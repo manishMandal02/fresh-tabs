@@ -19,7 +19,6 @@ const isProduction = !isDev;
 
 // ENABLE HMR IN BACKGROUND SCRIPT
 const enableHmrInBackgroundScript = true;
-const cacheInvalidationKeyRef = { current: generateKey() };
 
 export default defineConfig({
   resolve: {
@@ -31,13 +30,11 @@ export default defineConfig({
     },
   },
   plugins: [
-    makeManifest({
-      getCacheInvalidationKey,
-    }),
+    makeManifest(),
     react(),
     customDynamicImport(),
     addHmr({ background: enableHmrInBackgroundScript, view: true }),
-    isDev && watchRebuild({ afterWriteBundle: regenerateCacheInvalidationKey }),
+    isDev && watchRebuild(),
   ],
   publicDir,
   build: {
@@ -50,13 +47,7 @@ export default defineConfig({
     emptyOutDir: !isDev,
     rollupOptions: {
       input: {
-        devtools: resolve(pagesDir, 'devtools', 'index.html'),
-        panel: resolve(pagesDir, 'panel', 'index.html'),
-        content: resolve(pagesDir, 'content', 'index.ts'),
         background: resolve(pagesDir, 'background', 'index.ts'),
-        contentStyle: resolve(pagesDir, 'content', 'style.scss'),
-        popup: resolve(pagesDir, 'popup', 'index.html'),
-        newtab: resolve(pagesDir, 'newtab', 'index.html'),
         options: resolve(pagesDir, 'options', 'index.html'),
         sidepanel: resolve(pagesDir, 'sidepanel', 'index.html'),
       },
@@ -65,7 +56,7 @@ export default defineConfig({
         chunkFileNames: isDev ? 'assets/js/[name].js' : 'assets/js/[name].[hash].js',
         assetFileNames: assetInfo => {
           const { name } = path.parse(assetInfo.name);
-          const assetFileName = name === 'contentStyle' ? `${name}${getCacheInvalidationKey()}` : name;
+          const assetFileName = name === name;
           return `assets/[ext]/${assetFileName}.chunk.[ext]`;
         },
       },
@@ -78,15 +69,3 @@ export default defineConfig({
     setupFiles: './test-utils/vitest.setup.js',
   },
 });
-
-function getCacheInvalidationKey() {
-  return cacheInvalidationKeyRef.current;
-}
-function regenerateCacheInvalidationKey() {
-  cacheInvalidationKeyRef.current = generateKey();
-  return cacheInvalidationKeyRef;
-}
-
-function generateKey(): string {
-  return `${Date.now().toFixed()}`;
-}

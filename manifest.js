@@ -7,10 +7,21 @@ const manifest = {
   name: 'Fresh Tabs',
   version: '0.0.1',
   description: 'Manage tabs like pro',
-  permissions: ['storage', 'sidePanel'],
+  permissions: ['sidePanel'],
+  commands: {
+    openSidePanel: {
+      suggested_key: {
+        default: 'Ctrl+E',
+        mac: 'Command+E',
+      },
+      description: 'Open side panel',
+      contexts: ['browser_action'],
+    },
+  },
   side_panel: {
     default_path: 'src/pages/sidepanel/index.html',
   },
+
   options_page: 'src/pages/options/index.html',
   background: {
     service_worker: 'src/pages/background/index.js',
@@ -18,6 +29,7 @@ const manifest = {
   },
   action: {
     default_icon: 'icon-34.png',
+    default_title: 'open Fresh Tabs',
   },
   icons: {
     128: 'icon-128.png',

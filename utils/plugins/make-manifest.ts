@@ -24,18 +24,12 @@ const getManifestWithCacheBurst = (): Promise<{ default: chrome.runtime.Manifest
   return import(withCacheBurst(manifestFile));
 };
 
-export default function makeManifest(config?: { getCacheInvalidationKey?: () => string }): PluginOption {
-  function makeManifest(manifest: chrome.runtime.ManifestV3, to: string, cacheKey?: string) {
+export default function makeManifest(): PluginOption {
+  function makeManifest(manifest: chrome.runtime.ManifestV3, to: string) {
     if (!fs.existsSync(to)) {
       fs.mkdirSync(to);
     }
     const manifestPath = resolve(to, 'manifest.json');
-    if (cacheKey) {
-      // Naming change for cache invalidation
-      manifest.content_scripts.forEach(script => {
-        script.css &&= script.css.map(css => css.replace('<KEY>', cacheKey));
-      });
-    }
 
     fs.writeFileSync(manifestPath, ManifestParser.convertManifestToString(manifest));
 
@@ -48,9 +42,8 @@ export default function makeManifest(config?: { getCacheInvalidationKey?: () => 
       this.addWatchFile(manifestFile);
     },
     async writeBundle() {
-      const invalidationKey = config.getCacheInvalidationKey?.();
       const manifest = await getManifestWithCacheBurst();
-      makeManifest(manifest.default, distDir, invalidationKey);
+      makeManifest(manifest.default, distDir);
     },
   };
 }
