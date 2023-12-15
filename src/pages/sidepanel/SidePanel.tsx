@@ -1,6 +1,9 @@
 import '@pages/sidepanel/SidePanel.css';
+// import { useState } from 'react';
+// import { ISpace } from '../types/global.types';
 
 const SidePanel = () => {
+  // const [spaces, setSpaces] = useState<ISpace | undefined>(undefined);
   return (
     <div className="App">
       <div className="test-div">test</div>
