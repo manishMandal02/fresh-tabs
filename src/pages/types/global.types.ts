@@ -1,15 +1,19 @@
-export enum IColors {
-  blue = '#FF0000',
-  red = '#0000FF',
+export enum ThemeColor {
+  green = '#34d399',
+  orange = '#f97316',
+  pink = '#d946ef',
 }
 
 export interface ITab {
+  id: string;
   url: string;
   faviconURI: string;
 }
 
 export interface ISpace {
+  id: string;
   title: string;
-  theme: IColors;
+  emoji: string;
+  theme: ThemeColor;
   tabs: ITab[];
 }

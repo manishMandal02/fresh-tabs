@@ -15,4 +15,6 @@ console.log('background loaded');
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error => console.error(error));
 
 // shortcut key to open fresh-tabs side panel: CMD+E (CTRL+E)
-chrome.commands.onCommand.addListener(async (_command, tab) => await chrome.sidePanel.open({ windowId: tab.windowId }));
+chrome.commands.onCommand.addListener(async (_command, tab) => {
+  await chrome.sidePanel.open({ windowId: tab.windowId });
+});
