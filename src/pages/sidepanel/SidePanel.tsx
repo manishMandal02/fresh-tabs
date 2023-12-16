@@ -11,25 +11,21 @@ const testSpace: ISpace[] = [
     tabs: [
       {
         id: '1',
-
         url: 'https://dev.to/jmfayard/github-actions-a-new-hope-in-yaml-wasteland-1i9c',
         faviconURI: 'https://dev.to/favicon.ico',
       },
       {
         id: '2',
-
         url: 'https://www.daily.co/blog/implementing-api-billing-with-stripe',
         faviconURI: 'https://www.daily.co/favicon.ico',
       },
       {
         id: '3',
-
         url: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
         faviconURI: 'https://www.w3schools.com/favicon.ico',
       },
       {
         id: '4',
-
         url: 'https://developer.mozilla.org/en-US/docs/Glossary/Favicon',
         faviconURI: 'https://developer.mozilla.org/favicon.ico',
       },
@@ -163,15 +159,11 @@ const SidePanel = () => {
   const handleOpenedSpace = (space: ISpace) => {
     const newOpenedSpace = openedSpace && openedSpace.id === space.id ? undefined : space || undefined;
 
-    console.log('🚀 ~ file: SidePanel.tsx:42 ~ handleOpenedSpace ~ newOpenedSpace:', newOpenedSpace);
-
     setOpenedSpace(newOpenedSpace);
   };
 
   // check if space is opened
-  const isSpaceOpened = (space: ISpace) => {
-    return (openedSpace && openedSpace.id === space.id) || false;
-  };
+  const isSpaceOpened = (space: ISpace) => (openedSpace && openedSpace.id === space.id) || false;
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-brand-background">
