@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ISpace } from '../types/global.types';
 import { MdArrowForwardIos, MdDelete, MdContentCopy, MdOpenInNew } from 'react-icons/md';
 import { testSpaces } from './testData';
+import AddNewSpace from './components/add-new-space';
 
 const SPACE_HEIGHT = 45;
 
@@ -34,7 +35,7 @@ const SidePanel = () => {
 
   return (
     <div className="w-screen h-screen  overflow-hidden bg-brand-background">
-      <main className="h-full ">
+      <main className="h-full relative ">
         {/* heading */}
         <p className="h-[3%] text-slate-300 text-[.9rem] font-extralight pt-1  text-center">Fresh Tabs</p>
 
@@ -126,6 +127,8 @@ const SidePanel = () => {
               </div>
             </>
           ))}
+          {/* add new space */}
+          <AddNewSpace />
         </div>
       </main>
     </div>
