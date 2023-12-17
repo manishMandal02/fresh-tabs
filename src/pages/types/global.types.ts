@@ -5,15 +5,18 @@ export enum ThemeColor {
 }
 
 export interface ITab {
-  id: string;
+  id: string | number;
   url: string;
   faviconURI: string;
 }
 
+export type GrayColor = '#94a3b8';
+
 export interface ISpace {
   id: string;
+  isSaved: boolean;
   title: string;
   emoji: string;
-  theme: ThemeColor;
+  theme: ThemeColor | GrayColor;
   tabs: ITab[];
 }
