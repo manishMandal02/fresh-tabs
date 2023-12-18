@@ -38,7 +38,7 @@ const ColorPicker = ({ color, onChange }: Props) => {
             ))}
           </div>
         }>
-        <button className="border border-slate-600 rounded px-2 py-1.5">
+        <button className="border select-none border-slate-600 w-10 h-10 rounded flex items-center justify-center">
           <div
             className="w-5 h-5 rounded-full"
             style={{

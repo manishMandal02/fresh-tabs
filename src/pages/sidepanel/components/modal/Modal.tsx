@@ -34,23 +34,26 @@ const Modal = ({ children, isOpen, onClose, title }: Props) => {
         display: isOpen ? 'flex' : 'none',
       }}>
       {/* backdrop */}
-      <div className="z-[55] w-screen h-screen fixed bg-slate-500/10"></div>
+      {/* eslint-disable-next-line */}
+      <div className="z-[55] w-screen h-screen fixed bg-slate-500/10" onClick={handleClose}></div>
+      {/* modal card */}
       <div
-        className="z-[60] absolute bottom-0 flex flex-col left-0 w-full  mx-auto h-[40%]  bg-slate-700/30 rounded-tl-3xl rounded-tr-3xl transition-all duration-300  ease-in-out"
+        className={`z-[60] absolute bottom-0 flex flex-col left-0 w-full  mx-auto h-[40%]  bg-slate-800 rounded-tl-3xl 
+                  border-t border-slate-700 rounded-tr-3xl transition-all duration-300  ease-in-out`}
         style={{
           transform: `translateY(${posY})`,
           display: isOpen ? 'flex' : 'none',
         }}>
-        <div className="shadow-sm shadow-slate-600 relative  py-1.5">
-          <p className="text-base font-light text-slate-200 text-center">{title}</p>
+        <div className="shadow-sm shadow-slate-700 relative  py-1.5">
+          <p className="text-base font-light text-slate-200 select-none text-center">{title}</p>
           {/* close btn */}
           <button
-            className="absolute top-1 right-3 text-slate-500 hover:opacity-90 transition-all duration-200 "
+            className="absolute top-1.5 select-none right-3 text-slate-500 hover:opacity-90 transition-all duration-200 "
             onClick={handleClose}>
-            <MdClose size={28} className="" />
+            <MdClose size={26} className="" />
           </button>
         </div>
-        {children}
+        {isOpen ? children : null}
       </div>
     </div>
   );

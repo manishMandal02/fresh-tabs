@@ -27,8 +27,10 @@ const EmojiPicker = ({ emoji, onChange }: Props) => {
             />
           </div>
         }>
-        <button className="border border-slate-600 rounded px-2 py-1 text-xl" onClick={() => setIsOpen(true)}>
-          {emoji}
+        <button
+          className="border select-none border-slate-600 rounded w-10 h-10 flex items-center justify-center text-xl"
+          onClick={() => setIsOpen(true)}>
+          <div className="">{emoji}</div>
         </button>
       </Popover>
     </div>
