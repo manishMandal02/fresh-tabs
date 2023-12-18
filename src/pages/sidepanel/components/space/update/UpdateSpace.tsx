@@ -14,7 +14,7 @@ const UpdateSpace = ({ space, onClose }: Props) => {
   const [updateSpaceData, setUpdateSpaceData] = useState<ISpace | undefined>(undefined);
 
   const [errorMsg, setErrorMsg] = useState('');
-  const [showDeleteModal, setShowDeleteModal] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     setUpdateSpaceData(space);
@@ -62,7 +62,7 @@ const UpdateSpace = ({ space, onClose }: Props) => {
 
           {/* tabs */}
           <div className="mt-6">
-            <p className="text-slate-600 font-medium text-base">{updateSpaceData.tabs.length} tabs in space</p>
+            <p className="text-slate-500 font-light text-base">{updateSpaceData.tabs.length} tabs in space</p>
           </div>
           {/* error msg */}
           {errorMsg ? (

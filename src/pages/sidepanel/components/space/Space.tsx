@@ -1,7 +1,8 @@
-import { useState , MouseEventHandler } from 'react';
+import { useState, MouseEventHandler } from 'react';
 import { ISpace } from '@root/src/pages/types/global.types';
-import { MdArrowForwardIos, MdOutlineSettings } from 'react-icons/md';
+import { MdArrowForwardIos, MdOutlineSettings, MdOutlineOpenInBrowser } from 'react-icons/md';
 import Tab from './Tab';
+import Tooltip from '../tooltip';
 
 const SPACE_HEIGHT = 45;
 
@@ -9,13 +10,15 @@ type Props = {
   space: ISpace;
   numSpaces: number;
   onUpdateClick: () => void;
+  isActive: boolean;
+  handleOpenSpace: () => void;
 };
 
-const Space = ({ space, numSpaces, onUpdateClick }: Props) => {
+const Space = ({ space, numSpaces, onUpdateClick, isActive, handleOpenSpace }: Props) => {
   // opened space
   const [openedSpace, setOpenedSpace] = useState<ISpace | undefined>(undefined);
 
-  const handleOpenSpace = (currSpace: ISpace) => {
+  const handleExpandSpace = (currSpace: ISpace) => {
     const newOpenedSpace = openedSpace && openedSpace.id === currSpace.id ? undefined : currSpace || undefined;
 
     setOpenedSpace(newOpenedSpace);
@@ -47,36 +50,55 @@ const Space = ({ space, numSpaces, onUpdateClick }: Props) => {
       {/* space info container */}
       <button
         className="py-3 px-3 w-full h-[2.5rem] flex items-center justify-between  border-slate-700 group"
-        onClick={() => handleOpenSpace(space)}
+        onClick={() => handleExpandSpace(space)}
         style={{
           borderBottomWidth: isSpaceOpened(space) ? '1px' : '0px',
-          opacity: space.isSaved ? '1' : '0.6',
+          opacity: space.isSaved ? '1' : '0.75',
         }}>
         {/* title container */}
         <div className="flex items-center gap-x-1">
           <p className="text-base font-medium text-slate-50">{space.emoji}</p>
           <p className="text-sm font-medium text-slate-50">{space.title}</p>
-          {isSpaceOpened(space) ? (
+          {isActive ? (
             <>
               {/* active space indicator */}
-              <span className="relative flex h-1.5 w-1.5 ml-px">
-                <span
-                  className="animate-ping absolute inline-flex h-full w-full rounded-full  opacity-75 "
-                  style={{
-                    backgroundColor: space.theme,
-                    opacity: '0.7',
-                  }}></span>
-                <span
-                  className="relative inline-flex rounded-full h-1.5 w-1.5 "
-                  style={{
-                    backgroundColor: space.theme,
-                  }}></span>
-              </span>
+              <Tooltip label="Active space">
+                <span className="relative flex h-2 w-2 ml-1">
+                  <span
+                    className="animate-ping absolute inline-flex h-full w-full rounded-full  opacity-75 "
+                    style={{
+                      backgroundColor: space.theme,
+                      opacity: '0.7',
+                    }}></span>
+                  <span
+                    className="relative inline-flex rounded-full h-2 w-2 "
+                    style={{
+                      backgroundColor: space.theme,
+                    }}></span>
+                </span>
+              </Tooltip>
+            </>
+          ) : (
+            <>
+              {/* open space in new window btn */}
+              <Tooltip label="Open in new window">
+                <MdOutlineOpenInBrowser
+                  className="text-slate-500 ml-px -mb-1 cursor-pointer hover:text-slate-400 hover:-translate-y-px transition-all duration-200 "
+                  size={20}
+                  onClick={onSettingsClick}
+                  onMouseOver={ev => ev.stopPropagation()}
+                />
+              </Tooltip>
+            </>
+          )}
+
+          {isSpaceOpened(space) ? (
+            <>
               {/* update btn */}
               <MdOutlineSettings
                 className="text-slate-600 ml-1 cursor-pointer hover:text-slate-500 transition-all duration-200"
                 size={18}
-                onClick={onSettingsClick}
+                onClick={handleOpenSpace}
               />
             </>
           ) : null}

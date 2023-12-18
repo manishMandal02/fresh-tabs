@@ -3,6 +3,8 @@ import { ISpace } from '../types/global.types';
 import { testSpaces } from './testData';
 import { CreateSpace, Space, UpdateSpace } from './components/space';
 
+const Active_Space_Id = '3';
+
 const SidePanel = () => {
   const [spaces, setSpaces] = useState<ISpace[] | undefined>(undefined);
 
@@ -20,6 +22,9 @@ const SidePanel = () => {
     setSpaces(sortedSpaces);
   }, []);
 
+  // open space in new window
+  const handleOpenSpace = () => {};
+
   return (
     <div className="w-screen h-screen  overflow-hidden bg-brand-background">
       <main className="h-full relative ">
@@ -35,6 +40,8 @@ const SidePanel = () => {
               numSpaces={spaces.length}
               space={space}
               onUpdateClick={() => setSpaceToUpdate(space)}
+              isActive={Active_Space_Id === space.id}
+              handleOpenSpace={handleOpenSpace}
             />
           ))}
           {/* add new space */}
