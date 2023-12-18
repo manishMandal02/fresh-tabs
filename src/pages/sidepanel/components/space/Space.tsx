@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState , MouseEventHandler } from 'react';
 import { ISpace } from '@root/src/pages/types/global.types';
 import { MdArrowForwardIos, MdOutlineSettings } from 'react-icons/md';
 import Tab from './Tab';
@@ -19,6 +19,12 @@ const Space = ({ space, numSpaces, onUpdateClick }: Props) => {
     const newOpenedSpace = openedSpace && openedSpace.id === currSpace.id ? undefined : currSpace || undefined;
 
     setOpenedSpace(newOpenedSpace);
+  };
+
+  // on setting click
+  const onSettingsClick: MouseEventHandler<SVGElement> = ev => {
+    ev.stopPropagation();
+    onUpdateClick();
   };
 
   // check if space is opened
@@ -70,7 +76,7 @@ const Space = ({ space, numSpaces, onUpdateClick }: Props) => {
               <MdOutlineSettings
                 className="text-slate-600 ml-1 cursor-pointer hover:text-slate-500 transition-all duration-200"
                 size={18}
-                onClick={onUpdateClick}
+                onClick={onSettingsClick}
               />
             </>
           ) : null}

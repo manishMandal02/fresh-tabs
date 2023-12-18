@@ -1,8 +1,8 @@
 import { ISpace, ITab, ThemeColor } from '@root/src/pages/types/global.types';
 import ColorPicker from '../../color-picker';
 import EmojiPicker from '../../emoji-picker';
-import Modal from '../../modal';
-import { useState, useEffect , ChangeEventHandler } from 'react';
+import { SlideModal } from '../../modal';
+import { useState, useEffect, ChangeEventHandler } from 'react';
 import { Tab } from '..';
 
 type SpaceWithoutID = Omit<ISpace, 'id'>;
@@ -66,7 +66,7 @@ const CreateSpace = () => {
         +
       </button>
       {/* modal */}
-      <Modal title="New Space" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+      <SlideModal title="New Space" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <div className="relative flex flex-col  w-full h-full py-3 px-4">
           <div className="mt-4 flex items-center gap-x-3">
             <input
@@ -98,7 +98,7 @@ const CreateSpace = () => {
             Add
           </button>
         </div>
-      </Modal>
+      </SlideModal>
     </>
   );
 };

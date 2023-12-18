@@ -6,7 +6,7 @@ import { CreateSpace, Space, UpdateSpace } from './components/space';
 const SidePanel = () => {
   const [spaces, setSpaces] = useState<ISpace[] | undefined>(undefined);
 
-  const [spaceToUpdate, setSpaceToUpdate] = useState<ISpace | null>(null);
+  const [spaceToUpdate, setSpaceToUpdate] = useState<ISpace | undefined>(undefined);
 
   useEffect(() => {
     const sortedSpaces = testSpaces.toSorted(a => {
@@ -40,7 +40,7 @@ const SidePanel = () => {
           {/* add new space */}
           <CreateSpace />
           {/* update space */}
-          <UpdateSpace isOpen={spaceToUpdate !== null} space={spaceToUpdate} onClose={() => setSpaceToUpdate(null)} />
+          <UpdateSpace space={spaceToUpdate} onClose={() => setSpaceToUpdate(undefined)} />
         </div>
       </main>
     </div>
