@@ -8,27 +8,28 @@ export const createTab = async (url: string) => {
 
 // opens a space in new window
 export const openSpace = async (urls: string[], activeTabURL: string) => {
+  //  only active tab will be loaded, rest will be loaded after user visits them
+
   // create new window with all the space tabs
-  const window = await chrome.windows.create({ focused: true, url: urls });
+  const window = await chrome.windows.create({ focused: true });
 
-  if (activeTabURL) {
-    const activeTab = window.tabs.find(tab => tab.pendingUrl === activeTabURL);
+  if (window.id) {
+    // create discarded tabs
+    const discardedTabURLs = urls.filter(url => url !== activeTabURL);
 
-    if (activeTab) {
-      await chrome.tabs.update(activeTab.id, { active: true });
-    }
-  }
+    // batch all the promise to process at once (create's discarded tabs)
+    const createMultipleTabs = discardedTabURLs.map((url, idx) =>
+      chrome.tabs.create({ active: false, windowId: window.id, index: idx, url: `data:text/html,<title>${url}` }),
+    );
 
-  // discard tabs
-  if (urls.length > 2 && activeTabURL) {
-    // discard tabs all tabs except the last active tab in space
-    const newTabs = window.tabs.filter(tab => tab.pendingUrl !== activeTabURL).map(t => t.id);
+    await Promise.allSettled(createMultipleTabs);
 
-    // batch all the promise to process at once (discard fn )
-    const updateMultipleTabFn = newTabs.map(tab => chrome.tabs.discard(tab));
-
-    const res = await Promise.allSettled(updateMultipleTabFn);
-
-    console.log('🚀 ~ file: tabs.ts:36 ~ openSpace ~ res:', res);
+    // create active tab
+    await chrome.tabs.create({
+      active: true,
+      url: activeTabURL,
+      windowId: window.id,
+      index: urls.indexOf(activeTabURL),
+    });
   }
 };
