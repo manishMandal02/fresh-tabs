@@ -7,42 +7,33 @@ export const testSpaces: ISpace[] = [
     title: 'Work',
     emoji: '👨‍💻',
     isSaved: true,
+    activeTabURL: 'https://developer.mozilla.org/en-US/docs/Glossary/Favicon',
     tabs: [
       {
-        id: '1',
         url: 'https://dev.to/jmfayard/github-actions-a-new-hope-in-yaml-wasteland-1i9c',
         faviconURI: 'https://dev.to/favicon.ico',
       },
       {
-        id: '2',
         url: 'https://www.daily.co/blog/implementing-api-billing-with-stripe',
         faviconURI: 'https://www.daily.co/favicon.ico',
       },
       {
-        id: '3',
         url: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
         faviconURI: 'https://www.w3schools.com/favicon.ico',
       },
       {
-        id: '4',
         url: 'https://developer.mozilla.org/en-US/docs/Glossary/Favicon',
         faviconURI: 'https://developer.mozilla.org/favicon.ico',
       },
       {
-        id: '5',
-
         url: 'https://www.daily.co/blog/implementing-api-billing-with-stripe',
         faviconURI: 'https://www.daily.co/favicon.ico',
       },
       {
-        id: '5.5',
-
         url: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
         faviconURI: 'https://www.w3schools.com/favicon.ico',
       },
       {
-        id: '6',
-
         url: 'https://dev.to/jmfayard/github-actions-a-new-hope-in-yaml-wasteland-1i9c',
         faviconURI: 'https://dev.to/favicon.ico',
       },
@@ -54,43 +45,34 @@ export const testSpaces: ISpace[] = [
     title: 'Unsaved 1',
     emoji: '',
     isSaved: false,
+    activeTabURL: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
+
     tabs: [
       {
-        id: '1',
         url: 'https://dev.to/jmfayard/github-actions-a-new-hope-in-yaml-wasteland-1i9c',
         faviconURI: 'https://dev.to/favicon.ico',
       },
       {
-        id: '2',
-
         url: 'https://www.daily.co/blog/implementing-api-billing-with-stripe',
         faviconURI: 'https://www.daily.co/favicon.ico',
       },
       {
-        id: '3',
-
         url: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
         faviconURI: 'https://www.w3schools.com/favicon.ico',
       },
       {
-        id: '4',
-
         url: 'https://developer.mozilla.org/en-US/docs/Glossary/Favicon',
         faviconURI: 'https://developer.mozilla.org/favicon.ico',
       },
       {
-        id: '5',
-
         url: 'https://www.daily.co/blog/implementing-api-billing-with-stripe',
         faviconURI: 'https://www.daily.co/favicon.ico',
       },
       {
-        id: '6',
         url: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
         faviconURI: 'https://www.w3schools.com/favicon.ico',
       },
       {
-        id: '7',
         url: 'https://dev.to/jmfayard/github-actions-a-new-hope-in-yaml-wasteland-1i9c',
         faviconURI: 'https://dev.to/favicon.ico',
       },
@@ -102,84 +84,70 @@ export const testSpaces: ISpace[] = [
     title: 'Side Projects',
     emoji: '🎨',
     isSaved: true,
+    activeTabURL: 'https://dev.to/jmfayard/github-actions-a-new-hope-in-yaml-wasteland-1i9c',
+
     tabs: [
       {
-        id: '1',
         url: 'https://dev.to/jmfayard/github-actions-a-new-hope-in-yaml-wasteland-1i9c',
         faviconURI: 'https://dev.to/favicon.ico',
       },
       {
-        id: '2',
         url: 'https://www.daily.co/blog/implementing-api-billing-with-stripe',
         faviconURI: 'https://www.daily.co/favicon.ico',
       },
       {
-        id: '3',
         url: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
         faviconURI: 'https://www.w3schools.com/favicon.ico',
       },
       {
-        id: '4',
         url: 'https://developer.mozilla.org/en-US/docs/Glossary/Favicon',
         faviconURI: 'https://developer.mozilla.org/favicon.ico',
       },
       {
-        id: '5',
         url: 'https://www.daily.co/blog/implementing-api-billing-with-stripe',
         faviconURI: 'https://www.daily.co/favicon.ico',
       },
       {
-        id: '6',
         url: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
         faviconURI: 'https://www.w3schools.com/favicon.ico',
       },
       {
-        id: '7',
         url: 'https://dev.to/jmfayard/github-actions-a-new-hope-in-yaml-wasteland-1i9c',
         faviconURI: 'https://dev.to/favicon.ico',
       },
       {
-        id: '8',
         url: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
         faviconURI: 'https://www.w3schools.com/favicon.ico',
       },
       {
-        id: '1',
         url: 'https://dev.to/jmfayard/github-actions-a-new-hope-in-yaml-wasteland-1i9c',
         faviconURI: 'https://dev.to/favicon.ico',
       },
       {
-        id: '2',
         url: 'https://www.daily.co/blog/implementing-api-billing-with-stripe',
         faviconURI: 'https://www.daily.co/favicon.ico',
       },
       {
-        id: '3',
         url: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
         faviconURI: 'https://www.w3schools.com/favicon.ico',
       },
       {
-        id: '4',
         url: 'https://developer.mozilla.org/en-US/docs/Glossary/Favicon',
         faviconURI: 'https://developer.mozilla.org/favicon.ico',
       },
       {
-        id: '5',
         url: 'https://www.daily.co/blog/implementing-api-billing-with-stripe',
         faviconURI: 'https://www.daily.co/favicon.ico',
       },
       {
-        id: '6',
         url: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
         faviconURI: 'https://www.w3schools.com/favicon.ico',
       },
       {
-        id: '7',
         url: 'https://dev.to/jmfayard/github-actions-a-new-hope-in-yaml-wasteland-1i9c',
         faviconURI: 'https://dev.to/favicon.ico',
       },
       {
-        id: '8',
         url: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
         faviconURI: 'https://www.w3schools.com/favicon.ico',
       },
@@ -191,43 +159,30 @@ export const testSpaces: ISpace[] = [
     title: 'Coding',
     emoji: '👨‍💻',
     isSaved: true,
+    activeTabURL: 'https://www.daily.co/blog/implementing-api-billing-with-stripe',
     tabs: [
       {
-        id: '1',
         url: 'https://dev.to/jmfayard/github-actions-a-new-hope-in-yaml-wasteland-1i9c',
         faviconURI: 'https://dev.to/favicon.ico',
       },
       {
-        id: '2',
-
         url: 'https://www.daily.co/blog/implementing-api-billing-with-stripe',
         faviconURI: 'https://www.daily.co/favicon.ico',
       },
       {
-        id: '3',
-
         url: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
         faviconURI: 'https://www.w3schools.com/favicon.ico',
       },
       {
-        id: '4',
-
         url: 'https://developer.mozilla.org/en-US/docs/Glossary/Favicon',
         faviconURI: 'https://developer.mozilla.org/favicon.ico',
       },
-      {
-        id: '5',
 
-        url: 'https://www.daily.co/blog/implementing-api-billing-with-stripe',
-        faviconURI: 'https://www.daily.co/favicon.ico',
-      },
       {
-        id: '6',
         url: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
         faviconURI: 'https://www.w3schools.com/favicon.ico',
       },
       {
-        id: '7',
         url: 'https://dev.to/jmfayard/github-actions-a-new-hope-in-yaml-wasteland-1i9c',
         faviconURI: 'https://dev.to/favicon.ico',
       },

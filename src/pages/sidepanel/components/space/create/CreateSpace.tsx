@@ -1,19 +1,13 @@
-import { ISpace, ITab, ThemeColor } from '@root/src/pages/types/global.types';
+import { ISpace, ITab } from '@root/src/pages/types/global.types';
 import ColorPicker from '../../color-picker';
 import EmojiPicker from '../../emoji-picker';
 import { SlideModal } from '../../modal';
 import { useState, useEffect, ChangeEventHandler } from 'react';
 import { Tab } from '..';
+import Tooltip from '../../tooltip';
+import { testSpaces } from '../../../testData';
 
-type SpaceWithoutID = Omit<ISpace, 'id'>;
-
-const defaultSpaceData: SpaceWithoutID = {
-  title: 'Side Projects',
-  emoji: '🚀',
-  isSaved: true,
-  tabs: [],
-  theme: ThemeColor.blue,
-};
+const defaultSpaceData = testSpaces[2];
 
 const CreateSpace = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,12 +16,11 @@ const CreateSpace = () => {
 
   // new space data
 
-  const [newSpaceData, setNewSpaceData] = useState<SpaceWithoutID>(defaultSpaceData);
+  const [newSpaceData, setNewSpaceData] = useState<ISpace>(defaultSpaceData);
 
   useEffect(() => {
     //TODO - get current tab, and set to state
     setCurrentTab({
-      id: '1',
       url: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
       faviconURI: 'https://www.w3schools.com/favicon.ico',
     });
@@ -59,12 +52,14 @@ const CreateSpace = () => {
 
   return (
     <>
-      <button
-        className={`w-full border border-slate-700 text-xl font-light  text-slate-700 
-                  flex items-center justify-center rounded-md py-1.5 hover:border-slate-700/80 hover:text-slate-700/80 transition-all duration-200`}
-        onClick={handleCreateSpace}>
-        +
-      </button>
+      <Tooltip label="Add new space">
+        <button
+          className={`w-full border border-slate-700 text-xl font-light  text-slate-700 
+        flex items-center justify-center rounded-md py-1.5 hover:border-slate-700/80 hover:text-slate-700/80 transition-all duration-200`}
+          onClick={handleCreateSpace}>
+          +
+        </button>
+      </Tooltip>
       {/* modal */}
       <SlideModal title="New Space" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <div className="relative flex flex-col  w-full h-full py-3 px-4">

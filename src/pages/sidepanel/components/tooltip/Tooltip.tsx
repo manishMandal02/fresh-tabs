@@ -8,13 +8,13 @@ type Props = {
 const Tooltip = ({ label, children }: Props) => {
   return (
     <>
-      <span
-        className="group inline-block relative "
+      <div
+        className="group relative "
         id="tooltip-anchor-el"
         data-tooltip-delay-show={500}
         data-tooltip-content={label}>
         {children}
-      </span>
+      </div>
       <ReactTooltip anchorSelect="#tooltip-anchor-el" className="!bg-slate-700 !text-slate-50 !rounded-sm" />
     </>
   );

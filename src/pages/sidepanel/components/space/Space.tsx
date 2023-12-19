@@ -3,6 +3,7 @@ import { ISpace } from '@root/src/pages/types/global.types';
 import { MdArrowForwardIos, MdOutlineSettings, MdOutlineOpenInBrowser } from 'react-icons/md';
 import Tab from './Tab';
 import Tooltip from '../tooltip';
+import { openSpace } from '@root/src/services/tabs';
 
 const SPACE_HEIGHT = 45;
 
@@ -11,17 +12,16 @@ type Props = {
   numSpaces: number;
   onUpdateClick: () => void;
   isActive: boolean;
-  handleOpenSpace: () => void;
 };
 
-const Space = ({ space, numSpaces, onUpdateClick, isActive, handleOpenSpace }: Props) => {
+const Space = ({ space, numSpaces, onUpdateClick, isActive }: Props) => {
   // opened space
-  const [openedSpace, setOpenedSpace] = useState<ISpace | undefined>(undefined);
+  const [expandedSpace, setExpandedSpace] = useState<ISpace | undefined>(undefined);
 
   const handleExpandSpace = (currSpace: ISpace) => {
-    const newOpenedSpace = openedSpace && openedSpace.id === currSpace.id ? undefined : currSpace || undefined;
+    const newOpenedSpace = expandedSpace && expandedSpace.id === currSpace.id ? undefined : currSpace || undefined;
 
-    setOpenedSpace(newOpenedSpace);
+    setExpandedSpace(newOpenedSpace);
   };
 
   // on setting click
@@ -31,28 +31,35 @@ const Space = ({ space, numSpaces, onUpdateClick, isActive, handleOpenSpace }: P
   };
 
   // check if space is opened
-  const isSpaceOpened = (currSpace: ISpace) => (openedSpace && openedSpace.id === currSpace.id) || false;
+  const isSpaceExpanded = (currSpace: ISpace) => (expandedSpace && expandedSpace.id === currSpace.id) || false;
+
+  // open space in new window
+  const handleOpenSpace = async () => {
+    await openSpace(
+      space.tabs.map(s => s.url),
+      space.activeTabURL,
+    );
+  };
 
   return (
     <div
-      key={space.title}
       className={`text-slate-100 w-full  flex items-center justify-start  flex-col select-none
                             transition-all duration-200  mb-2.5 pb-2 bg-slate-800   rounded-md 
                           `}
       style={{
         borderColor: space.theme,
         borderWidth: '0px 0px 0px 3px',
-        // borderLeftWidth: isSpaceOpened(space) ? '1px' : '0px',
-        // borderRightWidth: isSpaceOpened(space) ? '1px' : '0px',
-        height: isSpaceOpened(space) ? 'min-content' : `${SPACE_HEIGHT}px`,
-        maxHeight: isSpaceOpened(space) ? `calc(100% - ${numSpaces * (SPACE_HEIGHT + 5)}px)` : `${SPACE_HEIGHT}px`,
+        // borderLeftWidth: isSpaceExpanded(space) ? '1px' : '0px',
+        // borderRightWidth: isSpaceExpanded(space) ? '1px' : '0px',
+        height: isSpaceExpanded(space) ? 'min-content' : `${SPACE_HEIGHT}px`,
+        maxHeight: isSpaceExpanded(space) ? `calc(100% - ${numSpaces * (SPACE_HEIGHT + 5)}px)` : `${SPACE_HEIGHT}px`,
       }}>
       {/* space info container */}
       <button
         className="py-3 px-3 w-full h-[2.5rem] flex items-center justify-between  border-slate-700 group"
         onClick={() => handleExpandSpace(space)}
         style={{
-          borderBottomWidth: isSpaceOpened(space) ? '1px' : '0px',
+          borderBottomWidth: isSpaceExpanded(space) ? '1px' : '0px',
           opacity: space.isSaved ? '1' : '0.75',
         }}>
         {/* title container */}
@@ -85,20 +92,20 @@ const Space = ({ space, numSpaces, onUpdateClick, isActive, handleOpenSpace }: P
                 <MdOutlineOpenInBrowser
                   className="text-slate-500 ml-px -mb-1 cursor-pointer hover:text-slate-400 hover:-translate-y-px transition-all duration-200 "
                   size={20}
-                  onClick={onSettingsClick}
+                  onClick={handleOpenSpace}
                   onMouseOver={ev => ev.stopPropagation()}
                 />
               </Tooltip>
             </>
           )}
 
-          {isSpaceOpened(space) ? (
+          {isSpaceExpanded(space) ? (
             <>
               {/* update btn */}
               <MdOutlineSettings
                 className="text-slate-600 ml-1 cursor-pointer hover:text-slate-500 transition-all duration-200"
                 size={18}
-                onClick={handleOpenSpace}
+                onClick={onSettingsClick}
               />
             </>
           ) : null}
@@ -110,17 +117,17 @@ const Space = ({ space, numSpaces, onUpdateClick, isActive, handleOpenSpace }: P
           <span className="group-hover:animate-bounce ">
             <MdArrowForwardIos
               className={`text-slate-300 text-xs transition-all  duration-200 ${
-                !isSpaceOpened(space) ? 'group-hover:rotate-90 rotate-0' : 'group-hover:rotate-0 rotate-90'
+                !isSpaceExpanded(space) ? 'group-hover:rotate-90 rotate-0' : 'group-hover:rotate-0 rotate-90'
               }`}
             />
           </span>
         </div>
       </button>
       {/* tabs within opened space */}
-      {isSpaceOpened(space) ? (
+      {isSpaceExpanded(space) ? (
         <div className=" mt-1  h-[calc(100%-40px)] overflow-x-hidden overflow-y-auto w-full scroll-m-1 scroll-p-0">
           {space.tabs.map(tab => (
-            <Tab key={tab.id} tabData={tab} />
+            <Tab key={tab.url} tabData={tab} />
           ))}
         </div>
       ) : null}

@@ -22,9 +22,6 @@ const SidePanel = () => {
     setSpaces(sortedSpaces);
   }, []);
 
-  // open space in new window
-  const handleOpenSpace = () => {};
-
   return (
     <div className="w-screen h-screen  overflow-hidden bg-brand-background">
       <main className="h-full relative ">
@@ -41,7 +38,6 @@ const SidePanel = () => {
               space={space}
               onUpdateClick={() => setSpaceToUpdate(space)}
               isActive={Active_Space_Id === space.id}
-              handleOpenSpace={handleOpenSpace}
             />
           ))}
           {/* add new space */}
