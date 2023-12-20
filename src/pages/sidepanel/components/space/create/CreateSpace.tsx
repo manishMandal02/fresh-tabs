@@ -23,6 +23,7 @@ const CreateSpace = () => {
     setCurrentTab({
       url: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
       faviconURI: 'https://www.w3schools.com/favicon.ico',
+      title: '',
     });
   }, []);
 

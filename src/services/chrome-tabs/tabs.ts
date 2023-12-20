@@ -1,15 +1,13 @@
 // create a tab
 
-import { getFaviconURL } from '../pages/utils';
+import { getFaviconURL } from '../../pages/utils';
 
 export const createTab = async (url: string) => {
-  const tab = await chrome.tabs.create({ active: false, url });
-
-  console.log('🚀 ~ file: tabs.ts:6 ~ createTab ~ tab:', tab);
+  await chrome.tabs.create({ active: false, url });
 };
 
 // opens a space in new window
-export const openSpace = async (urls: string[], activeTabURL: string) => {
+export const openSpace = async (urls: string[], activeTabIdx: number) => {
   //  only active tab will be loaded, rest will be loaded after user visits them
 
   // create new window with all the space tabs
@@ -17,7 +15,7 @@ export const openSpace = async (urls: string[], activeTabURL: string) => {
 
   if (window.id) {
     // create discarded tabs
-    const discardedTabURLs = urls.filter(url => url !== activeTabURL);
+    const discardedTabURLs = urls.filter((_url, idx) => idx !== activeTabIdx);
 
     // TODO -  set the title instead of url
     const discardedTabHTML = (url: string) => `
@@ -45,13 +43,13 @@ export const openSpace = async (urls: string[], activeTabURL: string) => {
     await Promise.allSettled(createMultipleTabs);
 
     // create active tab
-    const activeTab = await chrome.tabs.create({
+    await chrome.tabs.create({
       active: true,
-      url: activeTabURL,
+      url: urls[activeTabIdx],
       windowId: window.id,
-      index: urls.indexOf(activeTabURL),
+      index: urls.indexOf(urls[activeTabIdx]),
     });
 
-    console.log('🚀 ~ file: tabs.ts:50 ~ openSpace ~ activeTab:', activeTab);
+    // TODO - save window to space
   }
 };

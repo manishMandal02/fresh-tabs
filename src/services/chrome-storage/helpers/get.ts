@@ -4,7 +4,7 @@ import { logger } from '@root/src/pages/utils/logger';
 
 type GetStorageParams = {
   type: 'local' | 'sync';
-  key: StorageKeys;
+  key: StorageKeys | string;
 };
 
 // sets chrome storage by key

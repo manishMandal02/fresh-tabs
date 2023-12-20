@@ -1,3 +1,6 @@
+// TODO - delete this file
+// eslint-disable-next-line
+//@ts-nocheck
 import { ISpace, ThemeColor } from '../types/global.types';
 
 export const testSpaces: ISpace[] = [

@@ -1,6 +1,6 @@
 import { ITab } from '@root/src/pages/types/global.types';
 import { copyToClipboard } from '@root/src/pages/utils/copy-to-clipboard';
-import { createTab } from '@root/src/services/tabs';
+import { createTab } from '@root/src/services/chrome-tabs/tabs';
 import { MdDelete, MdContentCopy, MdOpenInNew } from 'react-icons/md';
 
 type Props = {

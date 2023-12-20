@@ -3,7 +3,7 @@ import { ISpace } from '@root/src/pages/types/global.types';
 import { MdArrowForwardIos, MdOutlineSettings, MdOutlineOpenInBrowser } from 'react-icons/md';
 import Tab from './Tab';
 import Tooltip from '../tooltip';
-import { openSpace } from '@root/src/services/tabs';
+import { openSpace } from '@root/src/services/chrome-tabs/tabs';
 
 const SPACE_HEIGHT = 45;
 
@@ -37,7 +37,7 @@ const Space = ({ space, numSpaces, onUpdateClick, isActive }: Props) => {
   const handleOpenSpace = async () => {
     await openSpace(
       space.tabs.map(s => s.url),
-      space.activeTabURL,
+      space.activeTabIndex,
     );
   };
 

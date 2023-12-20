@@ -14,6 +14,7 @@ export enum ThemeColor {
 export interface ITab {
   url: string;
   faviconURI: string;
+  title: string;
 }
 
 export type GrayColor = '#94a3b8';
@@ -23,7 +24,8 @@ export interface ISpace {
   isSaved: boolean;
   title: string;
   emoji: string;
+  windowId?: number;
   theme: ThemeColor | GrayColor;
   tabs: ITab[];
-  activeTabURL: string;
+  activeTabIndex: number;
 }

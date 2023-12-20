@@ -40,3 +40,27 @@ chrome.tabs.onActivated.addListener(({ tabId }) => {
     }
   });
 });
+
+// chrome.tabs.onCreated.addListener(tab => {
+//   console.log('🚀 ~ file: index.ts:45 ~ ~ tab: onCreated', tab);
+// });
+
+// event listener for when tabs get updated
+chrome.tabs.onUpdated.addListener(async (tabId, info) => {
+  if (info?.status === 'complete') {
+    const tab = await chrome.tabs.get(tabId);
+    console.log('🚀 ~ file: index.ts:52 ~ chrome.tabs.onUpdated.addListener ~ tab: ☘️ status changed', tab);
+  }
+
+  if (info?.url) {
+    const tab = await chrome.tabs.get(tabId);
+    console.log('🚀 ~ file: index.ts:52 ~ chrome.tabs.onUpdated.addListener ~ tab: ☘️ url changed', tab);
+    // todo - update this tab in storage
+  }
+});
+
+// // event listener for when tabs get removed
+// chrome.tabs.onRemoved.addListener(async (tabId, info) => {});
+
+// // event listener for when tabs get moved (index change)
+// chrome.tabs.onMoved.addListener(async (tabId, info) => {});
