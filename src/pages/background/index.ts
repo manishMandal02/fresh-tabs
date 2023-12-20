@@ -1,5 +1,6 @@
 import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
+import { getUrlFromHTML } from '../utils/get-url-from-html';
 
 reloadOnUpdate('pages/background');
 
@@ -21,17 +22,21 @@ chrome.commands.onCommand.addListener(async (_command, tab) => {
 
 // When the new tab is selected, get the link in the title and load the page
 chrome.tabs.onActivated.addListener(({ tabId }) => {
-  const splitText = 'data:text/html,<title>';
+  const splitText = 'data:text/html,';
 
-  console.log('🚀 ~ file: index.ts:26 ~ chrome.tabs.onActivated.addListener ~ splitText:', splitText);
-
+  // update tab with original link if it was discarded
   chrome.tabs.get(tabId, tab => {
+    // check if this was discarded
     if (tab.url.startsWith(splitText)) {
-      const realTabUrl = tab.url.replace(splitText, '');
+      // get url from html in the url
+      const url = getUrlFromHTML(tab.url.replace(splitText, ''));
 
-      chrome.tabs.update(tabId, {
-        url: realTabUrl,
-      });
+      // update tab with original url
+      (async () => {
+        await chrome.tabs.update(tabId, {
+          url,
+        });
+      })();
     }
   });
 });

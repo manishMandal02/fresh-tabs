@@ -1,5 +1,5 @@
 import { ITab } from '@root/src/pages/types/global.types';
-import { copyToClipboard } from '@root/src/pages/utils/copyToClipboard';
+import { copyToClipboard } from '@root/src/pages/utils/copy-to-clipboard';
 import { createTab } from '@root/src/services/tabs';
 import { MdDelete, MdContentCopy, MdOpenInNew } from 'react-icons/md';
 

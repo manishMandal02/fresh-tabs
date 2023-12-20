@@ -1,2 +1,2 @@
-export * from './getFaviconURL';
+export * from './get-favicon-url';
 export * from './wait';
