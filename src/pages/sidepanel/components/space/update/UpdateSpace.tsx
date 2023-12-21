@@ -3,6 +3,9 @@ import { AlertModal, SlideModal } from '../../modal';
 import { ISpace } from '@root/src/pages/types/global.types';
 import ColorPicker from '../../color-picker';
 import EmojiPicker from '../../emoji-picker';
+import { useAtom } from 'jotai';
+import { snackbarAtom } from '@root/src/stores/app';
+import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 
 type Props = {
   space: ISpace;
@@ -15,7 +18,11 @@ const UpdateSpace = ({ space, numTabs, onClose }: Props) => {
   const [updateSpaceData, setUpdateSpaceData] = useState<ISpace | undefined>(undefined);
 
   const [errorMsg, setErrorMsg] = useState('');
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // snackbar global state/atom
+  const [, setSnackbar] = useAtom(snackbarAtom);
 
   useEffect(() => {
     setUpdateSpaceData(space);
@@ -31,13 +38,22 @@ const UpdateSpace = ({ space, numTabs, onClose }: Props) => {
   };
 
   // create space
-  const handleUpdateSpace = () => {
+  const handleUpdateSpace = async () => {
     setErrorMsg('');
     if (!updateSpaceData.emoji || !updateSpaceData.title || !updateSpaceData.theme) {
       setErrorMsg('Fill all the fields');
       return;
     }
-    // TODO - create space
+    // show loading snackbar
+    setSnackbar({ show: true, msg: 'Updating space', isLoading: true });
+
+    //  create space
+    await updateSpace(space.id, { ...updateSpaceData });
+
+    // hide loading snackbar
+    setSnackbar({ show: false, msg: '', isLoading: false });
+    // show success snackbar
+    setSnackbar({ show: true, msg: 'Space updated', isSuccess: true });
   };
 
   // handle delete

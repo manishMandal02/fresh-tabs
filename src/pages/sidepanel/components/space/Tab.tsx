@@ -6,12 +6,13 @@ import { MdDelete, MdContentCopy, MdOpenInNew } from 'react-icons/md';
 type Props = {
   tabData: ITab;
   showHoverOption?: boolean;
+  onTabDelete: () => Promise<boolean>;
 };
-const Tab = ({ tabData, showHoverOption = true }: Props) => {
+const Tab = ({ tabData, onTabDelete, showHoverOption = true }: Props) => {
   // handle open tab
-  const handleOpenTab = async () => await createTab(tabData.url);
+  const handleOpen = async () => await createTab(tabData.url);
   // handle copy tab url
-  const handleCopyTabURL = async () => await copyToClipboard(tabData.url);
+  const handleCopyURL = async () => await copyToClipboard(tabData.url);
 
   return (
     <div className=" w-full relative px-2.5 py-1.5 flex items-center justify-between shadow-sm shadow-slate-700/80 group">
@@ -25,14 +26,15 @@ const Tab = ({ tabData, showHoverOption = true }: Props) => {
         <span className="absolute hidden group-hover:flex right-2 bottom-2 items-center gap-x-3">
           <MdContentCopy
             className={` text-slate-700 text-xs cursor-pointer bg-slate-400 px-[.75px] py-[1.5px] rounded-sm scale-150 transition-all duration-200 hover:bg-slate-400/80`}
-            onClick={handleCopyTabURL}
+            onClick={handleCopyURL}
           />
           <MdOpenInNew
             className={` text-slate-700 text-xs cursor-pointer bg-slate-400 px-[.75px] py-[1.5px] rounded-sm scale-150 transition-all duration-200 hover:bg-slate-400/80`}
-            onClick={handleOpenTab}
+            onClick={handleOpen}
           />
           <MdDelete
             className={` text-slate-700 text-xs cursor-pointer bg-slate-400 px-[.75px] py-[1.5px] rounded-sm scale-150 transition-all duration-200 hover:bg-slate-400/80`}
+            onClick={onTabDelete}
           />
         </span>
       ) : null}

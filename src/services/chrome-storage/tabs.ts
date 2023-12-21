@@ -110,7 +110,7 @@ export const removeTabFromSpace = async (spaceId: string, idx: number, windowId:
 
   // remove tab from window, when deleted from spaces view
   if (removeFromWindow) {
-    const tabId = await chrome.tabs.query({ url: tabToRemove.url, windowId: windowId, index: idx });
+    const tabId = await chrome.tabs.query({ windowId, url: tabToRemove.url, index: idx });
     if (tabId?.length < 1) return;
 
     await chrome.tabs.remove(tabId[0].id);

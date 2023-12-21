@@ -5,7 +5,10 @@ import { SlideModal } from '../../modal';
 import { useState, useEffect, ChangeEventHandler } from 'react';
 import { Tab } from '..';
 import Tooltip from '../../tooltip';
-import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
+import { getCurrentTab, getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
+import { useAtom } from 'jotai';
+import { snackbarAtom } from '@root/src/stores/app';
+import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
 
 type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;
 
@@ -22,6 +25,9 @@ const CreateSpace = () => {
 
   // new space data
   const [newSpaceData, setNewSpaceData] = useState<DefaultSpaceFields>(defaultSpaceData);
+
+  // snackbar global state/atom
+  const [, setSnackbar] = useAtom(snackbarAtom);
 
   useEffect(() => {
     (async () => {
@@ -52,13 +58,26 @@ const CreateSpace = () => {
   };
 
   // create space
-  const handleAddSpace = () => {
+  const handleAddSpace = async () => {
     setErrorMsg('');
     if (!newSpaceData.emoji || !newSpaceData.title || !newSpaceData.theme || !currentTab.url) {
       setErrorMsg('Fill all the fields');
       return;
     }
-    // TODO - create space
+    // show loading snackbar
+    setSnackbar({ show: true, msg: 'Creating new space', isLoading: true });
+
+    const currentWindowId = await getCurrentWindowId();
+
+    //  create space
+    await createNewSpace({ ...newSpaceData, isSaved: true, windowId: currentWindowId, activeTabIndex: 0 }, [
+      currentTab,
+    ]);
+
+    // hide loading snackbar
+    setSnackbar({ show: false, msg: '', isLoading: false });
+    // show success snackbar
+    setSnackbar({ show: true, msg: 'Space created', isSuccess: true });
   };
 
   return (

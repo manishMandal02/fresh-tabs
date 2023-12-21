@@ -60,6 +60,8 @@ export const updateSpace = async (spaceId: string, space: ISpaceWithoutId) => {
     key: StorageKeys.SPACES,
     value: [...spaces.filter(s => s.id !== spaceId), spaceToUpdate],
   });
+
+  return true;
 };
 
 // delete a space

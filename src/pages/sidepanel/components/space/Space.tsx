@@ -4,6 +4,7 @@ import { MdArrowForwardIos, MdOutlineSettings, MdOutlineOpenInBrowser } from 're
 import Tab from './Tab';
 import Tooltip from '../tooltip';
 import { openSpace } from '@root/src/services/chrome-tabs/tabs';
+import { removeTabFromSpace } from '@root/src/services/chrome-storage/tabs';
 
 const SPACE_HEIGHT = 45;
 
@@ -38,6 +39,9 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive }: Props) => {
   const handleOpenSpace = async () => {
     await openSpace(space);
   };
+
+  // handle remove tab from space
+  const handleRemoveTab = async (idx: number) => await removeTabFromSpace(space.id, idx, space.windowId, true);
 
   return (
     <div
@@ -124,8 +128,8 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive }: Props) => {
       {/* tabs within opened space */}
       {isSpaceExpanded(space) ? (
         <div className=" mt-1  h-[calc(100%-40px)] overflow-x-hidden overflow-y-auto w-full scroll-m-1 scroll-p-0">
-          {tabs.map(tab => (
-            <Tab key={tab.url} tabData={tab} />
+          {tabs.map((tab, idx) => (
+            <Tab key={tab.url} tabData={tab} onTabDelete={async () => await handleRemoveTab(idx)} />
           ))}
         </div>
       ) : null}
