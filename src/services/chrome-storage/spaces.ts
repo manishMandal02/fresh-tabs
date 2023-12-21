@@ -1,11 +1,10 @@
 import { StorageKeys } from '@root/src/constants/app';
 import { getStorage } from './helpers/get';
-import { ISpace, ITab } from '@root/src/pages/types/global.types';
+import { ISpace, ISpaceWithoutId, ITab } from '@root/src/pages/types/global.types';
 import { logger } from '@root/src/pages/utils/logger';
 import { setStorage } from './helpers/set';
 import { generateId } from '@root/src/pages/utils/generateId';
-
-type ISpaceWithoutId = Omit<ISpace, 'id'>;
+import { getTabsInSpace } from './tabs';
 
 // create new space with tabs
 export const createNewSpace = async (space: ISpaceWithoutId, tab: ITab[]) => {
@@ -20,6 +19,32 @@ export const createNewSpace = async (space: ISpaceWithoutId, tab: ITab[]) => {
 
   // create tabs storage for this space
   await setStorage({ type: 'sync', key: newSpaceId, value: [...tab] });
+};
+
+// create unsaved space
+export const createUnsavedSpace = async (windowId: number, tabs: ITab[]) => {
+  // get all spaces
+  const spaces = await getAllSpaces();
+  // count number of unsaved tabs, to mark the new unsaved space
+  const numOfUnsavedSpaces = spaces.filter(space => !space.isSaved);
+
+  const newSpaceId = generateId();
+
+  const newSpace: ISpace = {
+    id: newSpaceId,
+    title: `Unsaved Space ${numOfUnsavedSpaces?.length + 1}`,
+    emoji: '⚠️',
+    theme: '#94a3b8',
+    isSaved: false,
+    activeTabIndex: 0,
+    windowId: windowId,
+  };
+
+  // save new space along with others spaces to storage
+  await setStorage({ type: 'sync', key: StorageKeys.SPACES, value: [...spaces, newSpace] });
+
+  // create tabs storage for this space
+  await setStorage({ type: 'sync', key: newSpaceId, value: [...tabs] });
 };
 
 // update a space
@@ -59,6 +84,9 @@ export const deleteSpace = async (spaceId: string) => {
 
   return true;
 };
+
+// get all spaces
+export const getAllSpaces = async () => await getStorage<ISpace[]>({ key: StorageKeys.SPACES, type: 'sync' });
 
 // get space by window id
 export const getSpaceByWindow = async (windowId: number): Promise<ISpace | null> => {
@@ -109,4 +137,38 @@ export const updateActiveTabInSpace = async (windowId: number, idx: number) => {
   await setStorage({ type: 'sync', key: StorageKeys.SPACES, value: newSpacesList });
 
   return true;
+};
+
+// check if new opened window's tabs/urls are a part of space (the space might not have saved this window's id)
+export const checkNewWindowTabs = async (windowId: number, urls: string[]) => {
+  //get all spaces
+  const spaces = await getStorage<ISpace[]>({ key: StorageKeys.SPACES, type: 'sync' });
+
+  const tabsPromise = spaces.map(space => getTabsInSpace(space.id));
+
+  const promiseRes = await Promise.allSettled(tabsPromise);
+
+  //
+  let matchedSpace: ISpace | null = null;
+
+  promiseRes.forEach((res, idx) => {
+    if (res.status === 'fulfilled') {
+      // number of tabs in space
+      const numTabs = res.value.length;
+      // number of matched urls with this window
+      const matchedTabs = res.value.filter(tab => urls.includes(tab.url));
+      if (numTabs === matchedTabs.length) {
+        matchedSpace = spaces[idx];
+      }
+    }
+  });
+
+  if (matchedSpace) {
+    // tabs in this window is part of a space
+    // save windowId to space
+    await updateSpace(matchedSpace.id, { ...matchedSpace, windowId });
+    return true;
+  } else {
+    return false;
+  }
 };

@@ -71,7 +71,7 @@ export const saveNewTab = async (spaceId: string, url: string, title: string, id
   const newTab: ITab = {
     url,
     title,
-    faviconURI: getFaviconURL(url),
+    faviconURL: getFaviconURL(url),
   };
 
   // add new tab (array mutation)
@@ -83,13 +83,13 @@ export const saveNewTab = async (spaceId: string, url: string, title: string, id
   return true;
 };
 
-// update tab url, title, etc
-export const updateTabURL = async (spaceId: string, tab: ITab, idx: number) => {
+// update/save tab url, title, etc
+export const updateTab = async (spaceId: string, tab: ITab, idx: number) => {
   // get all tabs from the space
   const tabs = await getTabsInSpace(spaceId);
 
-  // update tab by index
-  tabs[idx] = tab;
+  // add new tab (array mutation)
+  tabs.splice(idx, 0, tab);
 
   // save new list to storage
   await setStorage({ type: 'sync', key: spaceId, value: tabs });

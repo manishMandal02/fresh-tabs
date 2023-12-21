@@ -6,10 +6,11 @@ import EmojiPicker from '../../emoji-picker';
 
 type Props = {
   space: ISpace;
+  numTabs: number;
   onClose: () => void;
 };
 
-const UpdateSpace = ({ space, onClose }: Props) => {
+const UpdateSpace = ({ space, numTabs, onClose }: Props) => {
   // update space data
   const [updateSpaceData, setUpdateSpaceData] = useState<ISpace | undefined>(undefined);
 
@@ -32,7 +33,7 @@ const UpdateSpace = ({ space, onClose }: Props) => {
   // create space
   const handleUpdateSpace = () => {
     setErrorMsg('');
-    if (!updateSpaceData.emoji || !updateSpaceData.title || !updateSpaceData.theme || updateSpaceData.tabs.length < 1) {
+    if (!updateSpaceData.emoji || !updateSpaceData.title || !updateSpaceData.theme) {
       setErrorMsg('Fill all the fields');
       return;
     }
@@ -62,7 +63,7 @@ const UpdateSpace = ({ space, onClose }: Props) => {
 
           {/* tabs */}
           <div className="mt-6">
-            <p className="text-slate-500 font-light text-base">{updateSpaceData.tabs.length} tabs in space</p>
+            <p className="text-slate-500 font-light text-base">{numTabs} tabs in space</p>
           </div>
           {/* error msg */}
           {errorMsg ? (

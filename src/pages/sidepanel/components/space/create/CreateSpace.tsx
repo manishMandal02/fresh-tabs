@@ -1,13 +1,19 @@
-import { ISpace, ITab } from '@root/src/pages/types/global.types';
+import { ISpace, ITab, ThemeColor } from '@root/src/pages/types/global.types';
 import ColorPicker from '../../color-picker';
 import EmojiPicker from '../../emoji-picker';
 import { SlideModal } from '../../modal';
 import { useState, useEffect, ChangeEventHandler } from 'react';
 import { Tab } from '..';
 import Tooltip from '../../tooltip';
-import { testSpaces } from '../../../testData';
+import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
 
-const defaultSpaceData = testSpaces[2];
+type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;
+
+const defaultSpaceData: DefaultSpaceFields = {
+  title: 'Side projects',
+  emoji: '🚀',
+  theme: ThemeColor.fuchsia,
+};
 
 const CreateSpace = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -15,16 +21,20 @@ const CreateSpace = () => {
   const [errorMsg, setErrorMsg] = useState('');
 
   // new space data
-
-  const [newSpaceData, setNewSpaceData] = useState<ISpace>(defaultSpaceData);
+  const [newSpaceData, setNewSpaceData] = useState<DefaultSpaceFields>(defaultSpaceData);
 
   useEffect(() => {
-    //TODO - get current tab, and set to state
-    setCurrentTab({
-      url: 'https://www.w3schools.com/howto/howto_html_favicon.asp',
-      faviconURI: 'https://www.w3schools.com/favicon.ico',
-      title: '',
-    });
+    (async () => {
+      // get current tab, and set to state
+      const currentTab = await getCurrentTab();
+
+      if (!currentTab) {
+        setErrorMsg('Failed to get current tab, Please try again.');
+        return;
+      }
+
+      setCurrentTab(currentTab);
+    })();
   }, []);
 
   // on title change
@@ -44,7 +54,7 @@ const CreateSpace = () => {
   // create space
   const handleAddSpace = () => {
     setErrorMsg('');
-    if (!newSpaceData.emoji || !newSpaceData.title || !newSpaceData.theme || newSpaceData.tabs.length < 1) {
+    if (!newSpaceData.emoji || !newSpaceData.title || !newSpaceData.theme || !currentTab.url) {
       setErrorMsg('Fill all the fields');
       return;
     }

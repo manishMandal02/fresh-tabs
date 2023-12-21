@@ -1,25 +1,58 @@
 import { useState, useEffect } from 'react';
-import { ISpace } from '../types/global.types';
-import { testSpaces } from './testData';
+import { ISpaceWithTabs } from '../types/global.types';
 import { CreateSpace, Space, UpdateSpace } from './components/space';
-
-const Active_Space_Id = '3';
+import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
+import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
+import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
+import Snackbar from './components/snackbar';
+import { useAtom } from 'jotai';
+import { snackbarAtom } from '@root/src/stores/app';
 
 const SidePanel = () => {
-  const [spaces, setSpaces] = useState<ISpace[] | undefined>(undefined);
+  const [spaces, setSpaces] = useState<ISpaceWithTabs[] | undefined>(undefined);
 
-  const [spaceToUpdate, setSpaceToUpdate] = useState<ISpace | undefined>(undefined);
+  const [spaceToUpdate, setSpaceToUpdate] = useState<ISpaceWithTabs | undefined>(undefined);
+
+  const [activeSpaceId, setActiveSpaceId] = useState('');
+
+  // snackbar global state/atom
+  const [snackbar] = useAtom(snackbarAtom);
+
+  // get all spaces and
+  const getAllSpacesFromStorage = async () => {
+    // get all the spaces
+    const allSpaces = await getAllSpaces();
+
+    // get tabs for each  space
+    const spacesWithTabs: ISpaceWithTabs[] = [];
+
+    for (const space of allSpaces) {
+      const tabs = await getTabsInSpace(space.id);
+      spacesWithTabs.push({
+        tabs,
+        ...space,
+      });
+    }
+
+    // set to storage
+    setSpaces(spacesWithTabs);
+  };
+
+  // set the active space based on current window
+  const getActiveSpace = async () => {
+    const windowId = await getCurrentWindowId();
+    const activeSpace = spaces.find(space => space.windowId === windowId);
+
+    setActiveSpaceId(activeSpace.id);
+  };
 
   useEffect(() => {
-    const sortedSpaces = testSpaces.toSorted(a => {
-      if (!a.isSaved) {
-        return -1;
-      } else {
-        return 1;
-      }
-    });
-
-    setSpaces(sortedSpaces);
+    (async () => {
+      // get all spaces and it's tabs
+      await getAllSpacesFromStorage();
+      // set active space
+      await getActiveSpace();
+    })();
   }, []);
 
   return (
@@ -36,15 +69,28 @@ const SidePanel = () => {
               key={space.id}
               numSpaces={spaces.length}
               space={space}
+              tabs={space.tabs}
               onUpdateClick={() => setSpaceToUpdate(space)}
-              isActive={Active_Space_Id === space.id}
+              isActive={activeSpaceId === space.id}
             />
           ))}
           {/* add new space */}
           <CreateSpace />
           {/* update space */}
-          <UpdateSpace space={spaceToUpdate} onClose={() => setSpaceToUpdate(undefined)} />
+          <UpdateSpace
+            space={spaceToUpdate}
+            numTabs={spaceToUpdate?.tabs.length}
+            onClose={() => setSpaceToUpdate(undefined)}
+          />
         </div>
+
+        {/* snackbar */}
+        <Snackbar
+          show={snackbar.show}
+          msg={snackbar.msg}
+          isSuccess={snackbar.isSuccess}
+          isLoading={snackbar.isLoading}
+        />
       </main>
     </div>
   );

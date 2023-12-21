@@ -13,7 +13,7 @@ export enum ThemeColor {
 
 export interface ITab {
   url: string;
-  faviconURI: string;
+  faviconURL: string;
   title: string;
 }
 
@@ -26,6 +26,11 @@ export interface ISpace {
   emoji: string;
   windowId?: number;
   theme: ThemeColor | GrayColor;
-  tabs: ITab[];
   activeTabIndex: number;
+}
+
+export type ISpaceWithoutId = Omit<ISpace, 'id'>;
+
+export interface ISpaceWithTabs extends ISpace {
+  tabs: ITab[];
 }

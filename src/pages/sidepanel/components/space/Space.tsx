@@ -1,5 +1,5 @@
 import { useState, MouseEventHandler } from 'react';
-import { ISpace } from '@root/src/pages/types/global.types';
+import { ISpace, ITab } from '@root/src/pages/types/global.types';
 import { MdArrowForwardIos, MdOutlineSettings, MdOutlineOpenInBrowser } from 'react-icons/md';
 import Tab from './Tab';
 import Tooltip from '../tooltip';
@@ -9,12 +9,13 @@ const SPACE_HEIGHT = 45;
 
 type Props = {
   space: ISpace;
+  tabs: ITab[];
   numSpaces: number;
   onUpdateClick: () => void;
   isActive: boolean;
 };
 
-const Space = ({ space, numSpaces, onUpdateClick, isActive }: Props) => {
+const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive }: Props) => {
   // opened space
   const [expandedSpace, setExpandedSpace] = useState<ISpace | undefined>(undefined);
 
@@ -35,10 +36,7 @@ const Space = ({ space, numSpaces, onUpdateClick, isActive }: Props) => {
 
   // open space in new window
   const handleOpenSpace = async () => {
-    await openSpace(
-      space.tabs.map(s => s.url),
-      space.activeTabIndex,
-    );
+    await openSpace(space);
   };
 
   return (
@@ -112,7 +110,7 @@ const Space = ({ space, numSpaces, onUpdateClick, isActive }: Props) => {
         </div>
         {/* right-end container */}
         <div className="flex items-center">
-          <span className="text-[.8rem] mr-2.5 opacity-80">{space.tabs.length}</span>
+          <span className="text-[.8rem] mr-2.5 opacity-80">{tabs.length}</span>
           {/* <SlOptionsVertical className="text-slate-300 text-sm cursor-pointer" /> */}
           <span className="group-hover:animate-bounce ">
             <MdArrowForwardIos
@@ -126,7 +124,7 @@ const Space = ({ space, numSpaces, onUpdateClick, isActive }: Props) => {
       {/* tabs within opened space */}
       {isSpaceExpanded(space) ? (
         <div className=" mt-1  h-[calc(100%-40px)] overflow-x-hidden overflow-y-auto w-full scroll-m-1 scroll-p-0">
-          {space.tabs.map(tab => (
+          {tabs.map(tab => (
             <Tab key={tab.url} tabData={tab} />
           ))}
         </div>

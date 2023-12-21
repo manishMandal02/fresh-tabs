@@ -16,7 +16,7 @@ const Tab = ({ tabData, showHoverOption = true }: Props) => {
   return (
     <div className=" w-full relative px-2.5 py-1.5 flex items-center justify-between shadow-sm shadow-slate-700/80 group">
       <span className="flex items-center w-full ">
-        <img className="w-4 h-4 mr-1.5 rounded-full" src={tabData.faviconURI} alt="icon" />
+        <img className="w-4 h-4 mr-1.5 rounded-full" src={tabData.faviconURL} alt="icon" />
         <span className="text-xs text-slate-400 max-w-fit min-w-[80%] whitespace-nowrap overflow-hidden text-ellipsis">
           {tabData.url}
         </span>
