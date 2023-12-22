@@ -129,8 +129,12 @@ chrome.tabs.onUpdated.addListener(async (tabId, info) => {
 
     const tab = await chrome.tabs.get(tabId);
 
+    await wait(500);
+
     // get space by windowId
     const space = await getSpaceByWindow(tab.windowId);
+
+    console.log('🚀 ~ file: index.ts:145 ~ chrome.tabs.onUpdated.addListener ~ space:', space);
 
     if (!space.id) return;
 

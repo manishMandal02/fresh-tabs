@@ -83,13 +83,13 @@ const SidePanel = () => {
             <Spinner size="md" />
           ) : (
             <>
-              {spaces?.map(space => (
+              {spaces?.map(({ tabs, ...space }) => (
                 <Space
                   key={space.id}
                   numSpaces={spaces.length}
                   space={space}
-                  tabs={space.tabs}
-                  onUpdateClick={() => setSpaceToUpdate(space)}
+                  tabs={tabs}
+                  onUpdateClick={() => setSpaceToUpdate({ ...space, tabs })}
                   isActive={activeSpaceId === space.id}
                 />
               ))}

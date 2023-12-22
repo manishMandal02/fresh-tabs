@@ -141,6 +141,9 @@ export const removeTabFromSpace = async (spaceId: string, id: number, removeFrom
 
     if (tabs?.length < 1) return false;
 
+    // do nothing, if only 1 tab remaining
+    if (tabs.length === 1) return;
+
     // save new list to storage
     await setStorage({ type: 'local', key: spaceId, value: [...tabs.filter(t => t.id !== id)] });
 

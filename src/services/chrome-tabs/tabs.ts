@@ -18,6 +18,7 @@ export const openSpace = async (space: ISpace) => {
   const window = await chrome.windows.create({ focused: true });
 
   if (window.id) {
+    const defaultWindowTabId = window.tabs[0].id;
     // get all tabs for space
 
     const tabs = await getTabsInSpace(space.id);
@@ -52,7 +53,9 @@ export const openSpace = async (space: ISpace) => {
 
     console.log('🚀 ~ file: tabs.ts:51 ~ openSpace ~ discardedTabs:', discardedTabs);
 
-    await Promise.allSettled(createMultipleTabsPromise);
+    const res = await Promise.allSettled(createMultipleTabsPromise);
+
+    console.log('🚀 ~ file: tabs.ts:57 ~ openSpace ~ res:', res);
 
     // create active tab
     await chrome.tabs.create({
@@ -64,6 +67,9 @@ export const openSpace = async (space: ISpace) => {
 
     // save new window id to space
     await updateSpace(space.id, { ...space, windowId: window.id });
+
+    // delete the default tab created (an empty tab gets created alone with window)
+    await chrome.tabs.remove(defaultWindowTabId);
   }
 };
 

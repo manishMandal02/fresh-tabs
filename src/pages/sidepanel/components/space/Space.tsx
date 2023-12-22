@@ -41,7 +41,7 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive }: Props) => {
   };
 
   // handle remove tab from space
-  const handleRemoveTab = async (idx: number) => await removeTabFromSpace(space.id, idx, space.windowId, true);
+  const handleRemoveTab = async (id: number) => await removeTabFromSpace(space.id, id, true);
 
   return (
     <div
@@ -133,7 +133,7 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive }: Props) => {
               key={tab.url}
               tabData={tab}
               isTabActive={space.activeTabIndex === idx}
-              onTabDelete={async () => await handleRemoveTab(idx)}
+              onTabDelete={async () => await handleRemoveTab(tab.id)}
             />
           ))}
         </div>
