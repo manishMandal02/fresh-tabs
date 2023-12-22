@@ -5,6 +5,7 @@ import { getTabsInSpace } from '../chrome-storage/tabs';
 import { updateSpace } from '../chrome-storage/spaces';
 import { getFaviconURL } from '@root/src/pages/utils';
 
+// create a new tab
 export const createTab = async (url: string) => {
   await chrome.tabs.create({ active: false, url });
 };
@@ -20,6 +21,8 @@ export const openSpace = async (space: ISpace) => {
     // get all tabs for space
 
     const tabs = await getTabsInSpace(space.id);
+
+    console.log('🚀 ~ file: tabs.ts:25 ~ openSpace ~ tabs:', tabs);
 
     // create discarded tabs
     const discardedTabs = tabs.filter((tab, idx) => idx !== space.activeTabIndex);
@@ -38,7 +41,7 @@ export const openSpace = async (space: ISpace) => {
     </html>`;
 
     // batch all the promise to process at once (create's discarded tabs)
-    const createMultipleTabs = discardedTabs.map((tab, idx) =>
+    const createMultipleTabsPromise = discardedTabs.map((tab, idx) =>
       chrome.tabs.create({
         active: false,
         windowId: window.id,
@@ -47,7 +50,9 @@ export const openSpace = async (space: ISpace) => {
       }),
     );
 
-    await Promise.allSettled(createMultipleTabs);
+    console.log('🚀 ~ file: tabs.ts:51 ~ openSpace ~ discardedTabs:', discardedTabs);
+
+    await Promise.allSettled(createMultipleTabsPromise);
 
     // create active tab
     await chrome.tabs.create({
@@ -72,6 +77,7 @@ export const getCurrentTab = async (): Promise<ITab> => {
   if (!tab?.id) return null;
 
   return {
+    id: tab.id,
     title: tab.title,
     url: tab.url,
     faviconURL: getFaviconURL(tab.url),

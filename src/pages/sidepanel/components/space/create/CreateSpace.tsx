@@ -110,7 +110,7 @@ const CreateSpace = () => {
           {/* tabs */}
           <div className="mt-6">
             <p className="text-slate-500 font text-sm mb-1.5">Tabs</p>
-            {currentTab ? <Tab tabData={currentTab} showHoverOption={false} /> : null}
+            {currentTab ? <Tab isTabActive={false} tabData={currentTab} showHoverOption={false} /> : null}
           </div>
           {/* error msg */}
           {errorMsg ? (

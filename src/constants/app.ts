@@ -15,13 +15,20 @@ export const SampleSpace = {
     windowId: 0,
   },
   tabs: [
-    { url: 'https://manishmandal.me', title: 'Manish Mandal', faviconURL: 'https://manishmandal.me/favicon.ico' },
     {
+      id: 0,
+      url: 'https://manishmandal.me',
+      title: 'Manish Mandal',
+      faviconURL: 'https://manishmandal.me/favicon.ico',
+    },
+    {
+      id: 0,
       url: 'https://freshinbox.xyz',
       title: 'Clean Inbox, Total Privacy | FreshInbox',
       faviconURL: 'https://freshinbox.xyz/favicon.ico',
     },
     {
+      id: 0,
       url: 'https://twitter.com/manishMandalJ',
       title: '(1) Manish Mandal (@manishMandalJ) / X',
       faviconURL: 'https://abs.twimg.com/favicons/twitter.3.ico',

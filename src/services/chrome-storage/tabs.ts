@@ -74,7 +74,13 @@ export const updateTabIndex = async (spaceId: string, oldIndex: number, newIndex
 };
 
 // save new tab to space
-export const saveNewTab = async (spaceId: string, url: string, title: string, idx: number): Promise<boolean> => {
+export const saveNewTab = async (
+  id: number,
+  spaceId: string,
+  url: string,
+  title: string,
+  idx: number,
+): Promise<boolean> => {
   try {
     // get all tabs from the space
     const tabs = await getTabsInSpace(spaceId);
@@ -82,6 +88,7 @@ export const saveNewTab = async (spaceId: string, url: string, title: string, id
     if (tabs?.length < 1) return false;
 
     const newTab: ITab = {
+      id,
       url,
       title,
       faviconURL: getFaviconURL(url),
@@ -110,8 +117,8 @@ export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promis
     // get all tabs from the space
     const tabs = await getTabsInSpace(spaceId);
 
-    // add new tab (array mutation)
-    tabs.splice(idx, 0, tab);
+    // update tab at index pos
+    tabs[idx] = tab;
 
     // save new list to storage
     await setStorage({ type: 'local', key: spaceId, value: tabs });
@@ -127,30 +134,19 @@ export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promis
 };
 
 // remove/delete a tab
-export const removeTabFromSpace = async (
-  spaceId: string,
-  idx: number,
-  windowId: number,
-  removeFromWindow = false,
-): Promise<boolean> => {
+export const removeTabFromSpace = async (spaceId: string, id: number, removeFromWindow = false): Promise<boolean> => {
   try {
     // get all tabs from the space
     const tabs = await getTabsInSpace(spaceId);
 
     if (tabs?.length < 1) return false;
 
-    // remove tab (array mutation)
-    const [tabToRemove] = tabs.splice(idx, 1);
-
     // save new list to storage
-    await setStorage({ type: 'local', key: spaceId, value: tabs });
+    await setStorage({ type: 'local', key: spaceId, value: [...tabs.filter(t => t.id !== id)] });
 
     // remove tab from window, when deleted from spaces view
     if (removeFromWindow) {
-      const tabId = await chrome.tabs.query({ windowId, url: tabToRemove.url, index: idx });
-      if (tabId?.length < 1) return;
-
-      await chrome.tabs.remove(tabId[0].id);
+      await chrome.tabs.remove(id);
     }
 
     return true;

@@ -17,10 +17,10 @@ const Tab = ({ tabData, onTabDelete, isTabActive, showHoverOption = true }: Prop
   const handleCopyURL = async () => await copyToClipboard(tabData.url);
 
   return (
-    <Tooltip>
+    <Tooltip delay={1500} label={isTabActive ? 'Last active tab' : ''}>
       <div
         className={` w-full relative px-2.5 py-1.5 flex rounded-sm items-center justify-between shadow-sm shadow-slate-700/80 group ${
-          isTabActive ? ' bg-slate-700' : ''
+          isTabActive ? ' bg-slate-700/30' : ''
         }`}>
         <span className="flex items-center w-full ">
           <img className="w-4 h-4 mr-1.5 rounded-full" src={tabData.faviconURL} alt="icon" />

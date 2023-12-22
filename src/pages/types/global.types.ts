@@ -12,6 +12,7 @@ export enum ThemeColor {
 }
 
 export interface ITab {
+  id: number;
   url: string;
   faviconURL: string;
   title: string;
