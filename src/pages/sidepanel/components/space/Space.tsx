@@ -129,7 +129,12 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive }: Props) => {
       {isSpaceExpanded(space) ? (
         <div className=" mt-1  h-[calc(100%-40px)] overflow-x-hidden overflow-y-auto w-full scroll-m-1 scroll-p-0">
           {tabs.map((tab, idx) => (
-            <Tab key={tab.url} tabData={tab} onTabDelete={async () => await handleRemoveTab(idx)} />
+            <Tab
+              key={tab.url}
+              tabData={tab}
+              isTabActive={space.activeTabIndex === idx}
+              onTabDelete={async () => await handleRemoveTab(idx)}
+            />
           ))}
         </div>
       ) : null}

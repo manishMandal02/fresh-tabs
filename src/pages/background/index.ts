@@ -1,9 +1,11 @@
+import { SampleSpace, StorageKeys } from './../../constants/app';
 import { ITab } from './../types/global.types';
 import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
 import { getUrlFromHTML } from '../utils/get-url-from-html';
 import {
   checkNewWindowTabs,
+  createNewSpace,
   createUnsavedSpace,
   deleteSpace,
   getSpaceByWindow,
@@ -11,6 +13,8 @@ import {
 } from '@root/src/services/chrome-storage/spaces';
 import { removeTabFromSpace, updateTab, updateTabIndex } from '@root/src/services/chrome-storage/tabs';
 import { getFaviconURL } from '../utils';
+import { logger } from '../utils/logger';
+import { setStorage } from '@root/src/services/chrome-storage/helpers/set';
 
 reloadOnUpdate('pages/background');
 
@@ -20,10 +24,71 @@ reloadOnUpdate('pages/background');
  */
 reloadOnUpdate('pages/content/style.scss');
 
-console.log('background loaded');
+logger.info('🏁 background loaded');
 
 // open side panel on extension icon clicked
-chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error => console.error(error));
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error => {
+  logger.error({
+    error,
+    msg: `Error at ~ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }) `,
+    fileTrace: 'src/pages/background/index.ts:35 ~ chrome.sidePanel.setPanelBehavior()',
+  });
+});
+
+const createSpacesOnInstall = async (shouldCreateSampleSpace = false) => {
+  try {
+    const windows = await chrome.windows.getAll();
+
+    for (const window of windows) {
+      // get all tabs in the window
+      const tabsInWindow = await chrome.tabs.query({ windowId: window.id });
+
+      if (tabsInWindow?.length < 1) throw new Error('No tabs found in window');
+
+      const tabs: ITab[] = tabsInWindow.map(tab => ({
+        title: tab.title,
+        url: tab.url,
+        faviconURL: getFaviconURL(tab.url),
+      }));
+
+      // active tab for window
+      const activeIndex = tabsInWindow.find(tab => tab.active).index || 0;
+
+      // create space
+      await createUnsavedSpace(window.id, tabs, activeIndex);
+    }
+
+    // create a sample space for new users
+    if (shouldCreateSampleSpace) {
+      await createNewSpace({ ...SampleSpace.space }, [...SampleSpace.tabs]);
+    }
+
+    // success
+    return true;
+  } catch (error) {
+    logger.error({
+      error: new Error('Failed to create spaces'),
+      msg: 'Failed to initialize app',
+      fileTrace: 'src/pages/background/index.ts:59 ~ createSpacesOnInstall() ~ catch block',
+    });
+    return false;
+  }
+};
+
+// on extension installed
+chrome.runtime.onInstalled.addListener(async info => {
+  if (info.reason === 'install') {
+    // initialize the app
+
+    // initialize storage
+    await setStorage({ type: 'local', key: StorageKeys.SPACES, value: [] });
+
+    // create unsaved spaces for current opened windows and sample space if new user
+    await createSpacesOnInstall(true);
+
+    logger.info('✅ Successfully initialized app.');
+  }
+});
 
 // shortcut key to open fresh-tabs side panel: CMD+E (CTRL+E)
 chrome.commands.onCommand.addListener(async (_command, tab) => {
@@ -63,8 +128,12 @@ chrome.tabs.onUpdated.addListener(async (tabId, info) => {
     // get space by windowId
     const space = await getSpaceByWindow(tab.windowId);
 
+    console.log('🚀 ~ file: index.ts:130 ~ chrome.tabs.onUpdated.addListener ~ space:', space);
+
+    if (!space.id) return;
+
     //  create new  or update tab
-    await updateTab(space.id, { url: tab.url, title: tab.title, faviconURL: getFaviconURL(tab.url) }, tab.index);
+    await updateTab(space?.id, { url: tab.url, title: tab.title, faviconURL: getFaviconURL(tab.url) }, tab.index);
   }
 });
 
@@ -78,7 +147,10 @@ chrome.tabs.onMoved.addListener(async (tabId, info) => {
 });
 
 // event listener for when tabs get removed
-chrome.tabs.onRemoved.addListener(async tabId => {
+chrome.tabs.onRemoved.addListener(async (tabId, info) => {
+  // do nothing if tab removed because window was closed
+  if (info.isWindowClosing) return;
+
   // get tab info
   const tab = await chrome.tabs.get(tabId);
 

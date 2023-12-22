@@ -6,7 +6,7 @@ type Props = {
 };
 
 const Tooltip = ({ label, children }: Props) => {
-  return (
+  return label ? (
     <>
       <div
         className="group relative "
@@ -17,7 +17,7 @@ const Tooltip = ({ label, children }: Props) => {
       </div>
       <ReactTooltip anchorSelect="#tooltip-anchor-el" className="!bg-slate-700 !text-slate-50 !rounded-sm" />
     </>
-  );
+  ) : null;
 };
 
 export default Tooltip;

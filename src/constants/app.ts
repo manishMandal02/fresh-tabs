@@ -1,17 +1,19 @@
-import { ISpaceWithTabs, ThemeColor } from '../pages/types/global.types';
+import { ThemeColor } from '../pages/types/global.types';
 
 export enum StorageKeys {
-  ACTIVE_SPACE = 'ACTIVE_SPACE',
   SPACES = 'SPACES',
 }
 
-export const SampleSpace: ISpaceWithTabs = {
-  id: 'space1',
-  title: 'Chrome management',
-  emoji: '📋',
-  isSaved: true,
-  theme: ThemeColor.teal,
-  activeTabIndex: 0,
+export const SampleSpace = {
+  space: {
+    id: 'space1',
+    title: 'Chrome management',
+    emoji: '📋',
+    isSaved: true,
+    theme: ThemeColor.teal,
+    activeTabIndex: 0,
+    windowId: 0,
+  },
   tabs: [
     { url: 'https://manishmandal.me', title: 'Manish Mandal', faviconURL: 'https://manishmandal.me/favicon.ico' },
     {

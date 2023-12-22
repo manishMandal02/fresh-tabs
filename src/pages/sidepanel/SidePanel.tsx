@@ -7,13 +7,20 @@ import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
 import Snackbar from './components/snackbar';
 import { useAtom } from 'jotai';
 import { snackbarAtom } from '@root/src/stores/app';
+import Spinner from './components/spinner';
 
 const SidePanel = () => {
+  // all spaces
   const [spaces, setSpaces] = useState<ISpaceWithTabs[] | undefined>(undefined);
 
+  // space opened for update
   const [spaceToUpdate, setSpaceToUpdate] = useState<ISpaceWithTabs | undefined>(undefined);
 
+  // active space in the window
   const [activeSpaceId, setActiveSpaceId] = useState('');
+
+  // loading space state
+  const [isLoadingSpaces, setIsLoadingSpaces] = useState(false);
 
   // snackbar global state/atom
   const [snackbar] = useAtom(snackbarAtom);
@@ -33,25 +40,33 @@ const SidePanel = () => {
         ...space,
       });
     }
+    console.log('🚀 ~ file: SidePanel.tsx:36 ~ getAllSpacesFromStorage ~ spacesWithTabs:', spacesWithTabs);
 
-    // set to storage
-    setSpaces(spacesWithTabs);
+    return spacesWithTabs;
   };
 
   // set the active space based on current window
-  const getActiveSpace = async () => {
+  const getActiveSpace = async (spacesInStorage: ISpaceWithTabs[]) => {
     const windowId = await getCurrentWindowId();
-    const activeSpace = spaces.find(space => space.windowId === windowId);
+
+    const activeSpace = spacesInStorage?.find(space => space?.windowId === windowId);
 
     setActiveSpaceId(activeSpace.id);
   };
 
+  // get all spaces from storage on load
   useEffect(() => {
     (async () => {
+      setIsLoadingSpaces(true);
       // get all spaces and it's tabs
-      await getAllSpacesFromStorage();
+      const spacesInStorage = await getAllSpacesFromStorage();
       // set active space
-      await getActiveSpace();
+      await getActiveSpace(spacesInStorage);
+
+      // set to storage
+      setSpaces(spacesInStorage);
+
+      setIsLoadingSpaces(false);
     })();
   }, []);
 
@@ -64,16 +79,22 @@ const SidePanel = () => {
         <div className="w-full  h-[97%] pt-10 px-3">
           <p className="text-sm text-slate-500  mb-1.5 tracking-wide select-none">Spaces</p>
           {/* un saved  */}
-          {spaces?.map(space => (
-            <Space
-              key={space.id}
-              numSpaces={spaces.length}
-              space={space}
-              tabs={space.tabs}
-              onUpdateClick={() => setSpaceToUpdate(space)}
-              isActive={activeSpaceId === space.id}
-            />
-          ))}
+          {isLoadingSpaces ? (
+            <Spinner size="md" />
+          ) : (
+            <>
+              {spaces?.map(space => (
+                <Space
+                  key={space.id}
+                  numSpaces={spaces.length}
+                  space={space}
+                  tabs={space.tabs}
+                  onUpdateClick={() => setSpaceToUpdate(space)}
+                  isActive={activeSpaceId === space.id}
+                />
+              ))}
+            </>
+          )}
           {/* add new space */}
           <CreateSpace />
           {/* update space */}

@@ -64,8 +64,12 @@ export const openSpace = async (space: ISpace) => {
 
 // get current tab
 export const getCurrentTab = async (): Promise<ITab> => {
+  // const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const tab = await chrome.tabs.getCurrent();
-  if (!tab?.id) null;
+
+  console.log('🚀 ~ file: tabs.ts:69 ~ getCurrentTab ~ tab:', tab);
+
+  if (!tab?.id) return null;
 
   return {
     title: tab.title,

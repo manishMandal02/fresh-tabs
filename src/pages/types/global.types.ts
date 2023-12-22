@@ -24,7 +24,7 @@ export interface ISpace {
   isSaved: boolean;
   title: string;
   emoji: string;
-  windowId?: number;
+  windowId: number;
   theme: ThemeColor | GrayColor;
   activeTabIndex: number;
 }

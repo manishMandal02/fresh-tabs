@@ -5,25 +5,18 @@ import { setStorage } from './helpers/set';
 import { getFaviconURL } from '@root/src/pages/utils';
 
 // get all tabs in space
-export const getTabsInSpace = async (spaceId: string) => {
+export const getTabsInSpace = async (spaceId: string): Promise<ITab[] | null> => {
   try {
-    const tabs = await getStorage<ITab[]>({ key: spaceId, type: 'sync' });
+    const tabs = await getStorage<ITab[]>({ key: spaceId, type: 'local' });
 
-    if (tabs.length < 1) {
-      logger.error({
-        error: new Error('failed to get tabs from storage.'),
-        msg: `Failed to get tabs for space with id:  ${spaceId}.`,
-        fileTrace: '/services/storage/spaces.ts:34 ~ getTabByIndex()',
-      });
-      return null;
-    }
+    if (tabs?.length < 1) throw new Error('No tabs found for this space');
 
     return tabs;
   } catch (error) {
     logger.error({
-      error: new Error('failed to get tabs from storage.'),
-      msg: `Failed to get tabs for space with id:  ${spaceId}.`,
-      fileTrace: '/services/storage/spaces.ts:34 ~ getTabByIndex()',
+      error,
+      msg: `Error getting tabs in space spaceId: ${spaceId}`,
+      fileTrace: 'src/services/chrome-storage/tabs.ts:26 ~ getTabsInSpace() ~ catch block',
     });
     return null;
   }
@@ -31,90 +24,142 @@ export const getTabsInSpace = async (spaceId: string) => {
 
 // get a tab in space by it's index number
 export const getTab = async (spaceId: string, idx: number): Promise<ITab | null> => {
-  const tabs = await getTabsInSpace(spaceId);
+  try {
+    // get all tabs in this space
+    const tabs = await getTabsInSpace(spaceId);
 
-  if (tabs?.length < 1) return null;
+    if (tabs?.length < 1) return null;
 
-  const tab = tabs[idx];
+    const tab = tabs[idx];
 
-  if (!tab) return null;
+    if (!tab) return null;
 
-  return tab;
+    return tab;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Error getting tab tab-index: ${idx}`,
+      fileTrace: 'src/services/chrome-storage/tabs.ts:49 ~ getTab() ~ catch block',
+    });
+    return null;
+  }
 };
 
 // update tab index
 export const updateTabIndex = async (spaceId: string, oldIndex: number, newIndex: number): Promise<boolean> => {
-  // get all tabs from the space
-  const tabs = await getTabsInSpace(spaceId);
+  try {
+    // get all tabs from the space
+    const tabs = await getTabsInSpace(spaceId);
 
-  if (tabs?.length < 1) return false;
+    if (tabs?.length < 1) return false;
 
-  // remove tab from old index
-  const tabToUpdate = tabs.splice(oldIndex, 1);
+    // remove tab from old index
+    const tabToUpdate = tabs.splice(oldIndex, 1);
 
-  // add tab to new index (array mutation)
-  tabs.splice(newIndex, 0, tabToUpdate[0]);
+    // add tab to new index (array mutation)
+    tabs.splice(newIndex, 0, tabToUpdate[0]);
 
-  // save new list to storage
-  await setStorage({ type: 'sync', key: spaceId, value: tabs });
+    // save new list to storage
+    await setStorage({ type: 'local', key: spaceId, value: tabs });
 
-  return true;
+    return true;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Error updating tab's index tab-index: ${oldIndex}`,
+      fileTrace: 'src/services/chrome-storage/tabs.ts:67 ~ updateTabIndex() ~ catch block',
+    });
+    return false;
+  }
 };
 
 // save new tab to space
-export const saveNewTab = async (spaceId: string, url: string, title: string, idx: number) => {
-  // get all tabs from the space
-  const tabs = await getTabsInSpace(spaceId);
+export const saveNewTab = async (spaceId: string, url: string, title: string, idx: number): Promise<boolean> => {
+  try {
+    // get all tabs from the space
+    const tabs = await getTabsInSpace(spaceId);
 
-  if (tabs?.length < 1) return false;
+    if (tabs?.length < 1) return false;
 
-  const newTab: ITab = {
-    url,
-    title,
-    faviconURL: getFaviconURL(url),
-  };
+    const newTab: ITab = {
+      url,
+      title,
+      faviconURL: getFaviconURL(url),
+    };
 
-  // add new tab (array mutation)
-  tabs.splice(idx, 0, newTab);
+    // add new tab (array mutation)
+    tabs.splice(idx, 0, newTab);
 
-  // save new list to storage
-  await setStorage({ type: 'sync', key: spaceId, value: tabs });
+    // save new list to storage
+    await setStorage({ type: 'local', key: spaceId, value: tabs });
 
-  return true;
+    return true;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Error saving tab: ${title}`,
+      fileTrace: 'src/services/chrome-storage/tabs.ts:89 ~ saveNewTab() ~ catch block',
+    });
+    return false;
+  }
 };
 
 // update/save tab url, title, etc
-export const updateTab = async (spaceId: string, tab: ITab, idx: number) => {
-  // get all tabs from the space
-  const tabs = await getTabsInSpace(spaceId);
+export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promise<boolean> => {
+  try {
+    // get all tabs from the space
+    const tabs = await getTabsInSpace(spaceId);
 
-  // add new tab (array mutation)
-  tabs.splice(idx, 0, tab);
+    // add new tab (array mutation)
+    tabs.splice(idx, 0, tab);
 
-  // save new list to storage
-  await setStorage({ type: 'sync', key: spaceId, value: tabs });
+    // save new list to storage
+    await setStorage({ type: 'local', key: spaceId, value: tabs });
+    return true;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Error updating tab: ${tab.title}`,
+      fileTrace: 'src/services/chrome-storage/tabs.ts:101 ~ updateTab() ~ catch block',
+    });
+    return false;
+  }
 };
 
 // remove/delete a tab
-export const removeTabFromSpace = async (spaceId: string, idx: number, windowId: number, removeFromWindow = false) => {
-  // get all tabs from the space
-  const tabs = await getTabsInSpace(spaceId);
+export const removeTabFromSpace = async (
+  spaceId: string,
+  idx: number,
+  windowId: number,
+  removeFromWindow = false,
+): Promise<boolean> => {
+  try {
+    // get all tabs from the space
+    const tabs = await getTabsInSpace(spaceId);
 
-  if (tabs?.length < 1) return false;
+    if (tabs?.length < 1) return false;
 
-  // remove tab (array mutation)
-  const [tabToRemove] = tabs.splice(idx, 1);
+    // remove tab (array mutation)
+    const [tabToRemove] = tabs.splice(idx, 1);
 
-  // save new list to storage
-  await setStorage({ type: 'sync', key: spaceId, value: tabs });
+    // save new list to storage
+    await setStorage({ type: 'local', key: spaceId, value: tabs });
 
-  // remove tab from window, when deleted from spaces view
-  if (removeFromWindow) {
-    const tabId = await chrome.tabs.query({ windowId, url: tabToRemove.url, index: idx });
-    if (tabId?.length < 1) return;
+    // remove tab from window, when deleted from spaces view
+    if (removeFromWindow) {
+      const tabId = await chrome.tabs.query({ windowId, url: tabToRemove.url, index: idx });
+      if (tabId?.length < 1) return;
 
-    await chrome.tabs.remove(tabId[0].id);
+      await chrome.tabs.remove(tabId[0].id);
+    }
+
+    return true;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Error removing tabs from space spaceId: ${spaceId}`,
+      fileTrace: 'src/services/chrome-storage/tabs.ts:160 ~ removeTabFromSpace() ~ catch block',
+    });
+    return false;
   }
-
-  return true;
 };

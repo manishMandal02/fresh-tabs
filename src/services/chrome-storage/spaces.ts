@@ -7,170 +7,232 @@ import { generateId } from '@root/src/pages/utils/generateId';
 import { getTabsInSpace } from './tabs';
 
 // create new space with tabs
-export const createNewSpace = async (space: ISpaceWithoutId, tab: ITab[]) => {
-  const newSpaceId = generateId();
-  const newSpace = { ...space, id: newSpaceId };
+export const createNewSpace = async (space: ISpaceWithoutId, tab: ITab[]): Promise<boolean> => {
+  try {
+    const newSpaceId = generateId();
+    const newSpace = { ...space, id: newSpaceId };
 
-  // get all spaces
-  const spaces = await getStorage<ISpace[]>({ type: 'sync', key: StorageKeys.SPACES });
+    // get all spaces
+    const spaces = await getStorage<ISpace[]>({ type: 'local', key: StorageKeys.SPACES });
 
-  // save new space along with others spaces to storage
-  await setStorage({ type: 'sync', key: StorageKeys.SPACES, value: [...spaces, newSpace] });
+    // save new space along with others spaces to storage
+    await setStorage({
+      type: 'local',
+      key: StorageKeys.SPACES,
+      value: spaces?.length ? [...spaces, newSpace] : [newSpace],
+    });
 
-  // create tabs storage for this space
-  await setStorage({ type: 'sync', key: newSpaceId, value: [...tab] });
+    // create tabs storage for this space
+    await setStorage({ type: 'local', key: newSpaceId, value: [...tab] });
+
+    return true;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Failed to initialize app space data: ${JSON.stringify(space)}`,
+      fileTrace: 'src/services/chrome-storage/spaces.ts:31 ~ createNewSpace() ~ catch block',
+    });
+    return false;
+  }
 };
 
 // create unsaved space
-export const createUnsavedSpace = async (windowId: number, tabs: ITab[]) => {
-  // get all spaces
-  const spaces = await getAllSpaces();
-  // count number of unsaved tabs, to mark the new unsaved space
-  const numOfUnsavedSpaces = spaces.filter(space => !space.isSaved);
+export const createUnsavedSpace = async (windowId: number, tabs: ITab[], activeIndex = 0): Promise<boolean> => {
+  try {
+    // get all spaces
+    const spaces = await getAllSpaces();
+    // count number of unsaved tabs, to mark the new unsaved space
+    const numOfUnsavedSpaces = spaces?.filter(space => !space.isSaved)?.length || 0;
 
-  const newSpaceId = generateId();
+    const newSpaceId = generateId();
 
-  const newSpace: ISpace = {
-    id: newSpaceId,
-    title: `Unsaved Space ${numOfUnsavedSpaces?.length + 1}`,
-    emoji: '⚠️',
-    theme: '#94a3b8',
-    isSaved: false,
-    activeTabIndex: 0,
-    windowId: windowId,
-  };
+    const newSpace: ISpace = {
+      windowId,
+      id: newSpaceId,
+      title: `Unsaved Space ${numOfUnsavedSpaces + 1}`,
+      emoji: '⚠️',
+      theme: '#94a3b8',
+      isSaved: false,
+      activeTabIndex: activeIndex,
+    };
 
-  // save new space along with others spaces to storage
-  await setStorage({ type: 'sync', key: StorageKeys.SPACES, value: [...spaces, newSpace] });
+    // save new space along with others spaces to storage
+    await setStorage({
+      type: 'local',
+      key: StorageKeys.SPACES,
+      value: spaces?.length ? [...spaces, newSpace] : [newSpace],
+    });
 
-  // create tabs storage for this space
-  await setStorage({ type: 'sync', key: newSpaceId, value: [...tabs] });
+    // create tabs storage for this space
+    await setStorage({ type: 'local', key: newSpaceId, value: [...tabs] });
+
+    return true;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Failed to create an unsaved space`,
+      fileTrace: 'src/services/chrome-storage/spaces.ts:65 ~ createUnsavedSpace() ~ catch block',
+    });
+    return false;
+  }
 };
 
 // update a space
-export const updateSpace = async (spaceId: string, space: ISpaceWithoutId) => {
-  const spaces = await getStorage<ISpace[]>({ key: StorageKeys.SPACES, type: 'sync' });
+export const updateSpace = async (spaceId: string, space: ISpaceWithoutId): Promise<boolean> => {
+  try {
+    const spaces = await getStorage<ISpace[]>({ key: StorageKeys.SPACES, type: 'local' });
 
-  let spaceToUpdate = spaces.find(space => space.id === spaceId);
-  spaceToUpdate = { ...spaceToUpdate, ...space };
+    let spaceToUpdate = spaces.find(s => s.id === spaceId);
+    spaceToUpdate = { ...spaceToUpdate, ...space };
 
-  // save new space along with others spaces to storage
-  await setStorage({
-    type: 'sync',
-    key: StorageKeys.SPACES,
-    value: [...spaces.filter(s => s.id !== spaceId), spaceToUpdate],
-  });
+    // save new space along with others spaces to storage
+    await setStorage({
+      type: 'local',
+      key: StorageKeys.SPACES,
+      value: [...spaces.filter(s => s.id !== spaceId), spaceToUpdate],
+    });
 
-  return true;
+    return true;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Failed to update space: ${space.title}`,
+      fileTrace: 'src/services/chrome-storage/spaces.ts:90 ~ updateSpace() ~ catch block',
+    });
+  }
+  return false;
 };
 
 // delete a space
 export const deleteSpace = async (spaceId: string) => {
-  const spaces = await getStorage<ISpace[]>({ key: StorageKeys.SPACES, type: 'sync' });
+  try {
+    const spaces = await getStorage<ISpace[]>({ key: StorageKeys.SPACES, type: 'local' });
 
-  const spaceToDelete = spaces.find(space => space.id === spaceId);
+    const spaceToDelete = spaces.find(space => space.id === spaceId);
 
-  const newSpaceArray = spaces.filter(space => space.id !== spaceId);
+    const newSpaceArray = spaces.filter(space => space.id !== spaceId);
 
-  // save new space list
-  await setStorage({ type: 'sync', key: StorageKeys.SPACES, value: newSpaceArray });
+    // save new space list
+    await setStorage({ type: 'local', key: StorageKeys.SPACES, value: newSpaceArray });
 
-  // remove saved tabs for this space
-  await chrome.storage.sync.remove(spaceId);
+    // remove saved tabs for this space
+    await chrome.storage.sync.remove(spaceId);
 
-  // close the space window if opened
-  const window = await chrome.windows.get(spaceToDelete.windowId);
-  if (window.id) {
-    await chrome.windows.remove(window.id);
+    // close the space window if opened
+    const window = await chrome.windows.get(spaceToDelete.windowId);
+
+    if (window?.id) {
+      await chrome.windows.remove(window.id);
+    }
+
+    return true;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Failed to delete space: ${spaceId}`,
+      fileTrace: 'src/services/chrome-storage/spaces.ts:127 ~ deleteSpace() ~ catch block',
+    });
   }
-
-  return true;
+  return false;
 };
 
 // get all spaces
-export const getAllSpaces = async () => await getStorage<ISpace[]>({ key: StorageKeys.SPACES, type: 'sync' });
+export const getAllSpaces = async () => await getStorage<ISpace[]>({ key: StorageKeys.SPACES, type: 'local' });
 
 // get space by window id
 export const getSpaceByWindow = async (windowId: number): Promise<ISpace | null> => {
-  const spaces = await getStorage<ISpace[]>({ key: StorageKeys.SPACES, type: 'sync' });
+  try {
+    // get all spaces from storage
+    const spaces = await getStorage<ISpace[]>({ key: StorageKeys.SPACES, type: 'local' });
 
-  if (spaces.length < 1) {
+    if (spaces.length < 1) throw new Error('No found spaces in storage.');
+
+    const space = spaces.find(s => s.windowId === windowId);
+
+    if (!space) return null;
+
+    return space;
+  } catch (error) {
     logger.error({
-      error: new Error('failed to get spaces from storage.'),
-      msg: 'Failed to get spaces',
-      fileTrace: '/services/storage/spaces.ts:12 ~ getSpaceByWindow()',
+      error,
+      msg: `Error getting space by window windowId: ${windowId}`,
+      fileTrace: 'src/services/chrome-storage/spaces.ts:157 ~ getSpaceByWindow() ~ catch block',
     });
     return null;
   }
-
-  const space = spaces.find(space => space.windowId === windowId);
-
-  if (!space) {
-    return null;
-  }
-
-  return space;
 };
 
 // update active tab in space
-export const updateActiveTabInSpace = async (windowId: number, idx: number) => {
-  const spaces = await getStorage<ISpace[]>({ key: StorageKeys.SPACES, type: 'sync' });
+export const updateActiveTabInSpace = async (windowId: number, idx: number): Promise<boolean> => {
+  try {
+    // get all spaces from storage
+    const spaces = await getStorage<ISpace[]>({ key: StorageKeys.SPACES, type: 'local' });
 
-  if (spaces.length < 1) {
+    if (spaces.length < 1) {
+      throw new Error('No found spaces in storage.');
+    }
+
+    // find space to update
+    const spaceToUpdate = spaces.find(space => space.windowId === windowId);
+    // update active tab index
+    spaceToUpdate.activeTabIndex = idx;
+
+    // add the update space along other spaces to new array
+    const newSpacesList = spaces.filter(space => space.windowId !== windowId);
+
+    newSpacesList.push(spaceToUpdate);
+
+    // save spaces to storage
+    await setStorage({ type: 'local', key: StorageKeys.SPACES, value: newSpacesList });
+
+    return true;
+  } catch (error) {
     logger.error({
-      error: new Error('failed to get spaces from storage.'),
-      msg: 'Failed to get spaces',
-      fileTrace: '/services/storage/spaces.ts:12 ~ getSpaceByWindow()',
+      error,
+      msg: `Error updating active tab for window windowId: ${windowId}`,
+      fileTrace: 'src/services/chrome-storage/spaces.ts:191 ~ updateActiveTabInSpace() ~ catch block',
     });
     return false;
   }
-
-  // find space to update
-  const spaceToUpdate = spaces.find(space => space.windowId === windowId);
-  // update active tab index
-  spaceToUpdate.activeTabIndex = idx;
-
-  // add the update space along other spaces to new array
-  const newSpacesList = spaces.filter(space => space.windowId !== windowId);
-
-  newSpacesList.push(spaceToUpdate);
-
-  // save spaces to storage
-  await setStorage({ type: 'sync', key: StorageKeys.SPACES, value: newSpacesList });
-
-  return true;
 };
 
 // check if new opened window's tabs/urls are a part of space (the space might not have saved this window's id)
-export const checkNewWindowTabs = async (windowId: number, urls: string[]) => {
-  //get all spaces
-  const spaces = await getStorage<ISpace[]>({ key: StorageKeys.SPACES, type: 'sync' });
+export const checkNewWindowTabs = async (windowId: number, urls: string[]): Promise<boolean> => {
+  try {
+    //get all spaces
+    const spaces = await getStorage<ISpace[]>({ key: StorageKeys.SPACES, type: 'local' });
 
-  const tabsPromise = spaces.map(space => getTabsInSpace(space.id));
+    const tabsPromise = spaces.map(space => getTabsInSpace(space.id));
 
-  const promiseRes = await Promise.allSettled(tabsPromise);
+    const promiseRes = await Promise.allSettled(tabsPromise);
 
-  //
-  let matchedSpace: ISpace | null = null;
+    //
+    let matchedSpace: ISpace | null = null;
 
-  promiseRes.forEach((res, idx) => {
-    if (res.status === 'fulfilled') {
-      // number of tabs in space
-      const numTabs = res.value.length;
-      // number of matched urls with this window
-      const matchedTabs = res.value.filter(tab => urls.includes(tab.url));
-      if (numTabs === matchedTabs.length) {
-        matchedSpace = spaces[idx];
+    promiseRes.forEach((res, idx) => {
+      if (res.status === 'fulfilled') {
+        // number of tabs in space
+        const numTabs = res.value.length;
+        // number of matched urls with this window
+        const matchedTabs = res.value.filter(tab => urls.includes(tab.url));
+        if (numTabs === matchedTabs.length) {
+          matchedSpace = spaces[idx];
+        }
       }
-    }
-  });
+    });
 
-  if (matchedSpace) {
-    // tabs in this window is part of a space
+    if (!matchedSpace) return false;
+
+    // else, tabs in this window is part of a space
     // save windowId to space
     await updateSpace(matchedSpace.id, { ...matchedSpace, windowId });
     return true;
-  } else {
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Error checking for space associated with window windowId: ${windowId}`,
+      fileTrace: 'src/services/chrome-storage/spaces.ts:234 ~ checkNewWindowTabs() ~ catch block',
+    });
     return false;
   }
 };

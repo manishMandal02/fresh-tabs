@@ -30,18 +30,20 @@ const CreateSpace = () => {
   const [, setSnackbar] = useAtom(snackbarAtom);
 
   useEffect(() => {
-    (async () => {
-      // get current tab, and set to state
-      const currentTab = await getCurrentTab();
+    if (isModalOpen) {
+      (async () => {
+        // get current tab, and set to state
+        const currentTabOpened = await getCurrentTab();
 
-      if (!currentTab) {
-        setErrorMsg('Failed to get current tab, Please try again.');
-        return;
-      }
+        if (!currentTabOpened) {
+          setErrorMsg('Failed to get current tab, Please try again.');
+          return;
+        }
 
-      setCurrentTab(currentTab);
-    })();
-  }, []);
+        setCurrentTab(currentTabOpened);
+      })();
+    }
+  }, [isModalOpen]);
 
   // on title change
   const onTitleChange: ChangeEventHandler<HTMLInputElement> = ev => {
@@ -108,7 +110,7 @@ const CreateSpace = () => {
           {/* tabs */}
           <div className="mt-6">
             <p className="text-slate-500 font text-sm mb-1.5">Tabs</p>
-            <>{currentTab ? <Tab tabData={currentTab} showHoverOption={false} /> : null}</>
+            {currentTab ? <Tab tabData={currentTab} showHoverOption={false} /> : null}
           </div>
           {/* error msg */}
           {errorMsg ? (
@@ -118,7 +120,8 @@ const CreateSpace = () => {
           ) : null}
           {/* add space */}
           <button
-            className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[90%] py-2 rounded-md text-slate-500 font-medium text-base shadow shadow-slate-500 hover:opacity-80 transition-all duration-300"
+            className={`absolute bottom-5 left-1/2 -translate-x-1/2 w-[90%] py-2 
+                      rounded-md text-slate-500 font-medium text-base shadow shadow-slate-500 hover:opacity-80 transition-all duration-300`}
             onClick={handleAddSpace}>
             Add
           </button>
