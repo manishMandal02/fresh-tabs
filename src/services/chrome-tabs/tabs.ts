@@ -23,8 +23,6 @@ export const openSpace = async (space: ISpace) => {
 
     const tabs = await getTabsInSpace(space.id);
 
-    console.log('🚀 ~ file: tabs.ts:25 ~ openSpace ~ tabs:', tabs);
-
     // create discarded tabs
     const discardedTabs = tabs.filter((tab, idx) => idx !== space.activeTabIndex);
 
@@ -51,11 +49,7 @@ export const openSpace = async (space: ISpace) => {
       }),
     );
 
-    console.log('🚀 ~ file: tabs.ts:51 ~ openSpace ~ discardedTabs:', discardedTabs);
-
-    const res = await Promise.allSettled(createMultipleTabsPromise);
-
-    console.log('🚀 ~ file: tabs.ts:57 ~ openSpace ~ res:', res);
+    await Promise.allSettled(createMultipleTabsPromise);
 
     // create active tab
     await chrome.tabs.create({
@@ -75,10 +69,7 @@ export const openSpace = async (space: ISpace) => {
 
 // get current tab
 export const getCurrentTab = async (): Promise<ITab> => {
-  // const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const tab = await chrome.tabs.getCurrent();
-
-  console.log('🚀 ~ file: tabs.ts:69 ~ getCurrentTab ~ tab:', tab);
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   if (!tab?.id) return null;
 

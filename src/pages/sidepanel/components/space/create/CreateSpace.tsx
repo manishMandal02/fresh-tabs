@@ -7,7 +7,7 @@ import { Tab } from '..';
 import Tooltip from '../../tooltip';
 import { getCurrentTab, getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
 import { useAtom } from 'jotai';
-import { snackbarAtom } from '@root/src/stores/app';
+import { snackbarAtom, spacesAtom } from '@root/src/stores/app';
 import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
 
 type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;
@@ -15,13 +15,16 @@ type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;
 const defaultSpaceData: DefaultSpaceFields = {
   title: 'Side projects',
   emoji: '🚀',
-  theme: ThemeColor.fuchsia,
+  theme: ThemeColor.Fuchsia,
 };
 
 const CreateSpace = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentTab, setCurrentTab] = useState<null | ITab>(null);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // spaces atom (global state)
+  const [, setSpaces] = useAtom(spacesAtom);
 
   // new space data
   const [newSpaceData, setNewSpaceData] = useState<DefaultSpaceFields>(defaultSpaceData);
@@ -72,14 +75,24 @@ const CreateSpace = () => {
     const currentWindowId = await getCurrentWindowId();
 
     //  create space
-    await createNewSpace({ ...newSpaceData, isSaved: true, windowId: currentWindowId, activeTabIndex: 0 }, [
-      currentTab,
-    ]);
+    const createdSpace = await createNewSpace(
+      { ...newSpaceData, isSaved: true, windowId: currentWindowId, activeTabIndex: 0 },
+      [currentTab],
+    );
 
     // hide loading snackbar
     setSnackbar({ show: false, msg: '', isLoading: false });
-    // show success snackbar
-    setSnackbar({ show: true, msg: 'Space created', isSuccess: true });
+
+    // space created
+    if (createdSpace?.id) {
+      // re-render updated spaces
+      setSpaces(prev => [...prev, { ...createdSpace, tabs: [currentTab] }]);
+
+      setSnackbar({ show: true, msg: 'Space created', isSuccess: true });
+    } else {
+      // failed
+      setSnackbar({ show: true, msg: 'Failed to created space', isSuccess: false });
+    }
   };
 
   return (

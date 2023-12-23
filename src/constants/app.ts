@@ -10,7 +10,7 @@ export const SampleSpace = {
     title: 'Chrome management',
     emoji: '📋',
     isSaved: true,
-    theme: ThemeColor.teal,
+    theme: ThemeColor.Teal,
     activeTabIndex: 0,
     windowId: 0,
   },

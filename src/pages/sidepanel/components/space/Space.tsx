@@ -1,10 +1,12 @@
-import { useState, MouseEventHandler } from 'react';
-import { ISpace, ITab } from '@root/src/pages/types/global.types';
+import { MouseEventHandler } from 'react';
+import { ISpace, ISpaceWithTabs, ITab } from '@root/src/pages/types/global.types';
 import { MdArrowForwardIos, MdOutlineSettings, MdOutlineOpenInBrowser } from 'react-icons/md';
 import Tab from './Tab';
 import Tooltip from '../tooltip';
 import { openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { removeTabFromSpace } from '@root/src/services/chrome-storage/tabs';
+import { useAtom } from 'jotai';
+import { snackbarAtom, spacesAtom } from '@root/src/stores/app';
 
 const SPACE_HEIGHT = 45;
 
@@ -14,17 +16,16 @@ type Props = {
   numSpaces: number;
   onUpdateClick: () => void;
   isActive: boolean;
+  isExpanded: boolean;
+  onExpand: () => void;
 };
 
-const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive }: Props) => {
-  // opened space
-  const [expandedSpace, setExpandedSpace] = useState<ISpace | undefined>(undefined);
+const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive, isExpanded, onExpand }: Props) => {
+  // spaces atom (global state)
+  const [, setSpaces] = useAtom(spacesAtom);
 
-  const handleExpandSpace = (currSpace: ISpace) => {
-    const newOpenedSpace = expandedSpace && expandedSpace.id === currSpace.id ? undefined : currSpace || undefined;
-
-    setExpandedSpace(newOpenedSpace);
-  };
+  // snackbar global state/atom
+  const [, setSnackbar] = useAtom(snackbarAtom);
 
   // on setting click
   const onSettingsClick: MouseEventHandler<SVGElement> = ev => {
@@ -33,15 +34,34 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive }: Props) => {
   };
 
   // check if space is opened
-  const isSpaceExpanded = (currSpace: ISpace) => (expandedSpace && expandedSpace.id === currSpace.id) || false;
 
   // open space in new window
-  const handleOpenSpace = async () => {
+  const handleOpenSpace: MouseEventHandler<SVGElement> = async ev => {
+    ev.stopPropagation();
     await openSpace(space);
   };
 
   // handle remove tab from space
-  const handleRemoveTab = async (id: number) => await removeTabFromSpace(space.id, id, true);
+  const handleRemoveTab = async (id: number, idx: number) => {
+    // remove tab
+    const res = await removeTabFromSpace(space, id, true);
+
+    // tab removed
+    if (res) {
+      const updatedSpace: ISpaceWithTabs = { ...space, tabs: [...tabs.filter(t => t.id !== id)] };
+      // update the space active tab index if the removed tab was the last active tab
+      if (space.activeTabIndex === idx) {
+        updatedSpace.activeTabIndex = 0;
+      }
+      // re-render updated tabs
+      setSpaces(prev => [...prev.filter(s => s.id !== space.id), updatedSpace]);
+
+      setSnackbar({ show: true, msg: 'Tab removed', isSuccess: true });
+    } else {
+      // failed
+      setSnackbar({ show: true, msg: 'Failed to remove tab', isSuccess: false });
+    }
+  };
 
   return (
     <div
@@ -51,17 +71,17 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive }: Props) => {
       style={{
         borderColor: space.theme,
         borderWidth: '0px 0px 0px 3px',
-        // borderLeftWidth: isSpaceExpanded(space) ? '1px' : '0px',
-        // borderRightWidth: isSpaceExpanded(space) ? '1px' : '0px',
-        height: isSpaceExpanded(space) ? 'min-content' : `${SPACE_HEIGHT}px`,
-        maxHeight: isSpaceExpanded(space) ? `calc(100% - ${numSpaces * (SPACE_HEIGHT + 5)}px)` : `${SPACE_HEIGHT}px`,
+        // borderLeftWidth: isExpanded ? '1px' : '0px',
+        // borderRightWidth: isExpanded ? '1px' : '0px',
+        height: isExpanded ? 'min-content' : `${SPACE_HEIGHT}px`,
+        maxHeight: isExpanded ? `calc(100% - ${numSpaces * (SPACE_HEIGHT + 5)}px)` : `${SPACE_HEIGHT}px`,
       }}>
       {/* space info container */}
       <button
         className="py-3 px-3 w-full h-[2.5rem] flex items-center justify-between  border-slate-700 group"
-        onClick={() => handleExpandSpace(space)}
+        onClick={onExpand}
         style={{
-          borderBottomWidth: isSpaceExpanded(space) ? '1px' : '0px',
+          borderBottomWidth: isExpanded ? '1px' : '0px',
           opacity: space.isSaved ? '1' : '0.75',
         }}>
         {/* title container */}
@@ -101,7 +121,7 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive }: Props) => {
             </>
           )}
 
-          {isSpaceExpanded(space) ? (
+          {isExpanded ? (
             <>
               {/* update btn */}
               <MdOutlineSettings
@@ -119,21 +139,21 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive }: Props) => {
           <span className="group-hover:animate-bounce ">
             <MdArrowForwardIos
               className={`text-slate-300 text-xs transition-all  duration-200 ${
-                !isSpaceExpanded(space) ? 'group-hover:rotate-90 rotate-0' : 'group-hover:rotate-0 rotate-90'
+                !isExpanded ? 'group-hover:rotate-90 rotate-0' : 'group-hover:rotate-0 rotate-90'
               }`}
             />
           </span>
         </div>
       </button>
       {/* tabs within opened space */}
-      {isSpaceExpanded(space) ? (
+      {isExpanded ? (
         <div className=" mt-1  h-[calc(100%-40px)] overflow-x-hidden overflow-y-auto w-full scroll-m-1 scroll-p-0">
           {tabs.map((tab, idx) => (
             <Tab
               key={tab.url}
               tabData={tab}
               isTabActive={space.activeTabIndex === idx}
-              onTabDelete={async () => await handleRemoveTab(tab.id)}
+              onTabDelete={async () => await handleRemoveTab(tab.id, idx)}
             />
           ))}
         </div>

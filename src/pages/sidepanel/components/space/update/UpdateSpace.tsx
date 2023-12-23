@@ -1,19 +1,23 @@
 import { useState, useEffect, ChangeEventHandler } from 'react';
 import { AlertModal, SlideModal } from '../../modal';
-import { ISpace } from '@root/src/pages/types/global.types';
+import { ISpace, ITab } from '@root/src/pages/types/global.types';
 import ColorPicker from '../../color-picker';
 import EmojiPicker from '../../emoji-picker';
 import { useAtom } from 'jotai';
-import { snackbarAtom } from '@root/src/stores/app';
-import { updateSpace } from '@root/src/services/chrome-storage/spaces';
+import { snackbarAtom, spacesAtom } from '@root/src/stores/app';
+import { deleteSpace, updateSpace } from '@root/src/services/chrome-storage/spaces';
+import Spinner from '../../spinner';
 
 type Props = {
   space: ISpace;
-  numTabs: number;
+  tabs: ITab[];
   onClose: () => void;
 };
 
-const UpdateSpace = ({ space, numTabs, onClose }: Props) => {
+const UpdateSpace = ({ space, tabs, onClose }: Props) => {
+  // spaces atom (global state)
+  const [, setSpaces] = useAtom(spacesAtom);
+
   // update space data
   const [updateSpaceData, setUpdateSpaceData] = useState<ISpace | undefined>(undefined);
 
@@ -22,7 +26,7 @@ const UpdateSpace = ({ space, numTabs, onClose }: Props) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // snackbar global state/atom
-  const [, setSnackbar] = useAtom(snackbarAtom);
+  const [snackbar, setSnackbar] = useAtom(snackbarAtom);
 
   useEffect(() => {
     setUpdateSpaceData(space);
@@ -37,7 +41,7 @@ const UpdateSpace = ({ space, numTabs, onClose }: Props) => {
     setUpdateSpaceData(prev => ({ ...prev, emoji }));
   };
 
-  // create space
+  // update space
   const handleUpdateSpace = async () => {
     setErrorMsg('');
     if (!updateSpaceData.emoji || !updateSpaceData.title || !updateSpaceData.theme) {
@@ -47,18 +51,43 @@ const UpdateSpace = ({ space, numTabs, onClose }: Props) => {
     // show loading snackbar
     setSnackbar({ show: true, msg: 'Updating space', isLoading: true });
 
-    //  create space
-    await updateSpace(space.id, { ...updateSpaceData });
+    //  update space
+    const res = await updateSpace(space.id, { ...updateSpaceData, isSaved: true });
 
     // hide loading snackbar
     setSnackbar({ show: false, msg: '', isLoading: false });
-    // show success snackbar
-    setSnackbar({ show: true, msg: 'Space updated', isSuccess: true });
+
+    // space update
+    if (res) {
+      // re-render updated spaces
+      setSpaces(prev => [...prev, { ...updateSpaceData, tabs: [...tabs] }]);
+      setSnackbar({ show: true, msg: 'Space updated', isSuccess: true });
+    } else {
+      // failed
+      setSnackbar({ show: true, msg: 'Failed to update space', isSuccess: false });
+    }
   };
 
   // handle delete
-  const handleDeleteSpace = () => {
-    //TODO - handle delete
+  const handleDeleteSpace = async () => {
+    // show loading snackbar
+    setSnackbar({ show: true, msg: 'Deleting space', isLoading: true });
+
+    // delete space
+    const res = await deleteSpace(space.id);
+
+    // hide loading snackbar
+    setSnackbar({ show: false, msg: '', isLoading: false });
+
+    // space deleted
+    if (res) {
+      // re-render spaces
+      setSpaces(prev => [...prev.filter(s => s.id !== space.id)]);
+      setSnackbar({ show: true, msg: 'Space deleted', isSuccess: true });
+    } else {
+      // failed
+      setSnackbar({ show: true, msg: 'Failed to deleted space', isSuccess: false });
+    }
   };
 
   return (
@@ -79,7 +108,7 @@ const UpdateSpace = ({ space, numTabs, onClose }: Props) => {
 
           {/* tabs */}
           <div className="mt-6">
-            <p className="text-slate-500 font-light text-base">{numTabs} tabs in space</p>
+            <p className="text-slate-500 font-light text-base">{tabs?.length} tabs in space</p>
           </div>
           {/* error msg */}
           {errorMsg ? (
@@ -91,13 +120,13 @@ const UpdateSpace = ({ space, numTabs, onClose }: Props) => {
           <div className="absolute bottom-5 w-full flex flex-col items-center justify-center left-1/2 -translate-x-1/2">
             <button
               className={` w-[90%] py-2 rounded-md text-slate-500 
-                      font-medium text-base shadow shadow-slate-500 hover:opacity-80 transition-all duration-300`}
+                      font-medium text-base shadow shadow-emerald-400 hover:opacity-80 transition-all duration-300`}
               onClick={handleUpdateSpace}>
-              Update
+              {snackbar.isLoading ? <Spinner size="sm" /> : updateSpaceData.isSaved ? 'Update' : 'Save'}
             </button>
             {/* delete space */}
             <button
-              className={` w-[90%] py-1.5 rounded-md text-red-700 mt-4  text-base shadow shadow-red-800 hover:opacity-80 transition-all duration-300`}
+              className={` w-[90%] py-1.5 rounded-md text-slate-500 mt-4   font-medium text-base shadow shadow-rose-600 hover:opacity-80 transition-all duration-300`}
               onClick={() => setShowDeleteModal(true)}>
               Remove
             </button>
@@ -116,7 +145,7 @@ const UpdateSpace = ({ space, numTabs, onClose }: Props) => {
                 <button
                   className="bg-red-600 text-slate-100 w-20 py-2 rounded-sm hover:opacity-90 transition-all duration-200"
                   onClick={handleDeleteSpace}>
-                  Delete
+                  {snackbar.isLoading ? <Spinner size="sm" /> : 'Delete'}
                 </button>
               </div>
             </div>

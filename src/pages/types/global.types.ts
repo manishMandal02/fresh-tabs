@@ -1,14 +1,14 @@
 export enum ThemeColor {
-  green = '#34d399',
-  orange = '#f97316',
-  fuchsia = '#d946ef',
-  yellow = '#fbbf24',
-  blue = '#38bdf8',
-  indigo = '#6366f1',
-  purple = '#c084fc',
-  pink = '#f472b6',
-  red = '#f43f5e',
-  teal = '#5eead4',
+  Green = '#34d399',
+  Orange = '#f97316',
+  Fuchsia = '#d946ef',
+  Yellow = '#fbbf24',
+  Blue = '#38bdf8',
+  Indigo = '#6366f1',
+  Purple = '#c084fc',
+  Pink = '#f472b6',
+  Red = '#f43f5e',
+  Teal = '#5eead4',
 }
 
 export interface ITab {
@@ -34,4 +34,20 @@ export type ISpaceWithoutId = Omit<ISpace, 'id'>;
 
 export interface ISpaceWithTabs extends ISpace {
   tabs: ITab[];
+}
+
+type MessageEvents = 'UPDATE_SPACE' | 'UPDATE_TAB' | 'UPDATE_TABS' | 'REMOVE_TAB' | 'REMOVE_SPACE' | 'ADD_SPACE';
+
+interface IEventPayload {
+  spaceId?: string;
+  tabId?: number;
+  spaces?: ISpace[];
+  space?: ISpace;
+  tab?: ITab;
+  tabs?: ITab[];
+}
+
+export interface IMessageEvent {
+  event: MessageEvents;
+  payload: IEventPayload;
 }

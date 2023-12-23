@@ -15,6 +15,7 @@ import { removeTabFromSpace, updateTab, updateTabIndex } from '@root/src/service
 import { getFaviconURL, wait } from '../utils';
 import { logger } from '../utils/logger';
 import { setStorage } from '@root/src/services/chrome-storage/helpers/set';
+import { publishEvents } from '../utils/publishEvents';
 
 reloadOnUpdate('pages/background');
 
@@ -119,17 +120,25 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   await wait(1000);
 
   // update spaces' active tab
-  await updateActiveTabInSpace(windowId, tab.index);
+  const updateSpace = await updateActiveTabInSpace(windowId, tab.index);
+
+  // send send to side panel
+  await publishEvents({
+    event: 'UPDATE_SPACE',
+    payload: {
+      space: updateSpace,
+    },
+  });
 });
 
 // event listener for when tabs get updated
 chrome.tabs.onUpdated.addListener(async (tabId, info) => {
   if (info?.status === 'complete') {
     // get tab info
-
     const tab = await chrome.tabs.get(tabId);
 
-    await wait(500);
+    // wait 0.2s for better processing when opened new space with lot of tabs
+    // await wait(200);
 
     // get space by windowId
     const space = await getSpaceByWindow(tab.windowId);
@@ -139,11 +148,20 @@ chrome.tabs.onUpdated.addListener(async (tabId, info) => {
     if (!space.id) return;
 
     //  create new  or update tab
-    await updateTab(
+    const updatedTab = await updateTab(
       space?.id,
       { id: tab.id, url: tab.url, title: tab.title, faviconURL: getFaviconURL(tab.url) },
       tab.index,
     );
+
+    // send send to side panel
+    await publishEvents({
+      event: 'UPDATE_TAB',
+      payload: {
+        spaceId: space.id,
+        tab: updatedTab,
+      },
+    });
   }
 });
 
@@ -154,6 +172,14 @@ chrome.tabs.onMoved.addListener(async (_tabId, info) => {
 
   // update tab index
   await updateTabIndex(space.id, info.fromIndex, info.toIndex);
+
+  // send send to side panel
+  await publishEvents({
+    event: 'UPDATE_TABS',
+    payload: {
+      spaceId: space.id,
+    },
+  });
 });
 
 // event listener for when tabs get removed
@@ -165,7 +191,16 @@ chrome.tabs.onRemoved.addListener(async (tabId, info) => {
   const space = await getSpaceByWindow(info.windowId);
 
   // remove tab
-  await removeTabFromSpace(space.id, tabId);
+  await removeTabFromSpace(space, tabId);
+
+  // send send to side panel
+  await publishEvents({
+    event: 'REMOVE_TAB',
+    payload: {
+      spaceId: space.id,
+      tabId: tabId,
+    },
+  });
 });
 
 // window created/opened
@@ -177,7 +212,7 @@ chrome.windows.onCreated.addListener(async window => {
   const space = await getSpaceByWindow(window.id);
 
   // if this window is associated with a space then do nothing
-  if (space) return;
+  if (space?.id) return;
 
   // create new unsaved space if only 1 tab created with the window
   if (window.tabs.length === 1) {
@@ -188,7 +223,16 @@ chrome.windows.onCreated.addListener(async window => {
       title: window.tabs[0].title,
       faviconURL: getFaviconURL(window.tabs[0].url),
     };
-    await createUnsavedSpace(window.id, [tab]);
+    const newSpace = await createUnsavedSpace(window.id, [tab]);
+
+    // send send to side panel
+    await publishEvents({
+      event: 'ADD_SPACE',
+      payload: {
+        space: newSpace,
+      },
+    });
+    return;
   }
 
   // check if the tabs in this window are of a space (check tab urls)
@@ -208,7 +252,15 @@ chrome.windows.onCreated.addListener(async window => {
   }));
 
   // create space
-  await createUnsavedSpace(window.id, tabs);
+  const newSpace = await createUnsavedSpace(window.id, tabs);
+
+  // send send to side panel
+  await publishEvents({
+    event: 'ADD_SPACE',
+    payload: {
+      space: newSpace,
+    },
+  });
 });
 
 // window removed/closed
@@ -219,5 +271,13 @@ chrome.windows.onRemoved.addListener(async windowId => {
   // if the space was not saved, then delete
   if (!space.isSaved) {
     await deleteSpace(space.id);
+
+    // send send to side panel
+    await publishEvents({
+      event: 'REMOVE_SPACE',
+      payload: {
+        spaceId: space.id,
+      },
+    });
   }
 });

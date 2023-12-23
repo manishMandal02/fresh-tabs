@@ -1,8 +1,9 @@
 import { logger } from '@root/src/pages/utils/logger';
 import { getStorage } from './helpers/get';
-import { ITab } from '@root/src/pages/types/global.types';
+import { ISpace, ITab } from '@root/src/pages/types/global.types';
 import { setStorage } from './helpers/set';
 import { getFaviconURL } from '@root/src/pages/utils';
+import { updateActiveTabInSpace } from './spaces';
 
 // get all tabs in space
 export const getTabsInSpace = async (spaceId: string): Promise<ITab[] | null> => {
@@ -112,7 +113,7 @@ export const saveNewTab = async (
 };
 
 // update/save tab url, title, etc
-export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promise<boolean> => {
+export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promise<ITab | null> => {
   try {
     // get all tabs from the space
     const tabs = await getTabsInSpace(spaceId);
@@ -122,22 +123,23 @@ export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promis
 
     // save new list to storage
     await setStorage({ type: 'local', key: spaceId, value: tabs });
-    return true;
+
+    return tabs[idx];
   } catch (error) {
     logger.error({
       error,
       msg: `Error updating tab: ${tab.title}`,
       fileTrace: 'src/services/chrome-storage/tabs.ts:101 ~ updateTab() ~ catch block',
     });
-    return false;
+    return null;
   }
 };
 
 // remove/delete a tab
-export const removeTabFromSpace = async (spaceId: string, id: number, removeFromWindow = false): Promise<boolean> => {
+export const removeTabFromSpace = async (space: ISpace, id: number, removeFromWindow = false): Promise<boolean> => {
   try {
     // get all tabs from the space
-    const tabs = await getTabsInSpace(spaceId);
+    const tabs = await getTabsInSpace(space.id);
 
     if (tabs?.length < 1) return false;
 
@@ -145,7 +147,12 @@ export const removeTabFromSpace = async (spaceId: string, id: number, removeFrom
     if (tabs.length === 1) return;
 
     // save new list to storage
-    await setStorage({ type: 'local', key: spaceId, value: [...tabs.filter(t => t.id !== id)] });
+    await setStorage({ type: 'local', key: space.id, value: [...tabs.filter(t => t.id !== id)] });
+
+    // update active index for space to 0,  if this tab was the last active tab for this space
+    if (space.activeTabIndex === tabs.findIndex(t => t.id === id)) {
+      await updateActiveTabInSpace(space.windowId, 0);
+    }
 
     // remove tab from window, when deleted from spaces view
     if (removeFromWindow) {
@@ -156,7 +163,7 @@ export const removeTabFromSpace = async (spaceId: string, id: number, removeFrom
   } catch (error) {
     logger.error({
       error,
-      msg: `Error removing tabs from space spaceId: ${spaceId}`,
+      msg: `Error removing tabs from space: ${space.title}`,
       fileTrace: 'src/services/chrome-storage/tabs.ts:160 ~ removeTabFromSpace() ~ catch block',
     });
     return false;
