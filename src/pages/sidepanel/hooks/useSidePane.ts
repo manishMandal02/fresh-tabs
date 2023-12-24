@@ -53,15 +53,13 @@ export const useSidePanel = () => {
       }
 
       case 'REMOVE_TAB': {
-        // remove the tab from space
+        // get updated tabs from storage
+        const updatedTabs = await getTabsInSpace(payload.spaceId);
         setSpaces(prev => [
           ...prev.map(s => {
-            console.log('🚀 ~ file: useSidePane.ts:60 ~ handleEvents ~ s:', s);
+            // replace tabs for  space
+            if (s.id === payload.spaceId) s.tabs = updatedTabs;
 
-            if (s.id === payload.spaceId) {
-              s.tabs = s.tabs.filter(t => t.id !== payload.tabId);
-            }
-            console.log('🚀 ~ file: useSidePane.ts:62 ~ handleEvents ~ s:', s);
             return s;
           }),
         ]);
@@ -72,10 +70,10 @@ export const useSidePanel = () => {
       case 'UPDATE_SPACE_ACTIVE_TAB': {
         setSpaces(prev => [
           ...prev.map(s => {
-            if (s.id === payload.spaceId) {
-              // update active tab index for the space
-              s.activeTabIndex = payload.newActiveIndex;
-            }
+            if (s.id !== payload.spaceId) return s;
+
+            // update active tab index for the space
+            s.activeTabIndex = payload.newActiveIndex;
             return s;
           }),
         ]);

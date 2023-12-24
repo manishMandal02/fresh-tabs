@@ -8,6 +8,9 @@ export const publishEvents = async (event: IMessageEvent): Promise<boolean> => {
 
     return true;
   } catch (error) {
+    // if errored because of the side-panel not opened then do nothing
+    if (error instanceof Error && error.message.includes('Receiving end does not exist.')) return;
+
     logger.error({
       error,
       msg: 'Failed to send message to side panel',

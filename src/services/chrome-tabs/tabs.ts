@@ -10,14 +10,22 @@ export const createTab = async (url: string) => {
   await chrome.tabs.create({ active: false, url });
 };
 
+type OpenSpaceProps = {
+  space: ISpace;
+  onNewWindowCreated: (windowId: number) => void;
+};
+
 // opens a space in new window
-export const openSpace = async (space: ISpace) => {
+export const openSpace = async ({ space, onNewWindowCreated }: OpenSpaceProps) => {
   //  only active tab will be loaded, rest will be loaded after user visits them
 
   // create new window with all the space tabs
   const window = await chrome.windows.create({ focused: true });
 
   if (window.id) {
+    // save new window id to space
+    await updateSpace(space.id, { ...space, windowId: window.id });
+    onNewWindowCreated(window.id);
     const defaultWindowTabId = window.tabs[0].id;
     // get all tabs for space
 
@@ -58,9 +66,6 @@ export const openSpace = async (space: ISpace) => {
       url: tabs[space.activeTabIndex].url,
       index: space.activeTabIndex,
     });
-
-    // save new window id to space
-    await updateSpace(space.id, { ...space, windowId: window.id });
 
     // delete the default tab created (an empty tab gets created alone with window)
     await chrome.tabs.remove(defaultWindowTabId);

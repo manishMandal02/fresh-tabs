@@ -38,7 +38,19 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive, isExpanded, on
   // open space in new window
   const handleOpenSpace: MouseEventHandler<SVGElement> = async ev => {
     ev.stopPropagation();
-    await openSpace(space);
+
+    // update window id for the space when new window gets created
+    const onNewWindowCreated = (windowId: number) => {
+      setSpaces(prevSpace => [
+        ...prevSpace.map(s => {
+          if (s.id === space.id) {
+            s.windowId === windowId;
+          }
+          return s;
+        }),
+      ]);
+    };
+    await openSpace({ space, onNewWindowCreated });
   };
 
   // handle remove tab from space

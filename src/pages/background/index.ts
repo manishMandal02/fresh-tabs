@@ -1,4 +1,4 @@
-import { SampleSpace, StorageKeys } from './../../constants/app';
+import { SampleSpace } from './../../constants/app';
 import { ITab } from './../types/global.types';
 import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
@@ -14,7 +14,6 @@ import {
 import { removeTabFromSpace, updateTab, updateTabIndex } from '@root/src/services/chrome-storage/tabs';
 import { getFaviconURL, wait } from '../utils';
 import { logger } from '../utils/logger';
-import { setStorage } from '@root/src/services/chrome-storage/helpers/set';
 import { publishEvents } from '../utils/publishEvents';
 
 reloadOnUpdate('pages/background');
@@ -26,6 +25,8 @@ reloadOnUpdate('pages/background');
 reloadOnUpdate('pages/content/style.scss');
 
 logger.info('🏁 background loaded');
+
+const DiscardTabURLPrefix = 'data:text/html,';
 
 // open side panel on extension icon clicked
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error => {
@@ -83,7 +84,7 @@ chrome.runtime.onInstalled.addListener(async info => {
     // initialize the app
 
     // initialize storage
-    await setStorage({ type: 'local', key: StorageKeys.SPACES, value: [] });
+    await chrome.storage.local.clear();
 
     // create unsaved spaces for current opened windows and sample space if new user
     await createSpacesOnInstall(true);
@@ -99,16 +100,13 @@ chrome.commands.onCommand.addListener(async (_command, tab) => {
 
 // When the new tab is selected, get the link in the title and load the page
 chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
-  //
-  const splitText = 'data:text/html,';
-
   // get tab info
   const tab = await chrome.tabs.get(tabId);
 
   // update tab with original link if it was discarded
-  if (tab.url.startsWith(splitText)) {
+  if (tab.url.startsWith(DiscardTabURLPrefix)) {
     // get url from html in the url
-    const url = getUrlFromHTML(tab.url.replace(splitText, ''));
+    const url = getUrlFromHTML(tab.url.replace(DiscardTabURLPrefix, ''));
 
     // update tab with original url
     await chrome.tabs.update(tabId, {
@@ -117,7 +115,7 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   }
 
   // wait for 1s
-  await wait(1000);
+  await wait(500);
 
   // update spaces' active tab
   const updateSpace = await updateActiveTabInSpace(windowId, tab.index);
@@ -126,8 +124,8 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   await publishEvents({
     event: 'UPDATE_SPACE_ACTIVE_TAB',
     payload: {
-      spaceId: updateSpace.id,
-      newActiveIndex: updateSpace.activeTabIndex,
+      spaceId: updateSpace?.id,
+      newActiveIndex: updateSpace?.activeTabIndex,
     },
   });
 });
@@ -138,13 +136,12 @@ chrome.tabs.onUpdated.addListener(async (tabId, info) => {
     // get tab info
     const tab = await chrome.tabs.get(tabId);
 
+    if (tab?.url.startsWith(DiscardTabURLPrefix)) return;
     // wait 0.2s for better processing when opened new space with lot of tabs
     // await wait(200);
 
     // get space by windowId
     const space = await getSpaceByWindow(tab.windowId);
-
-    console.log('🚀 ~ file: index.ts:145 ~ chrome.tabs.onUpdated.addListener ~ space:', space);
 
     if (!space?.id) return;
 
@@ -174,6 +171,8 @@ chrome.tabs.onMoved.addListener(async (_tabId, info) => {
   // update tab index
   await updateTabIndex(space.id, info.fromIndex, info.toIndex);
 
+  // update space's active tab index
+  await updateActiveTabInSpace(info.windowId, info.toIndex);
   // send send to side panel
   await publishEvents({
     event: 'UPDATE_TABS',
@@ -181,6 +180,41 @@ chrome.tabs.onMoved.addListener(async (_tabId, info) => {
       spaceId: space.id,
     },
   });
+  // send send to side panel
+  await publishEvents({
+    event: 'UPDATE_SPACE_ACTIVE_TAB',
+    payload: {
+      spaceId: space.id,
+      newActiveIndex: info.toIndex,
+    },
+  });
+});
+
+// on tab detached from window
+chrome.tabs.onDetached.addListener(async (tabId, info) => {
+  // handle tab remove from space
+  const space = await getSpaceByWindow(info.oldWindowId);
+
+  if (!space?.id) return;
+
+  // remove tab
+  await removeTabFromSpace(space, tabId);
+
+  // send send to side panel
+  await publishEvents({
+    event: 'REMOVE_TAB',
+    payload: {
+      spaceId: space?.id,
+    },
+  });
+});
+
+chrome.tabs.onAttached.addListener(async (tabId, info) => {
+  console.log('🚀 ~ file: index.ts:216 ~ chrome.tabs.onAttached.addListener ~ info:', info);
+
+  console.log('🚀 ~ file: index.ts:216 ~ chrome.tabs.onAttached.addListener ~ tabId:', tabId);
+
+  // handle add tab  to space
 });
 
 // event listener for when tabs get removed
@@ -198,8 +232,7 @@ chrome.tabs.onRemoved.addListener(async (tabId, info) => {
   await publishEvents({
     event: 'REMOVE_TAB',
     payload: {
-      spaceId: space.id,
-      tabId: tabId,
+      spaceId: space?.id,
     },
   });
 });
@@ -207,7 +240,7 @@ chrome.tabs.onRemoved.addListener(async (tabId, info) => {
 // window created/opened
 chrome.windows.onCreated.addListener(async window => {
   // wait for 1s
-  await wait(1000);
+  await wait(500);
 
   // get space by window
   const space = await getSpaceByWindow(window.id);
@@ -215,15 +248,29 @@ chrome.windows.onCreated.addListener(async window => {
   // if this window is associated with a space then do nothing
   if (space?.id) return;
 
+  // tabs of this window
+  let tabs: ITab[] = [];
+
+  // check if the window obj has tabs
+  // if not, then query for tabs in this window
+  if (window?.tabs?.length > 0) {
+    tabs = window.tabs.map(t => ({ url: t.url, faviconURL: getFaviconURL(t.url), id: t.id, title: t.title }));
+  } else {
+    const queriedTabs = await chrome.tabs.query({ windowId: window.id });
+    if (queriedTabs?.length < 1) return;
+    tabs = queriedTabs.map(t => ({ url: t.url, faviconURL: getFaviconURL(t.url), id: t.id, title: t.title }));
+  }
+
   // create new unsaved space if only 1 tab created with the window
-  if (window.tabs.length === 1) {
+  if (tabs.length === 1) {
     // tab to be added in space
     const tab: ITab = {
-      id: window.tabs[0].id,
-      url: window.tabs[0].url,
-      title: window.tabs[0].title,
-      faviconURL: getFaviconURL(window.tabs[0].url),
+      id: tabs[0].id,
+      url: tabs[0].url,
+      title: tabs[0].title,
+      faviconURL: tabs[0].faviconURL,
     };
+
     const newSpace = await createUnsavedSpace(window.id, [tab]);
 
     // send send to side panel
@@ -237,23 +284,17 @@ chrome.windows.onCreated.addListener(async window => {
   }
 
   // check if the tabs in this window are of a space (check tab urls)
-  const res = await checkNewWindowTabs(window.id, [...window.tabs.map(tab => tab.url)]);
+  const res = await checkNewWindowTabs(window.id, [...tabs.map(tab => tab.url)]);
   // if the tabs in this window are part of a space, do nothing
   // window id was saved to the respective space
   if (res) return;
 
   // if not then create new unsaved space with all tabs
 
-  // get all tabs in the window
-  const tabs: ITab[] = window.tabs.map(tab => ({
-    id: tab.id,
-    title: tab.title,
-    url: tab.url,
-    faviconURL: getFaviconURL(tab.url),
-  }));
-
   // create space
   const newSpace = await createUnsavedSpace(window.id, tabs);
+
+  console.log('🚀 ~ file: index.ts:297 ~ newSpace:', newSpace);
 
   // send send to side panel
   await publishEvents({

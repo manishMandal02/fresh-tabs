@@ -119,7 +119,9 @@ export const deleteSpace = async (spaceId: string) => {
     await chrome.storage.sync.remove(spaceId);
 
     // close the space window if opened
-    const window = await chrome.windows.get(spaceToDelete.windowId);
+    const window = await chrome.windows.get(spaceToDelete?.windowId);
+
+    console.log('🚀 ~ file: spaces.ts:124 ~ deleteSpace ~ window:', window);
 
     if (window?.id) {
       await chrome.windows.remove(window.id);
