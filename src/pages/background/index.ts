@@ -124,9 +124,10 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
 
   // send send to side panel
   await publishEvents({
-    event: 'UPDATE_SPACE',
+    event: 'UPDATE_SPACE_ACTIVE_TAB',
     payload: {
-      space: updateSpace,
+      spaceId: updateSpace.id,
+      newActiveIndex: updateSpace.activeTabIndex,
     },
   });
 });
@@ -145,7 +146,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, info) => {
 
     console.log('🚀 ~ file: index.ts:145 ~ chrome.tabs.onUpdated.addListener ~ space:', space);
 
-    if (!space.id) return;
+    if (!space?.id) return;
 
     //  create new  or update tab
     const updatedTab = await updateTab(
@@ -229,7 +230,7 @@ chrome.windows.onCreated.addListener(async window => {
     await publishEvents({
       event: 'ADD_SPACE',
       payload: {
-        space: newSpace,
+        space: { ...newSpace, tabs: [tab] },
       },
     });
     return;

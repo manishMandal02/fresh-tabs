@@ -36,13 +36,20 @@ export interface ISpaceWithTabs extends ISpace {
   tabs: ITab[];
 }
 
-type MessageEvents = 'UPDATE_SPACE' | 'UPDATE_TAB' | 'UPDATE_TABS' | 'REMOVE_TAB' | 'REMOVE_SPACE' | 'ADD_SPACE';
+type MessageEvents =
+  | 'UPDATE_SPACE_ACTIVE_TAB'
+  | 'UPDATE_TAB'
+  | 'UPDATE_TABS'
+  | 'REMOVE_TAB'
+  | 'REMOVE_SPACE'
+  | 'ADD_SPACE';
 
 interface IEventPayload {
   spaceId?: string;
   tabId?: number;
   spaces?: ISpace[];
-  space?: ISpace;
+  space?: ISpace | ISpaceWithTabs;
+  newActiveIndex?: number;
   tab?: ITab;
   tabs?: ITab[];
 }
