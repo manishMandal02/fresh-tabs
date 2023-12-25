@@ -7,6 +7,9 @@ import { snackbarAtom } from '@root/src/stores/app';
 import Spinner from './components/spinner';
 import { useSidePanel } from './hooks/useSidePane';
 
+// event ids of processed events
+const processedEvents: string[] = [];
+
 const SidePanel = () => {
   // space opened for update
   const [spaceToUpdate, setSpaceToUpdate] = useState<ISpaceWithTabs | undefined>(undefined);
@@ -28,9 +31,42 @@ const SidePanel = () => {
 
   // listen to events from  background
   chrome.runtime.onMessage.addListener(async (msg, _sender, response) => {
-    if (!(msg as IMessageEvent)?.event) return;
+    const event = msg as IMessageEvent;
+
+    if (!event?.id) {
+      response(true);
+      return;
+    }
+
+    // handle idempotence
+    // same events were  being consumed multiple times,
+    // so we now have an id for each event to handle duplicate events
+
+    // check if event was processed already
+    // if yes, do nothing
+
+    console.log('🚀 ~ file: SidePanel.tsx:49 ~ chrome.runtime.onMessage.addListener ~ event:', event);
+    console.log(
+      '🚀 ~ file: SidePanel.tsx:52 ~ chrome.runtime.onMessage.addListener ~ processedEvents.indexOf(event.id) !== -1:',
+      processedEvents.indexOf(event.id) !== -1,
+    );
+
+    console.log(
+      '🚀 ~ file: SidePanel.tsx:53 ~ chrome.runtime.onMessage.addListener ~ processedEvents:',
+      processedEvents,
+    );
+    if (processedEvents.indexOf(event.id) !== -1) {
+      response(true);
+      return;
+    }
+
+    processedEvents.push(event.id);
+
     // handle events
     await handleEvents(msg as IMessageEvent);
+
+    // add to processed events
+
     response(true);
   });
 
@@ -41,11 +77,11 @@ const SidePanel = () => {
       // get all spaces and it's tabs
       const spacesInStorage = await getAllSpacesStorage();
       // get active space
-      const activeSpaceId = await getActiveSpaceId();
+      const spaceId = await getActiveSpaceId();
 
       // set to storage
       setSpaces(spacesInStorage);
-      setActiveSpaceId(activeSpaceId);
+      setActiveSpaceId(spaceId);
 
       setIsLoadingSpaces(false);
     })();

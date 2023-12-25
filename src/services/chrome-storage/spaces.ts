@@ -60,7 +60,7 @@ export const createUnsavedSpace = async (windowId: number, tabs: ITab[], activeI
     await setStorage({
       type: 'local',
       key: StorageKeys.SPACES,
-      value: spaces?.length ? [...spaces, newSpace] : [newSpace],
+      value: spaces?.length > 0 ? [...spaces, newSpace] : [newSpace],
     });
 
     // create tabs storage for this space
@@ -121,8 +121,6 @@ export const deleteSpace = async (spaceId: string) => {
     // close the space window if opened
     const window = await chrome.windows.get(spaceToDelete?.windowId);
 
-    console.log('🚀 ~ file: spaces.ts:124 ~ deleteSpace ~ window:', window);
-
     if (window?.id) {
       await chrome.windows.remove(window.id);
     }
@@ -176,6 +174,9 @@ export const updateActiveTabInSpace = async (windowId: number, idx: number): Pro
 
     // find space to update
     const spaceToUpdate = spaces.find(space => space.windowId === windowId);
+
+    if (!spaceToUpdate) return;
+
     // update active tab index
     spaceToUpdate.activeTabIndex = idx;
 

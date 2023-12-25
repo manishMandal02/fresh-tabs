@@ -36,13 +36,7 @@ export interface ISpaceWithTabs extends ISpace {
   tabs: ITab[];
 }
 
-type MessageEvents =
-  | 'UPDATE_SPACE_ACTIVE_TAB'
-  | 'UPDATE_TAB'
-  | 'UPDATE_TABS'
-  | 'REMOVE_TAB'
-  | 'REMOVE_SPACE'
-  | 'ADD_SPACE';
+type MessageEvents = 'UPDATE_SPACE_ACTIVE_TAB' | 'UPDATE_TAB' | 'UPDATE_TABS' | 'REMOVE_SPACE' | 'ADD_SPACE';
 
 interface IEventPayload {
   spaceId?: string;
@@ -56,5 +50,6 @@ interface IEventPayload {
 
 export interface IMessageEvent {
   event: MessageEvents;
+  id: string;
   payload: IEventPayload;
 }

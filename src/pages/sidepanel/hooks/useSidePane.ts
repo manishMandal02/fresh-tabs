@@ -39,6 +39,8 @@ export const useSidePanel = () => {
   };
 
   const handleEvents = async ({ event, payload }: IMessageEvent) => {
+    console.log('🚀 ~ file: useSidePane.ts:49 ~ handleEvents ~  event:', event);
+    console.log('🚀 ~ file: useSidePane.ts:49 ~ handleEvents ~  payload:', payload);
     switch (event) {
       case 'ADD_SPACE': {
         // add new space
@@ -49,21 +51,6 @@ export const useSidePanel = () => {
       case 'REMOVE_SPACE': {
         // remove space
         setSpaces(prev => [...prev.filter(s => s.id !== payload.spaceId)]);
-        break;
-      }
-
-      case 'REMOVE_TAB': {
-        // get updated tabs from storage
-        const updatedTabs = await getTabsInSpace(payload.spaceId);
-        setSpaces(prev => [
-          ...prev.map(s => {
-            // replace tabs for  space
-            if (s.id === payload.spaceId) s.tabs = updatedTabs;
-
-            return s;
-          }),
-        ]);
-
         break;
       }
 

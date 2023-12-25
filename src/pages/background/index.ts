@@ -15,6 +15,7 @@ import { removeTabFromSpace, updateTab, updateTabIndex } from '@root/src/service
 import { getFaviconURL, wait } from '../utils';
 import { logger } from '../utils/logger';
 import { publishEvents } from '../utils/publishEvents';
+import { generateId } from '../utils/generateId';
 
 reloadOnUpdate('pages/background');
 
@@ -115,13 +116,14 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   }
 
   // wait for 1s
-  await wait(500);
+  await wait(1000);
 
   // update spaces' active tab
   const updateSpace = await updateActiveTabInSpace(windowId, tab.index);
 
   // send send to side panel
   await publishEvents({
+    id: generateId(),
     event: 'UPDATE_SPACE_ACTIVE_TAB',
     payload: {
       spaceId: updateSpace?.id,
@@ -154,6 +156,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, info) => {
 
     // send send to side panel
     await publishEvents({
+      id: generateId(),
       event: 'UPDATE_TAB',
       payload: {
         spaceId: space.id,
@@ -175,6 +178,7 @@ chrome.tabs.onMoved.addListener(async (_tabId, info) => {
   await updateActiveTabInSpace(info.windowId, info.toIndex);
   // send send to side panel
   await publishEvents({
+    id: generateId(),
     event: 'UPDATE_TABS',
     payload: {
       spaceId: space.id,
@@ -182,6 +186,7 @@ chrome.tabs.onMoved.addListener(async (_tabId, info) => {
   });
   // send send to side panel
   await publishEvents({
+    id: generateId(),
     event: 'UPDATE_SPACE_ACTIVE_TAB',
     payload: {
       spaceId: space.id,
@@ -202,7 +207,8 @@ chrome.tabs.onDetached.addListener(async (tabId, info) => {
 
   // send send to side panel
   await publishEvents({
-    event: 'REMOVE_TAB',
+    id: generateId(),
+    event: 'UPDATE_TABS',
     payload: {
       spaceId: space?.id,
     },
@@ -210,9 +216,9 @@ chrome.tabs.onDetached.addListener(async (tabId, info) => {
 });
 
 chrome.tabs.onAttached.addListener(async (tabId, info) => {
-  console.log('🚀 ~ file: index.ts:216 ~ chrome.tabs.onAttached.addListener ~ info:', info);
+  console.log('🚀 ~ file: index.ts:220 ~ chrome.tabs.onAttached.addListener ~ info:', info);
 
-  console.log('🚀 ~ file: index.ts:216 ~ chrome.tabs.onAttached.addListener ~ tabId:', tabId);
+  console.log('🚀 ~ file: index.ts:220 ~ chrome.tabs.onAttached.addListener ~ tabId:', tabId);
 
   // handle add tab  to space
 });
@@ -230,7 +236,8 @@ chrome.tabs.onRemoved.addListener(async (tabId, info) => {
 
   // send send to side panel
   await publishEvents({
-    event: 'REMOVE_TAB',
+    id: generateId(),
+    event: 'UPDATE_TABS',
     payload: {
       spaceId: space?.id,
     },
@@ -271,20 +278,23 @@ chrome.windows.onCreated.addListener(async window => {
       faviconURL: tabs[0].faviconURL,
     };
 
-    const newSpace = await createUnsavedSpace(window.id, [tab]);
+    const newUnsavedSpace = await createUnsavedSpace(window.id, [tab]);
 
     // send send to side panel
     await publishEvents({
+      id: generateId(),
       event: 'ADD_SPACE',
       payload: {
-        space: { ...newSpace, tabs: [tab] },
+        space: { ...newUnsavedSpace, tabs: [tab] },
       },
     });
+
     return;
   }
 
   // check if the tabs in this window are of a space (check tab urls)
   const res = await checkNewWindowTabs(window.id, [...tabs.map(tab => tab.url)]);
+
   // if the tabs in this window are part of a space, do nothing
   // window id was saved to the respective space
   if (res) return;
@@ -294,13 +304,12 @@ chrome.windows.onCreated.addListener(async window => {
   // create space
   const newSpace = await createUnsavedSpace(window.id, tabs);
 
-  console.log('🚀 ~ file: index.ts:297 ~ newSpace:', newSpace);
-
   // send send to side panel
   await publishEvents({
+    id: generateId(),
     event: 'ADD_SPACE',
     payload: {
-      space: newSpace,
+      space: { ...newSpace, tabs: [...tabs] },
     },
   });
 });
@@ -311,11 +320,12 @@ chrome.windows.onRemoved.addListener(async windowId => {
   const space = await getSpaceByWindow(windowId);
 
   // if the space was not saved, then delete
-  if (!space.isSaved) {
+  if (!space?.isSaved) {
     await deleteSpace(space.id);
 
     // send send to side panel
     await publishEvents({
+      id: generateId(),
       event: 'REMOVE_SPACE',
       payload: {
         spaceId: space.id,
