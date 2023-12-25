@@ -168,14 +168,12 @@ export const updateActiveTabInSpace = async (windowId: number, idx: number): Pro
     // get all spaces from storage
     const spaces = await getStorage<ISpace[]>({ key: StorageKeys.SPACES, type: 'local' });
 
-    if (spaces.length < 1) {
-      throw new Error('No found spaces in storage.');
-    }
+    if (spaces.length < 1) throw new Error('No found spaces in storage.');
 
     // find space to update
     const spaceToUpdate = spaces.find(space => space.windowId === windowId);
 
-    if (!spaceToUpdate) return;
+    if (!spaceToUpdate) throw new Error('Space not found with this window id.');
 
     // update active tab index
     spaceToUpdate.activeTabIndex = idx;

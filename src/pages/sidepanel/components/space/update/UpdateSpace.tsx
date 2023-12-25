@@ -3,10 +3,8 @@ import { AlertModal, SlideModal } from '../../modal';
 import { ISpace, ITab } from '@root/src/pages/types/global.types';
 import ColorPicker from '../../color-picker';
 import EmojiPicker from '../../emoji-picker';
-import { useAtom } from 'jotai';
-import { snackbarAtom, spacesAtom } from '@root/src/stores/app';
-import { deleteSpace, updateSpace } from '@root/src/services/chrome-storage/spaces';
 import Spinner from '../../spinner';
+import { useUpdateSpace } from './useUpdateSpace';
 
 type Props = {
   space: ISpace;
@@ -15,18 +13,17 @@ type Props = {
 };
 
 const UpdateSpace = ({ space, tabs, onClose }: Props) => {
-  // spaces atom (global state)
-  const [, setSpaces] = useAtom(spacesAtom);
-
   // update space data
   const [updateSpaceData, setUpdateSpaceData] = useState<ISpace | undefined>(undefined);
 
-  const [errorMsg, setErrorMsg] = useState('');
-
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-  // snackbar global state/atom
-  const [snackbar, setSnackbar] = useAtom(snackbarAtom);
+  // logic hook
+  const { handleUpdateSpace, handleDeleteSpace, errorMsg, snackbar, showDeleteModal, setShowDeleteModal } =
+    useUpdateSpace({
+      updateSpaceData,
+      onClose,
+      space,
+      tabs,
+    });
 
   useEffect(() => {
     setUpdateSpaceData(space);
@@ -39,55 +36,6 @@ const UpdateSpace = ({ space, tabs, onClose }: Props) => {
   // on emoji change
   const onEmojiChange = (emoji: string) => {
     setUpdateSpaceData(prev => ({ ...prev, emoji }));
-  };
-
-  // update space
-  const handleUpdateSpace = async () => {
-    setErrorMsg('');
-    if (!updateSpaceData.emoji || !updateSpaceData.title || !updateSpaceData.theme) {
-      setErrorMsg('Fill all the fields');
-      return;
-    }
-    // show loading snackbar
-    setSnackbar({ show: true, msg: 'Updating space', isLoading: true });
-
-    //  update space
-    const res = await updateSpace(space.id, { ...updateSpaceData, isSaved: true });
-
-    // hide loading snackbar
-    setSnackbar({ show: false, msg: '', isLoading: false });
-
-    // space update
-    if (res) {
-      // re-render updated spaces
-      setSpaces(prev => [...prev, { ...updateSpaceData, tabs: [...tabs] }]);
-      setSnackbar({ show: true, msg: 'Space updated', isSuccess: true });
-    } else {
-      // failed
-      setSnackbar({ show: true, msg: 'Failed to update space', isSuccess: false });
-    }
-  };
-
-  // handle delete
-  const handleDeleteSpace = async () => {
-    // show loading snackbar
-    setSnackbar({ show: true, msg: 'Deleting space', isLoading: true });
-
-    // delete space
-    const res = await deleteSpace(space.id);
-
-    // hide loading snackbar
-    setSnackbar({ show: false, msg: '', isLoading: false });
-
-    // space deleted
-    if (res) {
-      // re-render spaces
-      setSpaces(prev => [...prev.filter(s => s.id !== space.id)]);
-      setSnackbar({ show: true, msg: 'Space deleted', isSuccess: true });
-    } else {
-      // failed
-      setSnackbar({ show: true, msg: 'Failed to deleted space', isSuccess: false });
-    }
   };
 
   return (

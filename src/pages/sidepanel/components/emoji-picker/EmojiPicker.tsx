@@ -15,7 +15,7 @@ const EmojiPicker = ({ emoji, onChange }: Props) => {
         open={isOpen}
         onChange={setIsOpen}
         content={
-          <div className="z-150">
+          <div className="">
             <EmojiPickerReact
               onEmojiClick={data => {
                 onChange(data.emoji);

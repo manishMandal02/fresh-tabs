@@ -45,7 +45,7 @@ const Snackbar = ({ show, msg, isSuccess, isLoading }: Props) => {
 
   return (
     <div
-      className={`fixed bottom-4 left-0  h-5 w-fit items-center pl-2 pr-4 py-5 rounded-sm justify-start transition-all duration-200 ease-in ${bgColor}`}
+      className={`fixed z-150 bottom-4 left-0  h-5 w-fit items-center pl-2 pr-4 py-5 rounded-sm justify-start transition-all duration-200 ease-in ${bgColor}`}
       style={{
         display: show ? `flex` : `none`,
         // right: isShown ? `5%` : `-50%`,

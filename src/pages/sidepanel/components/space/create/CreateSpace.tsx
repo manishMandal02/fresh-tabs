@@ -9,6 +9,7 @@ import { getCurrentTab, getCurrentWindowId } from '@root/src/services/chrome-tab
 import { useAtom } from 'jotai';
 import { snackbarAtom, spacesAtom } from '@root/src/stores/app';
 import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
+import Spinner from '../../spinner';
 
 type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;
 
@@ -30,7 +31,7 @@ const CreateSpace = () => {
   const [newSpaceData, setNewSpaceData] = useState<DefaultSpaceFields>(defaultSpaceData);
 
   // snackbar global state/atom
-  const [, setSnackbar] = useAtom(snackbarAtom);
+  const [snackbar, setSnackbar] = useAtom(snackbarAtom);
 
   useEffect(() => {
     if (isModalOpen) {
@@ -85,6 +86,9 @@ const CreateSpace = () => {
 
     // space created
     if (createdSpace?.id) {
+      // close modal
+      setIsModalOpen(false);
+
       // re-render updated spaces
       setSpaces(prev => [...prev, { ...createdSpace, tabs: [currentTab] }]);
 
@@ -136,7 +140,7 @@ const CreateSpace = () => {
             className={`absolute bottom-5 left-1/2 -translate-x-1/2 w-[90%] py-2 
                       rounded-md text-slate-500 font-medium text-base shadow shadow-slate-500 hover:opacity-80 transition-all duration-300`}
             onClick={handleAddSpace}>
-            Add
+            {snackbar.isLoading ? <Spinner size="sm" /> : 'Add'}
           </button>
         </div>
       </SlideModal>

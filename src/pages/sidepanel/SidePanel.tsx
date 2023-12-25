@@ -45,16 +45,6 @@ const SidePanel = () => {
     // check if event was processed already
     // if yes, do nothing
 
-    console.log('🚀 ~ file: SidePanel.tsx:49 ~ chrome.runtime.onMessage.addListener ~ event:', event);
-    console.log(
-      '🚀 ~ file: SidePanel.tsx:52 ~ chrome.runtime.onMessage.addListener ~ processedEvents.indexOf(event.id) !== -1:',
-      processedEvents.indexOf(event.id) !== -1,
-    );
-
-    console.log(
-      '🚀 ~ file: SidePanel.tsx:53 ~ chrome.runtime.onMessage.addListener ~ processedEvents:',
-      processedEvents,
-    );
     if (processedEvents.indexOf(event.id) !== -1) {
       response(true);
       return;
