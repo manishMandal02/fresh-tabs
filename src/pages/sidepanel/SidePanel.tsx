@@ -15,7 +15,7 @@ const SidePanel = () => {
   const [spaceToUpdate, setSpaceToUpdate] = useState<ISpaceWithTabs | undefined>(undefined);
 
   // custom hook
-  const { spaces, setSpaces, getAllSpacesStorage, getActiveSpaceId, handleEvents } = useSidePanel();
+  const { spaces, getActiveSpaceId, handleEvents } = useSidePanel();
 
   // active space in the window
   const [activeSpaceId, setActiveSpaceId] = useState('');
@@ -64,19 +64,15 @@ const SidePanel = () => {
   useEffect(() => {
     (async () => {
       setIsLoadingSpaces(true);
-      // get all spaces and it's tabs
-      const spacesInStorage = await getAllSpacesStorage();
+
       // get active space
       const spaceId = await getActiveSpaceId();
 
-      // set to storage
-      setSpaces(spacesInStorage);
       setActiveSpaceId(spaceId);
 
       setIsLoadingSpaces(false);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [spaces]);
 
   return (
     <div className="w-screen h-screen  overflow-hidden bg-brand-background">

@@ -5,6 +5,7 @@ import { useAtom } from 'jotai';
 import { spacesAtom } from '@root/src/stores/app';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
+import { useEffect } from 'react';
 
 export const useSidePanel = () => {
   // spaces atom (global state)
@@ -29,18 +30,30 @@ export const useSidePanel = () => {
     return spacesWithTabs;
   };
 
+  useEffect(() => {
+    (async () => {
+      const allSpaces = await getAllSpacesStorage();
+      setSpaces(allSpaces);
+    })();
+  }, []);
+
   // set the active space based on current window
   const getActiveSpaceId = async () => {
     const windowId = await getCurrentWindowId();
 
+    console.log('🚀 ~ file: useSidePane.ts:36 ~ getActiveSpaceId ~ windowId:', windowId);
+
     const activeSpace = spaces?.find(space => space?.windowId === windowId);
+
+    console.log('🚀 ~ file: useSidePane.ts:40 ~ getActiveSpaceId ~ spaces:', spaces);
+
+    console.log('🚀 ~ file: useSidePane.ts:40 ~ getActiveSpaceId ~ activeSpace:', activeSpace);
 
     return activeSpace?.id;
   };
 
+  // handle background events
   const handleEvents = async ({ event, payload }: IMessageEvent) => {
-    console.log('🚀 ~ file: useSidePane.ts:49 ~ handleEvents ~  event:', event);
-    console.log('🚀 ~ file: useSidePane.ts:49 ~ handleEvents ~  payload:', payload);
     switch (event) {
       case 'ADD_SPACE': {
         // add new space
@@ -90,7 +103,6 @@ export const useSidePanel = () => {
 
   return {
     spaces,
-    setSpaces,
     getActiveSpaceId,
     handleEvents,
     getAllSpacesStorage,
