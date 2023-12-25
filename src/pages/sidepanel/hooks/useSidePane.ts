@@ -68,23 +68,6 @@ export const useSidePanel = () => {
         break;
       }
 
-      case 'UPDATE_TAB': {
-        setSpaces(prev => [
-          ...prev.map(s => {
-            if (s.id === payload.spaceId) {
-              // update tab for space
-              s.tabs = s.tabs.map(t => {
-                if (t.id === payload.tab.id) return payload.tab;
-
-                return t;
-              });
-            }
-            return s;
-          }),
-        ]);
-        break;
-      }
-
       case 'UPDATE_TABS': {
         // get updated tabs from storage
         const updatedTabs = await getTabsInSpace(payload.spaceId);

@@ -144,7 +144,7 @@ export const removeTabFromSpace = async (space: ISpace, id: number, removeFromWi
     if (tabs?.length < 1) return false;
 
     // do nothing, if only 1 tab remaining
-    if (tabs.length === 1 || !!tabs.find(t => t.id === id)) return false;
+    if (tabs.length === 1 || !tabs.find(t => t.id === id)) return false;
 
     // save new list to storage
     await setStorage({ type: 'local', key: space.id, value: [...tabs.filter(t => t.id !== id)] });
@@ -163,7 +163,7 @@ export const removeTabFromSpace = async (space: ISpace, id: number, removeFromWi
   } catch (error) {
     logger.error({
       error,
-      msg: `Error removing tabs from space: ${space.title}`,
+      msg: `Error removing tabs from space: ${space?.title}`,
       fileTrace: 'src/services/chrome-storage/tabs.ts:160 ~ removeTabFromSpace() ~ catch block',
     });
     return false;

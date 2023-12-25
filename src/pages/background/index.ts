@@ -38,6 +38,8 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
+//* common event handlers
+
 const createSpacesOnInstall = async (shouldCreateSampleSpace = false) => {
   try {
     const windows = await chrome.windows.getAll();
@@ -77,6 +79,52 @@ const createSpacesOnInstall = async (shouldCreateSampleSpace = false) => {
     });
     return false;
   }
+};
+
+const updateTabHandler = async (tabId: number) => {
+  const tab = await chrome.tabs.get(tabId);
+
+  if (tab?.url.startsWith(DiscardTabURLPrefix)) return;
+  // wait 0.2s for better processing when opened new space with lot of tabs
+  // await wait(200);
+
+  // get space by windowId
+  const space = await getSpaceByWindow(tab.windowId);
+
+  if (!space?.id) return;
+
+  //  create new  or update tab
+  await updateTab(
+    space?.id,
+    { id: tab.id, url: tab.url, title: tab.title, faviconURL: getFaviconURL(tab.url) },
+    tab.index,
+  );
+
+  // send send to side panel
+  await publishEvents({
+    id: generateId(),
+    event: 'UPDATE_TABS',
+    payload: {
+      spaceId: space.id,
+    },
+  });
+};
+
+const removeTabHandler = async (tabId: number, windowId: number) => {
+  // get space by windowId
+  const space = await getSpaceByWindow(windowId);
+
+  // remove tab
+  await removeTabFromSpace(space, tabId);
+
+  // send send to side panel
+  await publishEvents({
+    id: generateId(),
+    event: 'UPDATE_TABS',
+    payload: {
+      spaceId: space?.id,
+    },
+  });
 };
 
 // on extension installed
@@ -135,34 +183,8 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
 // event listener for when tabs get updated
 chrome.tabs.onUpdated.addListener(async (tabId, info) => {
   if (info?.status === 'complete') {
-    // get tab info
-    const tab = await chrome.tabs.get(tabId);
-
-    if (tab?.url.startsWith(DiscardTabURLPrefix)) return;
-    // wait 0.2s for better processing when opened new space with lot of tabs
-    // await wait(200);
-
-    // get space by windowId
-    const space = await getSpaceByWindow(tab.windowId);
-
-    if (!space?.id) return;
-
-    //  create new  or update tab
-    const updatedTab = await updateTab(
-      space?.id,
-      { id: tab.id, url: tab.url, title: tab.title, faviconURL: getFaviconURL(tab.url) },
-      tab.index,
-    );
-
-    // send send to side panel
-    await publishEvents({
-      id: generateId(),
-      event: 'UPDATE_TAB',
-      payload: {
-        spaceId: space.id,
-        tab: updatedTab,
-      },
-    });
+    // add/update tab
+    await updateTabHandler(tabId);
   }
 });
 
@@ -198,27 +220,12 @@ chrome.tabs.onMoved.addListener(async (_tabId, info) => {
 // on tab detached from window
 chrome.tabs.onDetached.addListener(async (tabId, info) => {
   // handle tab remove from space
-  const space = await getSpaceByWindow(info.oldWindowId);
-
-  if (!space?.id) return;
-
-  // remove tab
-  await removeTabFromSpace(space, tabId);
-
-  // send send to side panel
-  await publishEvents({
-    id: generateId(),
-    event: 'UPDATE_TABS',
-    payload: {
-      spaceId: space?.id,
-    },
-  });
+  await removeTabHandler(tabId, info.oldWindowId);
 });
 
-chrome.tabs.onAttached.addListener(async (tabId, info) => {
-  console.log('🚀 ~ file: index.ts:220 ~ chrome.tabs.onAttached.addListener ~ info:', info);
-
-  console.log('🚀 ~ file: index.ts:220 ~ chrome.tabs.onAttached.addListener ~ tabId:', tabId);
+chrome.tabs.onAttached.addListener(async tabId => {
+  // add tab to the attached space/window
+  await updateTabHandler(tabId);
 
   // handle add tab  to space
 });
@@ -228,20 +235,7 @@ chrome.tabs.onRemoved.addListener(async (tabId, info) => {
   // do nothing if tab removed because window was closed
   if (info.isWindowClosing) return;
 
-  // get space by windowId
-  const space = await getSpaceByWindow(info.windowId);
-
-  // remove tab
-  await removeTabFromSpace(space, tabId);
-
-  // send send to side panel
-  await publishEvents({
-    id: generateId(),
-    event: 'UPDATE_TABS',
-    payload: {
-      spaceId: space?.id,
-    },
-  });
+  await removeTabHandler(tabId, info.windowId);
 });
 
 // window created/opened
