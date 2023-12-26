@@ -78,7 +78,7 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive, isExpanded, on
   return (
     <div
       className={`text-slate-100 w-full  flex items-center justify-start  flex-col select-none
-                            transition-all duration-200  mb-2.5 pb-2 bg-slate-800   rounded-md 
+                            transition-all duration-200 ease-in-out  mb-2.5 pb-2 bg-slate-800   rounded-md 
                           `}
       style={{
         borderColor: space.theme,
@@ -98,8 +98,8 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive, isExpanded, on
         }}>
         {/* title container */}
         <div className="flex items-center gap-x-1">
-          <p className="text-base font-medium text-slate-50">{space.emoji}</p>
-          <p className="text-sm font-medium text-slate-50">{space.title}</p>
+          <p className="text-base">{space.emoji}</p>
+          <p className="text-sm  text-slate-100">{space.title}</p>
           {isActive ? (
             <>
               {/* active space indicator */}
@@ -124,7 +124,7 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive, isExpanded, on
               {/* open space in new window btn */}
               <Tooltip label="Open in new window">
                 <MdOutlineOpenInBrowser
-                  className="text-slate-500 ml-px -mb-1 cursor-pointer hover:text-slate-400 hover:-translate-y-px transition-all duration-200 "
+                  className="text-slate-500 ml-px -mb-px cursor-pointer hover:text-slate-400 hover:-translate-y-px transition-all duration-200 "
                   size={20}
                   onClick={handleOpenSpace}
                   onMouseOver={ev => ev.stopPropagation()}
@@ -159,7 +159,7 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive, isExpanded, on
       </button>
       {/* tabs within opened space */}
       {isExpanded ? (
-        <div className=" mt-1  h-[calc(100%-40px)] overflow-x-hidden overflow-y-auto w-full scroll-m-1 scroll-p-0">
+        <div className=" mt-1  h-[calc(100%-40px)] transition-all duration-200 ease-in-out overflow-x-hidden overflow-y-auto w-full scroll-m-1 scroll-p-0">
           {tabs.map((tab, idx) => (
             <Tab
               key={tab.url}

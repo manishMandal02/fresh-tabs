@@ -43,7 +43,7 @@ export const useUpdateSpace = ({ updateSpaceData, space, tabs, onClose }: UseUpd
       // close modal
       onClose();
       // re-render updated spaces
-      setSpaces(prev => [...prev, { ...updateSpaceData, tabs: [...tabs] }]);
+      setSpaces(prev => [...prev.filter(s => s.id !== updateSpaceData.id), { ...updateSpaceData, tabs: [...tabs] }]);
       setSnackbar({ show: true, msg: 'Space updated', isSuccess: true });
     } else {
       // failed
@@ -53,7 +53,7 @@ export const useUpdateSpace = ({ updateSpaceData, space, tabs, onClose }: UseUpd
 
   // handle delete space
   const handleDeleteSpace = async () => {
-    setShowDeleteModal(true);
+    setShowDeleteModal(false);
 
     // show loading snackbar
     setSnackbar({ show: true, msg: 'Deleting space', isLoading: true });

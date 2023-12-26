@@ -190,8 +190,11 @@ chrome.tabs.onUpdated.addListener(async (tabId, info) => {
 
 // event listener for when tabs get moved (index change)
 chrome.tabs.onMoved.addListener(async (_tabId, info) => {
+  await wait(1000);
   // get space by windowId
   const space = await getSpaceByWindow(info.windowId);
+
+  if (!space?.id) return;
 
   // update tab index
   await updateTabIndex(space.id, info.fromIndex, info.toIndex);
@@ -262,48 +265,27 @@ chrome.windows.onCreated.addListener(async window => {
     tabs = queriedTabs.map(t => ({ url: t.url, faviconURL: getFaviconURL(t.url), id: t.id, title: t.title }));
   }
 
-  // create new unsaved space if only 1 tab created with the window
-  if (tabs.length === 1) {
-    // tab to be added in space
-    const tab: ITab = {
-      id: tabs[0].id,
-      url: tabs[0].url,
-      title: tabs[0].title,
-      faviconURL: tabs[0].faviconURL,
-    };
-
-    const newUnsavedSpace = await createUnsavedSpace(window.id, [tab]);
-
-    // send send to side panel
-    await publishEvents({
-      id: generateId(),
-      event: 'ADD_SPACE',
-      payload: {
-        space: { ...newUnsavedSpace, tabs: [tab] },
-      },
-    });
-
-    return;
-  }
-
   // check if the tabs in this window are of a space (check tab urls)
   const res = await checkNewWindowTabs(window.id, [...tabs.map(tab => tab.url)]);
+
+  console.log('🚀 ~ file: index.ts:271 ~ windows.onCreated : checkNewWindowTabs : res:', res);
 
   // if the tabs in this window are part of a space, do nothing
   // window id was saved to the respective space
   if (res) return;
 
   // if not then create new unsaved space with all tabs
+  // create new unsaved space
+  const newUnsavedSpace = await createUnsavedSpace(window.id, tabs);
 
-  // create space
-  const newSpace = await createUnsavedSpace(window.id, tabs);
+  console.log('🚀 ~ file: index.ts:281 ~ newUnsavedSpace:', newUnsavedSpace);
 
   // send send to side panel
   await publishEvents({
     id: generateId(),
     event: 'ADD_SPACE',
     payload: {
-      space: { ...newSpace, tabs: [...tabs] },
+      space: { ...newUnsavedSpace, tabs: [...tabs] },
     },
   });
 });

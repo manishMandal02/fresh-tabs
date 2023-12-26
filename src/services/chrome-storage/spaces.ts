@@ -56,6 +56,8 @@ export const createUnsavedSpace = async (windowId: number, tabs: ITab[], activeI
       activeTabIndex: activeIndex,
     };
 
+    console.log('🚀 ~ file: spaces.ts:59 ~ createUnsavedSpace ~ newSpace:', newSpace);
+
     // save new space along with others spaces to storage
     await setStorage({
       type: 'local',
@@ -116,13 +118,15 @@ export const deleteSpace = async (spaceId: string) => {
     await setStorage({ type: 'local', key: StorageKeys.SPACES, value: newSpaceArray });
 
     // remove saved tabs for this space
-    await chrome.storage.sync.remove(spaceId);
+    await chrome.storage.local.remove(spaceId);
+
+    if (spaceToDelete?.windowId === 0) return true;
 
     // close the space window if opened
-    const window = await chrome.windows.get(spaceToDelete?.windowId);
+    const windows = await chrome.windows.getAll();
 
-    if (window?.id) {
-      await chrome.windows.remove(window.id);
+    if (windows.findIndex(w => w.id === spaceToDelete.windowId) !== -1) {
+      await chrome.windows.remove(spaceToDelete.windowId);
     }
 
     return true;
@@ -207,20 +211,25 @@ export const checkNewWindowTabs = async (windowId: number, urls: string[]): Prom
 
     const promiseRes = await Promise.allSettled(tabsPromise);
 
+    console.log('🚀 ~ file: spaces.ts:212 ~ checkNewWindowTabs ~ promiseRes:', promiseRes);
+
     //
     let matchedSpace: ISpace | null = null;
 
     promiseRes.forEach((res, idx) => {
       if (res.status === 'fulfilled') {
-        // number of tabs in space
-        const numTabs = res.value.length;
-        // number of matched urls with this window
-        const matchedTabs = res.value.filter(tab => urls.includes(tab.url));
-        if (numTabs === matchedTabs.length) {
+        // get all the tab urls from this tab
+        const tabURLs = res.value.map(t => t.url);
+
+        // compare them
+        if (JSON.stringify(urls) === JSON.stringify(tabURLs)) {
           matchedSpace = spaces[idx];
+          return;
         }
       }
     });
+
+    console.log('🚀 ~ file: spaces.ts:248 ~ checkNewWindowTabs ~ matchedSpace:', matchedSpace);
 
     if (!matchedSpace) return false;
 

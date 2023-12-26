@@ -156,7 +156,13 @@ export const removeTabFromSpace = async (space: ISpace, id: number, removeFromWi
 
     // remove tab from window, when deleted from spaces view
     if (removeFromWindow) {
-      await chrome.tabs.remove(id);
+      // check if the tab is opened
+      const tab = await chrome.tabs.get(id);
+
+      // if not, do nothing
+      if (tab?.id) {
+        await chrome.tabs.remove(id);
+      }
     }
 
     return true;

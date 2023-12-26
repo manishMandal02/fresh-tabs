@@ -31,9 +31,9 @@ const Snackbar = ({ show, msg, isSuccess, isLoading }: Props) => {
   useEffect(() => {
     (async () => {
       if (isShown && !isLoading) {
-        await wait(3500);
+        await wait(3000);
         setIsShown(false);
-        await wait(200);
+        await wait(300);
         setSnackbar({ show: false, msg: '' });
       }
     })();
@@ -45,17 +45,17 @@ const Snackbar = ({ show, msg, isSuccess, isLoading }: Props) => {
 
   return (
     <div
-      className={`fixed z-150 bottom-4 left-0  h-5 w-fit items-center pl-2 pr-4 py-5 rounded-sm justify-start transition-all duration-200 ease-in ${bgColor}`}
+      className={`fixed z-150 bottom-4 left-0  h-5 w-fit items-center pl-2 pr-4 py-5 rounded-sm justify-start transition-all duration-300 ease-in ${bgColor}`}
       style={{
         display: show ? `flex` : `none`,
         // right: isShown ? `5%` : `-50%`,
         transform: `translateX(${isShown ? '10%' : '-100%'})`,
       }}>
       {/* icon/spinner */}
-      <div className="mr-2">{isLoading ? <Spinner size="sm" /> : RenderIcon}</div>
+      <div className="mr-1.5">{isLoading ? <Spinner size="sm" /> : RenderIcon}</div>
       {/* msg */}
       <div
-        className={`text-base font-medium text-slate-700  
+        className={`text-base font-medium text-slate-700 -mt-px  flex items-center
       `}>
         {msg}
       </div>

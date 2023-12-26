@@ -5,7 +5,7 @@ import { SlideModal } from '../../modal';
 import { useState, useEffect, ChangeEventHandler } from 'react';
 import { Tab } from '..';
 import Tooltip from '../../tooltip';
-import { getCurrentTab, getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
+import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
 import { useAtom } from 'jotai';
 import { snackbarAtom, spacesAtom } from '@root/src/stores/app';
 import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
@@ -58,6 +58,13 @@ const CreateSpace = () => {
     setNewSpaceData(prev => ({ ...prev, emoji }));
   };
 
+  // on emoji change
+  const onThemeChange = (theme: string) => {
+    // eslint-disable-next-line
+    // @ts-ignore
+    setNewSpaceData(prev => ({ ...prev, theme }));
+  };
+
   // handle create space
   const handleCreateSpace = () => {
     setIsModalOpen(true);
@@ -73,13 +80,10 @@ const CreateSpace = () => {
     // show loading snackbar
     setSnackbar({ show: true, msg: 'Creating new space', isLoading: true });
 
-    const currentWindowId = await getCurrentWindowId();
-
     //  create space
-    const createdSpace = await createNewSpace(
-      { ...newSpaceData, isSaved: true, windowId: currentWindowId, activeTabIndex: 0 },
-      [currentTab],
-    );
+    const createdSpace = await createNewSpace({ ...newSpaceData, isSaved: true, windowId: 0, activeTabIndex: 0 }, [
+      currentTab,
+    ]);
 
     // hide loading snackbar
     setSnackbar({ show: false, msg: '', isLoading: false });
@@ -121,7 +125,7 @@ const CreateSpace = () => {
               onChange={onTitleChange}
             />
             <EmojiPicker emoji={newSpaceData.emoji} onChange={onEmojiChange} />
-            <ColorPicker color={newSpaceData.theme} onChange={() => {}} />
+            <ColorPicker color={newSpaceData.theme} onChange={onThemeChange} />
           </div>
 
           {/* tabs */}

@@ -38,6 +38,13 @@ const UpdateSpace = ({ space, tabs, onClose }: Props) => {
     setUpdateSpaceData(prev => ({ ...prev, emoji }));
   };
 
+  // on emoji change
+  const onThemeChange = (theme: string) => {
+    //eslint-disable-next-line
+    //@ts-ignore
+    setUpdateSpaceData(prev => ({ ...prev, theme }));
+  };
+
   return (
     <SlideModal title="Update Space" isOpen={!!updateSpaceData?.title} onClose={onClose}>
       {updateSpaceData?.title ? (
@@ -51,7 +58,7 @@ const UpdateSpace = ({ space, tabs, onClose }: Props) => {
               onChange={onTitleChange}
             />
             <EmojiPicker emoji={updateSpaceData.emoji} onChange={onEmojiChange} />
-            <ColorPicker color={updateSpaceData.theme} onChange={() => {}} />
+            <ColorPicker color={updateSpaceData.theme} onChange={onThemeChange} />
           </div>
 
           {/* tabs */}

@@ -35,19 +35,14 @@ export const useSidePanel = () => {
       const allSpaces = await getAllSpacesStorage();
       setSpaces(allSpaces);
     })();
+    // eslint-disable-next-line
   }, []);
 
   // set the active space based on current window
   const getActiveSpaceId = async () => {
     const windowId = await getCurrentWindowId();
 
-    console.log('🚀 ~ file: useSidePane.ts:36 ~ getActiveSpaceId ~ windowId:', windowId);
-
     const activeSpace = spaces?.find(space => space?.windowId === windowId);
-
-    console.log('🚀 ~ file: useSidePane.ts:40 ~ getActiveSpaceId ~ spaces:', spaces);
-
-    console.log('🚀 ~ file: useSidePane.ts:40 ~ getActiveSpaceId ~ activeSpace:', activeSpace);
 
     return activeSpace?.id;
   };

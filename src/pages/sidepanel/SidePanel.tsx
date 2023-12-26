@@ -5,7 +5,7 @@ import Snackbar from './components/snackbar';
 import { useAtom } from 'jotai';
 import { snackbarAtom } from '@root/src/stores/app';
 import Spinner from './components/spinner';
-import { useSidePanel } from './hooks/useSidePane';
+import { useSidePanel } from './hooks/useSidePanel';
 
 // event ids of processed events
 const processedEvents: string[] = [];
