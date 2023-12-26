@@ -81,7 +81,7 @@ const SidePanel = () => {
         {/* heading */}
         <p className="h-[3%] text-slate-300 text-[.9rem] font-extralight pt-1  text-center">Fresh Tabs</p>
         {/* spaces */}
-        <div className="w-full min-h-min  h-[97%] pt-10 px-3 relative">
+        <div className="w-full min-h-min  h-[97%] pt-10 px-3  relative">
           <p className="text-sm text-slate-500  mb-1.5 tracking-wide select-none">Spaces</p>
           {/* un saved  */}
           {isLoadingSpaces ? (
@@ -95,7 +95,7 @@ const SidePanel = () => {
                   !space.isSaved ? (
                     <Space
                       key={space.id}
-                      numSpaces={spaces.length}
+                      // numSpaces={spaces.length}
                       space={space}
                       tabs={tabs}
                       isActive={activeSpaceId === space.id}
@@ -126,9 +126,10 @@ const SidePanel = () => {
                               <div
                                 ref={provided2.innerRef}
                                 {...provided2.draggableProps}
-                                {...provided2.dragHandleProps}>
+                                {...provided2.dragHandleProps}
+                                className="h-fit max-h-fit">
                                 <Space
-                                  numSpaces={spaces.length}
+                                  // numSpaces={spaces.length}
                                   space={space}
                                   tabs={tabs}
                                   isActive={activeSpaceId === space.id}

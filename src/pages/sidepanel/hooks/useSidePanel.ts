@@ -46,6 +46,9 @@ export const useSidePanel = () => {
     if (!result.destination) {
       return;
     }
+
+    if (result.destination.index === result.source.index) return;
+
     const updatedSpaces = [...spaces];
 
     const [removed] = updatedSpaces.splice(result.source.index, 1);

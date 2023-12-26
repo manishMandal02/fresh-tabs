@@ -13,14 +13,13 @@ const SPACE_HEIGHT = 45;
 type Props = {
   space: ISpace;
   tabs: ITab[];
-  numSpaces: number;
   onUpdateClick: () => void;
   isActive: boolean;
   isExpanded: boolean;
   onExpand: () => void;
 };
 
-const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive, isExpanded, onExpand }: Props) => {
+const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: Props) => {
   // spaces atom (global state)
   const [, setSpaces] = useAtom(spacesAtom);
 
@@ -78,15 +77,14 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive, isExpanded, on
   return (
     <div
       className={`text-slate-100 w-full  flex items-center justify-start  flex-col select-none
-                            transition-all duration-200 ease-in-out  mb-2.5 pb-2 bg-slate-800   rounded-md 
+                            transition-all duration-200 ease-in-out  mb-2.5 pb-px bg-slate-800   rounded-md 
                           `}
       style={{
         borderColor: space.theme,
         borderWidth: '0px 0px 0px 5px',
-        // borderLeftWidth: isExpanded ? '1px' : '0px',
-        // borderRightWidth: isExpanded ? '1px' : '0px',
+        borderLeftWidth: isExpanded ? '3px' : '5px',
         height: isExpanded ? 'min-content' : `${SPACE_HEIGHT}px`,
-        maxHeight: isExpanded ? `calc(100% - ${numSpaces * (SPACE_HEIGHT + 5)}px)` : `${SPACE_HEIGHT}px`,
+        maxHeight: isExpanded ? `${440}px` : `${SPACE_HEIGHT}px`,
       }}>
       {/* space info container */}
       <button
@@ -159,7 +157,9 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive, isExpanded, on
       </button>
       {/* tabs within opened space */}
       {isExpanded ? (
-        <div className=" mt-1  h-[calc(100%-40px)] transition-all duration-200 ease-in-out overflow-x-hidden overflow-y-auto w-full scroll-m-1 scroll-p-0">
+        <div
+          className={`m-0 mt-1 w-full 
+                  transition-all duration-200 ease-in-out overflow-x-hidden overflow-y-auto  scroll-m-px scroll-p-0`}>
           {tabs.map((tab, idx) => (
             <Tab
               key={tab.url}
