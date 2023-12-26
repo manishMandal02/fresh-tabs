@@ -93,6 +93,7 @@ export const updateSpace = async (spaceId: string, space: ISpaceWithoutId): Prom
       key: StorageKeys.SPACES,
       value: [...spaces.filter(s => s.id !== spaceId), spaceToUpdate],
     });
+    console.log('🚀 ~ file: spaces.ts:96 ~ updateSpace ~ spaceToUpdate:', spaceToUpdate);
 
     return true;
   } catch (error) {
@@ -207,6 +208,8 @@ export const checkNewWindowTabs = async (windowId: number, urls: string[]): Prom
     //get all spaces
     const spaces = await getStorage<ISpace[]>({ key: StorageKeys.SPACES, type: 'local' });
 
+    if (spaces.length < 1) throw new Error('No spaces found');
+
     const tabsPromise = spaces.map(space => getTabsInSpace(space.id));
 
     const promiseRes = await Promise.allSettled(tabsPromise);
@@ -219,23 +222,29 @@ export const checkNewWindowTabs = async (windowId: number, urls: string[]): Prom
     promiseRes.forEach((res, idx) => {
       if (res.status === 'fulfilled') {
         // get all the tab urls from this tab
-        const tabURLs = res.value.map(t => t.url);
+        const tabURLs = res.value.map(tab => tab.url);
 
         // compare them
-        if (JSON.stringify(urls) === JSON.stringify(tabURLs)) {
+        if (urls.length === tabURLs.length && JSON.stringify(urls) == JSON.stringify(tabURLs)) {
           matchedSpace = spaces[idx];
           return;
         }
       }
     });
 
+    if (!matchedSpace) return false;
     console.log('🚀 ~ file: spaces.ts:248 ~ checkNewWindowTabs ~ matchedSpace:', matchedSpace);
 
-    if (!matchedSpace) return false;
-
-    // else, tabs in this window is part of a space
+    // tabs in this window is part of a space
     // save windowId to space
-    await updateSpace(matchedSpace.id, { ...matchedSpace, windowId });
+    await setStorage({
+      type: 'local',
+      key: StorageKeys.SPACES,
+      value: [...spaces.filter(s => s.id !== matchedSpace.id), { ...matchedSpace, windowId }],
+    });
+
+    console.log('🚀 ~ file: spaces.ts:240 ~ checkNewWindowTabs ~ updateSpace:', true);
+
     return true;
   } catch (error) {
     logger.error({

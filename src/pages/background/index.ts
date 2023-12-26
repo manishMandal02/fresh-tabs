@@ -1,4 +1,4 @@
-import { SampleSpace } from './../../constants/app';
+import { SampleSpaces } from './../../constants/app';
 import { ITab } from './../types/global.types';
 import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
@@ -14,7 +14,7 @@ import {
 import { removeTabFromSpace, updateTab, updateTabIndex } from '@root/src/services/chrome-storage/tabs';
 import { getFaviconURL, wait } from '../utils';
 import { logger } from '../utils/logger';
-import { publishEvents } from '../utils/publishEvents';
+import { publishEvents } from '../utils/publish-events';
 import { generateId } from '../utils/generateId';
 
 reloadOnUpdate('pages/background');
@@ -66,7 +66,8 @@ const createSpacesOnInstall = async (shouldCreateSampleSpace = false) => {
 
     // create a sample space for new users
     if (shouldCreateSampleSpace) {
-      await createNewSpace({ ...SampleSpace.space }, [...SampleSpace.tabs]);
+      await createNewSpace({ ...SampleSpaces[0].space }, [...SampleSpaces[0].tabs]);
+      await createNewSpace({ ...SampleSpaces[1].space }, [...SampleSpaces[1].tabs]);
     }
 
     // success
@@ -242,52 +243,50 @@ chrome.tabs.onRemoved.addListener(async (tabId, info) => {
 });
 
 // window created/opened
-chrome.windows.onCreated.addListener(async window => {
-  // wait for 1s
-  await wait(500);
+chrome.windows.onCreated.addListener(window => {
+  (async () => {
+    // wait for .750s
+    await wait(750);
 
-  // get space by window
-  const space = await getSpaceByWindow(window.id);
+    // get space by window
+    const space = await getSpaceByWindow(window.id);
 
-  // if this window is associated with a space then do nothing
-  if (space?.id) return;
+    // if this window is associated with a space then do nothing
+    if (space?.id) return;
 
-  // tabs of this window
-  let tabs: ITab[] = [];
+    // tabs of this window
+    let tabs: ITab[] = [];
 
-  // check if the window obj has tabs
-  // if not, then query for tabs in this window
-  if (window?.tabs?.length > 0) {
-    tabs = window.tabs.map(t => ({ url: t.url, faviconURL: getFaviconURL(t.url), id: t.id, title: t.title }));
-  } else {
-    const queriedTabs = await chrome.tabs.query({ windowId: window.id });
-    if (queriedTabs?.length < 1) return;
-    tabs = queriedTabs.map(t => ({ url: t.url, faviconURL: getFaviconURL(t.url), id: t.id, title: t.title }));
-  }
+    // check if the window obj has tabs
+    // if not, then query for tabs in this window
+    if (window?.tabs?.length > 0) {
+      tabs = window.tabs.map(t => ({ url: t.url, faviconURL: getFaviconURL(t.url), id: t.id, title: t.title }));
+    } else {
+      const queriedTabs = await chrome.tabs.query({ windowId: window.id });
+      if (queriedTabs?.length < 1) return;
+      tabs = queriedTabs.map(t => ({ url: t.url, faviconURL: getFaviconURL(t.url), id: t.id, title: t.title }));
+    }
 
-  // check if the tabs in this window are of a space (check tab urls)
-  const res = await checkNewWindowTabs(window.id, [...tabs.map(tab => tab.url)]);
+    // check if the tabs in this window are of a space (check tab urls)
+    const res = await checkNewWindowTabs(window.id, [...tabs.map(tab => tab.url)]);
 
-  console.log('🚀 ~ file: index.ts:271 ~ windows.onCreated : checkNewWindowTabs : res:', res);
+    // if the tabs in this window are part of a space, do nothing
+    // window id was saved to the respective space
+    if (res) return;
 
-  // if the tabs in this window are part of a space, do nothing
-  // window id was saved to the respective space
-  if (res) return;
+    // if not then create new unsaved space with all tabs
+    // create new unsaved space
+    const newUnsavedSpace = await createUnsavedSpace(window.id, tabs);
 
-  // if not then create new unsaved space with all tabs
-  // create new unsaved space
-  const newUnsavedSpace = await createUnsavedSpace(window.id, tabs);
-
-  console.log('🚀 ~ file: index.ts:281 ~ newUnsavedSpace:', newUnsavedSpace);
-
-  // send send to side panel
-  await publishEvents({
-    id: generateId(),
-    event: 'ADD_SPACE',
-    payload: {
-      space: { ...newUnsavedSpace, tabs: [...tabs] },
-    },
-  });
+    // send send to side panel
+    await publishEvents({
+      id: generateId(),
+      event: 'ADD_SPACE',
+      payload: {
+        space: { ...newUnsavedSpace, tabs: [...tabs] },
+      },
+    });
+  })();
 });
 
 // window removed/closed
