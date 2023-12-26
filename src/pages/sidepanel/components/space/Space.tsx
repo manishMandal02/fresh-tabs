@@ -44,7 +44,7 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive, isExpanded, on
       setSpaces(prevSpace => [
         ...prevSpace.map(s => {
           if (s.id === space.id) {
-            s.windowId === windowId;
+            s.windowId = windowId;
           }
           return s;
         }),
@@ -82,7 +82,7 @@ const Space = ({ space, tabs, numSpaces, onUpdateClick, isActive, isExpanded, on
                           `}
       style={{
         borderColor: space.theme,
-        borderWidth: '0px 0px 0px 3px',
+        borderWidth: '0px 0px 0px 5px',
         // borderLeftWidth: isExpanded ? '1px' : '0px',
         // borderRightWidth: isExpanded ? '1px' : '0px',
         height: isExpanded ? 'min-content' : `${SPACE_HEIGHT}px`,

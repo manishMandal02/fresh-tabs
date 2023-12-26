@@ -6,6 +6,9 @@ import { spacesAtom } from '@root/src/stores/app';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { useEffect } from 'react';
+import type { OnDragEndResponder } from 'react-beautiful-dnd';
+import { setStorage } from '@root/src/services/chrome-storage/helpers/set';
+import { StorageKeys } from '@root/src/constants/app';
 
 export const useSidePanel = () => {
   // spaces atom (global state)
@@ -37,6 +40,33 @@ export const useSidePanel = () => {
     })();
     // eslint-disable-next-line
   }, []);
+
+  // handle drag spaces
+  const onDragEnd: OnDragEndResponder = result => {
+    if (!result.destination) {
+      return;
+    }
+    const updatedSpaces = [...spaces];
+
+    const [removed] = updatedSpaces.splice(result.source.index, 1);
+    updatedSpaces.splice(result.destination.index, 0, removed);
+    setSpaces(updatedSpaces);
+
+    // save the new order of spaces
+    (async () => {
+      await setStorage({
+        type: 'local',
+        key: StorageKeys.SPACES,
+        value: [
+          ...updatedSpaces.map(space => {
+            // eslint-disable-next-line
+            const { tabs, ...spaceWithoutTabs } = space;
+            return spaceWithoutTabs;
+          }),
+        ],
+      });
+    })();
+  };
 
   // set the active space based on current window
   const getActiveSpaceId = async () => {
@@ -101,5 +131,6 @@ export const useSidePanel = () => {
     getActiveSpaceId,
     handleEvents,
     getAllSpacesStorage,
+    onDragEnd,
   };
 };

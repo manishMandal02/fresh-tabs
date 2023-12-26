@@ -6,6 +6,7 @@ import { useAtom } from 'jotai';
 import { snackbarAtom } from '@root/src/stores/app';
 import Spinner from './components/spinner';
 import { useSidePanel } from './hooks/useSidePanel';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -15,7 +16,7 @@ const SidePanel = () => {
   const [spaceToUpdate, setSpaceToUpdate] = useState<ISpaceWithTabs | undefined>(undefined);
 
   // custom hook
-  const { spaces, getActiveSpaceId, handleEvents } = useSidePanel();
+  const { spaces, getActiveSpaceId, handleEvents, onDragEnd } = useSidePanel();
 
   // active space in the window
   const [activeSpaceId, setActiveSpaceId] = useState('');
@@ -80,7 +81,7 @@ const SidePanel = () => {
         {/* heading */}
         <p className="h-[3%] text-slate-300 text-[.9rem] font-extralight pt-1  text-center">Fresh Tabs</p>
         {/* spaces */}
-        <div className="w-full  h-[97%] pt-10 px-3">
+        <div className="w-full min-h-min  h-[97%] pt-10 px-3 relative">
           <p className="text-sm text-slate-500  mb-1.5 tracking-wide select-none">Spaces</p>
           {/* un saved  */}
           {isLoadingSpaces ? (
@@ -89,7 +90,7 @@ const SidePanel = () => {
             <>
               {/* unsaved spaces, sort based on title */}
               {spaces
-                ?.sort((a, b) => (a.title > b.title ? 1 : -1))
+                ?.toSorted((a, b) => (a.title > b.title ? 1 : -1))
                 .map(({ tabs, ...space }) =>
                   !space.isSaved ? (
                     <Space
@@ -105,23 +106,45 @@ const SidePanel = () => {
                   ) : null,
                 )}
               <>
-                <hr className="h-px bg-slate-700/30 border-none rounded-md w-[60%] mt-0 mb-2 mx-auto" />
+                {spaces.find(s => !s.isSaved) ? (
+                  <hr className="h-px bg-slate-700/30 border-none rounded-md w-[60%] mt-0 mb-2 mx-auto" />
+                ) : null}
               </>
               {/* saved spaces */}
-              {spaces?.map(({ tabs, ...space }) =>
-                space.isSaved ? (
-                  <Space
-                    key={space.id}
-                    numSpaces={spaces.length}
-                    space={space}
-                    tabs={tabs}
-                    isActive={activeSpaceId === space.id}
-                    isExpanded={expandedSpaceId === space.id}
-                    onExpand={() => setExpandedSpaceId(prevId => (prevId !== space.id ? space.id : ''))}
-                    onUpdateClick={() => setSpaceToUpdate({ ...space, tabs })}
-                  />
-                ) : null,
-              )}
+              <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId={'saved-spaces'}>
+                  {provided1 => (
+                    <div
+                      {...provided1.droppableProps}
+                      ref={provided1.innerRef}
+                      className="h-[220px]"
+                      style={{ height: `${spaces.filter(s => s.isSaved).length * 3.5}rem` }}>
+                      {spaces?.map(({ tabs, ...space }, idx) =>
+                        space.isSaved ? (
+                          <Draggable draggableId={space.id} index={idx} key={space.id}>
+                            {provided2 => (
+                              <div
+                                ref={provided2.innerRef}
+                                {...provided2.draggableProps}
+                                {...provided2.dragHandleProps}>
+                                <Space
+                                  numSpaces={spaces.length}
+                                  space={space}
+                                  tabs={tabs}
+                                  isActive={activeSpaceId === space.id}
+                                  isExpanded={expandedSpaceId === space.id}
+                                  onExpand={() => setExpandedSpaceId(prevId => (prevId !== space.id ? space.id : ''))}
+                                  onUpdateClick={() => setSpaceToUpdate({ ...space, tabs })}
+                                />
+                              </div>
+                            )}
+                          </Draggable>
+                        ) : null,
+                      )}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
             </>
           )}
           {/* add new space */}

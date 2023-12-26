@@ -1,5 +1,6 @@
 import { ISpace, ITab, ThemeColor } from '@root/src/pages/types/global.types';
 import ColorPicker from '../../color-picker';
+import { MdAdd } from 'react-icons/md';
 import EmojiPicker from '../../emoji-picker';
 import { SlideModal } from '../../modal';
 import { useState, useEffect, ChangeEventHandler } from 'react';
@@ -66,7 +67,7 @@ const CreateSpace = () => {
   };
 
   // handle create space
-  const handleCreateSpace = () => {
+  const handleOpenModal = () => {
     setIsModalOpen(true);
   };
 
@@ -105,14 +106,14 @@ const CreateSpace = () => {
 
   return (
     <>
-      <Tooltip label="Add new space">
-        <button
-          className={`w-full border border-slate-700 text-xl font-light  text-slate-700 
-        flex items-center justify-center rounded-md py-1.5 hover:border-slate-700/80 hover:text-slate-700/80 transition-all duration-200`}
-          onClick={handleCreateSpace}>
-          +
-        </button>
-      </Tooltip>
+      <button
+        className={`border border-slate-600/80 shadow-sm shadow-slate-800 text-2xl  bg-slate-800 text-slate-500/90 fixed bottom-5 right-5 
+        flex items-center justify-center rounded-full w-12 h-12  hover:text-slate-500/60 transition-all duration-200`}
+        onClick={handleOpenModal}>
+        <Tooltip label="Add new space">
+          <MdAdd className="w-full h-full opacity-80 " />
+        </Tooltip>
+      </button>
       {/* modal */}
       <SlideModal title="New Space" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <div className="relative flex flex-col  w-full h-full py-3 px-4">
