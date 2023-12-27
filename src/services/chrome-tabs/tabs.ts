@@ -39,7 +39,7 @@ export const openSpace = async ({ space, onNewWindowCreated }: OpenSpaceProps) =
     <!DOCTYPE html>
     <html>
     <head>
-    <link rel="icon" href="${tab.faviconURL}">
+    <link rel="icon" href="${getFaviconURL(tab.url)}">
     <title>${tab.title}</title>
     <link href="//{[${tab.url}]}//">
     </head>
@@ -82,7 +82,6 @@ export const getCurrentTab = async (): Promise<ITab> => {
     id: tab.id,
     title: tab.title,
     url: tab.url,
-    faviconURL: getFaviconURL(tab.url),
   };
 };
 

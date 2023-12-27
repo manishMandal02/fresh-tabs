@@ -1,4 +1,5 @@
 import { ITab } from '@root/src/pages/types/global.types';
+import { getFaviconURL } from '@root/src/pages/utils';
 import { copyToClipboard } from '@root/src/pages/utils/copy-to-clipboard';
 import { createTab } from '@root/src/services/chrome-tabs/tabs';
 import { MdDelete, MdContentCopy, MdOpenInNew } from 'react-icons/md';
@@ -21,7 +22,7 @@ const Tab = ({ tabData, onTabDelete, isTabActive, showHoverOption = true }: Prop
         isTabActive ? ' bg-slate-700/30' : ''
       }`}>
       <span className="flex items-center w-full ">
-        <img className="w-4 h-4 mr-1.5 rounded-sm" src={tabData.faviconURL} alt="icon" />
+        <img className="w-4 h-4 mr-1.5 rounded-sm" src={getFaviconURL(tabData.url)} alt="icon" />
         <span className="text-xs text-slate-400 max-w-fit min-w-[80%] whitespace-nowrap overflow-hidden text-ellipsis">
           {tabData.title}
         </span>

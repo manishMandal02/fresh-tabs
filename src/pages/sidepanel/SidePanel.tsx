@@ -78,11 +78,12 @@ const SidePanel = () => {
   return (
     <div className="w-screen h-screen  overflow-hidden bg-brand-background">
       <main className="h-full relative ">
-        {/* heading */}
-        <p className="h-[3%] text-slate-300 text-[.9rem] font-extralight pt-1  text-center">Fresh Tabs</p>
-        {/* spaces */}
-        <div className="w-full min-h-min  h-[97%] pt-10 px-3  relative">
-          <p className="text-sm text-slate-500  mb-1.5 tracking-wide select-none">Spaces</p>
+        {/* app name */}
+        <p className="h-[10%] text-slate-400 text-base font-light tracking-wide mt-2  text-center">Fresh Tabs</p>
+
+        <p className="text-base text-slate-500 bg-brand-background  mb-1.5 ml-3 tracking-wide select-none">Spaces</p>
+        {/* spaces container */}
+        <div className="w-full min-h-min bg-indigo- h-[90%] px-3  scroll-p-px scroll-m-px relative overflow-y-auto">
           {/* un saved  */}
           {isLoadingSpaces ? (
             <Spinner size="md" />
@@ -95,7 +96,6 @@ const SidePanel = () => {
                   !space.isSaved ? (
                     <Space
                       key={space.id}
-                      // numSpaces={spaces.length}
                       space={space}
                       tabs={tabs}
                       isActive={activeSpaceId === space.id}
@@ -119,6 +119,7 @@ const SidePanel = () => {
                       ref={provided1.innerRef}
                       className="h-[220px]"
                       style={{ height: `${spaces.filter(s => s.isSaved).length * 3.5}rem` }}>
+                      {/* map spaces  */}
                       {spaces?.map(({ tabs, ...space }, idx) =>
                         space.isSaved ? (
                           <Draggable draggableId={space.id} index={idx} key={space.id}>
@@ -129,7 +130,6 @@ const SidePanel = () => {
                                 {...provided2.dragHandleProps}
                                 className="h-fit max-h-fit">
                                 <Space
-                                  // numSpaces={spaces.length}
                                   space={space}
                                   tabs={tabs}
                                   isActive={activeSpaceId === space.id}

@@ -1,20 +1,19 @@
 export enum ThemeColor {
   Green = '#34d399',
   Orange = '#f97316',
-  Fuchsia = '#d946ef',
   Yellow = '#fbbf24',
   Blue = '#38bdf8',
-  Indigo = '#6366f1',
   Purple = '#c084fc',
   Pink = '#f472b6',
   Red = '#f43f5e',
+  Indigo = '#6366f1',
   Teal = '#5eead4',
+  Fuchsia = '#d946ef',
 }
 
 export interface ITab {
   id: number;
   url: string;
-  faviconURL: string;
   title: string;
 }
 
@@ -49,3 +48,8 @@ export interface IMessageEvent {
   id: string;
   payload: IEventPayload;
 }
+
+/*
+
+
+*/

@@ -2,7 +2,6 @@ import { logger } from '@root/src/pages/utils/logger';
 import { getStorage } from './helpers/get';
 import { ISpace, ITab } from '@root/src/pages/types/global.types';
 import { setStorage } from './helpers/set';
-import { getFaviconURL } from '@root/src/pages/utils';
 import { updateActiveTabInSpace } from './spaces';
 
 // get all tabs in space
@@ -47,27 +46,31 @@ export const getTab = async (spaceId: string, idx: number): Promise<ITab | null>
 };
 
 // update tab index
-export const updateTabIndex = async (spaceId: string, oldIndex: number, newIndex: number): Promise<boolean> => {
+export const updateTabIndex = async (spaceId: string, tabId: number, newIndex: number): Promise<boolean> => {
   try {
     // get all tabs from the space
     const tabs = await getTabsInSpace(spaceId);
 
-    if (tabs?.length < 1) return false;
+    if (tabs?.length < 1) throw new Error(`Tabs not found for this space: ${spaceId}.`);
+
+    const tabToUpdate = tabs.find(t => t.id === tabId);
+
+    if (!tabToUpdate) throw new Error('Tab not found with this id.');
 
     // remove tab from old index
-    const tabToUpdate = tabs.splice(oldIndex, 1);
+    const newTabs = tabs.filter(t => t.id !== tabId);
 
-    // add tab to new index (array mutation)
-    tabs.splice(newIndex, 0, tabToUpdate[0]);
+    // add tab to new index, mutate array
+    newTabs.splice(newIndex, 0, tabToUpdate);
 
-    // save new list to storage
-    await setStorage({ type: 'local', key: spaceId, value: tabs });
+    // save new tabs array to storage
+    await setStorage({ type: 'local', key: spaceId, value: newTabs });
 
     return true;
   } catch (error) {
     logger.error({
       error,
-      msg: `Error updating tab's index tab-index: ${oldIndex}`,
+      msg: `Error updating tab's index tab-index: ${tabId}.`,
       fileTrace: 'src/services/chrome-storage/tabs.ts:67 ~ updateTabIndex() ~ catch block',
     });
     return false;
@@ -92,7 +95,6 @@ export const saveNewTab = async (
       id,
       url,
       title,
-      faviconURL: getFaviconURL(url),
     };
 
     // add new tab (array mutation)

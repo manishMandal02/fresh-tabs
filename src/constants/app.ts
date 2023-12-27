@@ -1,5 +1,7 @@
 import { ThemeColor } from '../pages/types/global.types';
 
+export const FRESH_TABS_BOOKMARK_TITLE = '#Fresh Tabs ~ ⚠️ Do not delete this, managed by extension.';
+
 export enum StorageKeys {
   SPACES = 'SPACES',
 }

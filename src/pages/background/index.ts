@@ -38,6 +38,8 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
+// TODO - check for BM tabs storage
+
 //* common event handlers
 
 const createSpacesOnInstall = async (shouldCreateSampleSpace = false) => {
@@ -95,11 +97,7 @@ const updateTabHandler = async (tabId: number) => {
   if (!space?.id) return;
 
   //  create new  or update tab
-  await updateTab(
-    space?.id,
-    { id: tab.id, url: tab.url, title: tab.title, faviconURL: getFaviconURL(tab.url) },
-    tab.index,
-  );
+  await updateTab(space?.id, { id: tab.id, url: tab.url, title: tab.title }, tab.index);
 
   // send send to side panel
   await publishEvents({
@@ -190,15 +188,16 @@ chrome.tabs.onUpdated.addListener(async (tabId, info) => {
 });
 
 // event listener for when tabs get moved (index change)
-chrome.tabs.onMoved.addListener(async (_tabId, info) => {
-  await wait(1000);
+chrome.tabs.onMoved.addListener(async (tabId, info) => {
+  await wait(500);
+
   // get space by windowId
   const space = await getSpaceByWindow(info.windowId);
 
   if (!space?.id) return;
 
   // update tab index
-  await updateTabIndex(space.id, info.fromIndex, info.toIndex);
+  await updateTabIndex(space.id, tabId, info.toIndex);
 
   // update space's active tab index
   await updateActiveTabInSpace(info.windowId, info.toIndex);
@@ -230,8 +229,6 @@ chrome.tabs.onDetached.addListener(async (tabId, info) => {
 chrome.tabs.onAttached.addListener(async tabId => {
   // add tab to the attached space/window
   await updateTabHandler(tabId);
-
-  // handle add tab  to space
 });
 
 // event listener for when tabs get removed
@@ -244,6 +241,7 @@ chrome.tabs.onRemoved.addListener(async (tabId, info) => {
 
 // window created/opened
 chrome.windows.onCreated.addListener(window => {
+  if (window.incognito) return;
   (async () => {
     // wait for .750s
     await wait(750);
