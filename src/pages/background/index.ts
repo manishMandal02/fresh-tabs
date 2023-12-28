@@ -123,9 +123,6 @@ chrome.runtime.onInstalled.addListener(async info => {
   if (info.reason === 'install') {
     // initialize the app
 
-    // initialize storage
-    await chrome.storage.local.clear();
-
     // create unsaved spaces for current opened windows
     await createUnsavedSpacesOnInstall();
 

@@ -1,16 +1,16 @@
 import { ISpace, ITab, ThemeColor } from '@root/src/pages/types/global.types';
-import ColorPicker from '../../color-picker';
+import ColorPicker from '../../elements/color-picker';
 import { MdAdd } from 'react-icons/md';
-import EmojiPicker from '../../emoji-picker';
-import { SlideModal } from '../../modal';
+import EmojiPicker from '../../elements/emoji-picker';
+import { SlideModal } from '../../elements/modal';
 import { useState, useEffect, ChangeEventHandler } from 'react';
 import { Tab } from '..';
-import Tooltip from '../../tooltip';
+import Tooltip from '../../elements/tooltip';
 import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
 import { useAtom } from 'jotai';
 import { snackbarAtom, spacesAtom } from '@root/src/stores/app';
 import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
-import Spinner from '../../spinner';
+import Spinner from '../../elements/spinner';
 
 type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;
 
@@ -118,7 +118,7 @@ const CreateSpace = () => {
       </button>
       {/* modal */}
       <SlideModal title="New Space" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <div className="relative flex flex-col  w-full h-full py-3 px-4">
+        <div className=" flex flex-col  w-full h-full py-3 px-4">
           <div className="mt-4 flex items-center gap-x-3">
             <input
               type="text"
@@ -144,7 +144,7 @@ const CreateSpace = () => {
           ) : null}
           {/* add space */}
           <button
-            className={`absolute bottom-5 left-1/2 -translate-x-1/2 w-[90%] py-2 
+            className={` mt-16 mx-auto w-[90%] py-2 
                       rounded-md text-slate-500 font-medium text-base shadow shadow-slate-500 hover:opacity-80 transition-all duration-300`}
             onClick={handleAddSpace}>
             {snackbar.isLoading ? <Spinner size="sm" /> : 'Add'}

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { IMessageEvent, ISpaceWithTabs } from '../types/global.types';
 import { CreateSpace, Space, UpdateSpace } from './components/space';
-import Snackbar from './components/snackbar';
+import Snackbar from './components/elements/snackbar';
 import { useAtom } from 'jotai';
 import { snackbarAtom } from '@root/src/stores/app';
-import Spinner from './components/spinner';
+import Spinner from './components/elements/spinner';
 import { useSidePanel } from './hooks/useSidePanel';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import Settings from './components/settings/Settings';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -79,7 +80,12 @@ const SidePanel = () => {
     <div className="w-screen h-screen  overflow-hidden bg-brand-background">
       <main className="h-full relative ">
         {/* app name */}
-        <p className="h-[10%] text-slate-400 text-base font-light tracking-wide mt-2  text-center">Fresh Tabs</p>
+        <div className="h-[10%] pt-2.5 flex items-start justify-between px-3">
+          <span className="invisible">Hide</span>
+          <p className=" text-slate-400 text-base font-light tracking-wide  text-center">Fresh Tabs</p>
+          {/* opens settings modal */}
+          <Settings />
+        </div>
 
         <p className="text-base text-slate-500 bg-brand-background  mb-1.5 ml-3 tracking-wide select-none">Spaces</p>
         {/* spaces container */}

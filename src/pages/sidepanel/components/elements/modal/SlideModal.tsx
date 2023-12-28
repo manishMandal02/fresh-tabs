@@ -38,7 +38,7 @@ const Modal = ({ children, isOpen, onClose, title }: Props) => {
       <div className="z-[55] w-screen h-screen fixed bg-slate-500/10" onClick={handleClose}></div>
       {/* modal card */}
       <div
-        className={`z-[60] absolute bottom-0 flex flex-col left-0 w-full  mx-auto h-[40%]  bg-slate-800 rounded-tl-3xl 
+        className={`z-[60] absolute bottom-0 flex flex-col left-0 w-full h-min  mx-auto  min-h-[40%]  bg-slate-800 rounded-tl-3xl 
                   border-t border-slate-700 rounded-tr-3xl transition-all duration-300  ease-in-out`}
         style={{
           transform: `translateY(${posY})`,

@@ -7,7 +7,7 @@ import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { useEffect } from 'react';
 import type { OnDragEndResponder } from 'react-beautiful-dnd';
-import { setStorage } from '@root/src/services/chrome-storage/helpers/set';
+import { setStorage } from '@root/src/services/chrome-storage/helpers';
 
 export const useSidePanel = () => {
   // spaces atom (global state)
@@ -57,7 +57,7 @@ export const useSidePanel = () => {
     // save the new order of spaces
     (async () => {
       await setStorage({
-        type: 'local',
+        type: 'sync',
         key: 'SPACES',
         value: [
           ...updatedSpaces.map(space => {

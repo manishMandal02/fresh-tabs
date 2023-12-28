@@ -2,7 +2,7 @@ import { MouseEventHandler } from 'react';
 import { ISpace, ISpaceWithTabs, ITab } from '@root/src/pages/types/global.types';
 import { MdArrowForwardIos, MdOutlineSettings, MdOutlineOpenInBrowser } from 'react-icons/md';
 import Tab from './Tab';
-import Tooltip from '../tooltip';
+import Tooltip from '../elements/tooltip';
 import { openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { removeTabFromSpace } from '@root/src/services/chrome-storage/tabs';
 import { useAtom } from 'jotai';

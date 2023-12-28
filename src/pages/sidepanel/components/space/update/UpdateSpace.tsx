@@ -1,9 +1,9 @@
 import { useState, useEffect, ChangeEventHandler } from 'react';
-import { AlertModal, SlideModal } from '../../modal';
+import { AlertModal, SlideModal } from '../../elements/modal';
 import { ISpace, ITab } from '@root/src/pages/types/global.types';
-import ColorPicker from '../../color-picker';
-import EmojiPicker from '../../emoji-picker';
-import Spinner from '../../spinner';
+import ColorPicker from '../../elements/color-picker';
+import EmojiPicker from '../../elements/emoji-picker';
+import Spinner from '../../elements/spinner';
 import { useUpdateSpace } from './useUpdateSpace';
 
 type Props = {

@@ -4,8 +4,7 @@ import { FRESH_TABS_BOOKMARK_TITLE } from '@root/src/constants/app';
 import { generateBMTitle, getSpaceInfoFromBMTitle } from './bookmarkTitle';
 import { ISpace, ITab } from '@root/src/pages/types/global.types';
 import { logger } from '@root/src/pages/utils/logger';
-import { getStorage } from '../chrome-storage/helpers/get';
-import { setStorage } from '../chrome-storage/helpers/set';
+import { getStorage, setStorage } from '../chrome-storage/helpers';
 import { getAllSpaces } from '../chrome-storage/spaces';
 
 // check if parent bookmark folder exists
@@ -99,7 +98,7 @@ export const syncSpacesFromBookmarks = async (rootFolderId: string) => {
     const allSpaces = await getAllSpaces();
 
     // save all spaces to storage
-    await setStorage({ type: 'local', key: 'SPACES', value: [...allSpaces, ...spaces] });
+    await setStorage({ type: 'sync', key: 'SPACES', value: [...allSpaces, ...spaces] });
 
     // save all tabs
     await Promise.allSettled(saveTabsPromises);
