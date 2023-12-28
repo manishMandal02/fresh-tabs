@@ -8,7 +8,6 @@ import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { useEffect } from 'react';
 import type { OnDragEndResponder } from 'react-beautiful-dnd';
 import { setStorage } from '@root/src/services/chrome-storage/helpers/set';
-import { StorageKeys } from '@root/src/constants/app';
 
 export const useSidePanel = () => {
   // spaces atom (global state)
@@ -59,7 +58,7 @@ export const useSidePanel = () => {
     (async () => {
       await setStorage({
         type: 'local',
-        key: StorageKeys.SPACES,
+        key: 'SPACES',
         value: [
           ...updatedSpaces.map(space => {
             // eslint-disable-next-line

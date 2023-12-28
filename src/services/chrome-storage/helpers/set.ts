@@ -2,11 +2,11 @@ import { StorageKeys } from '@root/src/constants/app';
 import { ISpace, ITab } from '@root/src/pages/types/global.types';
 import { logger } from '@root/src/pages/utils/logger';
 
-type StorageValue = ISpace | ISpace[] | ITab[];
+type StorageValue = ISpace | ISpace[] | ITab[] | string;
 
 type SetStorageParams = {
   type: 'local' | 'sync';
-  key: StorageKeys | string;
+  key: keyof typeof StorageKeys | `tabs-${string}`;
   value: StorageValue;
 };
 

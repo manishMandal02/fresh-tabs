@@ -7,7 +7,7 @@ import { updateActiveTabInSpace } from './spaces';
 // get all tabs in space
 export const getTabsInSpace = async (spaceId: string): Promise<ITab[] | null> => {
   try {
-    const tabs = await getStorage<ITab[]>({ key: spaceId, type: 'local' });
+    const tabs = await getStorage<ITab[]>({ key: `tabs-${spaceId}`, type: 'local' });
 
     if (tabs?.length < 1) throw new Error('No tabs found for this space');
 
@@ -64,7 +64,7 @@ export const updateTabIndex = async (spaceId: string, tabId: number, newIndex: n
     newTabs.splice(newIndex, 0, tabToUpdate);
 
     // save new tabs array to storage
-    await setStorage({ type: 'local', key: spaceId, value: newTabs });
+    await setStorage({ type: 'local', key: `tabs-${spaceId}`, value: newTabs });
 
     return true;
   } catch (error) {
@@ -101,7 +101,7 @@ export const saveNewTab = async (
     tabs.splice(idx, 0, newTab);
 
     // save new list to storage
-    await setStorage({ type: 'local', key: spaceId, value: tabs });
+    await setStorage({ type: 'local', key: `tabs-${spaceId}`, value: tabs });
 
     return true;
   } catch (error) {
@@ -124,7 +124,7 @@ export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promis
     tabs[idx] = tab;
 
     // save new list to storage
-    await setStorage({ type: 'local', key: spaceId, value: tabs });
+    await setStorage({ type: 'local', key: `tabs-${spaceId}`, value: tabs });
 
     return tabs[idx];
   } catch (error) {
@@ -148,8 +148,8 @@ export const removeTabFromSpace = async (space: ISpace, id: number, removeFromWi
     // do nothing, if only 1 tab remaining
     if (tabs.length === 1 || !tabs.find(t => t.id === id)) return false;
 
-    // save new list to storage
-    await setStorage({ type: 'local', key: space.id, value: [...tabs.filter(t => t.id !== id)] });
+    // save new tab arrays to storage
+    await setStorage({ type: 'local', key: `tabs-${space.id}`, value: [...tabs.filter(t => t.id !== id)] });
 
     // update active index for space to 0,  if this tab was the last active tab for this space
     if (space.activeTabIndex === tabs.findIndex(t => t.id === id)) {

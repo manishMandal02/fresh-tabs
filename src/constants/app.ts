@@ -4,6 +4,7 @@ export const FRESH_TABS_BOOKMARK_TITLE = '#Fresh Tabs ~ ⚠️ Do not delete thi
 
 export enum StorageKeys {
   SPACES = 'SPACES',
+  BOOKMARK_ID = 'BOOKMARK_ID',
 }
 
 export const SampleSpaces = [
