@@ -1,3 +1,4 @@
+import { SampleSpaces } from './../../constants/app';
 import { getStorage } from './helpers/get';
 import { ISpace, ISpaceWithoutId, ITab } from '@root/src/pages/types/global.types';
 import { logger } from '@root/src/pages/utils/logger';
@@ -29,7 +30,7 @@ export const createNewSpace = async (space: ISpaceWithoutId, tab: ITab[]): Promi
     logger.error({
       error,
       msg: `Failed to initialize app space data: ${JSON.stringify(space)}`,
-      fileTrace: 'src/services/chrome-storage/spaces.ts:31 ~ createNewSpace() ~ catch block',
+      fileTrace: 'src/services/chrome-storage/spaces.ts:32 ~ createNewSpace() ~ catch block',
     });
     return null;
   }
@@ -55,8 +56,6 @@ export const createUnsavedSpace = async (windowId: number, tabs: ITab[], activeI
       activeTabIndex: activeIndex,
     };
 
-    console.log('🚀 ~ file: spaces.ts:59 ~ createUnsavedSpace ~ newSpace:', newSpace);
-
     // save new space along with others spaces to storage
     await setStorage({
       type: 'local',
@@ -78,6 +77,12 @@ export const createUnsavedSpace = async (windowId: number, tabs: ITab[], activeI
   }
 };
 
+export const createSampleSpaces = async () => {
+  // create a sample spaces
+  await createNewSpace({ ...SampleSpaces[0].space }, [...SampleSpaces[0].tabs]);
+  await createNewSpace({ ...SampleSpaces[1].space }, [...SampleSpaces[1].tabs]);
+};
+
 // update a space
 export const updateSpace = async (spaceId: string, space: ISpaceWithoutId): Promise<boolean> => {
   try {
@@ -92,7 +97,6 @@ export const updateSpace = async (spaceId: string, space: ISpaceWithoutId): Prom
       key: 'SPACES',
       value: [...spaces.filter(s => s.id !== spaceId), spaceToUpdate],
     });
-    console.log('🚀 ~ file: spaces.ts:96 ~ updateSpace ~ spaceToUpdate:', spaceToUpdate);
 
     return true;
   } catch (error) {

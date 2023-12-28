@@ -2,12 +2,13 @@
 
 import { FRESH_TABS_BOOKMARK_TITLE } from '@root/src/constants/app';
 import { generateBMTitle, getSpaceInfoFromBMTitle } from './bookmarkTitle';
-import { ISpaceWithTabs, ITab } from '@root/src/pages/types/global.types';
+import { ISpace, ITab } from '@root/src/pages/types/global.types';
 import { logger } from '@root/src/pages/utils/logger';
 import { getStorage } from '../chrome-storage/helpers/get';
 import { setStorage } from '../chrome-storage/helpers/set';
+import { getAllSpaces } from '../chrome-storage/spaces';
 
-// check for parent bookmark folder
+// check if parent bookmark folder exists
 export const checkParentBMFolder = async () => {
   const bmSearch = await chrome.bookmarks.search({ title: FRESH_TABS_BOOKMARK_TITLE });
 
@@ -22,7 +23,8 @@ export const checkParentBMFolder = async () => {
   // folder found
   return appBMParent.id;
 };
-// create parent bookmark folder
+
+// create app's parent/root bookmark folder to save all the spaces
 const createParentBMFolder = async () => {
   try {
     const bmFolder = await chrome.bookmarks.create({ title: FRESH_TABS_BOOKMARK_TITLE });
@@ -36,38 +38,46 @@ const createParentBMFolder = async () => {
     logger.error({
       error,
       msg: 'Error creating bookmark parent id.',
-      fileTrace: 'src/services/chrome-storage/bookmarks.ts:26 ~ createParentBMFolder() ~ catch block',
+      fileTrace: 'src/services/chrome-storage/bookmarks.ts:39 ~ createParentBMFolder() ~ catch block',
     });
     return null;
   }
 };
 
-// get app's parent bm folder
+// get parent/root bookmark folder
 export const getParentBMId = async () => {
   const id = await getStorage<string>({ type: 'sync', key: 'BOOKMARK_ID' });
 
   if (id) return id;
 
+  // search book to find find app's root bm folder
   const parentBMId = await checkParentBMFolder();
 
-  // parent bm found
+  // folder not found, create one
+  if (!parentBMId) return createParentBMFolder();
+
+  // root folder found
   await setStorage({ type: 'sync', key: 'BOOKMARK_ID', value: parentBMId });
   return parentBMId;
 };
 
-// get all tabs from bookmarks by space id
-export const getSpacesFromBookmarks = async () => {
+// sync/save spaces  from bookmarks to storage
+export const syncSpacesFromBookmarks = async (rootFolderId: string) => {
   try {
     // spaces bookmark folder
-    const spacesBM = await chrome.bookmarks.search({ title: FRESH_TABS_BOOKMARK_TITLE });
+    const rootBMFolder = await chrome.bookmarks.getSubTree(rootFolderId);
 
-    if (spacesBM.length < 1) return null;
+    if (rootBMFolder.length < 1) return false;
 
-    const spaces: ISpaceWithTabs[] = [];
+    const spaces: ISpace[] = [];
 
-    for (const bookmark of spacesBM) {
-      const spaceBM = await chrome.bookmarks.getChildren(bookmark.id);
-      // only 1 folder inside a space bookmark who's title contains info about that space
+    // promises tabs to be saved to storage
+    const saveTabsPromises: Promise<boolean>[] = [];
+
+    for (const spaceBMFolder of rootBMFolder) {
+      const spaceBM = spaceBMFolder.children;
+
+      // there's only 1 folder inside a space folder,  who's title contains info about that space
       const spaceInfoBM = spaceBM.find(child => !child.url);
 
       const space = getSpaceInfoFromBMTitle(spaceInfoBM.title);
@@ -80,22 +90,33 @@ export const getSpacesFromBookmarks = async () => {
         tabs[tabBM.index] = { id: 0, title: tabBM.title, url: tabBM.url };
       }
 
-      spaces.push({ ...space, tabs });
+      spaces.push(space);
+
+      saveTabsPromises.push(setStorage({ type: 'local', key: `tabs-${space.id}`, value: tabs }));
     }
 
-    return spaces;
+    // get current spaces from storage
+    const allSpaces = await getAllSpaces();
+
+    // save all spaces to storage
+    await setStorage({ type: 'local', key: 'SPACES', value: [...allSpaces, ...spaces] });
+
+    // save all tabs
+    await Promise.allSettled(saveTabsPromises);
+
+    return true;
   } catch (error) {
     logger.error({
       error,
       msg: 'Error getting spaces from bookmarks',
-      fileTrace: 'src/services/chrome-storage/bookmarks.ts:40 ~ getSpacesFromBookmarks() ~ catch block',
+      fileTrace: 'src/services/chrome-storage/bookmarks.ts:91 ~ getSpacesFromBookmarks() ~ catch block',
     });
-    return null;
+    return false;
   }
 };
 
-// save spaces with tabs to app's parent bookmark folder
-export const saveSpacesToBookmark = async (spaces: ISpaceWithTabs[]) => {
+// sync/save spaces from storage bookmarks
+export const syncSpacesToBookmark = async () => {
   try {
     const parentBMId = await getParentBMId();
 
@@ -105,6 +126,10 @@ export const saveSpacesToBookmark = async (spaces: ISpaceWithTabs[]) => {
     // create new parent bm folder
     const newParentBMFolderId = await createParentBMFolder();
 
+    // get spaces and tabs
+
+    const spaces = await getAllSpaces();
+
     // add spaces folder to parent folder
     for (const space of spaces) {
       // don't save unsaved spaces to bookmarks
@@ -113,23 +138,25 @@ export const saveSpacesToBookmark = async (spaces: ISpaceWithTabs[]) => {
       // create space bookmark folder
       const spaceBMFolder = await chrome.bookmarks.create({ title: space.title, parentId: newParentBMFolderId });
 
-      // group all tab promises to process at once
-      const tabsPromises: Promise<chrome.bookmarks.BookmarkTreeNode>[] = [];
-
       // create an empty folder space folder
       // this folder's title contains all the details of that space
       const spaceDetailsStr = generateBMTitle(space);
 
+      // get all tabs for this space
+      const tabs = await getStorage<ITab[]>({ type: 'local', key: `tabs-${space.id}` });
+
+      // group all tab promises to process at once
+      const tabsPromises: Promise<chrome.bookmarks.BookmarkTreeNode>[] = [];
+
       tabsPromises.push(chrome.bookmarks.create({ parentId: spaceBMFolder.id, title: spaceDetailsStr, index: 0 }));
 
-      space.tabs.forEach((tab, idx) => {
+      tabs.forEach((tab, idx) => {
         tabsPromises.push(
           chrome.bookmarks.create({ parentId: spaceBMFolder.id, title: tab.title, url: tab.url, index: idx + 1 }),
         );
       });
 
       // create tabs bookmarks in space folder
-
       await Promise.allSettled(tabsPromises);
     }
     return true;
@@ -137,7 +164,7 @@ export const saveSpacesToBookmark = async (spaces: ISpaceWithTabs[]) => {
     logger.error({
       error,
       msg: 'Error saving spaces to bookmarks',
-      fileTrace: 'src/services/chrome-storage/bookmarks.ts:0 ~ saveSpacesToBookmark() ~ catch block',
+      fileTrace: 'src/services/chrome-storage/bookmarks.ts:140 ~ saveSpacesToBookmark() ~ catch block',
     });
     return false;
   }

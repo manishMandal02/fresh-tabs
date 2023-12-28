@@ -1,11 +1,10 @@
-import { SampleSpaces } from './../../constants/app';
 import { ITab } from './../types/global.types';
 import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
 import { getUrlFromHTML } from '../utils/get-url-from-html';
 import {
   checkNewWindowTabs,
-  createNewSpace,
+  createSampleSpaces,
   createUnsavedSpace,
   deleteSpace,
   getSpaceByWindow,
@@ -16,6 +15,7 @@ import { getFaviconURL, wait } from '../utils';
 import { logger } from '../utils/logger';
 import { publishEvents } from '../utils/publish-events';
 import { generateId } from '../utils/generateId';
+import { checkParentBMFolder, syncSpacesFromBookmarks } from '@root/src/services/chrome-bookmarks/bookmarks';
 
 reloadOnUpdate('pages/background');
 
@@ -38,11 +38,9 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - check for BM tabs storage
-
 //* common event handlers
 
-const createSpacesOnInstall = async (shouldCreateSampleSpace = false) => {
+const createUnsavedSpacesOnInstall = async () => {
   try {
     const windows = await chrome.windows.getAll();
 
@@ -66,19 +64,13 @@ const createSpacesOnInstall = async (shouldCreateSampleSpace = false) => {
       await createUnsavedSpace(window.id, tabs, activeIndex);
     }
 
-    // create a sample space for new users
-    if (shouldCreateSampleSpace) {
-      await createNewSpace({ ...SampleSpaces[0].space }, [...SampleSpaces[0].tabs]);
-      await createNewSpace({ ...SampleSpaces[1].space }, [...SampleSpaces[1].tabs]);
-    }
-
     // success
     return true;
   } catch (error) {
     logger.error({
       error: new Error('Failed to create spaces'),
       msg: 'Failed to initialize app',
-      fileTrace: 'src/pages/background/index.ts:59 ~ createSpacesOnInstall() ~ catch block',
+      fileTrace: 'src/pages/background/index.ts:59 ~ createUnsavedSpacesOnInstall() ~ catch block',
     });
     return false;
   }
@@ -134,8 +126,30 @@ chrome.runtime.onInstalled.addListener(async info => {
     // initialize storage
     await chrome.storage.local.clear();
 
-    // create unsaved spaces for current opened windows and sample space if new user
-    await createSpacesOnInstall(true);
+    // create unsaved spaces for current opened windows
+    await createUnsavedSpacesOnInstall();
+
+    //-- check for saved spaces in bookmarks
+
+    // 1. check if parent/root folder exists in bookmarks
+    const rootBMFolderId = await checkParentBMFolder();
+
+    if (!rootBMFolderId) {
+      // new user
+      // 2.a. create sample spaces
+      await createSampleSpaces();
+    } else {
+      // app's root folder found
+
+      // 2.b. get spaces from the root folder
+      const spacesWithTabs = await syncSpacesFromBookmarks(rootBMFolderId);
+
+      if (!spacesWithTabs) {
+        // 2.c. could not sync spaces from bookmarks
+        // create sample space
+        await createSampleSpaces();
+      }
+    }
 
     logger.info('✅ Successfully initialized app.');
   }
