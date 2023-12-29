@@ -49,7 +49,7 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
         }),
       ]);
     };
-    await openSpace({ space, onNewWindowCreated });
+    await openSpace({ space, onNewWindowCreated, shouldOpenInNewWindow: true });
   };
 
   // handle remove tab from space
@@ -166,6 +166,7 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
               tabData={tab}
               isTabActive={space.activeTabIndex === idx}
               onTabDelete={async () => await handleRemoveTab(tab.id, idx)}
+              isSpaceActive={isActive}
             />
           ))}
         </div>

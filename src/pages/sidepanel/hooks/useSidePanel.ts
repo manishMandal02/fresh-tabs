@@ -1,5 +1,5 @@
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
-import { IAppSettings, IMessageEvent, ISpaceWithTabs } from '../../types/global.types';
+import { IMessageEvent, ISpaceWithTabs } from '../../types/global.types';
 import { logger } from '../../utils/logger';
 import { useAtom } from 'jotai';
 import { appSettingsAtom, spacesAtom } from '@root/src/stores/app';
@@ -7,14 +7,14 @@ import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { useEffect } from 'react';
 import type { OnDragEndResponder } from 'react-beautiful-dnd';
-import { getStorage, setStorage } from '@root/src/services/chrome-storage/helpers';
-import { StorageKeys } from '@root/src/constants/app';
+import { setStorage } from '@root/src/services/chrome-storage/helpers';
+import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 
 export const useSidePanel = () => {
   // spaces atom (global state)
   const [spaces, setSpaces] = useAtom(spacesAtom);
   // app settings atom (global state)
-  const [, setAppSetting] = useAtom(appSettingsAtom);
+  const [appSettings, setAppSetting] = useAtom(appSettingsAtom);
 
   // get all spaces from storage
   const getAllSpacesStorage = async () => {
@@ -41,7 +41,7 @@ export const useSidePanel = () => {
       setSpaces(allSpaces);
 
       // set app settings
-      const settings = await getStorage<IAppSettings>({ type: 'sync', key: StorageKeys.SETTINGS });
+      const settings = await getAppSettings();
 
       setAppSetting(settings);
     })();
@@ -140,6 +140,7 @@ export const useSidePanel = () => {
     spaces,
     getActiveSpaceId,
     handleEvents,
+    appSettings,
     getAllSpacesStorage,
     onDragEnd,
   };

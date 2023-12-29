@@ -17,7 +17,7 @@ const SidePanel = () => {
   const [spaceToUpdate, setSpaceToUpdate] = useState<ISpaceWithTabs | undefined>(undefined);
 
   // custom hook
-  const { spaces, getActiveSpaceId, handleEvents, onDragEnd } = useSidePanel();
+  const { spaces, appSettings, getActiveSpaceId, handleEvents, onDragEnd } = useSidePanel();
 
   // active space in the window
   const [activeSpaceId, setActiveSpaceId] = useState('');
@@ -31,6 +31,8 @@ const SidePanel = () => {
   // snackbar global state/atom
   const [snackbar] = useAtom(snackbarAtom);
 
+  // expand the active space by default, if this preference is set by user
+
   // listen to events from  background
   chrome.runtime.onMessage.addListener(async (msg, _sender, response) => {
     const event = msg as IMessageEvent;
@@ -41,11 +43,7 @@ const SidePanel = () => {
     }
 
     // handle idempotence
-    // same events were  being consumed multiple times,
-    // so we now have an id for each event to handle duplicate events
-
-    // check if event was processed already
-    // if yes, do nothing
+    // same events were  being consumed multiple times, so we keep track of events processed
 
     if (processedEvents.indexOf(event.id) !== -1) {
       response(true);
@@ -71,6 +69,10 @@ const SidePanel = () => {
       const spaceId = await getActiveSpaceId();
 
       setActiveSpaceId(spaceId);
+
+      if (appSettings.activeSpaceExpanded) {
+        setExpandedSpaceId(spaceId);
+      }
 
       setIsLoadingSpaces(false);
     })();

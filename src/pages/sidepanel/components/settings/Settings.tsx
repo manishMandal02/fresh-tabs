@@ -1,14 +1,14 @@
-import { useState , useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import RadioGroup, { RadioOptions } from '../elements/RadioGroup/RadioGroup';
 import { useAtom } from 'jotai';
 import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
 import { IAppSettings } from '@root/src/pages/types/global.types';
-import { StorageKeys, defaultAppSettings } from '@root/src/constants/app';
+import { defaultAppSettings } from '@root/src/constants/app';
 import { MdOutlineSettings } from 'react-icons/md';
 import { SlideModal } from '../elements/modal';
 import Switch from '../elements/switch/Switch';
 import Spinner from '../elements/spinner';
-import { setStorage } from '@root/src/services/chrome-storage/helpers';
+import { saveSettings } from '@root/src/services/chrome-storage/settings';
 
 const shortcutOptions: RadioOptions[] = [
   { value: 'cmd+e', label: '<kbd>CMD</kbd> + <kbd>E</kbd>' },
@@ -34,6 +34,12 @@ const openSpaceOption: RadioOptions[] = [
 type IAppSettingsKeys = keyof IAppSettings;
 
 const Settings = () => {
+  //
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // const [errorMsg, setErrorMsg] = useState('');
+
+  // local settings state
   const [settingsUpdateData, setSettingsUpdateData] = useState<IAppSettings>(defaultAppSettings);
 
   // track settings changes from global state
@@ -44,9 +50,6 @@ const Settings = () => {
 
   // settings global state
   const [appSettings, setAppSetting] = useAtom(appSettingsAtom);
-
-  const [isModalOpen, setIsModalOpen] = useState(true);
-  // const [errorMsg, setErrorMsg] = useState('');
 
   // set local settings data state
   useEffect(() => {
@@ -69,7 +72,7 @@ const Settings = () => {
 
   const handleSaveSettings = async () => {
     // set to chrome storage
-    await setStorage({ type: 'sync', key: StorageKeys.SETTINGS, value: settingsUpdateData });
+    await saveSettings(settingsUpdateData);
     // set global state
     setAppSetting(settingsUpdateData);
   };

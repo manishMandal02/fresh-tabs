@@ -16,8 +16,8 @@ import { logger } from '../utils/logger';
 import { publishEvents } from '../utils/publish-events';
 import { generateId } from '../utils/generateId';
 import { checkParentBMFolder, syncSpacesFromBookmarks } from '@root/src/services/chrome-bookmarks/bookmarks';
-import { setStorage } from '@root/src/services/chrome-storage/helpers';
-import { StorageKeys, defaultAppSettings } from '@root/src/constants/app';
+import { defaultAppSettings } from '@root/src/constants/app';
+import { saveSettings } from '@root/src/services/chrome-storage/settings';
 
 reloadOnUpdate('pages/background');
 
@@ -126,7 +126,7 @@ chrome.runtime.onInstalled.addListener(async info => {
     //* initialize the app
 
     // save default settings to sync storage
-    await setStorage({ type: 'sync', key: StorageKeys.SETTINGS, value: defaultAppSettings });
+    await saveSettings(defaultAppSettings);
 
     // create unsaved spaces for current opened windows
     await createUnsavedSpacesOnInstall();
@@ -198,6 +198,9 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
 // event listener for when tabs get updated
 chrome.tabs.onUpdated.addListener(async (tabId, info) => {
   if (info?.status === 'complete') {
+    // if this is discard tab, do nothing
+    if (info?.url.startsWith(DiscardTabURLPrefix)) return;
+
     // add/update tab
     await updateTabHandler(tabId);
   }
