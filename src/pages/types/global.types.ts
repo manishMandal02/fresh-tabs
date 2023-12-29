@@ -49,7 +49,11 @@ export interface IMessageEvent {
   payload: IEventPayload;
 }
 
-/*
-
-
-*/
+export interface IAppSettings {
+  includeBookmarksInSearch: boolean;
+  activeSpaceExpanded: boolean;
+  deleteUnsavedSpace: 'immediately' | 'week';
+  openSpace: 'newWindow' | 'sameWindow';
+  autoSaveToBookmark: 'off' | 'daily' | 'weekly';
+  shortCutToOpenApp: 'cmd+e' | 'cmd+shift+s';
+}

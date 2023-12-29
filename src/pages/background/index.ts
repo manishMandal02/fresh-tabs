@@ -16,6 +16,8 @@ import { logger } from '../utils/logger';
 import { publishEvents } from '../utils/publish-events';
 import { generateId } from '../utils/generateId';
 import { checkParentBMFolder, syncSpacesFromBookmarks } from '@root/src/services/chrome-bookmarks/bookmarks';
+import { setStorage } from '@root/src/services/chrome-storage/helpers';
+import { StorageKeys, defaultAppSettings } from '@root/src/constants/app';
 
 reloadOnUpdate('pages/background');
 
@@ -121,7 +123,10 @@ const removeTabHandler = async (tabId: number, windowId: number) => {
 // on extension installed
 chrome.runtime.onInstalled.addListener(async info => {
   if (info.reason === 'install') {
-    // initialize the app
+    //* initialize the app
+
+    // save default settings to sync storage
+    await setStorage({ type: 'sync', key: StorageKeys.SETTINGS, value: defaultAppSettings });
 
     // create unsaved spaces for current opened windows
     await createUnsavedSpacesOnInstall();

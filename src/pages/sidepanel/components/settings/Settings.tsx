@@ -1,18 +1,21 @@
+import { useState , useEffect } from 'react';
+import RadioGroup, { RadioOptions } from '../elements/RadioGroup/RadioGroup';
+import { useAtom } from 'jotai';
+import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
+import { IAppSettings } from '@root/src/pages/types/global.types';
+import { StorageKeys, defaultAppSettings } from '@root/src/constants/app';
 import { MdOutlineSettings } from 'react-icons/md';
 import { SlideModal } from '../elements/modal';
-import { useState } from 'react';
-import RadioGroup from '../elements/RadioGroup';
-import { RadioOptions } from '../elements/RadioGroup/RadioGroup';
+import Switch from '../elements/switch/Switch';
 import Spinner from '../elements/spinner';
-import { useAtom } from 'jotai';
-import { snackbarAtom } from '@root/src/stores/app';
+import { setStorage } from '@root/src/services/chrome-storage/helpers';
 
 const shortcutOptions: RadioOptions[] = [
   { value: 'cmd+e', label: '<kbd>CMD</kbd> + <kbd>E</kbd>' },
   { value: 'cmd+shift+s', label: '<kbd>CMD</kbd> + <kbd>SHIFT</kbd> + <kbd>S</kbd>' },
 ];
 
-const autoSaveOptions: RadioOptions[] = [
+const autoSaveToBookmark: RadioOptions[] = [
   { value: 'off', label: 'Off' },
   { value: 'daily', label: 'Daily' },
   { value: 'weekly', label: 'Weekly' },
@@ -23,17 +26,54 @@ const deleteUnsavedSpacesOptions: RadioOptions[] = [
   { value: 'week', label: 'After a week' },
 ];
 
-const Settings = () => {
-  const [shortcutToOpen, setShortcutToOpen] = useState(shortcutOptions[0].value);
-  const [autoSave, setAutoSave] = useState(autoSaveOptions[0].value);
-  const [deleteUnsavedSpaces, setDeleteUnsavedSpaces] = useState(deleteUnsavedSpacesOptions[0].value);
+const openSpaceOption: RadioOptions[] = [
+  { value: 'newWindow', label: 'New Window' },
+  { value: 'sameWindow', label: 'Same Window' },
+];
 
+type IAppSettingsKeys = keyof IAppSettings;
+
+const Settings = () => {
+  const [settingsUpdateData, setSettingsUpdateData] = useState<IAppSettings>(defaultAppSettings);
+
+  // track settings changes from global state
+  const [hasSettingsChanged, setHasSettingsChanged] = useState(false);
+
+  // snackbar global state
   const [snackbar] = useAtom(snackbarAtom);
+
+  // settings global state
+  const [appSettings, setAppSetting] = useAtom(appSettingsAtom);
 
   const [isModalOpen, setIsModalOpen] = useState(true);
   // const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSaveSettings = async () => {};
+  // set local settings data state
+  useEffect(() => {
+    setSettingsUpdateData(appSettings);
+  }, [appSettings]);
+
+  // on settings change
+  const handleSettingsChange = (key: IAppSettingsKeys, value: IAppSettings[IAppSettingsKeys]) => {
+    const updatedSettings = { ...settingsUpdateData, [key]: value };
+
+    setSettingsUpdateData(updatedSettings);
+
+    // check if settings has changed
+    for (const key in updatedSettings) {
+      if (appSettings[key] !== updatedSettings[key]) {
+        setHasSettingsChanged(true);
+      }
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    // set to chrome storage
+    await setStorage({ type: 'sync', key: StorageKeys.SETTINGS, value: settingsUpdateData });
+    // set global state
+    setAppSetting(settingsUpdateData);
+  };
+
   return (
     <>
       <MdOutlineSettings
@@ -42,44 +82,80 @@ const Settings = () => {
         onClick={() => setIsModalOpen(true)}
       />
       <SlideModal title="Settings" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <div className="relative flex flex-col  w-full h-[24rem] py-4 px-3.5 text-slate-400 ">
+        <div className="relative flex flex-col  w-full h-[32rem] py-4 px-3.5 text-slate-400 ">
           {/* shortcuts */}
           <div className="mt-1">
-            <span className="text-[15px]  font-light tracking-wide ">Shortcut to open FreshTabs</span>
+            <span className="text-[14px]  font-light tracking-wide ">Shortcut to open FreshTabs</span>
             <RadioGroup
               options={shortcutOptions}
-              value={shortcutToOpen}
+              value={settingsUpdateData.shortCutToOpenApp}
               defaultValue={shortcutOptions[0].value}
-              onChange={value => setShortcutToOpen(value)}
+              onChange={value => handleSettingsChange('shortCutToOpenApp', value)}
             />
           </div>
           <hr className="w-3/4 mx-auto h-px bg-slate-700/20 rounded-md border-none mt-4 mb-3" />
           {/* save & sync */}
           <div className="">
-            <span className="text-[15px]  font-light tracking-wide ">Auto Save to Browser Bookmark</span>
+            <span className="text-[14px]  font-light tracking-wide ">Auto Save to Browser Bookmark</span>
             <RadioGroup
-              options={autoSaveOptions}
-              value={autoSave}
-              defaultValue={autoSaveOptions[0].value}
-              onChange={value => setAutoSave(value)}
+              options={autoSaveToBookmark}
+              value={settingsUpdateData.autoSaveToBookmark}
+              defaultValue={autoSaveToBookmark[0].value}
+              onChange={value => handleSettingsChange('autoSaveToBookmark', value)}
             />
           </div>
           <hr className="w-3/4 mx-auto h-px bg-slate-700/20 rounded-md border-none mt-4 mb-3" />
           {/* save & sync */}
           <div className="">
-            <span className="text-[15px]  font-light tracking-wide ">Delete Unsaved spaces after sessions</span>
+            <span className="text-[14px]  font-light tracking-wide ">Delete Unsaved spaces after sessions</span>
             <RadioGroup
               options={deleteUnsavedSpacesOptions}
-              value={deleteUnsavedSpaces}
+              value={settingsUpdateData.deleteUnsavedSpace}
               defaultValue={deleteUnsavedSpacesOptions[0].value}
-              onChange={value => setDeleteUnsavedSpaces(value)}
+              onChange={value => handleSettingsChange('deleteUnsavedSpace', value)}
+            />
+          </div>
+
+          <hr className="w-3/4 mx-auto h-px bg-slate-700/20 rounded-md border-none mt-4 mb-3" />
+
+          {/* open space in */}
+          <div className="">
+            <span className="text-[14px]  font-light tracking-wide ">Open space in</span>
+            <RadioGroup
+              options={openSpaceOption}
+              value={settingsUpdateData.openSpace}
+              defaultValue={openSpaceOption[0].value}
+              onChange={value => handleSettingsChange('openSpace', value)}
+            />
+          </div>
+          {/* active space expanded */}
+          <div className="mt-3 flex items-center justify-between pr-2.5 border-b border-slate-700/30 rounded-sm py-1 pb-2.5">
+            <label htmlFor="active-space-expanded" className="text-[14px] mr-8  font-light tracking-wide">
+              Expand active space by default
+            </label>
+            <Switch
+              id="active-space-expanded"
+              checked={settingsUpdateData.activeSpaceExpanded}
+              onChange={checked => handleSettingsChange('activeSpaceExpanded', checked)}
+            />
+          </div>
+          {/* include bookmarks in search */}
+          <div className="mt-3 flex items-center justify-between pr-2.5 border-b border-slate-700/30 rounded-sm  py-1 pb-2.5">
+            <label htmlFor="include-bookmark-in-search" className="text-[14px] mr-12  font-light tracking-wide">
+              Include Bookmarks in Search
+            </label>
+            <Switch
+              id="include-bookmark-in-search"
+              checked={settingsUpdateData.includeBookmarksInSearch}
+              onChange={checked => handleSettingsChange('includeBookmarksInSearch', checked)}
             />
           </div>
           {/* save button */}
           <button
-            className={` mt-12 mx-auto w-[90%] py-2 
+            className={` mt-8 mx-auto w-[90%] py-2  disabled:cursor-default
                       rounded-md text-slate-500 font-medium text-base shadow shadow-slate-500 hover:opacity-80 transition-all duration-300`}
-            onClick={handleSaveSettings}>
+            onClick={handleSaveSettings}
+            disabled={!hasSettingsChanged}>
             {snackbar.isLoading ? <Spinner size="sm" /> : 'Save'}
           </button>
         </div>

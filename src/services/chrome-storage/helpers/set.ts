@@ -1,8 +1,8 @@
 import { StorageKeys } from '@root/src/constants/app';
-import { ISpace, ITab } from '@root/src/pages/types/global.types';
+import { IAppSettings, ISpace, ITab } from '@root/src/pages/types/global.types';
 import { logger } from '@root/src/pages/utils/logger';
 
-type StorageValue = ISpace | ISpace[] | ITab[] | string;
+type StorageValue = ISpace | ISpace[] | ITab[] | IAppSettings | string;
 
 type SetStorageParams = {
   type: 'local' | 'sync';

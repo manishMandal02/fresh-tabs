@@ -76,6 +76,16 @@ const SidePanel = () => {
     })();
   }, [spaces]);
 
+  // const handleSearchShortcut: EventListener = ev => {
+  //   console.log('🚀 ~ file: SidePanel.tsx:82 ~ SidePanel ~ ev:', ev);
+
+  //   return;
+  // };
+
+  // useEffect(() => {
+  //   document.addEventListener('keypress', handleSearchShortcut);
+  // }, []);
+
   return (
     <div className="w-screen h-screen  overflow-hidden bg-brand-background">
       <main className="h-full relative ">

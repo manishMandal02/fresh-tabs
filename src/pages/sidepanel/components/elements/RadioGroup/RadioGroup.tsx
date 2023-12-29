@@ -5,34 +5,34 @@ export type RadioOptions = {
   label: string;
 };
 
-type Props = {
+type Props<T = string> = {
   options: RadioOptions[];
   defaultValue?: string;
-  value: string;
-  onChange: (value: string) => void;
+  value: T;
+  onChange: (value: T) => void;
 };
 
-const RadioGroup = ({ options, value, onChange, defaultValue }: Props) => {
+const RadioGroup = <T = string,>({ options, value, onChange, defaultValue }: Props<T>) => {
   return (
-    <form className="mt-2 ">
+    <form className="mt-1 ">
       <RadioGroupRadix.Root
         className="flex  gap-x-4"
         defaultValue={defaultValue}
-        value={value}
-        onValueChange={onChange}>
+        value={value as string}
+        onValueChange={value => onChange(value as T)}>
         {options.map(({ value, label }) => (
           <div key={value} className="flex items-center border border-slate-700/40  px-3 rounded-md py-1.5 w-fit ">
             <RadioGroupRadix.Item
-              className="bg-slate-600 w-[18px] h-[18px] rounded-full outline-none cursor-pointer"
+              className="bg-slate-600 w-[16px] h-[16px] rounded-full outline-none cursor-pointer"
               value={value}
               id={value}>
-              <RadioGroupRadix.Indicator className="flex items-center justify-center w-full h-full relative after:content-[''] after:block after:w-[10px] after:h-[10px] after:rounded-[50%] after:bg-emerald-400" />
+              <RadioGroupRadix.Indicator className="flex items-center justify-center w-full h-full relative after:content-[''] after:block after:w-[8px] after:h-[8px] after:rounded-[50%] after:bg-emerald-400" />
             </RadioGroupRadix.Item>
             <label
-              className="text-slate-300/90 text-sm leading-none pl-2.5 cursor-pointer select-text"
+              className="text-slate-300/90 text-[12px] leading-none pl-2.5 cursor-pointer select-text"
               htmlFor={value}
               dangerouslySetInnerHTML={{ __html: label }}>
-              {label}
+              {/* {label} */}
             </label>
           </div>
         ))}

@@ -35,7 +35,7 @@ const Modal = ({ children, isOpen, onClose, title }: Props) => {
       }}>
       {/* backdrop */}
       {/* eslint-disable-next-line */}
-      <div className="z-[55] w-screen h-screen fixed bg-slate-500/10" onClick={handleClose}></div>
+      <div className="z-[55] w-screen h-screen fixed bg-slate-700/10" onClick={handleClose}></div>
       {/* modal card */}
       <div
         className={`z-[60] absolute bottom-0 flex flex-col left-0 w-full h-min  mx-auto  min-h-[40%]  bg-slate-800 rounded-tl-3xl 
