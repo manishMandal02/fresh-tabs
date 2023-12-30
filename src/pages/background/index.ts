@@ -31,6 +31,8 @@ logger.info('🏁 background loaded');
 
 const DiscardTabURLPrefix = 'data:text/html,';
 
+// TODO - FIX: some subdomain favicon are broken
+
 // open side panel on extension icon clicked
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error => {
   logger.error({
@@ -199,7 +201,9 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
 chrome.tabs.onUpdated.addListener(async (tabId, info) => {
   if (info?.status === 'complete') {
     // if this is discard tab, do nothing
-    if (info?.url.startsWith(DiscardTabURLPrefix)) return;
+    if (info?.url?.startsWith(DiscardTabURLPrefix)) return;
+
+    console.log('🚀 ~ file: index.ts:204 ~ chrome.tabs.onUpdated.addListener ~ info:', info);
 
     // add/update tab
     await updateTabHandler(tabId);

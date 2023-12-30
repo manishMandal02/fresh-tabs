@@ -41,10 +41,12 @@ const Tab = ({ tabData, onTabDelete, isTabActive, isSpaceActive, showHoverOption
       </span>
       {showHoverOption ? (
         <span className="absolute hidden group-hover:flex right-2 bottom-2 items-center gap-x-3">
-          <OpenTabIcon
-            className={` text-slate-700 text-xs cursor-pointer bg-slate-400 px-[.75px] py-[1.5px] rounded-sm scale-150 transition-all duration-200 hover:bg-slate-400/80`}
-            onClick={handleOpen}
-          />
+          {!isTabActive ? (
+            <OpenTabIcon
+              className={` text-slate-700 text-xs cursor-pointer bg-slate-400 px-[.75px] py-[1.5px] rounded-sm scale-150 transition-all duration-200 hover:bg-slate-400/80`}
+              onClick={handleOpen}
+            />
+          ) : null}
           <MdContentCopy
             className={` text-slate-700 text-xs cursor-pointer bg-slate-400 px-[.75px] py-[1.5px] rounded-sm scale-150 transition-all duration-200 hover:bg-slate-400/80`}
             onClick={handleCopyURL}

@@ -1,14 +1,23 @@
 // create a tab
 
-import { ISpace, ITab } from '@root/src/pages/types/global.types';
-import { getTabsInSpace } from '../chrome-storage/tabs';
-import { updateSpace } from '../chrome-storage/spaces';
+import { IAppSettings, ISpace, ITab } from '@root/src/pages/types/global.types';
+import { getSpaceByWindow, updateSpace } from '../chrome-storage/spaces';
 import { getFaviconURL } from '@root/src/pages/utils';
 
 type OpenSpaceProps = {
   space: ISpace;
+  tabs: ITab[];
   onNewWindowCreated: (windowId: number) => void;
-  shouldOpenInNewWindow: boolean;
+  openWindowType: IAppSettings['openSpace'];
+};
+
+const createActiveTab = async (url: string, index: number, windowId) => {
+  return await chrome.tabs.create({
+    windowId,
+    url,
+    index,
+    active: true,
+  });
 };
 
 const createDiscardedTabs = async (tabs: ITab[], windowId: number) => {
@@ -38,73 +47,85 @@ const createDiscardedTabs = async (tabs: ITab[], windowId: number) => {
   await Promise.allSettled(createMultipleTabsPromise);
 };
 
-const openSpaceInSameWindow = async (space: ISpace, tabs: ITab[]) => {
+const clearCurrentWindow = async () => {
+  //
   const currentWindowId = await getCurrentWindowId();
-  // delete all the tabs in the current window
+
+  // batch tabs to delete promises
   const tabsToBeDeletedPromises: Promise<void>[] = [];
-  // get all tabs inm this window
-  const currentWindowTabs = await chrome.tabs.query({ windowId: space.windowId });
+
+  // temporary create an empty tab in this window
+  const defaultWindowTabId = await chrome.tabs.create({
+    active: true,
+    url: 'chrome://newtab/',
+    index: 0,
+    windowId: currentWindowId,
+  });
+
+  // get all tabs in this window
+  const currentWindowTabs = await chrome.tabs.query({ windowId: currentWindowId });
 
   for (const tab of currentWindowTabs) {
     tabsToBeDeletedPromises.push(chrome.tabs.remove(tab.id));
   }
 
-  // create tabs for the opened space
-  const tabsToBeCreatedPromises: Promise<chrome.tabs.Tab>[] = [];
-
-  tabs.forEach((tab, idx) => {
-    tabsToBeCreatedPromises.push(
-      chrome.tabs.create({ url: tab.url, windowId: currentWindowId, index: idx, active: space.activeTabIndex === idx }),
-    );
-  });
-
-  //TODO - make sure the window doesn't close
-
-  // delete all tabs
+  // delete all the tabs in the current window
   await Promise.allSettled(tabsToBeDeletedPromises);
 
-  // create new tabs
-  await Promise.allSettled(tabsToBeCreatedPromises);
-
-  // save new window id to space
-  await updateSpace(space.id, { ...space, windowId: currentWindowId });
+  return { defaultWindowTabId: defaultWindowTabId.id, windowId: currentWindowId };
 };
 
 // opens a space in new window
-export const openSpace = async ({ space, onNewWindowCreated, shouldOpenInNewWindow }: OpenSpaceProps) => {
-  //* only active tab will be loaded, rest will be loaded after user visits them
+export const openSpace = async ({ space, tabs, onNewWindowCreated, openWindowType }: OpenSpaceProps) => {
+  // only active tab will be loaded, rest will be loaded after user visits them
 
-  if (!shouldOpenInNewWindow) {
-    openSpaceInSameWindow(space, []);
+  // space's active tab position
+  const activeTabIndex = space.activeTabIndex;
+
+  const activeTabUrl = tabs[activeTabIndex].url;
+
+  const discardedTabs = tabs.filter((_tab, idx) => idx !== activeTabIndex);
+
+  let windowId = 0;
+
+  let defaultWindowTabId = 0;
+
+  // get the window based on user preference
+  if (openWindowType === 'sameWindow') {
+    // clear the current window
+    const res = await clearCurrentWindow(tabs);
+    windowId = res.windowId;
+    defaultWindowTabId = res.defaultWindowTabId;
+
+    // remove this window id from the current space
+    const currentSpace = await getSpaceByWindow(windowId);
+
+    await updateSpace(currentSpace.id, { ...currentSpace, windowId: 0 });
+  } else {
+    // create new window
+    const window = await chrome.windows.create({ focused: true });
+
+    if (window) {
+      windowId = window.id;
+      defaultWindowTabId = window.tabs[0].id;
+    }
   }
-  // create new window with all the space tabs
-  const window = await chrome.windows.create({ focused: true });
 
-  if (window.id) {
-    // save new window id to space
-    await updateSpace(space.id, { ...space, windowId: window.id });
-    onNewWindowCreated(window.id);
-    const defaultWindowTabId = window.tabs[0].id;
-    // get all tabs for space
+  if (!windowId) return;
+  // set current window in side panel UI
+  onNewWindowCreated(windowId);
 
-    const tabs = await getTabsInSpace(space.id);
+  // save new window id to space
+  await updateSpace(space.id, { ...space, windowId });
 
-    // create discarded tabs
-    const discardedTabs = tabs.filter((tab, idx) => idx !== space.activeTabIndex);
+  //  discarded tabs
+  await createDiscardedTabs(discardedTabs, windowId);
 
-    await createDiscardedTabs(discardedTabs, window.id);
+  // create active tab
+  await createActiveTab(activeTabUrl, activeTabIndex, windowId);
 
-    // create active tab
-    await chrome.tabs.create({
-      active: true,
-      windowId: window.id,
-      url: tabs[space.activeTabIndex].url,
-      index: space.activeTabIndex,
-    });
-
-    // delete the default tab created (an empty tab gets created along with window)
-    await chrome.tabs.remove(defaultWindowTabId);
-  }
+  // delete the default tab created (an empty tab gets created along with window)
+  await chrome.tabs.remove(defaultWindowTabId);
 };
 
 // create a new tab

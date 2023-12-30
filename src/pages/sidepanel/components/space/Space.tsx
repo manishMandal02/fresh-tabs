@@ -6,7 +6,7 @@ import Tooltip from '../elements/tooltip';
 import { openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { removeTabFromSpace } from '@root/src/services/chrome-storage/tabs';
 import { useAtom } from 'jotai';
-import { snackbarAtom, spacesAtom } from '@root/src/stores/app';
+import { appSettingsAtom, snackbarAtom, spacesAtom } from '@root/src/stores/app';
 
 const SPACE_HEIGHT = 45;
 
@@ -23,8 +23,11 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
   // spaces atom (global state)
   const [, setSpaces] = useAtom(spacesAtom);
 
-  // snackbar global state/atom
+  // snackbar atom
   const [, setSnackbar] = useAtom(snackbarAtom);
+
+  // settings atom
+  const [appSettings] = useAtom(appSettingsAtom);
 
   // on setting click
   const onSettingsClick: MouseEventHandler<SVGElement> = ev => {
@@ -49,7 +52,7 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
         }),
       ]);
     };
-    await openSpace({ space, onNewWindowCreated, shouldOpenInNewWindow: true });
+    await openSpace({ space, onNewWindowCreated, tabs, openWindowType: appSettings.openSpace });
   };
 
   // handle remove tab from space
