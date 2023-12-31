@@ -9,7 +9,7 @@ type Props = {
   showHoverOption?: boolean;
   onTabDelete?: () => Promise<void>;
   isTabActive: boolean;
-  isSpaceActive: boolean;
+  isSpaceActive?: boolean;
 };
 const Tab = ({ tabData, onTabDelete, isTabActive, isSpaceActive, showHoverOption = true }: Props) => {
   // handle open tab

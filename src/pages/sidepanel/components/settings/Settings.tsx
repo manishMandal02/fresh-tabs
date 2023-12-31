@@ -45,8 +45,8 @@ const Settings = () => {
   // track settings changes from global state
   const [hasSettingsChanged, setHasSettingsChanged] = useState(false);
 
-  // snackbar global state
-  const [snackbar] = useAtom(snackbarAtom);
+  // snackbar atom
+  const [snackbar, setSnackbar] = useAtom(snackbarAtom);
 
   // settings global state
   const [appSettings, setAppSetting] = useAtom(appSettingsAtom);
@@ -71,10 +71,21 @@ const Settings = () => {
   };
 
   const handleSaveSettings = async () => {
+    // show loading snackbar
+    setSnackbar({ show: true, msg: 'Creating new space', isLoading: true });
     // set to chrome storage
     await saveSettings(settingsUpdateData);
+
     // set global state
     setAppSetting(settingsUpdateData);
+
+    // hide loading snackbar
+    setSnackbar({ show: false, msg: '', isLoading: false });
+
+    // close modal
+    setIsModalOpen(false);
+
+    setSnackbar({ show: true, msg: 'Preferences saved', isSuccess: true });
   };
 
   return (
@@ -84,7 +95,7 @@ const Settings = () => {
         className="text-slate-600 mt-1 cursor-pointer"
         onClick={() => setIsModalOpen(true)}
       />
-      <SlideModal title="Settings" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+      <SlideModal title="Preferences" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <div className="relative flex flex-col  w-full h-[32rem] py-4 px-3.5 text-slate-400 ">
           {/* shortcuts */}
           <div className="mt-1">

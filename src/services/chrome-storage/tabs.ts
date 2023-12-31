@@ -22,6 +22,22 @@ export const getTabsInSpace = async (spaceId: string): Promise<ITab[] | null> =>
   }
 };
 
+// set tabs for space
+export const setTabsForSpace = async (spaceId: string, tabs: ITab[]): Promise<boolean> => {
+  try {
+    await setStorage({ type: 'local', key: `tabs-${spaceId}`, value: tabs });
+
+    return true;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Error setting tabs for space spaceId: ${spaceId}`,
+      fileTrace: 'src/services/chrome-storage/tabs.ts:35 ~ setTabsForSpace() ~ catch block',
+    });
+    return false;
+  }
+};
+
 // get a tab in space by it's index number
 export const getTab = async (spaceId: string, idx: number): Promise<ITab | null> => {
   try {
@@ -64,7 +80,7 @@ export const updateTabIndex = async (spaceId: string, tabId: number, newIndex: n
     newTabs.splice(newIndex, 0, tabToUpdate);
 
     // save new tabs array to storage
-    await setStorage({ type: 'local', key: `tabs-${spaceId}`, value: newTabs });
+    await setTabsForSpace(spaceId, newTabs);
 
     return true;
   } catch (error) {
@@ -101,7 +117,7 @@ export const saveNewTab = async (
     tabs.splice(idx, 0, newTab);
 
     // save new list to storage
-    await setStorage({ type: 'local', key: `tabs-${spaceId}`, value: tabs });
+    await setTabsForSpace(spaceId, tabs);
 
     return true;
   } catch (error) {
@@ -115,25 +131,27 @@ export const saveNewTab = async (
 };
 
 // update/save tab url, title, etc
-export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promise<ITab | null> => {
+export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promise<boolean> => {
   try {
     // get all tabs from the space
     const tabs = await getTabsInSpace(spaceId);
+
+    // Todo - need more fool proof solution use id for better confidence
 
     // update tab at index pos
     tabs[idx] = tab;
 
     // save new list to storage
-    await setStorage({ type: 'local', key: `tabs-${spaceId}`, value: tabs });
+    await setTabsForSpace(spaceId, tabs);
 
-    return tabs[idx];
+    return true;
   } catch (error) {
     logger.error({
       error,
       msg: `Error updating tab: ${tab.title}`,
       fileTrace: 'src/services/chrome-storage/tabs.ts:101 ~ updateTab() ~ catch block',
     });
-    return null;
+    return false;
   }
 };
 
@@ -149,7 +167,7 @@ export const removeTabFromSpace = async (space: ISpace, id: number, removeFromWi
     if (tabs.length === 1 || !tabs.find(t => t.id === id)) return false;
 
     // save new tab arrays to storage
-    await setStorage({ type: 'local', key: `tabs-${space.id}`, value: [...tabs.filter(t => t.id !== id)] });
+    await setTabsForSpace(space.id, [...tabs.filter(t => t.id !== id)]);
 
     // update active index for space to 0,  if this tab was the last active tab for this space
     if (space.activeTabIndex === tabs.findIndex(t => t.id === id)) {

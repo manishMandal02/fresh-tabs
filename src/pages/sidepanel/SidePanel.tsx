@@ -60,7 +60,7 @@ const SidePanel = () => {
     response(true);
   });
 
-  // get all spaces from storage on load
+  // set active space after loading all spaces
   useEffect(() => {
     (async () => {
       setIsLoadingSpaces(true);
@@ -70,13 +70,23 @@ const SidePanel = () => {
 
       setActiveSpaceId(spaceId);
 
-      if (appSettings.activeSpaceExpanded) {
-        setExpandedSpaceId(spaceId);
-      }
-
       setIsLoadingSpaces(false);
     })();
   }, [spaces]);
+
+  // expand active space by default based on preferences
+  useEffect(() => {
+    console.log(
+      '🚀 ~ file: SidePanel.tsx:81 ~ useEffect ~ appSettings.activeSpaceExpanded:',
+      appSettings.activeSpaceExpanded,
+    );
+    console.log('🚀 ~ file: SidePanel.tsx:89 ~ useEffect ~ activeSpaceId:', activeSpaceId);
+    if (appSettings.activeSpaceExpanded) {
+      setExpandedSpaceId(activeSpaceId);
+    } else {
+      setExpandedSpaceId('');
+    }
+  }, [activeSpaceId, appSettings]);
 
   // const handleSearchShortcut: EventListener = ev => {
   //   console.log('🚀 ~ file: SidePanel.tsx:82 ~ SidePanel ~ ev:', ev);

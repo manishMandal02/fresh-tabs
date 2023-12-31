@@ -84,8 +84,6 @@ const updateTabHandler = async (tabId: number) => {
   const tab = await chrome.tabs.get(tabId);
 
   if (tab?.url.startsWith(DiscardTabURLPrefix)) return;
-  // wait 0.2s for better processing when opened new space with lot of tabs
-  // await wait(200);
 
   // get space by windowId
   const space = await getSpaceByWindow(tab.windowId);
@@ -254,7 +252,7 @@ chrome.tabs.onAttached.addListener(async tabId => {
   await updateTabHandler(tabId);
 });
 
-// event listener for when tabs get removed
+// event listener for when tabs are closed
 chrome.tabs.onRemoved.addListener(async (tabId, info) => {
   // do nothing if tab removed because window was closed
   if (info.isWindowClosing) return;

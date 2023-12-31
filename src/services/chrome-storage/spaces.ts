@@ -4,7 +4,7 @@ import { ISpace, ISpaceWithoutId, ITab } from '@root/src/pages/types/global.type
 import { logger } from '@root/src/pages/utils/logger';
 import { setStorage } from './helpers/set';
 import { generateId } from '@root/src/pages/utils/generateId';
-import { getTabsInSpace } from './tabs';
+import { getTabsInSpace, setTabsForSpace } from './tabs';
 
 // create new space with tabs
 export const createNewSpace = async (space: ISpaceWithoutId, tab: ITab[]): Promise<ISpace | null> => {
@@ -23,7 +23,7 @@ export const createNewSpace = async (space: ISpaceWithoutId, tab: ITab[]): Promi
     });
 
     // create tabs storage for this space
-    await setStorage({ type: 'local', key: `tabs-${newSpaceId}`, value: [...tab] });
+    await setTabsForSpace(newSpaceId, [...tab]);
 
     return newSpace;
   } catch (error) {
@@ -64,7 +64,7 @@ export const createUnsavedSpace = async (windowId: number, tabs: ITab[], activeI
     });
 
     // create tabs storage for this space
-    await setStorage({ type: 'local', key: `tabs-${newSpaceId}`, value: [...tabs] });
+    await setTabsForSpace(newSpaceId, [...tabs]);
 
     return newSpace;
   } catch (error) {
@@ -119,7 +119,7 @@ export const deleteSpace = async (spaceId: string) => {
     const newSpaceArray = spaces.filter(space => space.id !== spaceId);
 
     // save new space list
-    await setStorage({ type: 'sync', key: 'SPACES', value: newSpaceArray });
+    await setSpacesToStorage(newSpaceArray);
 
     // remove saved tabs for this space
     await chrome.storage.local.remove(spaceId);
@@ -146,6 +146,11 @@ export const deleteSpace = async (spaceId: string) => {
 
 // get all spaces
 export const getAllSpaces = async () => await getStorage<ISpace[]>({ key: 'SPACES', type: 'sync' });
+
+export const setSpacesToStorage = async (space: ISpace[]) => {
+  await setStorage({ type: 'sync', key: 'SPACES', value: space });
+  return true;
+};
 
 // get space by window id
 export const getSpaceByWindow = async (windowId: number): Promise<ISpace | null> => {
@@ -191,8 +196,7 @@ export const updateActiveTabInSpace = async (windowId: number, idx: number): Pro
 
     newSpacesList.push(spaceToUpdate);
 
-    // save spaces to storage
-    await setStorage({ type: 'sync', key: 'SPACES', value: newSpacesList });
+    await setSpacesToStorage(newSpacesList);
 
     return spaceToUpdate;
   } catch (error) {

@@ -38,12 +38,12 @@ export const useSidePanel = () => {
   useEffect(() => {
     (async () => {
       const allSpaces = await getAllSpacesStorage();
-      setSpaces(allSpaces);
 
       // set app settings
       const settings = await getAppSettings();
 
       setAppSetting(settings);
+      setSpaces(allSpaces);
     })();
     // eslint-disable-next-line
   }, []);
