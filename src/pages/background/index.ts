@@ -16,7 +16,7 @@ import { logger } from '../utils/logger';
 import { publishEvents } from '../utils/publish-events';
 import { generateId } from '../utils/generateId';
 import { checkParentBMFolder, syncSpacesFromBookmarks } from '@root/src/services/chrome-bookmarks/bookmarks';
-import { defaultAppSettings } from '@root/src/constants/app';
+import { DiscardTabURLPrefix, defaultAppSettings } from '@root/src/constants/app';
 import { saveSettings } from '@root/src/services/chrome-storage/settings';
 
 reloadOnUpdate('pages/background');
@@ -29,8 +29,6 @@ reloadOnUpdate('pages/content/style.scss');
 
 logger.info('🏁 background loaded');
 
-const DiscardTabURLPrefix = 'data:text/html,';
-
 // TODO - FIX: some subdomain favicon are broken
 
 // open side panel on extension icon clicked
@@ -41,6 +39,14 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
     fileTrace: 'src/pages/background/index.ts:35 ~ chrome.sidePanel.setPanelBehavior()',
   });
 });
+
+// parse url if it's a discard tab url
+const parseURL = (url: string) => {
+  if (!url.startsWith(DiscardTabURLPrefix)) return url;
+
+  // get url from html data url
+  return getUrlFromHTML(url.replace(DiscardTabURLPrefix, ''));
+};
 
 //* common event handlers
 
@@ -57,8 +63,7 @@ const createUnsavedSpacesOnInstall = async () => {
       const tabs: ITab[] = tabsInWindow.map(tab => ({
         id: tab.id,
         title: tab.title,
-        url: tab.url,
-        faviconURL: getFaviconURL(tab.url),
+        url: parseURL(tab.url),
       }));
 
       // active tab for window
@@ -107,6 +112,7 @@ const removeTabHandler = async (tabId: number, windowId: number) => {
   // get space by windowId
   const space = await getSpaceByWindow(windowId);
 
+  if (!space?.id) return;
   // remove tab
   await removeTabFromSpace(space, tabId);
 

@@ -221,8 +221,6 @@ export const checkNewWindowTabs = async (windowId: number, urls: string[]): Prom
 
     const promiseRes = await Promise.allSettled(tabsPromise);
 
-    console.log('🚀 ~ file: spaces.ts:212 ~ checkNewWindowTabs ~ promiseRes:', promiseRes);
-
     //
     let matchedSpace: ISpace | null = null;
 
@@ -240,7 +238,6 @@ export const checkNewWindowTabs = async (windowId: number, urls: string[]): Prom
     });
 
     if (!matchedSpace) return false;
-    console.log('🚀 ~ file: spaces.ts:248 ~ checkNewWindowTabs ~ matchedSpace:', matchedSpace);
 
     // tabs in this window is part of a space
     // save windowId to space
@@ -249,8 +246,6 @@ export const checkNewWindowTabs = async (windowId: number, urls: string[]): Prom
       key: 'SPACES',
       value: [...spaces.filter(s => s.id !== matchedSpace.id), { ...matchedSpace, windowId }],
     });
-
-    console.log('🚀 ~ file: spaces.ts:240 ~ checkNewWindowTabs ~ updateSpace:', true);
 
     return true;
   } catch (error) {

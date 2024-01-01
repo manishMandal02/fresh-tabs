@@ -25,7 +25,7 @@ export const getTabsInSpace = async (spaceId: string): Promise<ITab[] | null> =>
 // set tabs for space
 export const setTabsForSpace = async (spaceId: string, tabs: ITab[]): Promise<boolean> => {
   try {
-    await setStorage({ type: 'local', key: `tabs-${spaceId}`, value: tabs });
+    await setStorage({ type: 'local', key: `tabs-${spaceId}`, value: [...tabs.filter(t => !!t)] });
 
     return true;
   } catch (error) {

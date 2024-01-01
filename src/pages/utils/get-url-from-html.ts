@@ -15,7 +15,5 @@ export const getUrlFromHTML = (htmlString: string) => {
   }
 
   // get the full link from replacing any unwanted char
-  const link = matches[0].replace(/\/\/{\[|\]}\/\//g, '');
-
-  return link;
+  return matches[0].replace(/\/\/{\[|\]}\/\//g, '');
 };

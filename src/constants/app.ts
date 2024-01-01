@@ -2,6 +2,8 @@ import { IAppSettings, ThemeColor } from '../pages/types/global.types';
 
 export const FRESH_TABS_BOOKMARK_TITLE = '#Fresh Tabs ~ ⚠️ Do not delete this, managed by extension.';
 
+export const DiscardTabURLPrefix = 'data:text/html,';
+
 export enum StorageKeys {
   SPACES = 'SPACES',
   SETTINGS = 'SETTINGS',

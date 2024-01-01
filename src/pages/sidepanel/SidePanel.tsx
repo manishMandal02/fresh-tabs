@@ -76,11 +76,6 @@ const SidePanel = () => {
 
   // expand active space by default based on preferences
   useEffect(() => {
-    console.log(
-      '🚀 ~ file: SidePanel.tsx:81 ~ useEffect ~ appSettings.activeSpaceExpanded:',
-      appSettings.activeSpaceExpanded,
-    );
-    console.log('🚀 ~ file: SidePanel.tsx:89 ~ useEffect ~ activeSpaceId:', activeSpaceId);
     if (appSettings.activeSpaceExpanded) {
       setExpandedSpaceId(activeSpaceId);
     } else {
