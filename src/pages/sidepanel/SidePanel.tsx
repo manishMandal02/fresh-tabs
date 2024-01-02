@@ -81,6 +81,9 @@ const SidePanel = () => {
     } else {
       setExpandedSpaceId('');
     }
+
+    // todo - temp
+    setSpaceToUpdate(spaces.find(s => s.id === activeSpaceId));
   }, [activeSpaceId, appSettings]);
 
   // const handleSearchShortcut: EventListener = ev => {
@@ -174,7 +177,12 @@ const SidePanel = () => {
           {/* add new space */}
           <CreateSpace />
           {/* update space */}
-          <UpdateSpace space={spaceToUpdate} tabs={spaceToUpdate?.tabs} onClose={() => setSpaceToUpdate(undefined)} />
+          <UpdateSpace
+            space={spaceToUpdate}
+            isActive={spaceToUpdate?.id === activeSpaceId}
+            tabs={spaceToUpdate?.tabs}
+            onClose={() => setSpaceToUpdate(undefined)}
+          />
         </div>
 
         {/* snackbar */}

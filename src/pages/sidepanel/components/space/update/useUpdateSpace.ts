@@ -3,6 +3,7 @@ import { snackbarAtom, spacesAtom } from '@root/src/stores/app';
 import { useAtom } from 'jotai';
 import { deleteSpace, updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { useState } from 'react';
+import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 
 type UseUpdateSpaceProps = {
   updateSpaceData: ISpace;
@@ -22,7 +23,7 @@ export const useUpdateSpace = ({ updateSpaceData, space, tabs, onClose }: UseUpd
   const [errorMsg, setErrorMsg] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // handle update space
+  //  update space
   const handleUpdateSpace = async () => {
     setErrorMsg('');
     if (!updateSpaceData.emoji || !updateSpaceData.title || !updateSpaceData.theme) {
@@ -51,7 +52,26 @@ export const useUpdateSpace = ({ updateSpaceData, space, tabs, onClose }: UseUpd
     }
   };
 
-  // handle delete space
+  // sync tabs
+  const handleSyncTabs = async () => {
+    setSnackbar({ msg: '', show: false, isLoading: true });
+    const currentTabs = await chrome.tabs.query({ currentWindow: true });
+    const tabs = currentTabs.map(t => ({ title: t.title, url: t.url, id: t.id }));
+    const activeTab = currentTabs.find(t => t.active);
+
+    // update space's active tab index if not correct
+    if (space.activeTabIndex !== activeTab.index) {
+      await updateSpace(space.id, { ...space, activeTabIndex: activeTab.index });
+    }
+    // update tabs in space
+    await setTabsForSpace(space.id, tabs);
+
+    setSnackbar({ msg: '', show: false, isLoading: false });
+
+    setSnackbar({ msg: 'Tabs synced', show: true, isLoading: false, isSuccess: true });
+  };
+
+  //  delete space
   const handleDeleteSpace = async () => {
     setShowDeleteModal(false);
 
@@ -84,5 +104,6 @@ export const useUpdateSpace = ({ updateSpaceData, space, tabs, onClose }: UseUpd
     snackbar,
     showDeleteModal,
     setShowDeleteModal,
+    handleSyncTabs,
   };
 };

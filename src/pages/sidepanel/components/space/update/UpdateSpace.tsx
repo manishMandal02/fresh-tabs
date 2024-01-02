@@ -5,25 +5,34 @@ import ColorPicker from '../../elements/color-picker';
 import EmojiPicker from '../../elements/emoji-picker';
 import Spinner from '../../elements/spinner';
 import { useUpdateSpace } from './useUpdateSpace';
+import { MdOutlineSync } from 'react-icons/md';
 
 type Props = {
   space: ISpace;
   tabs: ITab[];
+  isActive: boolean;
   onClose: () => void;
 };
 
-const UpdateSpace = ({ space, tabs, onClose }: Props) => {
+const UpdateSpace = ({ space, tabs, onClose, isActive }: Props) => {
   // update space data
   const [updateSpaceData, setUpdateSpaceData] = useState<ISpace | undefined>(undefined);
 
   // logic hook
-  const { handleUpdateSpace, handleDeleteSpace, errorMsg, snackbar, showDeleteModal, setShowDeleteModal } =
-    useUpdateSpace({
-      updateSpaceData,
-      onClose,
-      space,
-      tabs,
-    });
+  const {
+    handleUpdateSpace,
+    handleDeleteSpace,
+    handleSyncTabs,
+    errorMsg,
+    snackbar,
+    showDeleteModal,
+    setShowDeleteModal,
+  } = useUpdateSpace({
+    updateSpaceData,
+    onClose,
+    space,
+    tabs,
+  });
 
   useEffect(() => {
     setUpdateSpaceData(space);
@@ -62,8 +71,16 @@ const UpdateSpace = ({ space, tabs, onClose }: Props) => {
           </div>
 
           {/* tabs */}
-          <div className="mt-6">
+          <div className="mt-6 flex justify-between items-center">
             <p className="text-slate-500 font-light text-base">{tabs?.length} tabs in space</p>
+            {/* sync tabs */}
+            {isActive ? (
+              <button
+                className="bg-teal-400 flex items-center text-slate-800 font-medium text-xs rounded-sm px-2 py-1.5 transition-all duration-300 hover:bg-opacity-90"
+                onClick={handleSyncTabs}>
+                <MdOutlineSync size={16} className="mr-1" /> Sync Tabs
+              </button>
+            ) : null}
           </div>
           {/* error msg */}
           {errorMsg ? (
