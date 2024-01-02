@@ -44,7 +44,7 @@ const createDiscardedTabs = async (tabs: ITab[], windowId: number) => {
       windowId,
       index,
       active: false,
-      url: `data:text/html,${encodeURIComponent(discardedTabHTML(tab))}`,
+      url: `${DiscardTabURLPrefix}${encodeURIComponent(discardedTabHTML(tab))}`,
     }),
   );
 
@@ -54,10 +54,19 @@ const createDiscardedTabs = async (tabs: ITab[], windowId: number) => {
 
   for (const res of responses) {
     if (res.status === 'rejected') return;
-    const tab = res.value;
-    createdTabs.push({ id: tab.id, url: getUrlFromHTML(tab.url.replace(DiscardTabURLPrefix, '')), title: tab.title });
+    const { url, pendingUrl, id } = res.value;
+
+    const tabDiscardedURL = url || pendingUrl;
+
+    const tabURL = getUrlFromHTML(tabDiscardedURL.replace(DiscardTabURLPrefix, ''));
+
+    // get the tab details (as the new tab doesn't have title)
+    const matchedTab = tabs.find(tab => tab.url === tabURL);
+
+    if (!matchedTab) continue;
+    // update tab with new id
+    createdTabs.push({ ...matchedTab, id: id });
   }
-  console.log('🚀 ~ file: tabs.ts:60 ~ createDiscardedTabs ~ createdTabs:', createdTabs);
 
   return createdTabs;
 };
@@ -87,7 +96,11 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, openWindowTyp
   // space's active tab position
   const activeTabIndex = space.activeTabIndex;
 
-  const activeTabUrl = tabs[activeTabIndex]?.url || 'chrome://newtab';
+  const activeTab: ITab = {
+    url: tabs[activeTabIndex]?.url || 'chrome://newtab',
+    title: tabs[activeTabIndex]?.title || 'New Tab',
+    id: 0,
+  };
 
   const discardedTabsToCreate = tabs.filter((_tab, idx) => idx !== activeTabIndex);
 
@@ -123,7 +136,7 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, openWindowTyp
     // remove this window id from the current space
     await updateSpace(currentSpace.id, { ...currentSpace, windowId: 0 });
   } else {
-    // create new window
+    //  create new window
     const window = await chrome.windows.create({ focused: true });
 
     if (window) {
@@ -140,16 +153,18 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, openWindowTyp
   // set current window in side panel UI
   onNewWindowCreated(windowId);
 
-  //  discarded tabs
   const discardTabs = await createDiscardedTabs(discardedTabsToCreate, windowId);
 
-  // create active tab
-  const activeTab = await createActiveTab(activeTabUrl, activeTabIndex, windowId);
+  const activeTabCreated = await createActiveTab(activeTab.url, activeTabIndex, windowId);
 
+  activeTab.id = activeTabCreated.id;
+  activeTab.url = activeTabCreated.pendingUrl || activeTabCreated.url;
+
+  // newly created tabs
   const updatedTabs = [...discardTabs];
 
   // add active tab at its index
-  updatedTabs.splice(activeTabIndex, 0, { url: activeTab.url, id: activeTab.id, title: activeTab.title });
+  updatedTabs.splice(activeTabIndex, 0, activeTab);
 
   console.log('🚀 ~ file: tabs.ts:154 ~ openSpace ~ updatedTabs:', updatedTabs);
 
@@ -157,9 +172,7 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, openWindowTyp
   await setTabsForSpace(space.id, updatedTabs);
 
   // delete the default tab created (an empty tab gets created along with window)
-  const removedDefaultTab = await chrome.tabs.remove(defaultWindowTabId);
-
-  console.log('🚀 ~ file: tabs.ts:159 ~ openSpace ~ removedDefaultTab:', removedDefaultTab);
+  await chrome.tabs.remove(defaultWindowTabId);
 
   // making sure the deleted tabs are not removed from space
   await setTabsForSpace(currentSpaceInfo.id, currentSpaceInfo.tabs);

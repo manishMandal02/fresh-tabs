@@ -45,9 +45,14 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
     const onNewWindowCreated = (windowId: number) => {
       setSpaces(prevSpace => [
         ...prevSpace.map(s => {
+          // remove new window id from prev space
+          if (appSettings.openSpace && s.windowId === windowId) {
+            s.windowId = 0;
+          }
           if (s.id === space.id) {
             s.windowId = windowId;
           }
+
           return s;
         }),
       ]);

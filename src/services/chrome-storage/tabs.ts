@@ -161,7 +161,7 @@ export const removeTabFromSpace = async (space: ISpace, id: number, removeFromWi
     // get all tabs from the space
     const tabs = await getTabsInSpace(space.id);
 
-    if (tabs?.length < 1) return false;
+    if (tabs?.length < 1) throw new Error('No tabs found.');
 
     // do nothing, if only 1 tab remaining
     if (tabs.length === 1 || !tabs.find(t => t.id === id)) return false;
