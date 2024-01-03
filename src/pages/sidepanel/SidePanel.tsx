@@ -8,6 +8,7 @@ import Spinner from './components/elements/spinner';
 import { useSidePanel } from './hooks/useSidePanel';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Settings from './components/settings/Settings';
+import { omitObjProps } from '../utils/omit-obj-props';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -83,7 +84,7 @@ const SidePanel = () => {
     }
 
     // todo - temp
-    setSpaceToUpdate(spaces.find(s => s.id === activeSpaceId));
+    // setSpaceToUpdate(spaces.find(s => s.id === activeSpaceId));
   }, [activeSpaceId, appSettings]);
 
   // const handleSearchShortcut: EventListener = ev => {
@@ -178,7 +179,7 @@ const SidePanel = () => {
           <CreateSpace />
           {/* update space */}
           <UpdateSpace
-            space={spaceToUpdate}
+            space={spaceToUpdate && omitObjProps(spaceToUpdate, 'tabs')}
             isActive={spaceToUpdate?.id === activeSpaceId}
             tabs={spaceToUpdate?.tabs}
             onClose={() => setSpaceToUpdate(undefined)}

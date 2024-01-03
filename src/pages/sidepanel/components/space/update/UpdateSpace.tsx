@@ -15,6 +15,8 @@ type Props = {
 };
 
 const UpdateSpace = ({ space, tabs, onClose, isActive }: Props) => {
+  console.log('🚀 ~ file: UpdateSpace.tsx:19 ~ UpdateSpace ~ space:', space);
+
   // update space data
   const [updateSpaceData, setUpdateSpaceData] = useState<ISpace | undefined>(undefined);
 

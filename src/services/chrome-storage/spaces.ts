@@ -7,7 +7,7 @@ import { generateId } from '@root/src/pages/utils/generateId';
 import { getTabsInSpace, setTabsForSpace } from './tabs';
 
 // create new space with tabs
-export const createNewSpace = async (space: ISpaceWithoutId, tab: ITab[]): Promise<ISpace | null> => {
+export const createNewSpace = async (space: ISpaceWithoutId, tabs: ITab[]): Promise<ISpace | null> => {
   try {
     const newSpaceId = generateId();
     const newSpace = { ...space, id: newSpaceId };
@@ -23,7 +23,7 @@ export const createNewSpace = async (space: ISpaceWithoutId, tab: ITab[]): Promi
     });
 
     // create tabs storage for this space
-    await setTabsForSpace(newSpaceId, [...tab]);
+    await setTabsForSpace(newSpaceId, [...tabs]);
 
     return newSpace;
   } catch (error) {
@@ -41,7 +41,7 @@ export const createUnsavedSpace = async (windowId: number, tabs: ITab[], activeI
   try {
     // get all spaces
     const spaces = await getAllSpaces();
-    // count number of unsaved tabs, to mark the new unsaved space
+    // number the new unsaved space after the previous ones
     const numOfUnsavedSpaces = spaces?.filter(space => !space.isSaved)?.length || 0;
 
     const newSpaceId = generateId();
