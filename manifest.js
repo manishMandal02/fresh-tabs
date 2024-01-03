@@ -7,7 +7,7 @@ const manifest = {
   name: 'Fresh Tabs',
   version: '0.0.1',
   description: 'Manage tabs like pro',
-  permissions: ['sidePanel', 'tabs', 'storage', 'bookmarks', 'alarms'],
+  permissions: ['sidePanel', 'tabs', 'storage', 'bookmarks'],
   commands: {
     openSidePanel: {
       suggested_key: {
