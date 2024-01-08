@@ -29,8 +29,6 @@ reloadOnUpdate('pages/content/style.scss');
 
 logger.info('🏁 background loaded');
 
-// TODO - FIX: some subdomain favicon are broken
-
 // open side panel on extension icon clicked
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error => {
   logger.error({
@@ -86,6 +84,7 @@ const createUnsavedSpacesOnInstall = async () => {
 };
 
 const updateTabHandler = async (tabId: number) => {
+  // get tab details
   const tab = await chrome.tabs.get(tabId);
 
   if (tab?.url.startsWith(DiscardTabURLPrefix)) return;
@@ -206,8 +205,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, info) => {
   if (info?.status === 'complete') {
     // if this is discard tab, do nothing
     if (info?.url?.startsWith(DiscardTabURLPrefix)) return;
-
-    console.log('🚀 ~ file: index.ts:204 ~ chrome.tabs.onUpdated.addListener ~ info:', info);
 
     // add/update tab
     await updateTabHandler(tabId);

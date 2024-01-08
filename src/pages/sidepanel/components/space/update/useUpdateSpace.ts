@@ -55,11 +55,11 @@ export const useUpdateSpace = ({ updateSpaceData, space, tabs, onClose }: UseUpd
   // sync tabs
   const handleSyncTabs = async () => {
     setSnackbar({ msg: '', show: false, isLoading: true });
+
+    // get all tabs in the window
     const currentTabs = await chrome.tabs.query({ currentWindow: true });
 
-    const tabs = currentTabs.map(t => ({ title: t.title, url: t.url, id: t.id }));
-
-    console.log('🚀 ~ file: useUpdateSpace.ts:64 ~ handleSyncTabs ~ tabs:', tabs);
+    const tabsInWindow = currentTabs.map(t => ({ title: t.title, url: t.url, id: t.id }));
 
     const activeTab = currentTabs.find(t => t.active);
 
@@ -68,11 +68,11 @@ export const useUpdateSpace = ({ updateSpaceData, space, tabs, onClose }: UseUpd
       await updateSpace(space.id, { ...space, activeTabIndex: activeTab.index });
     }
     // update tabs in space
-    await setTabsForSpace(space.id, tabs);
+    await setTabsForSpace(space.id, tabsInWindow);
 
     setSpaces(prev => [
       ...prev.filter(s => s.id !== space.id),
-      { ...space, activeTabIndex: activeTab.index, tabs: [...tabs] },
+      { ...space, activeTabIndex: activeTab.index, tabs: [...tabsInWindow] },
     ]);
 
     setSnackbar({ msg: '', show: false, isLoading: false });

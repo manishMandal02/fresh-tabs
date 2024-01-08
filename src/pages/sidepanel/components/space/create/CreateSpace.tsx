@@ -79,7 +79,6 @@ const CreateSpace = () => {
       return;
     }
 
-    // TODO - check the title ## should not be include
     // show loading snackbar
     setSnackbar({ show: true, msg: 'Creating new space', isLoading: true });
 

@@ -31,7 +31,7 @@ export const setStorage = async ({ key, value, type }: SetStorageParams) => {
     logger.error({
       error,
       msg: 'Error setting chrome storage',
-      fileTrace: 'src/utils/setStorage.ts:37 ~ catch block',
+      fileTrace: 'src/services/chrome-storage/helpers/set/setStorage.ts:34 ~ catch block',
     });
     return false;
   }

@@ -32,7 +32,7 @@ export const getStorage = async <T = null | ISpace>({ key, type }: GetStoragePar
     logger.error({
       error,
       msg: 'Error getting chrome storage',
-      fileTrace: 'src/utils/getStorage.ts:35 ~ catch block',
+      fileTrace: 'src/services/chrome-storage/helpers/get/getStorage.ts:35 ~ catch block',
     });
     return null;
   }

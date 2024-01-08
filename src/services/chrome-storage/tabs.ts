@@ -93,55 +93,22 @@ export const updateTabIndex = async (spaceId: string, tabId: number, newIndex: n
   }
 };
 
-// save new tab to space
-export const saveNewTab = async (
-  id: number,
-  spaceId: string,
-  url: string,
-  title: string,
-  idx: number,
-): Promise<boolean> => {
-  try {
-    // get all tabs from the space
-    const tabs = await getTabsInSpace(spaceId);
-
-    if (tabs?.length < 1) return false;
-
-    const newTab: ITab = {
-      id,
-      url,
-      title,
-    };
-
-    // add new tab (array mutation)
-    tabs.splice(idx, 0, newTab);
-
-    // save new list to storage
-    await setTabsForSpace(spaceId, tabs);
-
-    return true;
-  } catch (error) {
-    logger.error({
-      error,
-      msg: `Error saving tab: ${title}`,
-      fileTrace: 'src/services/chrome-storage/tabs.ts:89 ~ saveNewTab() ~ catch block',
-    });
-    return false;
-  }
-};
-
 // update/save tab url, title, etc
 export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promise<boolean> => {
   try {
     // get all tabs from the space
     const tabs = await getTabsInSpace(spaceId);
 
-    // Todo - need more fool proof solution use id for better confidence
+    // check if tab exists
+    if (tabs.find(t => t.id === tab.id)) {
+      // exists, update tab at index pos
+      tabs[idx] = tab;
+    } else {
+      // add new tab at index pos
+      tabs.splice(idx, 1, tab);
+    }
 
-    // update tab at index pos
-    tabs[idx] = tab;
-
-    // save new list to storage
+    // save updated tabs to storage
     await setTabsForSpace(spaceId, tabs);
 
     return true;

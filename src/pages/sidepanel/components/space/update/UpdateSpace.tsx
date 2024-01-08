@@ -15,8 +15,6 @@ type Props = {
 };
 
 const UpdateSpace = ({ space, tabs, onClose, isActive }: Props) => {
-  console.log('🚀 ~ file: UpdateSpace.tsx:19 ~ UpdateSpace ~ space:', space);
-
   // update space data
   const [updateSpaceData, setUpdateSpaceData] = useState<ISpace | undefined>(undefined);
 
@@ -55,6 +53,9 @@ const UpdateSpace = ({ space, tabs, onClose, isActive }: Props) => {
     //@ts-ignore
     setUpdateSpaceData(prev => ({ ...prev, theme }));
   };
+
+  // set update button label
+  const updateBtnLabel = (updateSpaceData?.isSaved && 'Update') || 'Save';
 
   return (
     <SlideModal title="Update Space" isOpen={!!updateSpaceData?.title} onClose={onClose}>
@@ -96,7 +97,7 @@ const UpdateSpace = ({ space, tabs, onClose, isActive }: Props) => {
               className={` w-[90%] py-2 rounded-md text-slate-500 
                       font-medium text-base shadow shadow-emerald-400 hover:opacity-80 transition-all duration-300`}
               onClick={handleUpdateSpace}>
-              {snackbar.isLoading ? <Spinner size="sm" /> : updateSpaceData.isSaved ? 'Update' : 'Save'}
+              {snackbar.isLoading ? <Spinner size="sm" /> : updateBtnLabel}
             </button>
             {/* delete space */}
             <button

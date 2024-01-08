@@ -1,7 +1,7 @@
 // chrome bookmarks helpers
 
 import { FRESH_TABS_BOOKMARK_TITLE } from '@root/src/constants/app';
-import { generateBMTitle, getSpaceInfoFromBMTitle } from './bookmarkTitle';
+import { generateBMTitle, getSpaceInfoFromBMTitle } from './bookmark-title';
 import { ISpace, ITab } from '@root/src/pages/types/global.types';
 import { logger } from '@root/src/pages/utils/logger';
 import { getStorage, setStorage } from '../chrome-storage/helpers';

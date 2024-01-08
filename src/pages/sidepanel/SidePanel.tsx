@@ -73,6 +73,7 @@ const SidePanel = () => {
 
       setIsLoadingSpaces(false);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spaces]);
 
   // expand active space by default based on preferences
@@ -82,9 +83,6 @@ const SidePanel = () => {
     } else {
       setExpandedSpaceId('');
     }
-
-    // todo - temp
-    // setSpaceToUpdate(spaces.find(s => s.id === activeSpaceId));
   }, [activeSpaceId, appSettings]);
 
   // const handleSearchShortcut: EventListener = ev => {

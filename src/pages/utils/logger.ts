@@ -13,7 +13,6 @@ export const logger = {
   info: (msg: string) => {
     // log error
     console.log(`FreshInbox:LOGGER:INFO ℹ️ ~ ${msg}`);
-    // console.log(`FreshInbox:LOGGER:INFO ℹ️ ~ ${msg}  \n  ${fileTrace ? `📁 File: ${fileTrace}` : ''}`);
   },
 
   /**

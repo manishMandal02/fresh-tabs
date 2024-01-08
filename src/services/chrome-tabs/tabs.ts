@@ -79,8 +79,6 @@ const clearCurrentWindow = async (windowId: number) => {
   // get all non-active tabs in this window
   const currentWindowTabs = await chrome.tabs.query({ windowId, active: false });
 
-  console.log('🚀 ~ file: tabs.ts:72 ~ clearCurrentWindow ~ currentWindowTabs:', currentWindowTabs);
-
   for (const tab of currentWindowTabs) {
     tabsToBeDeletedPromises.push(chrome.tabs.remove(tab.id));
   }
@@ -165,8 +163,6 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, openWindowTyp
 
   // add active tab at its index
   updatedTabs.splice(activeTabIndex, 0, activeTab);
-
-  console.log('🚀 ~ file: tabs.ts:154 ~ openSpace ~ updatedTabs:', updatedTabs);
 
   // set tabs with new ids
   await setTabsForSpace(space.id, updatedTabs);
