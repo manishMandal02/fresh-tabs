@@ -9,13 +9,12 @@ const manifest = {
   description: 'Manage tabs like pro',
   permissions: ['sidePanel', 'tabs', 'storage', 'bookmarks', 'favicon'],
   commands: {
-    openSidePanel: {
+    cmdE: {
       suggested_key: {
         default: 'Ctrl+E',
         mac: 'Command+E',
       },
-      description: 'Open side panel',
-      contexts: ['browser_action'],
+      description: 'Set ☝️ to open FreshTabs',
     },
   },
   side_panel: {

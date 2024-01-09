@@ -162,10 +162,10 @@ chrome.runtime.onInstalled.addListener(async info => {
   }
 });
 
-// shortcut key to open fresh-tabs side panel: CMD+E (CTRL+E)
-chrome.commands.onCommand.addListener(async (_command, tab) => {
-  await chrome.sidePanel.open({ windowId: tab.windowId });
-});
+// TODO - not used - shortcut key to open fresh-tabs side panel: CMD+E (CTRL+E)
+// chrome.commands.onCommand.addListener(async (_command, tab) => {
+//   await chrome.sidePanel.open({ windowId: tab.windowId });
+// });
 
 // When the new tab is selected, get the link in the title and load the page
 chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
@@ -205,6 +205,10 @@ chrome.tabs.onUpdated.addListener(async (tabId, info) => {
   if (info?.status === 'complete') {
     // if this is discard tab, do nothing
     if (info?.url?.startsWith(DiscardTabURLPrefix)) return;
+
+    const commands = await chrome.commands.getAll();
+
+    console.log('🚀 ~ file: index.ts:211 ~ chrome.tabs.onUpdated.addListener ~ commands:', commands?.[1].shortcut);
 
     // add/update tab
     await updateTabHandler(tabId);

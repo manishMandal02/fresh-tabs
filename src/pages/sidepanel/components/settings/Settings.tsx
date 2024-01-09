@@ -4,7 +4,7 @@ import { useAtom } from 'jotai';
 import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
 import { IAppSettings } from '@root/src/pages/types/global.types';
 import { defaultAppSettings } from '@root/src/constants/app';
-import { MdOutlineSettings } from 'react-icons/md';
+import { MdOpenInNew, MdOutlineSettings } from 'react-icons/md';
 import { SlideModal } from '../elements/modal';
 import Switch from '../elements/switch/Switch';
 import Spinner from '../elements/spinner';
@@ -35,12 +35,14 @@ type IAppSettingsKeys = keyof IAppSettings;
 
 const Settings = () => {
   //
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(true);
 
   // const [errorMsg, setErrorMsg] = useState('');
 
   // local settings state
   const [settingsUpdateData, setSettingsUpdateData] = useState<IAppSettings>(defaultAppSettings);
+
+  const [openAppShortcut, setOpenAppShortcut] = useState('');
 
   // track settings changes from global state
   const [hasSettingsChanged, setHasSettingsChanged] = useState(false);
@@ -54,6 +56,7 @@ const Settings = () => {
   // set local settings data state
   useEffect(() => {
     setSettingsUpdateData(appSettings);
+    getAppShortcut();
   }, [appSettings]);
 
   // on settings change
@@ -88,6 +91,19 @@ const Settings = () => {
     setSnackbar({ show: true, msg: 'Preferences saved', isSuccess: true });
   };
 
+  const getAppShortcut = async () => {
+    const chromeShortcuts = await chrome.commands.getAll();
+
+    let openSidePanelShortcut = chromeShortcuts.find(s => s.name == '_execute_action')?.shortcut || '⌘E';
+
+    openSidePanelShortcut = openSidePanelShortcut.split('').join(' + ');
+    setOpenAppShortcut(openSidePanelShortcut);
+  };
+
+  const openChromeShortcutSettings = async () => {
+    await chrome.tabs.create({ url: 'chrome://extensions/shortcuts', active: true });
+  };
+
   return (
     <>
       <MdOutlineSettings
@@ -100,12 +116,19 @@ const Settings = () => {
           {/* shortcuts */}
           <div className="mt-1">
             <span className="text-[14px]  font-light tracking-wide ">Shortcut to open FreshTabs</span>
-            <RadioGroup
-              options={shortcutOptions}
-              value={settingsUpdateData.shortCutToOpenApp}
-              defaultValue={shortcutOptions[0].value}
-              onChange={value => handleSettingsChange('shortCutToOpenApp', value)}
-            />
+            <div className="flex items-center ">
+              <RadioGroup
+                options={[{ label: openAppShortcut, value: openAppShortcut }]}
+                value={openAppShortcut}
+                defaultValue={shortcutOptions[0].value}
+                onChange={() => {}}
+              />
+              <button
+                className="ml-2 flex items-center gap-x-1 border border-slate-700 rounded-sm px-2 py-1"
+                onClick={openChromeShortcutSettings}>
+                Change Shortcut In Chrome <MdOpenInNew />
+              </button>
+            </div>
           </div>
           <hr className="w-3/4 mx-auto h-px bg-slate-700/20 rounded-md border-none mt-4 mb-3" />
           {/* save & sync */}
