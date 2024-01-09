@@ -4,6 +4,7 @@ import { useAtom } from 'jotai';
 import { deleteSpace, updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { useState } from 'react';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
+import { AlarmNames } from '@root/src/constants/app';
 
 type UseUpdateSpaceProps = {
   updateSpaceData: ISpace;
@@ -100,6 +101,15 @@ export const useUpdateSpace = ({ updateSpaceData, space, tabs, onClose }: UseUpd
       // re-render spaces
       setSpaces(prev => [...prev.filter(s => s.id !== space.id)]);
       setSnackbar({ show: true, msg: 'Space deleted', isSuccess: true });
+
+      // if the space was unsaved, check if it had any delete trigger scheduled
+
+      const schedule = await chrome.alarms.get(AlarmNames.deleteSpace(space.id));
+
+      if (schedule?.name) {
+        // delete scheduled trigger
+        await chrome.alarms.clear(schedule.name);
+      }
     } else {
       // failed
       setSnackbar({ show: true, msg: 'Failed to deleted space', isSuccess: false });

@@ -15,9 +15,13 @@ import { getFaviconURL, wait } from '../utils';
 import { logger } from '../utils/logger';
 import { publishEvents } from '../utils/publish-events';
 import { generateId } from '../utils/generateId';
-import { checkParentBMFolder, syncSpacesFromBookmarks } from '@root/src/services/chrome-bookmarks/bookmarks';
-import { DiscardTabURLPrefix, defaultAppSettings } from '@root/src/constants/app';
-import { saveSettings } from '@root/src/services/chrome-storage/settings';
+import {
+  checkParentBMFolder,
+  syncSpacesFromBookmarks,
+  syncSpacesToBookmark,
+} from '@root/src/services/chrome-bookmarks/bookmarks';
+import { AlarmNames, DiscardTabURLPrefix, defaultAppSettings } from '@root/src/constants/app';
+import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
 
 reloadOnUpdate('pages/background');
 
@@ -158,14 +162,39 @@ chrome.runtime.onInstalled.addListener(async info => {
       }
     }
 
+    // set alarm schedules to save space to bookmark,
+    // default preference is save daily (1d = 1440m)
+    await chrome.alarms.create(AlarmNames.saveToBM, { periodInMinutes: 1440 });
+
     logger.info('✅ Successfully initialized app.');
   }
 });
 
-// TODO - not used - shortcut key to open fresh-tabs side panel: CMD+E (CTRL+E)
-// chrome.commands.onCommand.addListener(async (_command, tab) => {
-//   await chrome.sidePanel.open({ windowId: tab.windowId });
-// });
+// handle chrome alarms triggers
+chrome.alarms.onAlarm.addListener(async alarm => {
+  // handle delete unsaved space
+  if (alarm.name.startsWith('deleteSpace')) {
+    const spaceId = alarm.name.split('-')[1];
+    await deleteSpace(spaceId);
+    await publishEvents({ id: generateId(), event: 'REMOVE_SPACE', payload: { spaceId } });
+    return;
+  }
+
+  // handle save spaces to bookmark
+  if (alarm.name === AlarmNames.saveToBM) {
+    await syncSpacesToBookmark();
+    logger.info('✅ Synced Spaces to Bookmark');
+  }
+});
+
+// IIFE - checks for alarms, its not guaranteed to persist
+(async () => {
+  const alarm = await chrome.alarms.get(AlarmNames.saveToBM);
+  if (alarm.name) return;
+
+  // create alarm if not found
+  await chrome.alarms.create(AlarmNames.saveToBM, { periodInMinutes: 1440 });
+})();
 
 // When the new tab is selected, get the link in the title and load the page
 chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
@@ -322,6 +351,16 @@ chrome.windows.onRemoved.addListener(async windowId => {
 
   // if the space was not saved, then delete
   if (!space?.isSaved) {
+    // get user preference
+    const { deleteUnsavedSpace } = await getAppSettings();
+
+    // if user preference is to delete unsaved after a week
+    // set an alarm for after a week (1w = 10080m)
+    if (deleteUnsavedSpace === 'week') {
+      await chrome.alarms.create(AlarmNames.deleteSpace(space.id), { delayInMinutes: 10080 });
+      return;
+    }
+    // delete space immediately
     await deleteSpace(space.id);
 
     // send send to side panel

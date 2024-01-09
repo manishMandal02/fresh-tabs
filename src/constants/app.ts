@@ -4,6 +4,11 @@ export const FRESH_TABS_BOOKMARK_TITLE = '#Fresh Tabs ~ ⚠️ Do not delete thi
 
 export const DiscardTabURLPrefix = 'data:text/html,';
 
+export const AlarmNames = {
+  deleteSpace: (spaceId: string) => `deleteSpace-${spaceId}`,
+  saveToBM: 'SaveToBookmark',
+};
+
 export enum StorageKeys {
   SPACES = 'SPACES',
   SETTINGS = 'SETTINGS',
