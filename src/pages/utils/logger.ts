@@ -12,7 +12,7 @@ export const logger = {
    */
   info: (msg: string) => {
     // log error
-    console.log(`FreshInbox:LOGGER:INFO ℹ️ ~ ${msg}`);
+    console.log(`FreshTabs:LOGGER:INFO ℹ️ ~ ${msg}`);
   },
 
   /**
@@ -23,6 +23,6 @@ export const logger = {
    */
   error: ({ msg, fileTrace, error }: ErrorLoggerParams) => {
     // log error
-    console.log(`FreshInbox:LOGGER:ERROR ❌ ~ ${msg}  \n  ${fileTrace ? `📁 File: ${fileTrace}` : ''} \n`, error);
+    console.log(`FreshTabs:LOGGER:ERROR ❌ ~ ${msg}  \n  ${fileTrace ? `📁 File: ${fileTrace}` : ''} \n`, error);
   },
 };

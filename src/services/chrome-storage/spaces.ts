@@ -147,8 +147,8 @@ export const deleteSpace = async (spaceId: string) => {
 // get all spaces
 export const getAllSpaces = async () => await getStorage<ISpace[]>({ key: 'SPACES', type: 'sync' });
 
-export const setSpacesToStorage = async (space: ISpace[]) => {
-  await setStorage({ type: 'sync', key: 'SPACES', value: space });
+export const setSpacesToStorage = async (spaces: ISpace[]) => {
+  await setStorage({ type: 'sync', key: 'SPACES', value: spaces });
   return true;
 };
 
@@ -190,6 +190,8 @@ export const updateActiveTabInSpace = async (windowId: number, idx: number): Pro
 
     // update active tab index
     spaceToUpdate.activeTabIndex = idx;
+
+    console.log('🚀 ~ file: spaces.ts:194 ~ updateActiveTabInSpace ~ idx:', idx);
 
     // add the update space along other spaces to new array
     const newSpacesList = spaces.filter(space => space?.windowId !== windowId);

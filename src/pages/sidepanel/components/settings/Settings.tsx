@@ -3,17 +3,12 @@ import RadioGroup, { RadioOptions } from '../elements/RadioGroup/RadioGroup';
 import { useAtom } from 'jotai';
 import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
 import { IAppSettings } from '@root/src/pages/types/global.types';
-import { defaultAppSettings } from '@root/src/constants/app';
+import { AlarmNames, defaultAppSettings } from '@root/src/constants/app';
 import { MdOpenInNew, MdOutlineSettings } from 'react-icons/md';
 import { SlideModal } from '../elements/modal';
 import Switch from '../elements/switch/Switch';
 import Spinner from '../elements/spinner';
 import { saveSettings } from '@root/src/services/chrome-storage/settings';
-
-const shortcutOptions: RadioOptions[] = [
-  { value: 'cmd+e', label: '<kbd>CMD</kbd> + <kbd>E</kbd>' },
-  { value: 'cmd+shift+s', label: '<kbd>CMD</kbd> + <kbd>SHIFT</kbd> + <kbd>S</kbd>' },
-];
 
 const autoSaveToBookmark: RadioOptions[] = [
   { value: 'off', label: 'Off' },
@@ -35,7 +30,7 @@ type IAppSettingsKeys = keyof IAppSettings;
 
 const Settings = () => {
   //
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // const [errorMsg, setErrorMsg] = useState('');
 
@@ -79,6 +74,18 @@ const Settings = () => {
     // set to chrome storage
     await saveSettings(settingsUpdateData);
 
+    // check if auto save to bookmark preference has changed
+    if (settingsUpdateData.autoSaveToBookmark !== appSettings.autoSaveToBookmark) {
+      // clear the previous trigger
+      await chrome.alarms.clear(AlarmNames.saveToBM);
+      // create new trigger ( 1d = 1440m)
+      if (settingsUpdateData.autoSaveToBookmark === 'daily') {
+        await chrome.alarms.create(AlarmNames.saveToBM, { delayInMinutes: 1440 });
+      } else if (settingsUpdateData.autoSaveToBookmark == 'weekly') {
+        await chrome.alarms.create(AlarmNames.saveToBM, { delayInMinutes: 1440 * 7 });
+      }
+    }
+
     // set global state
     setAppSetting(settingsUpdateData);
 
@@ -120,7 +127,7 @@ const Settings = () => {
               <RadioGroup
                 options={[{ label: openAppShortcut, value: openAppShortcut }]}
                 value={openAppShortcut}
-                defaultValue={shortcutOptions[0].value}
+                defaultValue={openAppShortcut}
                 onChange={() => {}}
               />
               <button

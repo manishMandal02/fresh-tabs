@@ -156,7 +156,7 @@ chrome.runtime.onInstalled.addListener(async info => {
       const spacesWithTabs = await syncSpacesFromBookmarks(rootBMFolderId);
 
       if (!spacesWithTabs) {
-        // 2.c. could not sync spaces from bookmarks
+        // could not sync spaces from bookmarks
         // create sample space
         await createSampleSpaces();
       }
@@ -190,7 +190,7 @@ chrome.alarms.onAlarm.addListener(async alarm => {
 // IIFE - checks for alarms, its not guaranteed to persist
 (async () => {
   const alarm = await chrome.alarms.get(AlarmNames.saveToBM);
-  if (alarm.name) return;
+  if (alarm?.name) return;
 
   // create alarm if not found
   await chrome.alarms.create(AlarmNames.saveToBM, { periodInMinutes: 1440 });
@@ -235,15 +235,12 @@ chrome.tabs.onUpdated.addListener(async (tabId, info) => {
     // if this is discard tab, do nothing
     if (info?.url?.startsWith(DiscardTabURLPrefix)) return;
 
-    const commands = await chrome.commands.getAll();
-
-    console.log('🚀 ~ file: index.ts:211 ~ chrome.tabs.onUpdated.addListener ~ commands:', commands?.[1].shortcut);
-
     // add/update tab
     await updateTabHandler(tabId);
   }
 });
 
+// todo - fix, doesn't work sometimes
 // event listener for when tabs get moved (index change)
 chrome.tabs.onMoved.addListener(async (tabId, info) => {
   await wait(500);
@@ -258,6 +255,8 @@ chrome.tabs.onMoved.addListener(async (tabId, info) => {
 
   // update space's active tab index
   await updateActiveTabInSpace(info.windowId, info.toIndex);
+  console.log('🚀 ~ file: index.ts:277 ~ chrome.tabs.onMoved.addListener ~ info.toIndex:', info.toIndex);
+
   // send send to side panel
   await publishEvents({
     id: generateId(),
@@ -283,6 +282,8 @@ chrome.tabs.onDetached.addListener(async (tabId, info) => {
   await removeTabHandler(tabId, info.oldWindowId);
 });
 
+// todo - fix, doesn't work sometimes
+// on tab attached to a window
 chrome.tabs.onAttached.addListener(async tabId => {
   // add tab to the attached space/window
   await updateTabHandler(tabId);

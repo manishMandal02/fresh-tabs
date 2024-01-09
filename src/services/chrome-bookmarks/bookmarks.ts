@@ -4,7 +4,7 @@ import { FRESH_TABS_BOOKMARK_TITLE } from '@root/src/constants/app';
 import { generateBMTitle, getSpaceInfoFromBMTitle } from './bookmark-title';
 import { ISpace, ITab } from '@root/src/pages/types/global.types';
 import { logger } from '@root/src/pages/utils/logger';
-import { getStorage, setStorage } from '../chrome-storage/helpers';
+import { getStorage } from '../chrome-storage/helpers';
 import { getAllSpaces, setSpacesToStorage } from '../chrome-storage/spaces';
 import { setTabsForSpace } from '../chrome-storage/tabs';
 
@@ -31,8 +31,6 @@ const createParentBMFolder = async () => {
 
     if (!bmFolder.id) throw new Error('Error creating parent bookmark folder');
 
-    await setStorage({ type: 'sync', key: 'BOOKMARK_ID', value: bmFolder.id });
-
     return bmFolder.id;
   } catch (error) {
     logger.error({
@@ -46,18 +44,12 @@ const createParentBMFolder = async () => {
 
 // get parent/root bookmark folder
 export const getParentBMId = async () => {
-  const id = await getStorage<string>({ type: 'sync', key: 'BOOKMARK_ID' });
-
-  if (id) return id;
-
   // search book to find find app's root bm folder
   const parentBMId = await checkParentBMFolder();
 
   // folder not found, create one
   if (!parentBMId) return createParentBMFolder();
 
-  // root folder found
-  await setStorage({ type: 'sync', key: 'BOOKMARK_ID', value: parentBMId });
   return parentBMId;
 };
 
@@ -74,7 +66,7 @@ export const syncSpacesFromBookmarks = async (rootFolderId: string) => {
     // promises tabs to be saved to storage
     const saveTabsPromises: Promise<boolean>[] = [];
 
-    for (const spaceBMFolder of rootBMFolder) {
+    for (const spaceBMFolder of rootBMFolder[0].children) {
       const spaceBM = spaceBMFolder.children;
 
       // there's only 1 folder inside a space folder,  who's title contains info about that space
@@ -127,7 +119,6 @@ export const syncSpacesToBookmark = async () => {
     const newParentBMFolderId = await createParentBMFolder();
 
     // get spaces and tabs
-
     const spaces = await getAllSpaces();
 
     // add spaces folder to parent folder

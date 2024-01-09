@@ -55,5 +55,4 @@ export interface IAppSettings {
   deleteUnsavedSpace: 'immediately' | 'week';
   openSpace: 'newWindow' | 'sameWindow';
   autoSaveToBookmark: 'off' | 'daily' | 'weekly';
-  shortCutToOpenApp: 'cmd+e' | 'cmd+shift+s';
 }

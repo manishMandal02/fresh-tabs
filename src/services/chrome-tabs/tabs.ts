@@ -1,5 +1,3 @@
-// create a tab
-
 import { IAppSettings, ISpace, ITab } from '@root/src/pages/types/global.types';
 import { getSpaceByWindow, updateSpace } from '../chrome-storage/spaces';
 import { getFaviconURL } from '@root/src/pages/utils';
@@ -14,6 +12,7 @@ type OpenSpaceProps = {
   openWindowType: IAppSettings['openSpace'];
 };
 
+// create new active tab
 const createActiveTab = async (url: string, index: number, windowId) => {
   return await chrome.tabs.create({
     windowId,

@@ -12,7 +12,6 @@ export const AlarmNames = {
 export enum StorageKeys {
   SPACES = 'SPACES',
   SETTINGS = 'SETTINGS',
-  BOOKMARK_ID = 'BOOKMARK_ID',
 }
 
 export const defaultAppSettings: IAppSettings = {
@@ -21,7 +20,6 @@ export const defaultAppSettings: IAppSettings = {
   deleteUnsavedSpace: 'immediately',
   openSpace: 'newWindow',
   autoSaveToBookmark: 'daily',
-  shortCutToOpenApp: 'cmd+e',
 };
 
 export const SampleSpaces = [

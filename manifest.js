@@ -14,7 +14,7 @@ const manifest = {
         default: 'Ctrl+E',
         mac: 'Command+E',
       },
-      description: 'Set ☝️ to open FreshTabs',
+      description: 'Set above ☝️',
     },
   },
   side_panel: {
