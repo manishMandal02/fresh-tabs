@@ -105,7 +105,7 @@ export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promis
       tabs[idx] = tab;
     } else {
       // add new tab at index pos
-      tabs.splice(idx, 1, tab);
+      tabs.splice(idx, 0, tab);
     }
 
     // save updated tabs to storage

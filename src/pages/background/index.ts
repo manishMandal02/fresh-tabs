@@ -213,10 +213,12 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   }
 
   // wait for 1s
-  await wait(1000);
+  await wait(500);
 
   // update spaces' active tab
   const updateSpace = await updateActiveTabInSpace(windowId, tab.index);
+
+  console.log('🚀 ~ file: index.ts:221 ~ chrome.tabs.onActivated.addListener ~ tab.index:', tab.index);
 
   // send send to side panel
   await publishEvents({
@@ -240,7 +242,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, info) => {
   }
 });
 
-// todo - fix, doesn't work sometimes
 // event listener for when tabs get moved (index change)
 chrome.tabs.onMoved.addListener(async (tabId, info) => {
   await wait(500);
@@ -255,7 +256,6 @@ chrome.tabs.onMoved.addListener(async (tabId, info) => {
 
   // update space's active tab index
   await updateActiveTabInSpace(info.windowId, info.toIndex);
-  console.log('🚀 ~ file: index.ts:277 ~ chrome.tabs.onMoved.addListener ~ info.toIndex:', info.toIndex);
 
   // send send to side panel
   await publishEvents({
@@ -282,7 +282,6 @@ chrome.tabs.onDetached.addListener(async (tabId, info) => {
   await removeTabHandler(tabId, info.oldWindowId);
 });
 
-// todo - fix, doesn't work sometimes
 // on tab attached to a window
 chrome.tabs.onAttached.addListener(async tabId => {
   // add tab to the attached space/window
