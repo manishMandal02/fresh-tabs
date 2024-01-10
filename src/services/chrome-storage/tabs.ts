@@ -99,8 +99,10 @@ export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promis
     // get all tabs from the space
     const tabs = await getTabsInSpace(spaceId);
 
+    if (tabs?.length < 1) return;
+
     // check if tab exists
-    if (tabs.find(t => t.id === tab.id)) {
+    if (tabs.find(t => t.id === tab.id) || tabs[idx]?.url === tab.url) {
       // exists, update tab at index pos
       tabs[idx] = tab;
     } else {

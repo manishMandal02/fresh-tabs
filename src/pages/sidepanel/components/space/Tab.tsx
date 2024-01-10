@@ -10,8 +10,16 @@ type Props = {
   onTabDelete?: () => Promise<void>;
   isTabActive: boolean;
   isSpaceActive?: boolean;
+  showDeleteOption?: boolean;
 };
-const Tab = ({ tabData, onTabDelete, isTabActive, isSpaceActive, showHoverOption = true }: Props) => {
+const Tab = ({
+  tabData,
+  onTabDelete,
+  isTabActive,
+  isSpaceActive,
+  showDeleteOption = true,
+  showHoverOption = true,
+}: Props) => {
   // handle open tab
   const handleOpen = async () => {
     if (!isSpaceActive) {
@@ -26,8 +34,6 @@ const Tab = ({ tabData, onTabDelete, isTabActive, isSpaceActive, showHoverOption
   // handle copy tab url
   const handleCopyURL = async () => await copyToClipboard(tabData.url);
 
-  const OpenTabIcon = isSpaceActive ? MdMyLocation : MdOpenInNew;
-
   return (
     <div
       className={` w-full relative px-2.5 py-1.5 flex rounded-sm items-center justify-between shadow-sm shadow-slate-700/80 group ${
@@ -41,8 +47,16 @@ const Tab = ({ tabData, onTabDelete, isTabActive, isSpaceActive, showHoverOption
       </span>
       {showHoverOption ? (
         <span className="absolute hidden group-hover:flex right-2 bottom-2 items-center gap-x-3">
-          {!isTabActive ? (
-            <OpenTabIcon
+          {/* go to tab */}
+          {isSpaceActive && !isTabActive ? (
+            <MdMyLocation
+              className={` text-slate-700 text-xs cursor-pointer bg-slate-400 px-[.75px] py-[1.5px] rounded-sm scale-150 transition-all duration-200 hover:bg-slate-400/80`}
+              onClick={handleOpen}
+            />
+          ) : null}
+          {/* open tab  */}
+          {!isSpaceActive ? (
+            <MdOpenInNew
               className={` text-slate-700 text-xs cursor-pointer bg-slate-400 px-[.75px] py-[1.5px] rounded-sm scale-150 transition-all duration-200 hover:bg-slate-400/80`}
               onClick={handleOpen}
             />
@@ -51,10 +65,12 @@ const Tab = ({ tabData, onTabDelete, isTabActive, isSpaceActive, showHoverOption
             className={` text-slate-700 text-xs cursor-pointer bg-slate-400 px-[.75px] py-[1.5px] rounded-sm scale-150 transition-all duration-200 hover:bg-slate-400/80`}
             onClick={handleCopyURL}
           />
-          <MdDelete
-            className={` text-slate-700 text-xs cursor-pointer bg-slate-400 px-[.75px] py-[1.5px] rounded-sm scale-150 transition-all duration-200 hover:bg-slate-400/80`}
-            onClick={onTabDelete}
-          />
+          {showDeleteOption ? (
+            <MdDelete
+              className={` text-slate-700 text-xs cursor-pointer bg-slate-400 px-[.75px] py-[1.5px] rounded-sm scale-150 transition-all duration-200 hover:bg-slate-400/80`}
+              onClick={onTabDelete}
+            />
+          ) : null}
         </span>
       ) : null}
     </div>

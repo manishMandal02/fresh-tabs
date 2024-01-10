@@ -4,9 +4,12 @@ type Props = {
   checked: boolean;
   onChange: (value: boolean) => void;
   id: string;
+  size?: 'small' | 'medium';
 };
 
-const Switch = ({ id, checked, onChange }: Props) => {
+const Switch = ({ id, checked, onChange, size = 'medium' }: Props) => {
+  const switchSize = size === 'medium' ? 'w-[36px] h-[20px] bg-slate-600' : 'w-[22px] h-[12px] bg-slate-700';
+  const thumbSize = size === 'medium' ? ' w-[14px] h-[14px] bg-white' : ' w-[9px] h-[9px] bg-slate-300';
   return (
     <form>
       <div className="flex items-center">
@@ -14,9 +17,9 @@ const Switch = ({ id, checked, onChange }: Props) => {
           id={id}
           checked={checked}
           onCheckedChange={onChange}
-          className={`w-[36px] h-[20px] bg-blackA6 rounded-full relative bg-slate-600 data-[state=checked]:bg-emerald-500 outline-none cursor-default`}>
+          className={`${switchSize} bg-blackA6 rounded-full relative  data-[state=checked]:bg-emerald-500 outline-none cursor-default`}>
           <SwitchRadix.Thumb
-            className={`block w-[14px] h-[14px] bg-white rounded-full 
+            className={`block ${thumbSize}  rounded-full 
                         transition-transform duration-100 translate-x-[20%] will-change-transform data-[state=checked]:translate-x-[130%]`}
           />
         </SwitchRadix.Root>
