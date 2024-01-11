@@ -1,3 +1,4 @@
+import { generateId } from '@root/src/pages/utils/generateId';
 import { Tooltip as ReactTooltip } from 'react-tooltip';
 
 type Props = {
@@ -6,14 +7,19 @@ type Props = {
   delay?: number;
 };
 
-const Tooltip = ({ label, children, delay = 500 }: Props) => {
+const Tooltip = ({ label, children, delay = 1500 }: Props) => {
+  const tooltipId = generateId();
   return (
     <>
-      <div className="relative" id="tooltip-anchor-el" data-tooltip-delay-show={delay} data-tooltip-content={label}>
-        {children}
-      </div>
       {label ? (
-        <ReactTooltip anchorSelect="#tooltip-anchor-el" className="!bg-slate-700 !text-sm !text-slate-50 !rounded-sm" />
+        <>
+          <div className="relative" data-tooltip data-tooltip-id={tooltipId} data-tooltip-delay-show={delay}>
+            {children}
+          </div>
+          <ReactTooltip id={tooltipId} className="!bg-slate-700 !text-[13px] !text-slate-50 !rounded-sm">
+            {label}
+          </ReactTooltip>
+        </>
       ) : null}
     </>
   );

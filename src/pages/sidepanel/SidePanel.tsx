@@ -10,6 +10,9 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Settings from './components/settings/Settings';
 import { omitObjProps } from '../utils/omit-obj-props';
 import Search from './components/search';
+import { MdOutlineSync } from 'react-icons/md';
+import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
+import Tooltip from './components/elements/tooltip';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -30,8 +33,11 @@ const SidePanel = () => {
   // loading space state
   const [isLoadingSpaces, setIsLoadingSpaces] = useState(false);
 
+  // loading state for save spaces to bookmarks
+  const [isLoadingSaveSpaces, setIsLoadingSaveSpaces] = useState(false);
+
   // snackbar global state/atom
-  const [snackbar] = useAtom(snackbarAtom);
+  const [snackbar, setSnackbar] = useAtom(snackbarAtom);
 
   // expand the active space by default, if this preference is set by user
 
@@ -86,6 +92,17 @@ const SidePanel = () => {
     }
   }, [activeSpaceId, appSettings]);
 
+  // sync/save spaces to bookmarks
+  const handleSaveSpacesToBM = async () => {
+    setIsLoadingSaveSpaces(true);
+
+    await syncSpacesToBookmark();
+
+    setIsLoadingSaveSpaces(false);
+
+    setSnackbar({ show: true, isSuccess: true, msg: 'Saved spaces to bookmarks' });
+  };
+
   return (
     <div className="w-screen h-screen  overflow-hidden bg-brand-background">
       <main className="h-full relative ">
@@ -94,7 +111,16 @@ const SidePanel = () => {
           <span className="invisible">Hide</span>
           <p className=" text-slate-400 text-base font-light tracking-wide  text-center">Fresh Tabs</p>
           {/* opens settings modal */}
-          <Settings />
+          <div className="flex items-center gap-2">
+            <Tooltip label="Sync/Save spaces to bookmarks">
+              <MdOutlineSync
+                size={22}
+                className={`text-slate-600 -mb-px cursor-pointer ${isLoadingSaveSpaces ? 'animate-spin' : ''}`}
+                onClick={handleSaveSpacesToBM}
+              />
+            </Tooltip>
+            <Settings />
+          </div>
         </div>
 
         {/* search */}

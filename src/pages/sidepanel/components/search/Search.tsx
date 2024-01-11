@@ -123,6 +123,9 @@ const Search = () => {
           ref={inputRef}
           type="text"
           placeholder="Search tabs..."
+          onKeyDown={ev => {
+            ev.stopPropagation();
+          }}
           className="placeholder:text-slate-500 outline-none bg-transparent ml-1.5 w-full   "
           value={searchQuery}
           onChange={ev => setSearchQuery(ev.currentTarget.value)}

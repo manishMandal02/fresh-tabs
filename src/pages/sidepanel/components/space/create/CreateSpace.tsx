@@ -3,7 +3,7 @@ import ColorPicker from '../../elements/color-picker';
 import { MdAdd } from 'react-icons/md';
 import EmojiPicker from '../../elements/emoji-picker';
 import { SlideModal } from '../../elements/modal';
-import { useState, useEffect, ChangeEventHandler , useCallback } from 'react';
+import { useState, useEffect, ChangeEventHandler, useCallback } from 'react';
 import { Tab } from '..';
 import Tooltip from '../../elements/tooltip';
 import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';

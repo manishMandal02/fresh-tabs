@@ -61,15 +61,15 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
   };
 
   // handle remove tab from space
-  const handleRemoveTab = async (id: number, idx: number) => {
+  const handleRemoveTab = async (id: number, index: number) => {
     // remove tab
-    const res = await removeTabFromSpace(space, null, idx, true);
+    const res = await removeTabFromSpace(space, null, index, true);
 
     // tab removed
     if (res) {
-      const updatedSpace: ISpaceWithTabs = { ...space, tabs: [...tabs.filter(t => t.id !== id)] };
+      const updatedSpace: ISpaceWithTabs = { ...space, tabs: [...tabs.filter((_t, idx) => idx !== index)] };
       // update the space active tab index if the removed tab was the last active tab
-      if (space.activeTabIndex === idx) {
+      if (space.activeTabIndex === index) {
         updatedSpace.activeTabIndex = 0;
       }
       // re-render updated tabs
