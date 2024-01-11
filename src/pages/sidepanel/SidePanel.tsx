@@ -86,16 +86,6 @@ const SidePanel = () => {
     }
   }, [activeSpaceId, appSettings]);
 
-  // const handleSearchShortcut: EventListener = ev => {
-  //   console.log('🚀 ~ file: SidePanel.tsx:82 ~ SidePanel ~ ev:', ev);
-
-  //   return;
-  // };
-
-  // useEffect(() => {
-  //   document.addEventListener('keypress', handleSearchShortcut);
-  // }, []);
-
   return (
     <div className="w-screen h-screen  overflow-hidden bg-brand-background">
       <main className="h-full relative ">
@@ -147,7 +137,7 @@ const SidePanel = () => {
                       {...provided1.droppableProps}
                       ref={provided1.innerRef}
                       className="h-[220px]"
-                      style={{ height: `${spaces.filter(s => s.isSaved).length * 3.5}rem` }}>
+                      style={{ height: `${spaces.filter(s => s.isSaved)?.length * 3.5}rem` }}>
                       {/* map spaces  */}
                       {spaces?.map(({ tabs, ...space }, idx) =>
                         space.isSaved ? (

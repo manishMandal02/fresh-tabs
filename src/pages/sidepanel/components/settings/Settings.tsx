@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import RadioGroup, { RadioOptions } from '../elements/RadioGroup/RadioGroup';
+import RadioGroup, { RadioOptions } from '../elements/radio-group/RadioGroup';
 import { useAtom } from 'jotai';
 import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
 import { IAppSettings } from '@root/src/pages/types/global.types';

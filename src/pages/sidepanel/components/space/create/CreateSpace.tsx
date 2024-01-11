@@ -3,7 +3,7 @@ import ColorPicker from '../../elements/color-picker';
 import { MdAdd } from 'react-icons/md';
 import EmojiPicker from '../../elements/emoji-picker';
 import { SlideModal } from '../../elements/modal';
-import { useState, useEffect, ChangeEventHandler } from 'react';
+import { useState, useEffect, ChangeEventHandler , useCallback } from 'react';
 import { Tab } from '..';
 import Tooltip from '../../elements/tooltip';
 import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
@@ -105,6 +105,22 @@ const CreateSpace = () => {
     }
   };
 
+  const handleShortcut = useCallback(ev => {
+    const keyEv = ev as KeyboardEvent;
+
+    console.log('🚀 ~ handleShortcut ~ keyEv:', keyEv);
+
+    if ((keyEv.ctrlKey || keyEv.shiftKey) && keyEv.key.toLowerCase() === 'a') {
+      setIsModalOpen(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleShortcut);
+
+    () => document.removeEventListener('keydown', handleShortcut);
+  }, [handleShortcut]);
+
   return (
     <>
       <button
@@ -123,6 +139,9 @@ const CreateSpace = () => {
               type="text"
               className="rounded bg-slate-700  px-2.5 py-1.5 text-[1rem] text-slate-200 w-48 outline-slate-600"
               placeholder="Space Title..."
+              onKeyDown={ev => {
+                ev.stopPropagation();
+              }}
               value={newSpaceData.title}
               onChange={onTitleChange}
             />

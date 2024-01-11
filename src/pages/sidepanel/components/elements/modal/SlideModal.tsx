@@ -1,5 +1,5 @@
 import { wait } from '@root/src/pages/utils';
-import { useEffect, useState, ReactNode } from 'react';
+import { useEffect, useState, ReactNode, useCallback } from 'react';
 import { MdClose } from 'react-icons/md';
 
 type Props = {
@@ -21,11 +21,30 @@ const Modal = ({ children, isOpen, onClose, title }: Props) => {
   }, [isOpen]);
 
   // handle close
-  const handleClose = async () => {
+  const handleClose = useCallback(async () => {
     setPosY('100%');
     await wait(200);
     onClose();
-  };
+  }, [onClose]);
+
+  const handleKeydown = useCallback(
+    ev => {
+      const key = (ev as KeyboardEvent).key;
+
+      console.log('🚀 ~ Modal ~ key:', key);
+
+      if (key === 'Escape') {
+        handleClose();
+      }
+    },
+    [handleClose],
+  );
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeydown);
+
+    () => document.removeEventListener('keydown', handleKeydown);
+  }, [handleKeydown]);
 
   return (
     <div

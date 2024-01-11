@@ -66,6 +66,9 @@ const UpdateSpace = ({ space, tabs, onClose, isActive }: Props) => {
               type="text"
               className="rounded bg-slate-700  px-2.5 py-1.5 text-[1rem] text-slate-200 w-48 outline-slate-600"
               placeholder="Space Title..."
+              onKeyDown={ev => {
+                ev.stopPropagation();
+              }}
               value={updateSpaceData.title}
               onChange={onTitleChange}
             />

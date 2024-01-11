@@ -125,18 +125,27 @@ export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promis
 };
 
 // remove/delete a tab
-export const removeTabFromSpace = async (space: ISpace, id: number, removeFromWindow = false): Promise<boolean> => {
+export const removeTabFromSpace = async (
+  space: ISpace,
+  id?: number,
+  index?: number,
+  removeFromWindow = false,
+): Promise<boolean> => {
   try {
     // get all tabs from the space
     const tabs = await getTabsInSpace(space.id);
 
     if (tabs?.length < 1) throw new Error('No tabs found.');
 
+    const tabToDelete = id ? tabs.find(t => t.id === id) : tabs[index];
+
     // do nothing, if only 1 tab remaining
-    if (tabs.length === 1 || !tabs.find(t => t.id === id)) return false;
+    if (tabs.length === 1 || !tabToDelete) return false;
+
+    const updatedTabs = id ? [...tabs.filter(t => t.id !== id)] : [...tabs.filter((_t, idx) => idx !== index)];
 
     // save new tab arrays to storage
-    await setTabsForSpace(space.id, [...tabs.filter(t => t.id !== id)]);
+    await setTabsForSpace(space.id, updatedTabs);
 
     // update active index for space to 0,  if this tab was the last active tab for this space
     if (space.activeTabIndex === tabs.findIndex(t => t.id === id)) {
@@ -144,7 +153,7 @@ export const removeTabFromSpace = async (space: ISpace, id: number, removeFromWi
     }
 
     // remove tab from window, when deleted from spaces view
-    if (removeFromWindow) {
+    if (removeFromWindow && id) {
       // check if the tab is opened
       const tab = await chrome.tabs.get(id);
 

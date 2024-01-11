@@ -63,7 +63,7 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
   // handle remove tab from space
   const handleRemoveTab = async (id: number, idx: number) => {
     // remove tab
-    const res = await removeTabFromSpace(space, id, true);
+    const res = await removeTabFromSpace(space, null, idx, true);
 
     // tab removed
     if (res) {
