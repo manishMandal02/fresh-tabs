@@ -46,7 +46,7 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
       setSpaces(prevSpace => [
         ...prevSpace.map(s => {
           // remove new window id from prev space
-          if (appSettings.openSpace && s.windowId === windowId) {
+          if (appSettings.openSpace === 'sameWindow' && s.windowId === windowId) {
             s.windowId = 0;
           }
           if (s.id === space.id) {
@@ -128,7 +128,7 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
           ) : (
             <>
               {/* open space in new window btn */}
-              <Tooltip label="Open in new window">
+              <Tooltip label={appSettings.openSpace === 'newWindow' ? 'Open in new window' : 'Open space'}>
                 <MdOutlineOpenInBrowser
                   className="text-slate-500 ml-px -mb-px cursor-pointer hover:text-slate-400 hover:-translate-y-px transition-all duration-200 "
                   size={20}
@@ -167,7 +167,7 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
       {isExpanded ? (
         <div
           className={`m-0 mt-1 w-full 
-                  transition-all duration-200 ease-in-out overflow-x-hidden overflow-y-auto  scroll-m-px scroll-p-0`}>
+                  transition-all duration-200 ease-in-out overflow-x-hidden overflow-y-auto cc-scroll-bar scroll-smooth`}>
           {tabs.map((tab, idx) => (
             <Tab
               key={tab?.id}

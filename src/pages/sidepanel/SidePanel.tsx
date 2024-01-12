@@ -111,11 +111,11 @@ const SidePanel = () => {
           <span className="invisible">Hide</span>
           <p className=" text-slate-400 text-base font-light tracking-wide  text-center">Fresh Tabs</p>
           {/* opens settings modal */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-[3.5px]">
             <Tooltip label="Sync/Save spaces to bookmarks">
               <MdOutlineSync
-                size={22}
-                className={`text-slate-600 -mb-px cursor-pointer ${isLoadingSaveSpaces ? 'animate-spin' : ''}`}
+                size={20}
+                className={`text-slate-600 -mb-[1.5px] cursor-pointer ${isLoadingSaveSpaces ? 'animate-spin' : ''}`}
                 onClick={handleSaveSpacesToBM}
               />
             </Tooltip>
@@ -126,7 +126,7 @@ const SidePanel = () => {
         {/* search */}
         <Search />
 
-        <p className="text-base text-slate-500 bg-brand-background  mb-1.5 ml-3 tracking-wide select-none">Spaces</p>
+        <p className="text-sm font-light text-slate-400 mt-3 mb-1 ml-3 select-none">Spaces</p>
         {/* spaces container */}
         <div className="w-full min-h-min bg-indigo- h-[90%] px-3  scroll-p-px scroll-m-px relative overflow-y-auto">
           {/* un saved  */}

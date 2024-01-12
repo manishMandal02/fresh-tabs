@@ -1,5 +1,5 @@
 import { useState, useRef, FormEvent, useEffect, useCallback, KeyboardEvent } from 'react';
-import { MdArrowForwardIos, MdSearch } from 'react-icons/md';
+import { MdArrowForwardIos, MdSearch, MdOutlineClose } from 'react-icons/md';
 import { ITab } from '@root/src/pages/types/global.types';
 import { appSettingsAtom, spacesAtom } from '@root/src/stores/app';
 import { useAtom } from 'jotai';
@@ -67,7 +67,7 @@ const Search = () => {
   );
 
   useEffect(() => {
-    if (searchQuery.length > 3) {
+    if (searchQuery.length > 2) {
       handleSearch();
     } else {
       setSearchResults([]);
@@ -113,6 +113,12 @@ const Search = () => {
     };
   }, []);
 
+  //  clear search
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+  };
+
   return (
     <div className="mt-6 mb-2 mx-8">
       <form
@@ -126,16 +132,19 @@ const Search = () => {
           onKeyDown={ev => {
             ev.stopPropagation();
           }}
-          className="placeholder:text-slate-500 outline-none bg-transparent ml-1.5 w-full   "
+          className="placeholder:text-slate-500 placeholder:select-none outline-none bg-transparent ml-1.5 w-full   "
           value={searchQuery}
           onChange={ev => setSearchQuery(ev.currentTarget.value)}
         />
+        {searchQuery?.length > 2 ? (
+          <MdOutlineClose className="opacity-50 scale-150 cursor-pointer" onClick={handleClearSearch} />
+        ) : null}
       </form>
       {/* search results */}
       {searchResults?.length > 0 ? (
         <div
           className={`fixed max-h-[75%] mt-2 left-1/2 -translate-x-1/2 z-50 bg-gray-800
-          rounded-md px-3 pb-1 pt-2 w-[95%]  shadow-md shadow-teal-500 overflow-y-auto scroll-smooth`}>
+          rounded-md px-3 pb-1 pt-2 w-[95%]  shadow-md shadow-teal-500 overflow-y-auto scroll-smooth cc-scroll-bar`}>
           <p className="text-slate-400 text-[12.5px] font-light  text-center">
             {searchResults.length} search results for {searchQuery || 'manish'}
           </p>
