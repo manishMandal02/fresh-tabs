@@ -61,7 +61,7 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
   };
 
   // handle remove tab from space
-  const handleRemoveTab = async (id: number, index: number) => {
+  const handleRemoveTab = async (index: number) => {
     // remove tab
     const res = await removeTabFromSpace(space, null, index, true);
 
@@ -167,13 +167,13 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
       {isExpanded ? (
         <div
           className={`m-0 mt-1 w-full 
-                  transition-all duration-200 ease-in-out overflow-x-hidden overflow-y-auto cc-scroll-bar scroll-smooth`}>
+                  transition-all duration-200 ease-in-out overflow-x-hidden overflow-y-auto cc-scrollbar scroll-smooth`}>
           {tabs.map((tab, idx) => (
             <Tab
               key={tab?.id}
               tabData={tab}
               isTabActive={space.activeTabIndex === idx}
-              onTabDelete={async () => await handleRemoveTab(tab.id, idx)}
+              onTabDelete={async () => await handleRemoveTab(idx)}
               isSpaceActive={isActive}
             />
           ))}

@@ -144,7 +144,7 @@ const Search = () => {
       {searchResults?.length > 0 ? (
         <div
           className={`fixed max-h-[75%] mt-2 left-1/2 -translate-x-1/2 z-50 bg-gray-800
-          rounded-md px-3 pb-1 pt-2 w-[95%]  shadow-md shadow-teal-500 overflow-y-auto scroll-smooth cc-scroll-bar`}>
+          rounded-md px-3 pb-1 pt-2 w-[95%]  shadow-md shadow-teal-500 overflow-y-auto scroll-smooth cc-scrollbar`}>
           <p className="text-slate-400 text-[12.5px] font-light  text-center">
             {searchResults.length} search results for {searchQuery || 'manish'}
           </p>

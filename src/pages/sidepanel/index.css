@@ -14,22 +14,22 @@ body {
   position: relative;
 }
 
-.cc-scroll-bar::-webkit-scrollbar {
+.cc-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
 
 /* Track */
-.cc-scroll-bar::-webkit-scrollbar-track {
+.cc-scrollbar::-webkit-scrollbar-track {
   background: #101010a7;
 }
 
 /* Handle */
-.cc-scroll-bar::-webkit-scrollbar-thumb {
+.cc-scrollbar::-webkit-scrollbar-thumb {
   background: #686868b1;
   border-radius: 16px;
 }
 
 /* Handle on hover */
-.cc-scroll-bar::-webkit-scrollbar-thumb:hover {
+.cc-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #232323bb;
 }

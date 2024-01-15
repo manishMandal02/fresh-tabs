@@ -128,7 +128,7 @@ const SidePanel = () => {
 
         <p className="text-sm font-light text-slate-400 mt-3 mb-1 ml-3 select-none">Spaces</p>
         {/* spaces container */}
-        <div className="w-full min-h-min bg-indigo- h-[90%] px-3  scroll-p-px scroll-m-px relative overflow-y-auto">
+        <div className="w-full h-[85%]  px-3 py-1  scroll-p-px scroll-m-px relative overflow-y-auto cc-scrollbar">
           {/* un saved  */}
           {isLoadingSpaces ? (
             <Spinner size="md" />
