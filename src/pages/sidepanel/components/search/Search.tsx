@@ -91,6 +91,9 @@ const Search = () => {
 
   const handleKeydown = ev => {
     const key = (ev as KeyboardEvent).key;
+
+    console.log('🚀 ~ handleKeydown ~ key:', key);
+
     if (key === 'f') {
       inputRef.current.focus();
       // hack to clear search as f gets added after the input is focused
@@ -98,7 +101,9 @@ const Search = () => {
         await wait(10);
         setSearchQuery(prev => (prev.trim() === 'f' ? '' : prev));
       })();
-    } else if (key === 'Escape') {
+    } else if (key.toLowerCase() === 'escape') {
+      console.log('🚀 ~ handleKeydown ~ key:', key);
+
       setSearchQuery('');
       inputRef.current.blur();
     }
@@ -129,9 +134,6 @@ const Search = () => {
           ref={inputRef}
           type="text"
           placeholder="Search tabs..."
-          onKeyDown={ev => {
-            ev.stopPropagation();
-          }}
           className="placeholder:text-slate-500 placeholder:select-none outline-none bg-transparent ml-1.5 w-full   "
           value={searchQuery}
           onChange={ev => setSearchQuery(ev.currentTarget.value)}

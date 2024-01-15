@@ -23,7 +23,7 @@ const ColorPicker = ({ color, onChange }: Props) => {
         open={isOpen}
         onChange={setIsOpen}
         content={
-          <div className="px-3 py-2 rounded gap-4 flex flex-wrap items-center justify-center bg-slate-800/80 w-52">
+          <div className="px-3 py-2 rounded gap-4 flex flex-wrap items-center justify-center bg-slate-900 w-52">
             {(Object.keys(ThemeColor) as Array<ColorType>).map(key => (
               <span
                 key={key}

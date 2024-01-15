@@ -31,9 +31,7 @@ const Modal = ({ children, isOpen, onClose, title }: Props) => {
     ev => {
       const key = (ev as KeyboardEvent).key;
 
-      console.log('🚀 ~ Modal ~ key:', key);
-
-      if (key === 'Escape') {
+      if (key.toLowerCase() === 'escape') {
         handleClose();
       }
     },
@@ -41,6 +39,7 @@ const Modal = ({ children, isOpen, onClose, title }: Props) => {
   );
 
   useEffect(() => {
+    if (!isOpen) return;
     document.addEventListener('keydown', handleKeydown);
 
     () => document.removeEventListener('keydown', handleKeydown);

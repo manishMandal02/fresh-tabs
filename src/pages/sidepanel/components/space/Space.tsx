@@ -7,16 +7,17 @@ import { openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { removeTabFromSpace } from '@root/src/services/chrome-storage/tabs';
 import { useAtom } from 'jotai';
 import { appSettingsAtom, snackbarAtom, spacesAtom } from '@root/src/stores/app';
+import MoreOptions from './more-options/MoreOptions';
 
 const SPACE_HEIGHT = 45;
 
 type Props = {
   space: ISpace;
   tabs: ITab[];
-  onUpdateClick: () => void;
   isActive: boolean;
   isExpanded: boolean;
   onExpand: () => void;
+  onUpdateClick: () => void;
 };
 
 const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: Props) => {
@@ -96,7 +97,7 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
       }}>
       {/* space info container */}
       <button
-        className="py-3 px-3 w-full h-[2.5rem] flex items-center justify-between  border-slate-700 group"
+        className="py-3 pl-2.5 pr-1 w-full h-[2.5rem] flex items-center justify-between  border-slate-700 group"
         onClick={onExpand}
         style={{
           borderBottomWidth: isExpanded ? '1px' : '0px',
@@ -152,15 +153,18 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
         </div>
         {/* right-end container */}
         <div className="flex items-center">
-          <span className="text-[.8rem] mr-2.5 opacity-80">{tabs.length}</span>
+          <span className="text-[.8rem] mr-2 opacity-80">{tabs.length}</span>
           {/* <SlOptionsVertical className="text-slate-300 text-sm cursor-pointer" /> */}
           <span className="group-hover:animate-bounce ">
             <MdArrowForwardIos
-              className={`text-slate-300 text-xs transition-all  duration-200 ${
+              className={`text-slate-300 mr-1 text-xs transition-all  duration-200 ${
                 !isExpanded ? 'group-hover:rotate-90 rotate-0' : 'group-hover:rotate-0 rotate-90'
               }`}
             />
           </span>
+          {/* more options menu */}
+          {/* TODO: - allow delete and sync from here, remove it from update modal */}
+          <MoreOptions onEditClick={onUpdateClick} onSyncClick={() => {}} onDeleteClick={() => {}} />
         </div>
       </button>
       {/* tabs within opened space */}

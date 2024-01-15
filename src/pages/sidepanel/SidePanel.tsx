@@ -112,7 +112,7 @@ const SidePanel = () => {
           <p className=" text-slate-400 text-base font-light tracking-wide  text-center">Fresh Tabs</p>
           {/* opens settings modal */}
           <div className="flex items-center gap-[3.5px]">
-            <Tooltip label="Sync/Save spaces to bookmarks">
+            <Tooltip label="Save spaces to bookmarks">
               <MdOutlineSync
                 size={20}
                 className={`text-slate-600 -mb-[1.5px] cursor-pointer ${isLoadingSaveSpaces ? 'animate-spin' : ''}`}
