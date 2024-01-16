@@ -99,7 +99,7 @@ export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promis
     // get all tabs from the space
     const tabs = await getTabsInSpace(spaceId);
 
-    if (tabs?.length < 1) return;
+    if (tabs?.length < 1) throw new Error(`Tabs not found for this space: ${spaceId}.`);
 
     // check if tab exists
     if (tabs.find(t => t.id === tab.id) || tabs[idx]?.url === tab.url) {

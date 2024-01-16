@@ -18,35 +18,33 @@ const ColorPicker = ({ color, onChange }: Props) => {
   };
 
   return (
-    <>
-      <Popover
-        open={isOpen}
-        onChange={setIsOpen}
-        content={
-          <div className="px-3 py-2 rounded gap-4 flex flex-wrap items-center justify-center bg-slate-900 w-52">
-            {(Object.keys(ThemeColor) as Array<ColorType>).map(key => (
-              <span
-                key={key}
-                className="w-6 h-6 rounded-full"
-                style={{
-                  backgroundColor: ThemeColor[key],
-                }}
-                onClick={() => handleColorSelect(ThemeColor[key])}
-                onKeyDown={() => handleColorSelect(ThemeColor[key])}
-                role="button"
-                tabIndex={0}></span>
-            ))}
-          </div>
-        }>
-        <button className="border select-none border-slate-600 w-10 h-10 rounded flex items-center justify-center">
-          <div
-            className="w-5 h-5 rounded-full"
-            style={{
-              backgroundColor: color,
-            }}></div>
-        </button>
-      </Popover>
-    </>
+    <Popover
+      open={isOpen}
+      onChange={setIsOpen}
+      content={
+        <div className="px-3 py-2 rounded gap-4 flex flex-wrap items-center justify-center bg-slate-900 w-52">
+          {(Object.keys(ThemeColor) as Array<ColorType>).map(key => (
+            <span
+              key={key}
+              className="w-6 h-6 rounded-full"
+              style={{
+                backgroundColor: ThemeColor[key],
+              }}
+              onClick={() => handleColorSelect(ThemeColor[key])}
+              onKeyDown={() => handleColorSelect(ThemeColor[key])}
+              role="button"
+              tabIndex={0}></span>
+          ))}
+        </div>
+      }>
+      <button className="border select-none border-slate-600 w-10 h-10 rounded flex items-center justify-center">
+        <div
+          className="w-5 h-5 rounded-full"
+          style={{
+            backgroundColor: color,
+          }}></div>
+      </button>
+    </Popover>
   );
 };
 

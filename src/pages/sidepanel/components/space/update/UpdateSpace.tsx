@@ -1,37 +1,26 @@
 import { useState, useEffect, ChangeEventHandler } from 'react';
-import { AlertModal, SlideModal } from '../../elements/modal';
-import { ISpace, ITab } from '@root/src/pages/types/global.types';
+import { SlideModal } from '../../elements/modal';
+import { ISpace } from '@root/src/pages/types/global.types';
 import ColorPicker from '../../elements/color-picker';
 import EmojiPicker from '../../elements/emoji-picker';
 import Spinner from '../../elements/spinner';
 import { useUpdateSpace } from './useUpdateSpace';
-import { MdOutlineSync } from 'react-icons/md';
 
 type Props = {
   space: ISpace;
-  tabs: ITab[];
-  isActive: boolean;
+  numTabs: number;
   onClose: () => void;
 };
 
-const UpdateSpace = ({ space, tabs, onClose, isActive }: Props) => {
+const UpdateSpace = ({ space, numTabs, onClose }: Props) => {
   // update space data
   const [updateSpaceData, setUpdateSpaceData] = useState<ISpace | undefined>(undefined);
 
   // logic hook
-  const {
-    handleUpdateSpace,
-    handleDeleteSpace,
-    handleSyncTabs,
-    errorMsg,
-    snackbar,
-    showDeleteModal,
-    setShowDeleteModal,
-  } = useUpdateSpace({
+  const { handleUpdateSpace, errorMsg, snackbar } = useUpdateSpace({
     updateSpaceData,
     onClose,
     space,
-    tabs,
   });
 
   useEffect(() => {
@@ -76,17 +65,9 @@ const UpdateSpace = ({ space, tabs, onClose, isActive }: Props) => {
             <ColorPicker color={updateSpaceData.theme} onChange={onThemeChange} />
           </div>
 
-          {/* tabs */}
+          {/* numTabs */}
           <div className="mt-6 flex justify-between items-center">
-            <p className="text-slate-500 font-light text-base">{tabs?.length} tabs in space</p>
-            {/* sync tabs */}
-            {isActive ? (
-              <button
-                className="bg-teal-400 flex items-center text-slate-800 font-medium text-xs rounded-sm px-2 py-1.5 transition-all duration-300 hover:bg-opacity-90"
-                onClick={handleSyncTabs}>
-                <MdOutlineSync size={16} className="mr-1" /> Sync Tabs
-              </button>
-            ) : null}
+            <p className="text-slate-500 font-light text-base">{numTabs} tabs in space</p>
           </div>
           {/* error msg */}
           {errorMsg ? (
@@ -102,32 +83,7 @@ const UpdateSpace = ({ space, tabs, onClose, isActive }: Props) => {
               onClick={handleUpdateSpace}>
               {snackbar.isLoading ? <Spinner size="sm" /> : updateBtnLabel}
             </button>
-            {/* delete space */}
-            <button
-              className={` w-[90%] py-1.5 rounded-md text-slate-500 mt-4   font-medium text-base shadow shadow-rose-600 hover:opacity-80 transition-all duration-300`}
-              onClick={() => setShowDeleteModal(true)}>
-              Remove
-            </button>
           </div>
-          {/* delete modal */}
-          <AlertModal isOpen={showDeleteModal} title="Confirm Delete" onClose={() => setShowDeleteModal(false)}>
-            <div className=" px-4 py-2.5 text-slate-400  ">
-              <p className="font-light text-sm">Are you sure you want to delete this space?</p>
-
-              <div className=" absolute bottom-4 right-3 ">
-                <button
-                  className="bg-slate-500 text-slate-100 w-20 py-2 mr-3 rounded-sm hover:opacity-90 transition-all duration-200"
-                  onClick={() => setShowDeleteModal(false)}>
-                  Cancel
-                </button>
-                <button
-                  className="bg-red-600 text-slate-100 w-20 py-2 rounded-sm hover:opacity-90 transition-all duration-200"
-                  onClick={handleDeleteSpace}>
-                  {snackbar.isLoading ? <Spinner size="sm" /> : 'Delete'}
-                </button>
-              </div>
-            </div>
-          </AlertModal>
         </div>
       ) : null}
     </SlideModal>

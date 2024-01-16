@@ -114,7 +114,6 @@ const Search = () => {
 
     () => {
       document.removeEventListener('keydown', handleKeydown);
-      return;
     };
   }, []);
 
@@ -128,8 +127,8 @@ const Search = () => {
     <div className="mt-6 mb-2 mx-8">
       <form
         onSubmit={handleSearch}
-        className="flex items-center text-slate-200 font-light px-2 py-1.5  rounded-md   border border-slate-700/60  focus-within:shadow focus-within:shadow-teal-400">
-        <MdSearch className="opacity-25 scale-125" onClick={handleIconClick} />
+        className="flex items-center text-slate-200 font-light px-2 py-1.5  rounded-lg   border border-slate-700/60  focus-within:shadow focus-within:shadow-teal-400">
+        <MdSearch className="opacity-25 scale-125 mt-px" onClick={handleIconClick} />
         <input
           ref={inputRef}
           type="text"

@@ -1,4 +1,4 @@
-import { IAppSettings, ISpace, ITab } from '@root/src/pages/types/global.types';
+import { ISpace, ITab } from '@root/src/pages/types/global.types';
 import { getSpaceByWindow, updateSpace } from '../chrome-storage/spaces';
 import { getFaviconURL } from '@root/src/pages/utils';
 import { getTabsInSpace, setTabsForSpace } from '../chrome-storage/tabs';
@@ -9,7 +9,7 @@ type OpenSpaceProps = {
   space: ISpace;
   tabs: ITab[];
   onNewWindowCreated: (windowId: number) => void;
-  openWindowType: IAppSettings['openSpace'];
+  shouldOpenInNewWindow: boolean;
 };
 
 // create new active tab
@@ -52,7 +52,9 @@ const createDiscardedTabs = async (tabs: ITab[], windowId: number) => {
   const createdTabs: ITab[] = [];
 
   for (const res of responses) {
-    if (res.status === 'rejected') return;
+    // process only successful responses
+    if (res.status === 'rejected') continue;
+
     const { url, pendingUrl, id } = res.value;
 
     const tabDiscardedURL = url || pendingUrl;
@@ -62,9 +64,10 @@ const createDiscardedTabs = async (tabs: ITab[], windowId: number) => {
     // get the tab details (as the new tab doesn't have title)
     const matchedTab = tabs.find(tab => tab.url === tabURL);
 
-    if (!matchedTab) continue;
-    // update tab with new id
-    createdTabs.push({ ...matchedTab, id: id });
+    if (matchedTab) {
+      // update tab with new id
+      createdTabs.push({ ...matchedTab, id });
+    }
   }
 
   return createdTabs;
@@ -87,7 +90,7 @@ const clearCurrentWindow = async (windowId: number) => {
 };
 
 // opens a space in new window
-export const openSpace = async ({ space, tabs, onNewWindowCreated, openWindowType }: OpenSpaceProps) => {
+export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInNewWindow }: OpenSpaceProps) => {
   // only active tab will be loaded, rest will be loaded after user visits them
 
   // space's active tab position
@@ -113,7 +116,7 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, openWindowTyp
   };
 
   // get the window based on user preference
-  if (openWindowType === 'sameWindow') {
+  if (!shouldOpenInNewWindow) {
     const currentWindowId = await getCurrentWindowId();
 
     const currentSpace = await getSpaceByWindow(currentWindowId);

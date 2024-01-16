@@ -1,38 +1,73 @@
 import * as DropdownMenuRadix from '@radix-ui/react-dropdown-menu';
-import { MdMoreVert, MdEdit, MdSync, MdDelete } from 'react-icons/md';
+import { MdMoreVert, MdEdit, MdSync, MdDelete, MdOutlineOpenInBrowser, MdOpenInNew } from 'react-icons/md';
 
 type Props = {
+  isSpaceActive: boolean;
+  shouldOpenInNewWindow: boolean;
+  onOpenSpace: () => void;
   onEditClick: () => void;
   onSyncClick: () => void;
   onDeleteClick: () => void;
 };
 
-const MoreOptions = ({ onEditClick, onSyncClick, onDeleteClick }: Props) => {
+const MoreOptions = ({
+  isSpaceActive,
+  onEditClick,
+  onSyncClick,
+  shouldOpenInNewWindow,
+  onOpenSpace,
+  onDeleteClick,
+}: Props) => {
   return (
     <DropdownMenuRadix.Root>
       <DropdownMenuRadix.Trigger>
-        <MdMoreVert className="text-slate-400 z-50 text-lg m-0" onClick={() => {}} />
+        <MdMoreVert
+          className="text-slate-500 z-50 text-lg hover:text-slate-400 transition-all duration-200 focus:ring-0 outline-none"
+          onClick={() => {}}
+        />
       </DropdownMenuRadix.Trigger>
 
       <DropdownMenuRadix.Portal>
         <DropdownMenuRadix.Content
-          className="min-w-28 z-[200] bg-slate-900 text-slate-400 rounded py-1 px-1 shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)] will-change-[opacity,transform] data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade"
+          className={`min-w-28 z-[200] py-1 bg-slate-900 text-slate-400 rounded data-[side=top]:animate-slideDownAndFade 
+                    shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]  
+                    data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade`}
           sideOffset={5}
           onClick={ev => {
             ev.stopPropagation();
           }}>
+          {!isSpaceActive ? (
+            <DropdownMenuRadix.Item
+              className={`group text-xs px-1.5 py-2 pr-4 hover:bg-slate-800 cursor-pointer 
+                    transition-all duration-200 leading-none flex items-center  relative select-none outline-none`}
+              onClick={onOpenSpace}>
+              <>
+                {!shouldOpenInNewWindow ? (
+                  <>
+                    <MdOpenInNew className="mr-1 opacity-70 text-xs" /> Open in new window
+                  </>
+                ) : (
+                  <>
+                    <MdOutlineOpenInBrowser className="mr-1 opacity-70 text-xs" /> Open Space
+                  </>
+                )}
+              </>
+            </DropdownMenuRadix.Item>
+          ) : null}
           <DropdownMenuRadix.Item
-            className="group text-xs px-1 py-1.5 hover:bg-slate-800 cursor-pointer transition-all duration-200 leading-none flex items-center  relative select-none outline-none "
+            className="group text-xs px-1.5 py-2 hover:bg-slate-800 cursor-pointer transition-all duration-200 leading-none flex items-center  relative select-none outline-none "
             onClick={onEditClick}>
             <MdEdit className="mr-1 opacity-70 text-xs" /> Edit
           </DropdownMenuRadix.Item>
+          {isSpaceActive ? (
+            <DropdownMenuRadix.Item
+              className="group text-xs px-1.5 py-2 hover:bg-slate-800 cursor-pointer transition-all duration-200 leading-none flex items-center  relative select-none outline-none "
+              onClick={onSyncClick}>
+              <MdSync className="mr-1 opacity-70 text-xs" /> Sync Tabs
+            </DropdownMenuRadix.Item>
+          ) : null}
           <DropdownMenuRadix.Item
-            className="group text-xs px-1 py-1.5 hover:bg-slate-800 cursor-pointer transition-all duration-200 leading-none flex items-center  relative select-none outline-none "
-            onClick={onSyncClick}>
-            <MdSync className="mr-1 opacity-70 text-xs" /> Sync Tabs
-          </DropdownMenuRadix.Item>
-          <DropdownMenuRadix.Item
-            className="group text-xs px-1 py-1.5 hover:bg-slate-800 cursor-pointer transition-all duration-200 leading-none flex items-center  relative select-none outline-none "
+            className="group text-xs px-1.5 py-2 hover:bg-slate-800 cursor-pointer transition-all duration-200 leading-none flex items-center  relative select-none outline-none "
             onClick={onDeleteClick}>
             <MdDelete className="mr-1 opacity-70 text-xs" /> Delete
           </DropdownMenuRadix.Item>

@@ -1,13 +1,16 @@
-import { MouseEventHandler } from 'react';
+import { createPortal } from 'react-dom';
+import { useState } from 'react';
+import { useAtom } from 'jotai';
+import { MdArrowForwardIos, MdOutlineOpenInBrowser } from 'react-icons/md';
 import { ISpace, ISpaceWithTabs, ITab } from '@root/src/pages/types/global.types';
-import { MdArrowForwardIos, MdOutlineSettings, MdOutlineOpenInBrowser } from 'react-icons/md';
 import Tab from './Tab';
 import Tooltip from '../elements/tooltip';
 import { openSpace } from '@root/src/services/chrome-tabs/tabs';
-import { removeTabFromSpace } from '@root/src/services/chrome-storage/tabs';
-import { useAtom } from 'jotai';
+import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { appSettingsAtom, snackbarAtom, spacesAtom } from '@root/src/stores/app';
-import MoreOptions from './more-options/MoreOptions';
+import MoreOptions from './more-options';
+import { updateSpace } from '@root/src/services/chrome-storage/spaces';
+import DeleteSpaceModal from './delete';
 
 const SPACE_HEIGHT = 45;
 
@@ -30,24 +33,45 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
   // settings atom
   const [appSettings] = useAtom(appSettingsAtom);
 
-  // on setting click
-  const onSettingsClick: MouseEventHandler<SVGElement> = ev => {
-    ev.stopPropagation();
-    onUpdateClick();
+  // local state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // sync tabs
+  const handleSyncTabs = async () => {
+    setSnackbar({ msg: '', show: false, isLoading: true });
+
+    // get all tabs in the window
+    const currentTabs = await chrome.tabs.query({ currentWindow: true });
+
+    const tabsInWindow = currentTabs.map(t => ({ title: t.title, url: t.url, id: t.id }));
+
+    const activeTab = currentTabs.find(t => t.active);
+
+    // update space's active tab index if not correct
+    if (space.activeTabIndex !== activeTab.index) {
+      await updateSpace(space.id, { ...space, activeTabIndex: activeTab.index });
+    }
+    // update tabs in space
+    await setTabsForSpace(space.id, tabsInWindow);
+
+    setSpaces(prev => [
+      ...prev.filter(s => s.id !== space.id),
+      { ...space, activeTabIndex: activeTab.index, tabs: [...tabsInWindow] },
+    ]);
+
+    setSnackbar({ msg: '', show: false, isLoading: false });
+
+    setSnackbar({ msg: 'Tabs synced', show: true, isLoading: false, isSuccess: true });
   };
 
-  // check if space is opened
-
   // open space in new window
-  const handleOpenSpace: MouseEventHandler<SVGElement> = async ev => {
-    ev.stopPropagation();
-
+  const handleOpenSpace = async (shouldOpenInNewWindow: boolean) => {
     // update window id for the space when new window gets created
     const onNewWindowCreated = (windowId: number) => {
       setSpaces(prevSpace => [
         ...prevSpace.map(s => {
-          // remove new window id from prev space
-          if (appSettings.openSpace === 'sameWindow' && s.windowId === windowId) {
+          // remove new window id from prev space, if opening space in same window
+          if (!shouldOpenInNewWindow && s.windowId === windowId) {
             s.windowId = 0;
           }
           if (s.id === space.id) {
@@ -58,7 +82,12 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
         }),
       ]);
     };
-    await openSpace({ space, onNewWindowCreated, tabs, openWindowType: appSettings.openSpace });
+    await openSpace({
+      space,
+      onNewWindowCreated,
+      tabs,
+      shouldOpenInNewWindow,
+    });
   };
 
   // handle remove tab from space
@@ -133,44 +162,45 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
                 <MdOutlineOpenInBrowser
                   className="text-slate-500 ml-px -mb-px cursor-pointer hover:text-slate-400 hover:-translate-y-px transition-all duration-200 "
                   size={20}
-                  onClick={handleOpenSpace}
+                  onClick={ev => {
+                    ev.stopPropagation();
+                    handleOpenSpace(appSettings.openSpace === 'newWindow');
+                  }}
                   onMouseOver={ev => ev.stopPropagation()}
                 />
               </Tooltip>
             </>
           )}
-
-          {isExpanded ? (
-            <>
-              {/* update btn */}
-              <MdOutlineSettings
-                className="text-slate-600 ml-1 cursor-pointer hover:text-slate-500 transition-all duration-200"
-                size={18}
-                onClick={onSettingsClick}
-              />
-            </>
-          ) : null}
         </div>
         {/* right-end container */}
         <div className="flex items-center">
-          <span className="text-[.8rem] mr-2 opacity-80">{tabs.length}</span>
+          <span className="text-[.8rem] mr-1 opacity-80">{tabs.length}</span>
           {/* <SlOptionsVertical className="text-slate-300 text-sm cursor-pointer" /> */}
           <span className="group-hover:animate-bounce ">
             <MdArrowForwardIos
-              className={`text-slate-300 mr-1 text-xs transition-all  duration-200 ${
+              className={`text-slate-300 mr-1.5 text-xs transition-all  duration-200 ${
                 !isExpanded ? 'group-hover:rotate-90 rotate-0' : 'group-hover:rotate-0 rotate-90'
               }`}
             />
           </span>
           {/* more options menu */}
-          {/* TODO: - allow delete and sync from here, remove it from update modal */}
-          <MoreOptions onEditClick={onUpdateClick} onSyncClick={() => {}} onDeleteClick={() => {}} />
+          <MoreOptions
+            shouldOpenInNewWindow={appSettings.openSpace === 'newWindow'}
+            onOpenSpace={() => {
+              // open space in a opposite method as set in the preferences
+              handleOpenSpace(appSettings.openSpace !== 'newWindow');
+            }}
+            isSpaceActive={isActive}
+            onEditClick={onUpdateClick}
+            onSyncClick={handleSyncTabs}
+            onDeleteClick={() => setShowDeleteModal(true)}
+          />
         </div>
       </button>
       {/* tabs within opened space */}
       {isExpanded ? (
         <div
-          className={`m-0 mt-1 w-full 
+          className={`m-0 mt-1 w-full z-10
                   transition-all duration-200 ease-in-out overflow-x-hidden overflow-y-auto cc-scrollbar scroll-smooth`}>
           {tabs.map((tab, idx) => (
             <Tab
@@ -183,6 +213,12 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
           ))}
         </div>
       ) : null}
+      {/* delete space alert modal */}
+      {showDeleteModal &&
+        createPortal(
+          <DeleteSpaceModal spaceId={space.id} show={showDeleteModal} onClose={() => setShowDeleteModal(false)} />,
+          document.body,
+        )}
     </div>
   );
 };

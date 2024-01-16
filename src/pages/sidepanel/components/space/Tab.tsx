@@ -36,7 +36,7 @@ const Tab = ({
 
   return (
     <div
-      className={` w-full relative px-2.5 py-1.5 flex rounded-sm items-center justify-between shadow-sm shadow-slate-700/80 group ${
+      className={` w-full z-[10] relative px-2.5 py-1.5 flex rounded-sm items-center justify-between shadow-sm shadow-slate-700/80 group ${
         isTabActive ? ' bg-slate-700/30' : ''
       }`}>
       <span className="flex items-center w-full ">

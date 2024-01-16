@@ -198,8 +198,7 @@ const SidePanel = () => {
           {/* update space */}
           <UpdateSpace
             space={spaceToUpdate && omitObjProps(spaceToUpdate, 'tabs')}
-            isActive={spaceToUpdate?.id === activeSpaceId}
-            tabs={spaceToUpdate?.tabs}
+            numTabs={spaceToUpdate?.tabs?.length}
             onClose={() => setSpaceToUpdate(undefined)}
           />
         </div>
