@@ -89,8 +89,32 @@ const clearCurrentWindow = async (windowId: number) => {
   await Promise.allSettled(tabsToBeDeletedPromises);
 };
 
+// check if the space is already opened in another window
+const checkIfSpaceActiveInAnotherWindow = async (space: ISpace) => {
+  // get all windows
+  const windows = await chrome.windows.getAll();
+
+  const activeSpaceWindow = windows.find(window => window.id === space.windowId);
+
+  // space not active
+  if (!activeSpaceWindow) return false;
+
+  // space active in another window
+  // focus the window
+  await chrome.windows.update(activeSpaceWindow.id, { focused: true });
+  return true;
+};
+
 // opens a space in new window
 export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInNewWindow }: OpenSpaceProps) => {
+  // focus window is space already active
+  const isAlreadyActive = checkIfSpaceActiveInAnotherWindow(space);
+
+  if (isAlreadyActive) {
+    onNewWindowCreated(space.windowId);
+    return;
+  }
+
   // only active tab will be loaded, rest will be loaded after user visits them
 
   // space's active tab position

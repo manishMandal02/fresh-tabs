@@ -79,8 +79,10 @@ export const createUnsavedSpace = async (windowId: number, tabs: ITab[], activeI
 
 export const createSampleSpaces = async () => {
   // create a sample spaces
-  await createNewSpace({ ...SampleSpaces[0].space }, [...SampleSpaces[0].tabs]);
-  await createNewSpace({ ...SampleSpaces[1].space }, [...SampleSpaces[1].tabs]);
+  for (const spaceWithTabs of SampleSpaces) {
+    const { tabs, ...space } = spaceWithTabs;
+    await createNewSpace(space, tabs);
+  }
 };
 
 // update a space
