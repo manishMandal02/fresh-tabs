@@ -2,7 +2,7 @@ import { ITab } from '@root/src/pages/types/global.types';
 import { getFaviconURL } from '@root/src/pages/utils';
 import { copyToClipboard } from '@root/src/pages/utils/copy-to-clipboard';
 import { createTab, goToTab } from '@root/src/services/chrome-tabs/tabs';
-import { MdDelete, MdContentCopy, MdOpenInNew, MdMyLocation } from 'react-icons/md';
+import { MdClose, MdContentCopy, MdOpenInNew, MdMyLocation } from 'react-icons/md';
 
 type Props = {
   tabData: ITab;
@@ -66,7 +66,7 @@ const Tab = ({
             onClick={handleCopyURL}
           />
           {showDeleteOption ? (
-            <MdDelete
+            <MdClose
               className={` text-slate-700 text-xs cursor-pointer bg-slate-400 px-[.75px] py-[1.5px] rounded-sm scale-150 transition-all duration-200 hover:bg-slate-400/80`}
               onClick={onTabDelete}
             />

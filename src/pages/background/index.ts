@@ -189,6 +189,7 @@ chrome.alarms.onAlarm.addListener(async alarm => {
 
 // IIFE - checks for alarms, its not guaranteed to persist
 (async () => {
+  chrome.omnibox.setDefaultSuggestion({ description: 'Search for a space' });
   const alarm = await chrome.alarms.get(AlarmNames.saveToBM);
   if (alarm?.name) return;
 

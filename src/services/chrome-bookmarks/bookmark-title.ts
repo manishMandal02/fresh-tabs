@@ -12,7 +12,7 @@ export const getSpaceInfoFromBMTitle = (title: string): ISpace => {
     emoji: spaceDetailsParts[0],
     title: spaceDetailsParts[1],
     id: spaceDetailsParts[2],
-    theme: ThemeColor[spaceDetailsParts[3]],
+    theme: spaceDetailsParts[3] as ThemeColor,
     activeTabIndex: Number(spaceDetailsParts[4]),
     windowId: Number(spaceDetailsParts[5]),
     isSaved: true,

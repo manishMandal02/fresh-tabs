@@ -8,6 +8,7 @@ const manifest = {
   version: '0.0.1',
   description: 'Manage tabs like pro',
   permissions: ['sidePanel', 'tabs', 'storage', 'bookmarks', 'favicon', 'alarms'],
+  omnibox: { keyword: '/' },
   commands: {
     cmdE: {
       suggested_key: {

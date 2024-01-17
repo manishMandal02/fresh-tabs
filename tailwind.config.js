@@ -8,6 +8,7 @@ export default {
           primary: '#34d399',
           secondary: '#f97316',
           background: '#19212c',
+          // try new bg: #151C2F
         },
       },
     },
