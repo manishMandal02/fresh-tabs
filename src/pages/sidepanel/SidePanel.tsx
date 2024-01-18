@@ -1,18 +1,22 @@
 import { useState, useEffect } from 'react';
-import { IMessageEvent, ISpaceWithTabs } from '../types/global.types';
-import { CreateSpace, Space, UpdateSpace } from './components/space';
+import { IMessageEvent, ISpace, ISpaceWithTabs } from '../types/global.types';
+import { ActiveSpace, UpdateSpace } from './components/space';
 import Snackbar from './components/elements/snackbar';
 import { useAtom } from 'jotai';
-import { snackbarAtom } from '@root/src/stores/app';
+import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
 import Spinner from './components/elements/spinner';
 import { useSidePanel } from './hooks/useSidePanel';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Settings from './components/settings/Settings';
 import { omitObjProps } from '../utils/omit-obj-props';
 import Search from './components/search';
-import { MdOutlineSync } from 'react-icons/md';
+import { MdAdd, MdOutlineSync } from 'react-icons/md';
 import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
 import Tooltip from './components/elements/tooltip';
+import type { OnDragEndResponder } from 'react-beautiful-dnd';
+import { getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
+import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import { getAppSettings } from '@root/src/services/chrome-storage/settings';
+import NonActiveSpace from './components/space/other-space/NonActiveSpace';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -22,29 +26,42 @@ const SidePanel = () => {
   const [spaceToUpdate, setSpaceToUpdate] = useState<ISpaceWithTabs | undefined>(undefined);
 
   // custom hook
-  const { spaces, appSettings, getActiveSpaceId, handleEvents, onDragEnd } = useSidePanel();
+  const { nonActiveSpaces, setNonActiveSpaces, activeSpace, setActiveSpace, handleEvents, getAllOtherSpaces } =
+    useSidePanel();
 
-  // active space in the window
-  const [activeSpaceId, setActiveSpaceId] = useState('');
+  // snackbar global state/atom
+  const [snackbar, setSnackbar] = useAtom(snackbarAtom);
 
-  // expanded space
-  const [expandedSpaceId, setExpandedSpaceId] = useState('');
+  // app settings atom (global state)
+  const [, setAppSetting] = useAtom(appSettingsAtom);
 
   // loading space state
   const [isLoadingSpaces, setIsLoadingSpaces] = useState(false);
 
+  useEffect(() => {
+    (async () => {
+      setIsLoadingSpaces(true);
+
+      const allOtherSpaces = await getAllOtherSpaces();
+
+      setNonActiveSpaces(allOtherSpaces);
+      // set app settings
+      const settings = await getAppSettings();
+
+      setAppSetting(settings);
+      setIsLoadingSpaces(false);
+    })();
+    // eslint-disable-next-line
+  }, []);
+
   // loading state for save spaces to bookmarks
   const [isLoadingSaveSpaces, setIsLoadingSaveSpaces] = useState(false);
-
-  // snackbar global state/atom
-  const [snackbar, setSnackbar] = useAtom(snackbarAtom);
 
   // expand the active space by default, if this preference is set by user
 
   // listen to events from  background
   chrome.runtime.onMessage.addListener(async (msg, _sender, response) => {
     const event = msg as IMessageEvent;
-
     if (!event?.id) {
       response(true);
       return;
@@ -68,30 +85,6 @@ const SidePanel = () => {
     response(true);
   });
 
-  // set active space after loading all spaces
-  useEffect(() => {
-    (async () => {
-      setIsLoadingSpaces(true);
-
-      // get active space
-      const spaceId = await getActiveSpaceId();
-
-      setActiveSpaceId(spaceId);
-
-      setIsLoadingSpaces(false);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spaces]);
-
-  // expand active space by default based on preferences
-  useEffect(() => {
-    if (appSettings.activeSpaceExpanded) {
-      setExpandedSpaceId(activeSpaceId);
-    } else {
-      setExpandedSpaceId('');
-    }
-  }, [activeSpaceId, appSettings]);
-
   // sync/save spaces to bookmarks
   const handleSaveSpacesToBM = async () => {
     setIsLoadingSaveSpaces(true);
@@ -103,8 +96,59 @@ const SidePanel = () => {
     setSnackbar({ show: true, isSuccess: true, msg: 'Saved spaces to bookmarks' });
   };
 
+  // handle tab drag
+  // handle tabs drag end
+  const onTabsDragEnd: OnDragEndResponder = result => {
+    if (!result.destination) {
+      return;
+    }
+
+    if (result.destination.index === result.source.index) return;
+
+    const droppedSpaceId = result.destination.droppableId;
+    const reOrderedTabs = [...activeSpace.tabs];
+    const [tabToMove] = reOrderedTabs.splice(result.source.index, 1);
+
+    const activeTab = activeSpace?.tabs[activeSpace.activeTabIndex];
+    // check if dropped space is active space
+    if (droppedSpaceId === activeSpace?.id) {
+      // if yes, then re-arrange tabs and update active tab index
+
+      reOrderedTabs.splice(result.destination.index, 0, tabToMove);
+      (async () => {
+        // move tab in window
+        await chrome.tabs.move(tabToMove.id, { index: result.destination.index });
+        // update storage
+        await setTabsForSpace(activeSpace.id, reOrderedTabs);
+      })();
+
+      // save local ui state
+      setActiveSpace(prev => ({
+        ...prev,
+        activeTabIndex: reOrderedTabs.findIndex(el => el.url === activeTab.url),
+        tabs: reOrderedTabs,
+      }));
+      return;
+    }
+
+    // if no then remove tab from active space and rearrange tabs
+    (async () => {
+      // save the tabs (with removed dragged tab) in active space
+      await setTabsForSpace(activeSpace.id, reOrderedTabs);
+      // add tab to new dragged space
+      const tabsInNewSpace = await getTabsInSpace(droppedSpaceId);
+      await setTabsForSpace(droppedSpaceId, [...tabsInNewSpace, tabToMove]);
+      // save local ui state
+      setActiveSpace(prev => ({
+        ...prev,
+        activeTabIndex: reOrderedTabs.findIndex(el => el.url === activeTab.url),
+        tabs: reOrderedTabs,
+      }));
+    })();
+  };
+
   return (
-    <div className="w-screen h-screen  overflow-hidden bg-brand-background">
+    <div className="w-screen h-screen  overflow-hidden bg-brand-darkBg">
       <main className="h-full relative ">
         {/* app name */}
         <div className="h-[4%] pt-2.5 flex items-start justify-between px-3">
@@ -128,73 +172,40 @@ const SidePanel = () => {
 
         <p className="text-sm font-light text-slate-400 mt-3 mb-1 ml-3 select-none">Spaces</p>
         {/* spaces container */}
-        <div className="w-full h-[85%]  px-3 py-1  scroll-p-px scroll-m-px relative overflow-y-auto cc-scrollbar">
+        <div className="w-full h-[85%] bg-red-300 px-3 py-1  scroll-p-px scroll-m-px relative ">
           {/* un saved  */}
           {isLoadingSpaces ? (
             <Spinner size="md" />
           ) : (
-            <>
-              {/* unsaved spaces, sort based on title */}
-              {spaces
-                ?.toSorted((a, b) => (a.title > b.title ? 1 : -1))
-                .map(({ tabs, ...space }) =>
-                  !space.isSaved ? (
-                    <Space
-                      key={space.id}
-                      space={space}
-                      tabs={tabs}
-                      isActive={activeSpaceId === space.id}
-                      isExpanded={expandedSpaceId === space.id}
-                      onExpand={() => setExpandedSpaceId(prevId => (prevId !== space.id ? space.id : ''))}
-                      onUpdateClick={() => setSpaceToUpdate({ ...space, tabs })}
-                    />
-                  ) : null,
-                )}
-              <>
-                {spaces.find(s => !s.isSaved) ? (
-                  <hr className="h-px bg-slate-700/30 border-none rounded-md w-[60%] mt-0 mb-2 mx-auto" />
-                ) : null}
-              </>
-              {/* saved spaces */}
-              <DragDropContext onDragEnd={onDragEnd}>
-                <Droppable droppableId={'saved-spaces'}>
-                  {provided1 => (
-                    <div
-                      {...provided1.droppableProps}
-                      ref={provided1.innerRef}
-                      className="h-[220px]"
-                      style={{ height: `${spaces.filter(s => s.isSaved)?.length * 3.5}rem` }}>
-                      {/* map spaces  */}
-                      {spaces?.map(({ tabs, ...space }, idx) =>
-                        space.isSaved ? (
-                          <Draggable draggableId={space.id} index={idx} key={space.id}>
-                            {provided2 => (
-                              <div
-                                ref={provided2.innerRef}
-                                {...provided2.draggableProps}
-                                {...provided2.dragHandleProps}
-                                className="h-fit max-h-fit">
-                                <Space
-                                  space={space}
-                                  tabs={tabs}
-                                  isActive={activeSpaceId === space.id}
-                                  isExpanded={expandedSpaceId === space.id}
-                                  onExpand={() => setExpandedSpaceId(prevId => (prevId !== space.id ? space.id : ''))}
-                                  onUpdateClick={() => setSpaceToUpdate({ ...space, tabs })}
-                                />
-                              </div>
-                            )}
-                          </Draggable>
-                        ) : null,
-                      )}
-                    </div>
-                  )}
-                </Droppable>
-              </DragDropContext>
-            </>
+            <DragDropContext onDragEnd={onTabsDragEnd}>
+              {/* Current space */}
+              <div className="h-[80%]">
+                <ActiveSpace space={activeSpace} setActiveSpace={setActiveSpace} />
+              </div>
+
+              {/* other spaces */}
+              <div className=" h-[20%] bg-indigo-300 flex gap-x-2 ">
+                {[{ id: 'new-space' }, ...nonActiveSpaces].map(space => (
+                  <Droppable key={space.id} droppableId={space.id}>
+                    {(provided, snapshot) => (
+                      <div {...provided.droppableProps} ref={provided.innerRef} className="">
+                        {space.id !== 'new-space' ? (
+                          <NonActiveSpace space={space as ISpace} isDraggedOver={snapshot.isDraggingOver} />
+                        ) : (
+                          // new space zone
+                          <div className="bg-brand-darkBgAccent cursor-pointer flex items-center justify-center w-[60px] h-[60px] rounded">
+                            <MdAdd className="text-2xl font-extralight text-slate-500" />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Droppable>
+                ))}
+              </div>
+            </DragDropContext>
           )}
           {/* add new space */}
-          <CreateSpace />
+          {/* <CreateSpace /> */}
           {/* update space */}
           <UpdateSpace
             space={spaceToUpdate && omitObjProps(spaceToUpdate, 'tabs')}

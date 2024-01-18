@@ -11,6 +11,7 @@ import { useAtom } from 'jotai';
 import { snackbarAtom, spacesAtom } from '@root/src/stores/app';
 import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
 import Spinner from '../../elements/spinner';
+import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 
 type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;
 
@@ -96,7 +97,9 @@ const CreateSpace = () => {
       setIsModalOpen(false);
 
       // re-render updated spaces
-      setSpaces(prev => [...prev, { ...createdSpace, tabs: [currentTab] }]);
+      setSpaces(prev => [...prev, { ...createdSpace }]);
+
+      await setTabsForSpace(createdSpace.id, [currentTab]);
 
       setSnackbar({ show: true, msg: 'Space created', isSuccess: true });
     } else {

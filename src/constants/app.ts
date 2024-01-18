@@ -16,7 +16,6 @@ export enum StorageKeys {
 
 export const defaultAppSettings: IAppSettings = {
   includeBookmarksInSearch: false,
-  activeSpaceExpanded: true,
   deleteUnsavedSpace: 'immediately',
   openSpace: 'newWindow',
   autoSaveToBookmark: 'daily',

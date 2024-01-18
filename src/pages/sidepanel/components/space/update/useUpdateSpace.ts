@@ -13,7 +13,7 @@ type UseUpdateSpaceProps = {
 export const useUpdateSpace = ({ updateSpaceData, space, onClose }: UseUpdateSpaceProps) => {
   // global state
   // spaces atom
-  const [spaces, setSpaces] = useAtom(spacesAtom);
+  const [, setSpaces] = useAtom(spacesAtom);
   // snackbar atom
   const [snackbar, setSnackbar] = useAtom(snackbarAtom);
 
@@ -40,12 +40,7 @@ export const useUpdateSpace = ({ updateSpaceData, space, onClose }: UseUpdateSpa
     if (res) {
       // close modal
       onClose();
-      // re-render updated spaces
-      const currentSpaceTabs = spaces.find(s => s.id === space.id)?.tabs;
-      setSpaces(prev => [
-        ...prev.filter(s => s.id !== updateSpaceData.id),
-        { ...updateSpaceData, tabs: [...currentSpaceTabs] },
-      ]);
+      setSpaces(prev => [...prev.filter(s => s.id !== updateSpaceData.id), { ...updateSpaceData }]);
       setSnackbar({ show: true, msg: 'Space updated', isSuccess: true });
     } else {
       // failed

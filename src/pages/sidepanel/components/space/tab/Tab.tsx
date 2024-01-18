@@ -3,6 +3,7 @@ import { getFaviconURL } from '@root/src/pages/utils';
 import { copyToClipboard } from '@root/src/pages/utils/copy-to-clipboard';
 import { createTab, goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { MdClose, MdContentCopy, MdOpenInNew, MdMyLocation } from 'react-icons/md';
+import { motion } from 'framer-motion';
 
 type Props = {
   tabData: ITab;
@@ -36,42 +37,48 @@ const Tab = ({
 
   return (
     <div
-      className={` w-full z-[10] relative px-2.5 py-1.5 flex rounded-sm items-center justify-between shadow-sm shadow-slate-700/80 group ${
-        isTabActive ? ' bg-slate-700/30' : ''
+      className={` w-full z-[10] relative px-2.5 py-1.5 flex items-center justify-between shadow-sm rounded-lg overflow-hidden group h-[1.7rem] ${
+        isTabActive ? ' bg-brand-darkBgAccent' : ''
       }`}>
       <span className="flex items-center w-full ">
-        <img className="w-4 h-4 mr-1.5 rounded-sm" src={getFaviconURL(tabData.url)} alt="icon" />
+        <img className="w-4 h-4 mr-1.5 rounded-sm cursor-pointer z-10" src={getFaviconURL(tabData.url)} alt="icon" />
         <span className="text-xs text-slate-400 max-w-fit min-w-[80%] whitespace-nowrap overflow-hidden text-ellipsis">
           {tabData.title}
         </span>
       </span>
       {showHoverOption ? (
-        <span className="absolute hidden group-hover:flex right-2 bottom-2 items-center gap-x-3">
+        <motion.span
+          initial={{ x: 20, opacity: 0 }}
+          whileInView={{ x: 0, opacity: 1, animationDuration: '0.5s', transition: { delay: 0.5 } }}
+          className="absolute hidden group-hover:flex right-2 bottom-px items-center gap-x-3 bg-brand-darkBgAccent px-2 py-1.5 rounded">
           {/* go to tab */}
           {isSpaceActive && !isTabActive ? (
-            <MdMyLocation
-              className={` text-slate-700 text-xs cursor-pointer bg-slate-400 px-[.75px] py-[1.5px] rounded-sm scale-150 transition-all duration-200 hover:bg-slate-400/80`}
-              onClick={handleOpen}
-            />
+            <>
+              <MdMyLocation
+                className={` text-slate-500 text-xs cursor-pointer py-[1.5px] px-[1.5px] scale-[1.65] transition-all duration-200 hover:bg-brand-darkBg/50`}
+                onClick={handleOpen}
+              />
+              {/* <span className="h-px w-px bg-slate-200" /> */}
+            </>
           ) : null}
           {/* open tab  */}
           {!isSpaceActive ? (
             <MdOpenInNew
-              className={` text-slate-700 text-xs cursor-pointer bg-slate-400 px-[.75px] py-[1.5px] rounded-sm scale-150 transition-all duration-200 hover:bg-slate-400/80`}
+              className={` text-slate-500 text-xs cursor-pointer py-[1.5px] px-[1.5px] scale-[1.65] transition-all duration-200 hover:bg-brand-darkBg/50`}
               onClick={handleOpen}
             />
           ) : null}
           <MdContentCopy
-            className={` text-slate-700 text-xs cursor-pointer bg-slate-400 px-[.75px] py-[1.5px] rounded-sm scale-150 transition-all duration-200 hover:bg-slate-400/80`}
+            className={` text-slate-500 text-xs cursor-pointer py-[1.5px] px-[1.5px] scale-[1.65] transition-all duration-200 hover:bg-brand-darkBg/50`}
             onClick={handleCopyURL}
           />
           {showDeleteOption ? (
             <MdClose
-              className={` text-slate-700 text-xs cursor-pointer bg-slate-400 px-[.75px] py-[1.5px] rounded-sm scale-150 transition-all duration-200 hover:bg-slate-400/80`}
+              className={` text-slate-500 text-xs cursor-pointer py-[1.5px] px-[1.5px] scale-[1.65] transition-all duration-200 hover:bg-brand-darkBg/50`}
               onClick={onTabDelete}
             />
           ) : null}
-        </span>
+        </motion.span>
       ) : null}
     </div>
   );

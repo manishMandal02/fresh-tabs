@@ -1,6 +1,6 @@
 import { defaultAppSettings } from './../constants/app';
 import { atom } from 'jotai';
-import { IAppSettings, ISpaceWithTabs } from '../pages/types/global.types';
+import { IAppSettings, ISpace } from '../pages/types/global.types';
 
 type SnackbarAtom = {
   show: boolean;
@@ -10,7 +10,7 @@ type SnackbarAtom = {
 };
 
 // global spaces state
-export const spacesAtom = atom<ISpaceWithTabs[]>([]);
+export const spacesAtom = atom<ISpace[]>([]);
 
 // global settings state
 export const appSettingsAtom = atom<IAppSettings>({ ...defaultAppSettings });

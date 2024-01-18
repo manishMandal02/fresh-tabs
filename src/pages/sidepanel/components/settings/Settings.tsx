@@ -172,17 +172,6 @@ const Settings = () => {
               onChange={value => handleSettingsChange('openSpace', value)}
             />
           </div>
-          {/* active space expanded */}
-          <div className="mt-3 flex items-center justify-between pr-2.5 border-b border-slate-700/30 rounded-sm py-1 pb-2.5">
-            <label htmlFor="active-space-expanded" className="text-[14px] mr-8  font-light tracking-wide">
-              Expand active space by default
-            </label>
-            <Switch
-              id="active-space-expanded"
-              checked={settingsUpdateData.activeSpaceExpanded}
-              onChange={checked => handleSettingsChange('activeSpaceExpanded', checked)}
-            />
-          </div>
           {/* include bookmarks in search */}
           <div className="mt-3 flex items-center justify-between pr-2.5 border-b border-slate-700/30 rounded-sm  py-1 pb-2.5">
             <label htmlFor="include-bookmark-in-search" className="text-[14px] mr-12  font-light tracking-wide">

@@ -6,6 +6,7 @@ import { useAtom } from 'jotai';
 import { Tab } from '../space';
 import Switch from '../elements/switch/Switch';
 import { wait } from '@root/src/pages/utils';
+import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 
 type SearchResult = {
   space: string;
@@ -34,7 +35,9 @@ const Search = () => {
       const results: SearchResult[] = [];
 
       for (const space of spaces) {
-        const tabs = space.tabs.filter(
+        const tabsInSpace = await getTabsInSpace(space.id);
+
+        const tabs = tabsInSpace?.filter(
           tab =>
             tab.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             tab.url.toLowerCase().includes(searchQuery.toLowerCase()),

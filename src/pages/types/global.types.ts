@@ -51,7 +51,6 @@ export interface IMessageEvent {
 
 export interface IAppSettings {
   includeBookmarksInSearch: boolean;
-  activeSpaceExpanded: boolean;
   deleteUnsavedSpace: 'immediately' | 'week';
   openSpace: 'newWindow' | 'sameWindow';
   autoSaveToBookmark: 'off' | 'daily' | 'weekly';

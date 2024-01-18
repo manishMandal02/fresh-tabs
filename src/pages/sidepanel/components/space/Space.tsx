@@ -3,13 +3,12 @@ import { useState } from 'react';
 import { useAtom } from 'jotai';
 import { MdArrowForwardIos, MdOutlineOpenInBrowser } from 'react-icons/md';
 import { ISpace, ISpaceWithTabs, ITab } from '@root/src/pages/types/global.types';
-import Tab from './Tab';
+import Tab from './tab/Tab';
 import Tooltip from '../elements/tooltip';
 import { openSpace } from '@root/src/services/chrome-tabs/tabs';
-import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
+import { removeTabFromSpace } from '@root/src/services/chrome-storage/tabs';
 import { appSettingsAtom, snackbarAtom, spacesAtom } from '@root/src/stores/app';
 import MoreOptions from './more-options';
-import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import DeleteSpaceModal from './delete';
 
 const SPACE_HEIGHT = 45;
@@ -35,34 +34,6 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
 
   // local state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-  // sync tabs
-  const handleSyncTabs = async () => {
-    setSnackbar({ msg: '', show: false, isLoading: true });
-
-    // get all tabs in the window
-    const currentTabs = await chrome.tabs.query({ currentWindow: true });
-
-    const tabsInWindow = currentTabs.map(t => ({ title: t.title, url: t.url, id: t.id }));
-
-    const activeTab = currentTabs.find(t => t.active);
-
-    // update space's active tab index if not correct
-    if (space.activeTabIndex !== activeTab.index) {
-      await updateSpace(space.id, { ...space, activeTabIndex: activeTab.index });
-    }
-    // update tabs in space
-    await setTabsForSpace(space.id, tabsInWindow);
-
-    setSpaces(prev => [
-      ...prev.filter(s => s.id !== space.id),
-      { ...space, activeTabIndex: activeTab.index, tabs: [...tabsInWindow] },
-    ]);
-
-    setSnackbar({ msg: '', show: false, isLoading: false });
-
-    setSnackbar({ msg: 'Tabs synced', show: true, isLoading: false, isSuccess: true });
-  };
 
   // open space in new window
   const handleOpenSpace = async (shouldOpenInNewWindow: boolean) => {
@@ -192,7 +163,7 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
             }}
             isSpaceActive={isActive}
             onEditClick={onUpdateClick}
-            onSyncClick={handleSyncTabs}
+            onSyncClick={() => {}}
             onDeleteClick={() => setShowDeleteModal(true)}
           />
         </div>

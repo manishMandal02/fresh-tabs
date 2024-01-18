@@ -7,8 +7,10 @@ export default {
         brand: {
           primary: '#34d399',
           secondary: '#f97316',
-          background: '#19212c',
-          // try new bg: #151C2F
+          // darkBg: '#1C2039',
+          darkBg: '#121422',
+          darkBgAccent: '#262B49',
+          // darkBgAccent: '#1C1E2F',
         },
       },
     },

@@ -189,7 +189,6 @@ chrome.alarms.onAlarm.addListener(async alarm => {
 
 // IIFE - checks for alarms, its not guaranteed to persist
 (async () => {
-  chrome.omnibox.setDefaultSuggestion({ description: 'Search for a space' });
   const alarm = await chrome.alarms.get(AlarmNames.saveToBM);
   if (alarm?.name) return;
 
@@ -254,7 +253,7 @@ chrome.tabs.onMoved.addListener(async (tabId, info) => {
   await updateTabIndex(space.id, tabId, info.toIndex);
 
   // update space's active tab index
-  await updateActiveTabInSpace(info.windowId, info.toIndex);
+  // await updateActiveTabInSpace(info.windowId, info.toIndex);
 
   // send send to side panel
   await publishEvents({
