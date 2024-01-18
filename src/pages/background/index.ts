@@ -10,7 +10,12 @@ import {
   getSpaceByWindow,
   updateActiveTabInSpace,
 } from '@root/src/services/chrome-storage/spaces';
-import { removeTabFromSpace, updateTab, updateTabIndex } from '@root/src/services/chrome-storage/tabs';
+import {
+  removeTabFromSpace,
+  saveGlobalPinnedTabs,
+  updateTab,
+  updateTabIndex,
+} from '@root/src/services/chrome-storage/tabs';
 import { getFaviconURL, wait } from '../utils';
 import { logger } from '../utils/logger';
 import { publishEvents } from '../utils/publish-events';
@@ -20,7 +25,7 @@ import {
   syncSpacesFromBookmarks,
   syncSpacesToBookmark,
 } from '@root/src/services/chrome-bookmarks/bookmarks';
-import { AlarmNames, DiscardTabURLPrefix, defaultAppSettings } from '@root/src/constants/app';
+import { AlarmNames, DiscardTabURLPrefix, DefaultAppSettings, DefaultPinnedTabs } from '@root/src/constants/app';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
 
 reloadOnUpdate('pages/background');
@@ -135,7 +140,10 @@ chrome.runtime.onInstalled.addListener(async info => {
     //* initialize the app
 
     // save default settings to sync storage
-    await saveSettings(defaultAppSettings);
+    await saveSettings(DefaultAppSettings);
+
+    // save default pinned tabs
+    await saveGlobalPinnedTabs(DefaultPinnedTabs);
 
     // create unsaved spaces for current opened windows
     await createUnsavedSpacesOnInstall();

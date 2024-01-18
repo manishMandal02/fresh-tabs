@@ -29,6 +29,11 @@ export interface ISpace {
   activeTabIndex: number;
 }
 
+export interface IPinnedTab {
+  url: string;
+  title?: string;
+}
+
 export type ISpaceWithoutId = Omit<ISpace, 'id'>;
 
 export interface ISpaceWithTabs extends ISpace {

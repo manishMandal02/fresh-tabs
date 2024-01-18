@@ -3,7 +3,7 @@ import RadioGroup, { RadioOptions } from '../elements/radio-group/RadioGroup';
 import { useAtom } from 'jotai';
 import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
 import { IAppSettings } from '@root/src/pages/types/global.types';
-import { AlarmNames, defaultAppSettings } from '@root/src/constants/app';
+import { AlarmNames, DefaultAppSettings } from '@root/src/constants/app';
 import { MdOpenInNew, MdOutlineSettings } from 'react-icons/md';
 import { SlideModal } from '../elements/modal';
 import Switch from '../elements/switch/Switch';
@@ -35,7 +35,7 @@ const Settings = () => {
   // const [errorMsg, setErrorMsg] = useState('');
 
   // local settings state
-  const [settingsUpdateData, setSettingsUpdateData] = useState<IAppSettings>(defaultAppSettings);
+  const [settingsUpdateData, setSettingsUpdateData] = useState<IAppSettings>(DefaultAppSettings);
 
   const [openAppShortcut, setOpenAppShortcut] = useState('');
 

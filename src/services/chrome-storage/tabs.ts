@@ -1,6 +1,6 @@
 import { logger } from '@root/src/pages/utils/logger';
 import { getStorage } from './helpers/get';
-import { ISpace, ITab } from '@root/src/pages/types/global.types';
+import { IPinnedTab, ISpace, ITab } from '@root/src/pages/types/global.types';
 import { setStorage } from './helpers/set';
 import { updateActiveTabInSpace } from './spaces';
 
@@ -171,5 +171,34 @@ export const removeTabFromSpace = async (
       fileTrace: 'src/services/chrome-storage/tabs.ts:160 ~ removeTabFromSpace() ~ catch block',
     });
     return false;
+  }
+};
+
+// save pinned tabs
+export const saveGlobalPinnedTabs = async (tabs: IPinnedTab[]): Promise<boolean> => {
+  try {
+    await setStorage({ type: 'sync', key: 'PinnedTabs', value: tabs });
+    return true;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Error saving pinned tabs to chrome storage`,
+      fileTrace: 'src/services/chrome-storage/tabs.ts:186 ~ savePinnedTabs() ~ catch block',
+    });
+    return false;
+  }
+};
+// save pinned tabs
+export const getGlobalPinnedTabs = async (): Promise<IPinnedTab[]> => {
+  try {
+    const pinnedTabs = await getStorage<IPinnedTab[]>({ type: 'sync', key: 'PinnedTabs' });
+    return pinnedTabs;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Error saving pinned tabs to chrome storage`,
+      fileTrace: 'src/services/chrome-storage/tabs.ts:186 ~ savePinnedTabs() ~ catch block',
+    });
+    return null;
   }
 };

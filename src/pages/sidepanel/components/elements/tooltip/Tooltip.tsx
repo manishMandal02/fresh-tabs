@@ -16,7 +16,9 @@ const Tooltip = ({ label, children, delay = 1500 }: Props) => {
           <div className="relative " data-tooltip data-tooltip-id={tooltipId} data-tooltip-delay-show={delay}>
             {children}
           </div>
-          <ReactTooltip id={tooltipId} className="!bg-slate-900 !z-[1000] !text-[13px] !text-slate-50 !rounded">
+          <ReactTooltip
+            id={tooltipId}
+            className="!bg-brand-darkBgAccent !z-[1000] !text-[13px] !text-slate-100 !rounded">
             {label}
           </ReactTooltip>
         </>

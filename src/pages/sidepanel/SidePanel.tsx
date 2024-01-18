@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { IMessageEvent, ISpace, ISpaceWithTabs } from '../types/global.types';
+import { IMessageEvent, IPinnedTab, ISpace, ISpaceWithTabs } from '../types/global.types';
 import { ActiveSpace, UpdateSpace } from './components/space';
 import Snackbar from './components/elements/snackbar';
 import { useAtom } from 'jotai';
@@ -13,10 +13,11 @@ import { MdAdd, MdOutlineSync } from 'react-icons/md';
 import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
 import Tooltip from './components/elements/tooltip';
 import type { OnDragEndResponder } from 'react-beautiful-dnd';
-import { getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
+import { getGlobalPinnedTabs, getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 import NonActiveSpace from './components/space/other-space/NonActiveSpace';
+import { FavTabs } from './components/space/tab';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -35,8 +36,11 @@ const SidePanel = () => {
   // app settings atom (global state)
   const [, setAppSetting] = useAtom(appSettingsAtom);
 
-  // loading space state
+  // local state - loading space state
   const [isLoadingSpaces, setIsLoadingSpaces] = useState(false);
+
+  // local state - global pinned tabs
+  const [globalPinnedTabs, setGlobalPinnedTabs] = useState<IPinnedTab[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -49,6 +53,8 @@ const SidePanel = () => {
       const settings = await getAppSettings();
 
       setAppSetting(settings);
+      const pinnedTabs = await getGlobalPinnedTabs();
+      setGlobalPinnedTabs(pinnedTabs);
       setIsLoadingSpaces(false);
     })();
     // eslint-disable-next-line
@@ -170,9 +176,15 @@ const SidePanel = () => {
         {/* search */}
         <Search />
 
-        <p className="text-sm font-light text-slate-400 mt-3 mb-1 ml-3 select-none">Spaces</p>
+        {/* <p className="text-sm font-light text-slate-400 mt-3 mb-1 ml-3 select-none">Spaces</p> */}
+
+        {/* global */}
+        <div className="mt-4">
+          <FavTabs tabs={globalPinnedTabs} isGlobal={true} />
+        </div>
+
         {/* spaces container */}
-        <div className="w-full h-[85%] bg-red-300 px-3 py-1  scroll-p-px scroll-m-px relative ">
+        <div className="w-full h-[85%] bg-red-30 px-3 py-1  scroll-p-px scroll-m-px relative ">
           {/* un saved  */}
           {isLoadingSpaces ? (
             <Spinner size="md" />

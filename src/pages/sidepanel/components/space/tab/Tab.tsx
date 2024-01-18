@@ -49,7 +49,7 @@ const Tab = ({
       {showHoverOption ? (
         <motion.span
           initial={{ x: 20, opacity: 0 }}
-          whileInView={{ x: 0, opacity: 1, animationDuration: '0.5s', transition: { delay: 0.5 } }}
+          whileInView={{ x: 0, opacity: 1, animationDuration: '0.5s', transition: { delay: 0.25 } }}
           className="absolute hidden group-hover:flex right-2 bottom-px items-center gap-x-3 bg-brand-darkBgAccent px-2 py-1.5 rounded">
           {/* go to tab */}
           {isSpaceActive && !isTabActive ? (

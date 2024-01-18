@@ -1,0 +1,82 @@
+import { getFaviconURL } from '@root/src/pages/utils';
+import Tooltip from '../../elements/tooltip';
+import { MdAdd } from 'react-icons/md';
+import { IPinnedTab } from '@root/src/pages/types/global.types';
+import { useState } from 'react';
+import Popover from '../../elements/popover';
+import { saveGlobalPinnedTabs } from '@root/src/services/chrome-storage/tabs';
+
+type Props = {
+  tabs: IPinnedTab[];
+  isGlobal: boolean;
+};
+
+// pinned url limits for both global and space scope
+const PinnedTabsLimit = 6;
+
+const FavTab = ({ tabs, isGlobal }: Props) => {
+  const [showAddNewPopover, setShowAddNewPopover] = useState(false);
+
+  const [newPinTab, setNewPinTab] = useState<IPinnedTab>({ url: '', title: '' });
+
+  // TODO - complete this feat
+  // add new pinned tabs
+  const handleAddNewPin = async () => {
+    if (isGlobal) {
+      await saveGlobalPinnedTabs([...tabs, newPinTab]);
+      return;
+    }
+  };
+
+  const handleInputChange = (url: string, title: string) => {
+    setNewPinTab({ url, title });
+  };
+
+  // show an add url box if pinned tabs less then allowed limits
+  const AddNewButton = (
+    <div>
+      <Popover
+        open={showAddNewPopover}
+        onChange={setShowAddNewPopover}
+        content={
+          <div className="h-[5rem] relative rounded-md px-3 py-2 bg-brand-darkBgAccent flex flex-col">
+            <input
+              type="text"
+              placeholder="Enter url..."
+              onChange={ev => {
+                handleInputChange(ev.currentTarget.value, '');
+              }}
+              className="px-2 py-1 bg-slate-800 text-slate-300 outline-none border border-slate-800 rounded-md"
+            />
+            <button className="text-slate-50 border border-emerald-500/60 bg-brand-darkBg  w-[70%] text-xs mx-auto py-1 rounded mt-3">
+              Add
+            </button>
+          </div>
+        }>
+        <button
+          className="bg-brand-darkBgAccent/70 w-[26px] h-[24px] rounded-md flex items-center justify-center cursor-pointer"
+          onClick={handleAddNewPin}>
+          <MdAdd className="text-base font-extralight text-slate-500" />
+        </button>
+      </Popover>
+    </div>
+  );
+
+  return (
+    <div className=" flex items-center justify-around w-[65%] mx-auto">
+      {[...((tabs.length < PinnedTabsLimit ? [...tabs, { url: '' }] : [...tabs]) as IPinnedTab[])].map((tab, idx) =>
+        tab?.url ? (
+          <Tooltip key={tab.url} label={tab.title || tab.url} delay={1000}>
+            <div className="bg-brand-darkBgAccent/70 z-10 cursor-pointer w-[26px] h-[24px] rounded-md flex items-center justify-center">
+              <img className="w-[14px] h-[14px] rounded-sm cursor-pointer" src={getFaviconURL(tab.url)} alt="icon" />
+            </div>
+          </Tooltip>
+        ) : (
+          <div key={tab?.url || '' + idx}>{AddNewButton}</div>
+        ),
+      )}
+    </div>
+  );
+};
+
+export default FavTab;

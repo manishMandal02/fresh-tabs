@@ -7,8 +7,7 @@ import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import autoAnimate from '@formkit/auto-animate';
 import { useEffect, useRef, Dispatch } from 'react';
-import { FavTab, Tab } from '../tab';
-import { MdAdd } from 'react-icons/md';
+import { Tab } from '../tab';
 
 type Props = {
   space: ISpaceWithTabs;
@@ -16,15 +15,7 @@ type Props = {
   setActiveSpace: Dispatch<SetStateAction<ISpaceWithTabs>>;
 };
 
-const textFavTabs = [
-  { url: 'https://youtube.com' },
-  { url: 'https://www.w3schools.com' },
-  { url: 'https://freshinbox.xyz' },
-];
-
 const ActiveSpace = ({ space, setActiveSpace }: Props) => {
-  console.log('🚀 ~ ActiveSpace ~ space:', space);
-
   // snackbar atom
   const [, setSnackbar] = useAtom(snackbarAtom);
 
@@ -62,30 +53,16 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
 
   // add empty object to fav tabs list if less than 5
 
-  textFavTabs.length < 5 && textFavTabs.push({ url: '' });
-
   return space?.id ? (
-    <div className="h-full">
+    <div className="h-full mt-6">
       {/* fav tabs */}
-      <div className=" flex items-center justify-around">
-        {textFavTabs.map((fav, idx) =>
-          fav?.url ? (
-            <FavTab url={fav.url} key={fav.url} />
-          ) : (
-            <div
-              className="bg-brand-darkBgAccent/70 w-[28px] h-[28px] rounded-md flex items-center justify-center cursor-pointer"
-              key={fav?.url || '' + idx}>
-              <MdAdd className="text-base font-extralight text-slate-500" />
-            </div>
-          ),
-        )}
-        <span></span>
-      </div>
-      <div className="flex items-center mb-2 h-[8%] justify-between px-2">
+
+      <div className="flex items-start mb-2 h-[10%] justify-between px-2">
         <div className="flex items-center">
           <div className="text-lg  border-r  pr-3 border-slate-700/60 w-fit">{space.emoji}</div>
           <p className="text-base font-light text-slate-400 ml-2.5">{space.title}</p>
         </div>
+
         {/* more options menu */}
         <div className="flex items-center">
           <span className="text-slate-500 mr-1 ">{space.tabs.length}</span>
