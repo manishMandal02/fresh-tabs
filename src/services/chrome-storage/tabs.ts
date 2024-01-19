@@ -153,13 +153,13 @@ export const removeTabFromSpace = async (
     }
 
     // remove tab from window, when deleted from spaces view
-    if (removeFromWindow && id) {
+    if (removeFromWindow) {
       // check if the tab is opened
-      const tab = await chrome.tabs.get(id);
+      const tab = await chrome.tabs.get(tabToDelete.id);
 
       // if not, do nothing
       if (tab?.id) {
-        await chrome.tabs.remove(id);
+        await chrome.tabs.remove(tabToDelete.id);
       }
     }
 
@@ -188,6 +188,7 @@ export const saveGlobalPinnedTabs = async (tabs: IPinnedTab[]): Promise<boolean>
     return false;
   }
 };
+
 // save pinned tabs
 export const getGlobalPinnedTabs = async (): Promise<IPinnedTab[]> => {
   try {

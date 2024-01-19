@@ -3,15 +3,15 @@ import { Droppable, Draggable } from 'react-beautiful-dnd';
 import MoreOptions from '../more-options';
 import { snackbarAtom } from '@root/src/stores/app';
 import { SetStateAction, useAtom } from 'jotai';
-import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
+import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
-import autoAnimate from '@formkit/auto-animate';
-import { useEffect, useRef, Dispatch, useState } from 'react';
+import { Dispatch, useState } from 'react';
 import { Tab } from '../tab';
 import DeleteSpaceModal from '../delete/DeleteSpaceModal';
 import { createPortal } from 'react-dom';
 import UpdateSpace from '../update/UpdateSpace';
 import { omitObjProps } from '@root/src/pages/utils/omit-obj-props';
+import { motion } from 'framer-motion';
 
 type Props = {
   space: ISpaceWithTabs;
@@ -49,19 +49,35 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
     setSnackbar({ msg: 'Tabs synced', show: true, isLoading: false, isSuccess: true });
   };
 
+  // handle remove tab from space
+  const handleRemoveTab = async (index: number) => {
+    // remove tab
+    await removeTabFromSpace(space, null, index, true);
+
+    // update ui
+    setActiveSpace({ ...space, tabs: [...space.tabs.filter((_t, idx) => idx !== index)] });
+  };
+
+  // handle tab click/ go to tab
+  const onTabClick = (index: number) => {
+    setActiveSpace({ ...space, activeTabIndex: index });
+  };
+
   // local state - show delete modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   // local state - show delete modal
   const [showEditModal, setShowEditModal] = useState(false);
 
-  // animate
-  const parent = useRef(null);
-
-  useEffect(() => {
-    parent.current && autoAnimate(parent.current);
-  }, [parent]);
-
-  // add empty object to fav tabs list if less than 5
+  // active tab indicator/div animation
+  const activeTabIndicatorAnimation = {
+    initial: { scale: 0, opacity: 0 },
+    animate: {
+      scale: 1,
+      opacity: 1,
+    },
+    exit: { scale: 0, opacity: 0 },
+    transition: { type: 'spring', stiffness: 900, damping: 40, duration: 0.2 },
+  };
 
   return space?.id ? (
     <div className="h-full mt-4">
@@ -87,17 +103,32 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
       </div>
 
       {/* tabs */}
-      <div className="h-[90%] overflow-y-auto cc-scrollbar">
+      <div className="h-[90%] overflow-y-auto cc-scrollbar overflow-x-hidden">
         <Droppable droppableId={space.id}>
           {provided1 => (
             <div {...provided1.droppableProps} ref={provided1.innerRef} className="min-h-full py-2">
               {/* render draggable  */}
-
               {space.tabs.map((tab, idx) => (
                 <Draggable draggableId={tab.id.toString()} index={idx} key={tab.id}>
                   {provided2 => (
-                    <div ref={provided2.innerRef} {...provided2.draggableProps} {...provided2.dragHandleProps}>
-                      <Tab tabData={tab} isSpaceActive={true} isTabActive={space.activeTabIndex === idx} />
+                    <div
+                      ref={provided2.innerRef}
+                      {...provided2.draggableProps}
+                      {...provided2.dragHandleProps}
+                      className="relative">
+                      <Tab
+                        tabData={tab}
+                        isSpaceActive={true}
+                        isTabActive={space.activeTabIndex === idx}
+                        onTabDelete={() => handleRemoveTab(idx)}
+                        onTabClick={() => onTabClick(idx)}
+                      />
+                      {/* active tab indicator */}
+                      {space.activeTabIndex === idx ? (
+                        <motion.div
+                          {...activeTabIndicatorAnimation}
+                          className="absolute h-[1.7rem] w-[98%] top-0 left-0 rounded-lg bg-brand-darkBgAccent z-10"></motion.div>
+                      ) : null}
                     </div>
                   )}
                 </Draggable>

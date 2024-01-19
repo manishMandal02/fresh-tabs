@@ -1,4 +1,4 @@
-import { useState, useEffect , useCallback , useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { IMessageEvent, IPinnedTab, ISpace, ISpaceWithTabs } from '../types/global.types';
 import { ActiveSpace } from './components/space';
 import Snackbar from './components/elements/snackbar';
@@ -11,40 +11,41 @@ import Search from './components/search';
 import { MdAdd, MdOutlineSync } from 'react-icons/md';
 import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
 import Tooltip from './components/elements/tooltip';
-import type { OnDragEndResponder } from 'react-beautiful-dnd';
-import { getGlobalPinnedTabs, getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
+import { getGlobalPinnedTabs } from '@root/src/services/chrome-storage/tabs';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 import NonActiveSpace from './components/space/other-space/NonActiveSpace';
 import { FavTabs } from './components/space/tab';
-import { logger } from '../utils/logger';
 
 // event ids of processed events
 const processedEvents: string[] = [];
 
 const SidePanel = () => {
-  // local state
-  const [activeSpace, setActiveSpace] = useState<ISpaceWithTabs>(null);
-
-  const activeSpaceRef = useRef(activeSpace);
-
-  console.log('🚀 ~ SidePanel ~ activeSpace:', activeSpace);
-
-  // custom hook
-  const { nonActiveSpaces, setNonActiveSpaces, getAllSpacesStorage } = useSidePanel();
-
-  // snackbar global state/atom
+  // global state - snackbar
   const [snackbar, setSnackbar] = useAtom(snackbarAtom);
 
-  // app settings atom (global state)
+  // global state - app settings
   const [, setAppSetting] = useAtom(appSettingsAtom);
 
-  // local state - loading space state
+  // local state - active space
+  const [activeSpace, setActiveSpace] = useState<ISpaceWithTabs>(null);
+
+  // local state - loading spaces state
   const [isLoadingSpaces, setIsLoadingSpaces] = useState(false);
 
   // local state - global pinned tabs
   const [globalPinnedTabs, setGlobalPinnedTabs] = useState<IPinnedTab[]>([]);
 
+  const activeSpaceRef = useRef(activeSpace);
+
+  // custom hook
+  const { nonActiveSpaces, setNonActiveSpaces, getAllSpacesStorage, handleEvents, onTabsDragEnd } = useSidePanel({
+    activeSpace,
+    setActiveSpace,
+  });
+
+  // loading state for save spaces to bookmarks
+  const [isLoadingSaveSpaces, setIsLoadingSaveSpaces] = useState(false);
   useEffect(() => {
     (async () => {
       setIsLoadingSpaces(true);
@@ -69,57 +70,6 @@ const SidePanel = () => {
     activeSpaceRef.current = activeSpace;
   }, [activeSpace]);
 
-  // loading state for save spaces to bookmarks
-  const [isLoadingSaveSpaces, setIsLoadingSaveSpaces] = useState(false);
-
-  // handle background events
-  const handleEvents = useCallback(
-    async ({ event, payload }: IMessageEvent) => {
-      console.log('🚀 ~ handleEvents ~ payload:', payload);
-
-      console.log('🚀 ~ handleEvents ~ event:', event);
-
-      switch (event) {
-        case 'ADD_SPACE': {
-          // add new space
-          setNonActiveSpaces(prev => [...prev, payload.space]);
-          break;
-        }
-
-        case 'REMOVE_SPACE': {
-          // remove space
-          setNonActiveSpaces(prev => [...prev.filter(s => s.id !== payload.spaceId)]);
-          break;
-        }
-
-        case 'UPDATE_SPACE_ACTIVE_TAB': {
-          console.log('🚀 ~ activeSpace:', activeSpaceRef.current);
-          if (payload.spaceId !== activeSpaceRef.current?.id) return;
-
-          setActiveSpace({ ...activeSpaceRef.current, activeTabIndex: payload.newActiveIndex });
-
-          break;
-        }
-
-        case 'UPDATE_TABS': {
-          // get updated tabs from storage
-          if (payload.spaceId !== activeSpaceRef.current?.id) return;
-
-          const updatedTabs = await getTabsInSpace(payload.spaceId);
-          setActiveSpace({ ...activeSpaceRef.current, tabs: updatedTabs });
-          break;
-        }
-
-        default: {
-          logger.info(`Unknown event: ${event} `);
-        }
-      }
-    },
-    [setActiveSpace, setNonActiveSpaces, activeSpaceRef],
-  );
-
-  console.log('🚀 ~ useEffect ~ activeSpace:', activeSpace);
-
   // listen to  events from  background
   chrome.runtime.onMessage.addListener(async (msg, _sender, response) => {
     const event = msg as IMessageEvent;
@@ -131,18 +81,15 @@ const SidePanel = () => {
 
     // handle idempotence
     // same events were  being consumed multiple times, so we keep track of events processed
-
     if (processedEvents.indexOf(event.id) !== -1) {
       response(true);
       return;
     }
 
+    // add to processed events
     processedEvents.push(event.id);
 
-    // handle events
-    await handleEvents(msg as IMessageEvent);
-
-    // add to processed events
+    await handleEvents(msg as IMessageEvent, activeSpaceRef);
 
     response(true);
   });
@@ -156,57 +103,6 @@ const SidePanel = () => {
     setIsLoadingSaveSpaces(false);
 
     setSnackbar({ show: true, isSuccess: true, msg: 'Saved spaces to bookmarks' });
-  };
-
-  // handle tab drag
-  // handle tabs drag end
-  const onTabsDragEnd: OnDragEndResponder = result => {
-    if (!result.destination) {
-      return;
-    }
-
-    if (result.destination.index === result.source.index) return;
-
-    const droppedSpaceId = result.destination.droppableId;
-    const reOrderedTabs = [...activeSpace.tabs];
-    const [tabToMove] = reOrderedTabs.splice(result.source.index, 1);
-
-    const activeTab = activeSpace?.tabs[activeSpace.activeTabIndex];
-    // check if dropped space is active space
-    if (droppedSpaceId === activeSpace?.id) {
-      // if yes, then re-arrange tabs and update active tab index
-
-      reOrderedTabs.splice(result.destination.index, 0, tabToMove);
-      (async () => {
-        // move tab in window
-        await chrome.tabs.move(tabToMove.id, { index: result.destination.index });
-        // update storage
-        await setTabsForSpace(activeSpace.id, reOrderedTabs);
-      })();
-
-      // save local ui state
-      setActiveSpace(prev => ({
-        ...prev,
-        activeTabIndex: reOrderedTabs.findIndex(el => el.url === activeTab.url),
-        tabs: reOrderedTabs,
-      }));
-      return;
-    }
-
-    // if no then remove tab from active space and rearrange tabs
-    (async () => {
-      // save the tabs (with removed dragged tab) in active space
-      await setTabsForSpace(activeSpace.id, reOrderedTabs);
-      // add tab to new dragged space
-      const tabsInNewSpace = await getTabsInSpace(droppedSpaceId);
-      await setTabsForSpace(droppedSpaceId, [...tabsInNewSpace, tabToMove]);
-      // save local ui state
-      setActiveSpace(prev => ({
-        ...prev,
-        activeTabIndex: reOrderedTabs.findIndex(el => el.url === activeTab.url),
-        tabs: reOrderedTabs,
-      }));
-    })();
   };
 
   return (
@@ -274,7 +170,6 @@ const SidePanel = () => {
           )}
           {/* add new space */}
           {/* <CreateSpace /> */}
-          {/* update space */}
         </div>
 
         {/* snackbar */}

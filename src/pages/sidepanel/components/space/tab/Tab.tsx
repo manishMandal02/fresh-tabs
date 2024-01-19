@@ -13,12 +13,14 @@ type Props = {
   isTabActive: boolean;
   isSpaceActive?: boolean;
   showDeleteOption?: boolean;
+  onTabClick?: () => void;
 };
 const Tab = ({
   tabData,
   onTabDelete,
   isTabActive,
   isSpaceActive,
+  onTabClick,
   showDeleteOption = true,
   showHoverOption = true,
 }: Props) => {
@@ -35,10 +37,12 @@ const Tab = ({
 
     // if the space is active, just go to the tab
     await goToTab(tabData.id);
+    onTabClick();
   };
   // handle copy tab url
   const handleCopyURL = async () => await copyToClipboard(tabData.url);
 
+  // if cmd/ctrl key is pressed save to state
   const handleKeydown = useCallback(ev => {
     const keyEv = ev as KeyboardEvent;
 
@@ -49,10 +53,12 @@ const Tab = ({
     }
   }, []);
 
+  // keyup, reset the state
   const handleKeyUp = useCallback(() => {
     setIsModifiesKeyPressed(false);
   }, []);
 
+  // keeping track of cmd/ctrl key press for UI action
   useEffect(() => {
     document.addEventListener('keydown', handleKeydown);
     document.addEventListener('keyup', handleKeyUp);
@@ -61,22 +67,32 @@ const Tab = ({
       document.removeEventListener('keydown', handleKeydown);
       document.removeEventListener('keyup', handleKeyUp);
     };
-  }, [handleKeydown]);
+  }, [handleKeydown, handleKeyUp]);
 
-  const onTabClick = async () => {
+  const onTabClickHandler = async () => {
     if (isModifiesKeyPressed) {
       await goToTab(tabData.id);
+      onTabClick();
     }
+  };
+
+  const tabAnimation = {
+    initial: { scale: 0, opacity: 0 },
+    animate: {
+      scale: 1,
+      opacity: 1,
+    },
+    exit: { scale: 0, opacity: 0 },
+    transition: { type: 'spring', stiffness: 900, damping: 40 },
   };
 
   return (
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-    <div
-      className={` w-full select-none z-[10] relative px-2.5 py-1.5 flex   items-center justify-between shadow-sm rounded-lg overflow-hidden group h-[1.7rem]  ${
-        isTabActive ? ' bg-brand-darkBgAccent' : ''
-      }`}
+    <motion.div
+      {...tabAnimation}
+      className={` w-full select-none z-[20] px-2.5 py-1.5 flex relative  items-center justify-between shadow-sm rounded-lg overflow-hidden group h-[1.7rem]`}
       style={{ cursor: isModifiesKeyPressed ? 'pointer' : '' }}
-      onClick={onTabClick}>
+      onClick={onTabClickHandler}>
       <span className="flex items-center w-full ">
         <img className="w-4 h-4 mr-1.5 rounded-sm cursor-pointer z-10" src={getFaviconURL(tabData.url)} alt="icon" />
         <span className="text-xs text-slate-400 max-w-fit min-w-[80%] whitespace-nowrap overflow-hidden text-ellipsis">
@@ -86,7 +102,7 @@ const Tab = ({
       {showHoverOption ? (
         <motion.span
           initial={{ x: 20, opacity: 0 }}
-          whileInView={{ x: 0, opacity: 1, animationDuration: '0.5s', transition: { delay: 0.25 } }}
+          whileInView={{ x: 0, opacity: 1, animationDuration: '0.4s', transition: { delay: 0.2 } }}
           className="absolute hidden group-hover:flex right-2 bottom-px items-center gap-x-3 bg-brand-darkBgAccent px-2 py-1.5 rounded">
           {/* go to tab */}
           {isSpaceActive && !isTabActive ? (
@@ -117,7 +133,7 @@ const Tab = ({
           ) : null}
         </motion.span>
       ) : null}
-    </div>
+    </motion.div>
   );
 };
 
