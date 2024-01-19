@@ -4,6 +4,7 @@ import { copyToClipboard } from '@root/src/pages/utils/copy-to-clipboard';
 import { createTab, goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { MdClose, MdContentCopy, MdOpenInNew, MdMyLocation } from 'react-icons/md';
 import { motion } from 'framer-motion';
+import { useEffect, useCallback, useState } from 'react';
 
 type Props = {
   tabData: ITab;
@@ -21,6 +22,9 @@ const Tab = ({
   showDeleteOption = true,
   showHoverOption = true,
 }: Props) => {
+  // local state
+  const [isModifiesKeyPressed, setIsModifiesKeyPressed] = useState(false);
+
   // handle open tab
   const handleOpen = async () => {
     if (!isSpaceActive) {
@@ -35,11 +39,44 @@ const Tab = ({
   // handle copy tab url
   const handleCopyURL = async () => await copyToClipboard(tabData.url);
 
+  const handleKeydown = useCallback(ev => {
+    const keyEv = ev as KeyboardEvent;
+
+    if (keyEv.ctrlKey || keyEv.metaKey) {
+      setIsModifiesKeyPressed(true);
+    } else {
+      setIsModifiesKeyPressed(false);
+    }
+  }, []);
+
+  const handleKeyUp = useCallback(() => {
+    setIsModifiesKeyPressed(false);
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeydown);
+    document.addEventListener('keyup', handleKeyUp);
+
+    () => {
+      document.removeEventListener('keydown', handleKeydown);
+      document.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [handleKeydown]);
+
+  const onTabClick = async () => {
+    if (isModifiesKeyPressed) {
+      await goToTab(tabData.id);
+    }
+  };
+
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
     <div
-      className={` w-full z-[10] relative px-2.5 py-1.5 flex   items-center justify-between shadow-sm rounded-lg overflow-hidden group h-[1.7rem]  ${
+      className={` w-full select-none z-[10] relative px-2.5 py-1.5 flex   items-center justify-between shadow-sm rounded-lg overflow-hidden group h-[1.7rem]  ${
         isTabActive ? ' bg-brand-darkBgAccent' : ''
-      }`}>
+      }`}
+      style={{ cursor: isModifiesKeyPressed ? 'pointer' : '' }}
+      onClick={onTabClick}>
       <span className="flex items-center w-full ">
         <img className="w-4 h-4 mr-1.5 rounded-sm cursor-pointer z-10" src={getFaviconURL(tabData.url)} alt="icon" />
         <span className="text-xs text-slate-400 max-w-fit min-w-[80%] whitespace-nowrap overflow-hidden text-ellipsis">

@@ -26,7 +26,6 @@ const FavTab = ({ tabs, isGlobal, setGlobalPinnedTabs }: Props) => {
     if (isGlobal) {
       await saveGlobalPinnedTabs([...tabs, newPinTab]);
       setGlobalPinnedTabs([...tabs, newPinTab]);
-      return;
     }
   };
 
@@ -37,8 +36,11 @@ const FavTab = ({ tabs, isGlobal, setGlobalPinnedTabs }: Props) => {
   const handleKeydown: KeyboardEventHandler<HTMLInputElement> = ev => {
     if (ev.key.toLowerCase() !== 'escape') {
       ev.stopPropagation();
-      return;
     }
+  };
+
+  const openPinnedTab = async (url: string) => {
+    await chrome.tabs.create({ url, active: true });
   };
 
   // show an add url box if pinned tabs less then allowed limits
@@ -89,9 +91,11 @@ const FavTab = ({ tabs, isGlobal, setGlobalPinnedTabs }: Props) => {
       {[...((tabs.length < PinnedTabsLimit ? [...tabs, { url: '' }] : [...tabs]) as IPinnedTab[])].map((tab, idx) =>
         tab?.url ? (
           <Tooltip key={tab.url} label={tab.title || tab.url} delay={1000}>
-            <div className="bg-brand-darkBgAccent/70 z-10 cursor-pointer w-[26px] h-[24px] rounded-md flex items-center justify-center">
+            <button
+              className="bg-brand-darkBgAccent/70 z-10 cursor-pointer w-[26px] h-[24px] rounded-md flex items-center justify-center"
+              onClick={() => openPinnedTab(tab.url)}>
               <img className="w-[14px] h-[14px] rounded-sm cursor-pointer" src={getFaviconURL(tab.url)} alt="icon" />
-            </div>
+            </button>
           </Tooltip>
         ) : (
           <div key={tab?.url || '' + idx}>{AddNewButton}</div>

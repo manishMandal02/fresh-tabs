@@ -19,6 +19,8 @@ type Props = {
 };
 
 const ActiveSpace = ({ space, setActiveSpace }: Props) => {
+  console.log('🚀 ~ ActiveSpace ~ space:', space);
+
   // snackbar atom
   const [, setSnackbar] = useAtom(snackbarAtom);
 
@@ -65,14 +67,14 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
     <div className="h-full mt-4">
       {/* fav tabs */}
 
-      <div className="flex items-start mb-2 h-[10%] justify-between px-2">
+      <div className="flex items-start mb-2 h-[5%] justify-between px-2">
         <div className="flex items-center">
-          <div className="text-lg  border-r  pr-3 border-slate-700/60 w-fit">{space.emoji}</div>
+          <div className="text-lg  border-r  pr-3 border-slate-700/60 w-fit select-none">{space.emoji}</div>
           <p className="text-base font-light text-slate-400 ml-2.5">{space.title}</p>
         </div>
 
         {/* more options menu */}
-        <div className="flex items-center">
+        <div className="flex items-center select-none">
           <span className="text-slate-500 mr-1 ">{space.tabs.length}</span>
           <MoreOptions
             shouldOpenInNewWindow={false}
@@ -85,7 +87,7 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
       </div>
 
       {/* tabs */}
-      <div className="h-[85%] overflow-y-auto cc-scrollbar">
+      <div className="h-[90%] overflow-y-auto cc-scrollbar">
         <Droppable droppableId={space.id}>
           {provided1 => (
             <div {...provided1.droppableProps} ref={provided1.innerRef} className="min-h-full py-2">

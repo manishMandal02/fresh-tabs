@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { IMessageEvent, IPinnedTab, ISpace } from '../types/global.types';
+import { useState, useEffect , useCallback , useRef } from 'react';
+import { IMessageEvent, IPinnedTab, ISpace, ISpaceWithTabs } from '../types/global.types';
 import { ActiveSpace } from './components/space';
 import Snackbar from './components/elements/snackbar';
 import { useAtom } from 'jotai';
@@ -17,16 +17,21 @@ import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 import NonActiveSpace from './components/space/other-space/NonActiveSpace';
 import { FavTabs } from './components/space/tab';
+import { logger } from '../utils/logger';
 
 // event ids of processed events
 const processedEvents: string[] = [];
 
 const SidePanel = () => {
-  // space opened for update
+  // local state
+  const [activeSpace, setActiveSpace] = useState<ISpaceWithTabs>(null);
+
+  const activeSpaceRef = useRef(activeSpace);
+
+  console.log('🚀 ~ SidePanel ~ activeSpace:', activeSpace);
 
   // custom hook
-  const { nonActiveSpaces, setNonActiveSpaces, activeSpace, setActiveSpace, handleEvents, getAllOtherSpaces } =
-    useSidePanel();
+  const { nonActiveSpaces, setNonActiveSpaces, getAllSpacesStorage } = useSidePanel();
 
   // snackbar global state/atom
   const [snackbar, setSnackbar] = useAtom(snackbarAtom);
@@ -44,9 +49,11 @@ const SidePanel = () => {
     (async () => {
       setIsLoadingSpaces(true);
 
-      const allOtherSpaces = await getAllOtherSpaces();
+      const { activeSpaceWithTabs, otherSpaces } = await getAllSpacesStorage();
 
-      setNonActiveSpaces(allOtherSpaces);
+      setActiveSpace({ ...activeSpaceWithTabs });
+
+      setNonActiveSpaces(otherSpaces);
       // set app settings
       const settings = await getAppSettings();
 
@@ -55,17 +62,68 @@ const SidePanel = () => {
       setGlobalPinnedTabs(pinnedTabs);
       setIsLoadingSpaces(false);
     })();
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    activeSpaceRef.current = activeSpace;
+  }, [activeSpace]);
 
   // loading state for save spaces to bookmarks
   const [isLoadingSaveSpaces, setIsLoadingSaveSpaces] = useState(false);
 
-  // expand the active space by default, if this preference is set by user
+  // handle background events
+  const handleEvents = useCallback(
+    async ({ event, payload }: IMessageEvent) => {
+      console.log('🚀 ~ handleEvents ~ payload:', payload);
 
-  // listen to events from  background
+      console.log('🚀 ~ handleEvents ~ event:', event);
+
+      switch (event) {
+        case 'ADD_SPACE': {
+          // add new space
+          setNonActiveSpaces(prev => [...prev, payload.space]);
+          break;
+        }
+
+        case 'REMOVE_SPACE': {
+          // remove space
+          setNonActiveSpaces(prev => [...prev.filter(s => s.id !== payload.spaceId)]);
+          break;
+        }
+
+        case 'UPDATE_SPACE_ACTIVE_TAB': {
+          console.log('🚀 ~ activeSpace:', activeSpaceRef.current);
+          if (payload.spaceId !== activeSpaceRef.current?.id) return;
+
+          setActiveSpace({ ...activeSpaceRef.current, activeTabIndex: payload.newActiveIndex });
+
+          break;
+        }
+
+        case 'UPDATE_TABS': {
+          // get updated tabs from storage
+          if (payload.spaceId !== activeSpaceRef.current?.id) return;
+
+          const updatedTabs = await getTabsInSpace(payload.spaceId);
+          setActiveSpace({ ...activeSpaceRef.current, tabs: updatedTabs });
+          break;
+        }
+
+        default: {
+          logger.info(`Unknown event: ${event} `);
+        }
+      }
+    },
+    [setActiveSpace, setNonActiveSpaces, activeSpaceRef],
+  );
+
+  console.log('🚀 ~ useEffect ~ activeSpace:', activeSpace);
+
+  // listen to  events from  background
   chrome.runtime.onMessage.addListener(async (msg, _sender, response) => {
     const event = msg as IMessageEvent;
+
     if (!event?.id) {
       response(true);
       return;

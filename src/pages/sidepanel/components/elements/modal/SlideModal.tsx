@@ -43,7 +43,7 @@ const Modal = ({ children, isOpen, onClose, title }: Props) => {
     document.addEventListener('keydown', handleKeydown);
 
     () => document.removeEventListener('keydown', handleKeydown);
-  }, [handleKeydown]);
+  }, [handleKeydown, isOpen]);
 
   return (
     <div
