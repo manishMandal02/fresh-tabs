@@ -6,12 +6,15 @@ import { SetStateAction, useAtom } from 'jotai';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import autoAnimate from '@formkit/auto-animate';
-import { useEffect, useRef, Dispatch } from 'react';
+import { useEffect, useRef, Dispatch, useState } from 'react';
 import { Tab } from '../tab';
+import DeleteSpaceModal from '../delete/DeleteSpaceModal';
+import { createPortal } from 'react-dom';
+import UpdateSpace from '../update/UpdateSpace';
+import { omitObjProps } from '@root/src/pages/utils/omit-obj-props';
 
 type Props = {
   space: ISpaceWithTabs;
-
   setActiveSpace: Dispatch<SetStateAction<ISpaceWithTabs>>;
 };
 
@@ -44,6 +47,11 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
     setSnackbar({ msg: 'Tabs synced', show: true, isLoading: false, isSuccess: true });
   };
 
+  // local state - show delete modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // local state - show delete modal
+  const [showEditModal, setShowEditModal] = useState(false);
+
   // animate
   const parent = useRef(null);
 
@@ -54,7 +62,7 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
   // add empty object to fav tabs list if less than 5
 
   return space?.id ? (
-    <div className="h-full mt-6">
+    <div className="h-full mt-4">
       {/* fav tabs */}
 
       <div className="flex items-start mb-2 h-[10%] justify-between px-2">
@@ -68,11 +76,10 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
           <span className="text-slate-500 mr-1 ">{space.tabs.length}</span>
           <MoreOptions
             shouldOpenInNewWindow={false}
-            onOpenSpace={() => {}}
             isSpaceActive={true}
-            onEditClick={() => {}}
             onSyncClick={handleSyncTabs}
-            onDeleteClick={() => {}}
+            onEditClick={() => setShowEditModal(true)}
+            onDeleteClick={() => setShowDeleteModal(true)}
           />
         </div>
       </div>
@@ -97,6 +104,21 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
           )}
         </Droppable>
       </div>
+      {/* delete space alert modal */}
+      {showDeleteModal &&
+        createPortal(
+          <DeleteSpaceModal spaceId={space.id} show={showDeleteModal} onClose={() => setShowDeleteModal(false)} />,
+          document.body,
+        )}
+      {showEditModal &&
+        createPortal(
+          <UpdateSpace
+            space={omitObjProps(space, 'tabs')}
+            numTabs={space.tabs?.length}
+            onClose={() => setShowEditModal(false)}
+          />,
+          document.body,
+        )}
     </div>
   ) : null;
 };

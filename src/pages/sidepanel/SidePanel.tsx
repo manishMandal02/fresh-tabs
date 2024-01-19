@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
-import { IMessageEvent, IPinnedTab, ISpace, ISpaceWithTabs } from '../types/global.types';
-import { ActiveSpace, UpdateSpace } from './components/space';
+import { IMessageEvent, IPinnedTab, ISpace } from '../types/global.types';
+import { ActiveSpace } from './components/space';
 import Snackbar from './components/elements/snackbar';
 import { useAtom } from 'jotai';
 import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
 import Spinner from './components/elements/spinner';
 import { useSidePanel } from './hooks/useSidePanel';
 import Settings from './components/settings/Settings';
-import { omitObjProps } from '../utils/omit-obj-props';
 import Search from './components/search';
 import { MdAdd, MdOutlineSync } from 'react-icons/md';
 import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
@@ -24,7 +23,6 @@ const processedEvents: string[] = [];
 
 const SidePanel = () => {
   // space opened for update
-  const [spaceToUpdate, setSpaceToUpdate] = useState<ISpaceWithTabs | undefined>(undefined);
 
   // custom hook
   const { nonActiveSpaces, setNonActiveSpaces, activeSpace, setActiveSpace, handleEvents, getAllOtherSpaces } =
@@ -219,11 +217,6 @@ const SidePanel = () => {
           {/* add new space */}
           {/* <CreateSpace /> */}
           {/* update space */}
-          <UpdateSpace
-            space={spaceToUpdate && omitObjProps(spaceToUpdate, 'tabs')}
-            numTabs={spaceToUpdate?.tabs?.length}
-            onClose={() => setSpaceToUpdate(undefined)}
-          />
         </div>
 
         {/* snackbar */}

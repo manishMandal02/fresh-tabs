@@ -1,11 +1,11 @@
-import { ISpace } from '@root/src/pages/types/global.types';
+import { ISpace, ISpaceWithoutId } from '@root/src/pages/types/global.types';
 import { snackbarAtom, spacesAtom } from '@root/src/stores/app';
 import { useAtom } from 'jotai';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { useState } from 'react';
 
 type UseUpdateSpaceProps = {
-  updateSpaceData: ISpace;
+  updateSpaceData: ISpaceWithoutId;
   space: ISpace;
   onClose: () => void;
 };
@@ -40,7 +40,7 @@ export const useUpdateSpace = ({ updateSpaceData, space, onClose }: UseUpdateSpa
     if (res) {
       // close modal
       onClose();
-      setSpaces(prev => [...prev.filter(s => s.id !== updateSpaceData.id), { ...updateSpaceData }]);
+      setSpaces(prev => [...prev.filter(s => s.id !== space.id), { id: space.id, ...updateSpaceData }]);
       setSnackbar({ show: true, msg: 'Space updated', isSuccess: true });
     } else {
       // failed

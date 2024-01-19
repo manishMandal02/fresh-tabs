@@ -4,7 +4,7 @@ import { MdMoreVert, MdEdit, MdSync, MdDelete, MdOutlineOpenInBrowser, MdOpenInN
 type Props = {
   isSpaceActive: boolean;
   shouldOpenInNewWindow: boolean;
-  onOpenSpace: () => void;
+  onOpenSpace?: () => void;
   onEditClick: () => void;
   onSyncClick: () => void;
   onDeleteClick: () => void;
@@ -20,9 +20,9 @@ const MoreOptions = ({
 }: Props) => {
   return (
     <DropdownMenuRadix.Root>
-      <DropdownMenuRadix.Trigger>
+      <DropdownMenuRadix.Trigger className="outline-none">
         <MdMoreVert
-          className="text-slate-500 z-50 text-lg hover:text-slate-400 transition-all duration-200 focus:ring-0 outline-none"
+          className="text-slate-500 z-50 text-lg  hover:text-slate-400 transition-all duration-200 "
           onClick={() => {}}
         />
       </DropdownMenuRadix.Trigger>

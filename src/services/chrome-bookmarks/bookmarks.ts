@@ -59,7 +59,7 @@ export const syncSpacesFromBookmarks = async (rootFolderId: string) => {
     // spaces bookmark folder
     const rootBMFolder = await chrome.bookmarks.getSubTree(rootFolderId);
 
-    if (rootBMFolder.length < 1) return false;
+    if (rootBMFolder.length < 1) return [];
 
     const spaces: ISpace[] = [];
 
@@ -91,19 +91,19 @@ export const syncSpacesFromBookmarks = async (rootFolderId: string) => {
     const allSpaces = await getAllSpaces();
 
     // save all spaces to storage
-    await setSpacesToStorage([...allSpaces, ...spaces]);
+    await setSpacesToStorage([...(allSpaces || []), ...spaces]);
 
     // save all tabs
     await Promise.allSettled(saveTabsPromises);
 
-    return true;
+    return [...(allSpaces || []), ...spaces];
   } catch (error) {
     logger.error({
       error,
       msg: 'Error getting spaces from bookmarks',
       fileTrace: 'src/services/chrome-storage/bookmarks.ts:91 ~ getSpacesFromBookmarks() ~ catch block',
     });
-    return false;
+    return [];
   }
 };
 

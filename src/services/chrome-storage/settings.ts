@@ -12,6 +12,5 @@ export const getAppSettings = async () => {
 };
 
 // get settings from chrome sync storage
-export const saveSettings = async (settings: IAppSettings) => {
-  return await setStorage({ type: 'sync', key: StorageKeys.SETTINGS, value: settings });
-};
+export const saveSettings = async (settings: IAppSettings) =>
+  await setStorage({ type: 'sync', key: StorageKeys.SETTINGS, value: settings });

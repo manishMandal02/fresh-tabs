@@ -61,9 +61,17 @@ const createUnsavedSpacesOnInstall = async () => {
   try {
     const windows = await chrome.windows.getAll();
 
+    if (windows?.length < 1) throw new Error('No open windows found');
+
     for (const window of windows) {
+      // check if widows associated with any saved spaces from bookmarks to not create a duplicate space
+      if (await getSpaceByWindow(window.id)) continue;
+
       // get all tabs in the window
       const tabsInWindow = await chrome.tabs.query({ windowId: window.id });
+
+      // check if the tabs in windows are associated with saved spaces to not create a duplicate space
+      if (await checkNewWindowTabs(window.id, [...tabsInWindow.map(t => t.url)])) continue;
 
       if (tabsInWindow?.length < 1) throw new Error('No tabs found in window');
 
@@ -84,7 +92,7 @@ const createUnsavedSpacesOnInstall = async () => {
     return true;
   } catch (error) {
     logger.error({
-      error: new Error('Failed to create spaces'),
+      error: new Error('Failed to create unsaved spaces'),
       msg: 'Failed to initialize app',
       fileTrace: 'src/pages/background/index.ts:59 ~ createUnsavedSpacesOnInstall() ~ catch block',
     });
@@ -145,9 +153,6 @@ chrome.runtime.onInstalled.addListener(async info => {
     // save default pinned tabs
     await saveGlobalPinnedTabs(DefaultPinnedTabs);
 
-    // create unsaved spaces for current opened windows
-    await createUnsavedSpacesOnInstall();
-
     //-- check for saved spaces in bookmarks
 
     // 1. check if parent/root folder exists in bookmarks
@@ -155,7 +160,9 @@ chrome.runtime.onInstalled.addListener(async info => {
 
     if (!rootBMFolderId) {
       // new user
-      // 2.a. create sample spaces
+      // 2.a. create unsaved spaces for current opened windows
+      await createUnsavedSpacesOnInstall();
+      // 2.b. create sample spaces
       await createSampleSpaces();
     } else {
       // app's root folder found
@@ -163,12 +170,16 @@ chrome.runtime.onInstalled.addListener(async info => {
       // 2.b. get spaces from the root folder
       const spacesWithTabs = await syncSpacesFromBookmarks(rootBMFolderId);
 
-      if (!spacesWithTabs) {
+      if (spacesWithTabs?.length < 1) {
         // could not sync spaces from bookmarks
+
         // create sample space
         await createSampleSpaces();
       }
     }
+
+    // create unsaved spaces for current opened windows
+    await createUnsavedSpacesOnInstall();
 
     // set alarm schedules to save space to bookmark,
     // default preference is save daily (1d = 1440m)

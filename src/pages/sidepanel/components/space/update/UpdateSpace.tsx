@@ -1,10 +1,11 @@
 import { useState, useEffect, ChangeEventHandler } from 'react';
 import { SlideModal } from '../../elements/modal';
-import { ISpace } from '@root/src/pages/types/global.types';
+import { ISpace, ISpaceWithoutId } from '@root/src/pages/types/global.types';
 import ColorPicker from '../../elements/color-picker';
 import EmojiPicker from '../../elements/emoji-picker';
 import Spinner from '../../elements/spinner';
 import { useUpdateSpace } from './useUpdateSpace';
+import { omitObjProps } from '@root/src/pages/utils/omit-obj-props';
 
 type Props = {
   space: ISpace;
@@ -14,7 +15,7 @@ type Props = {
 
 const UpdateSpace = ({ space, numTabs, onClose }: Props) => {
   // update space data
-  const [updateSpaceData, setUpdateSpaceData] = useState<ISpace | undefined>(undefined);
+  const [updateSpaceData, setUpdateSpaceData] = useState<ISpaceWithoutId | undefined>(undefined);
 
   // logic hook
   const { handleUpdateSpace, errorMsg, snackbar } = useUpdateSpace({
@@ -24,7 +25,7 @@ const UpdateSpace = ({ space, numTabs, onClose }: Props) => {
   });
 
   useEffect(() => {
-    setUpdateSpaceData(space);
+    setUpdateSpaceData(omitObjProps(space, 'id'));
   }, [space]);
 
   // on title change
