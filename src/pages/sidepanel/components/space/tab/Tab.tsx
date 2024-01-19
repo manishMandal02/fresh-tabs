@@ -37,7 +37,7 @@ const Tab = ({
 
   return (
     <div
-      className={` w-full z-[10] relative px-2.5 py-1.5 flex items-center justify-between shadow-sm rounded-lg overflow-hidden group h-[1.7rem] ${
+      className={` w-full z-[10] relative px-2.5 py-1.5 flex   items-center justify-between shadow-sm rounded-lg overflow-hidden group h-[1.7rem]  ${
         isTabActive ? ' bg-brand-darkBgAccent' : ''
       }`}>
       <span className="flex items-center w-full ">

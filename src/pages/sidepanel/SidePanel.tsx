@@ -180,7 +180,7 @@ const SidePanel = () => {
 
         {/* global */}
         <div className="mt-4">
-          <FavTabs tabs={globalPinnedTabs} isGlobal={true} />
+          <FavTabs tabs={globalPinnedTabs} isGlobal={true} setGlobalPinnedTabs={setGlobalPinnedTabs} />
         </div>
 
         {/* spaces container */}

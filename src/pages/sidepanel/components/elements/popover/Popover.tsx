@@ -12,7 +12,9 @@ const Popover = ({ children, content, open, onChange }: Props) => {
   return (
     <>
       <PopoverRadix.Root open={open} onOpenChange={onChange}>
-        <PopoverRadix.Trigger asChild>{children}</PopoverRadix.Trigger>
+        <PopoverRadix.Trigger className="outline-none" asChild>
+          {children}
+        </PopoverRadix.Trigger>
         <PopoverRadix.Portal>
           <PopoverRadix.Content className=" z-[150]" sideOffset={5}>
             {content}
