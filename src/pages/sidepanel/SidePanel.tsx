@@ -46,7 +46,7 @@ const SidePanel = () => {
     handleEvents,
     onTabsDragEnd,
     onTabsDragStart,
-  } = useSidePanel();
+  } = useSidePanel(setActiveSpaceTabs);
 
   const activeSpaceRef = useRef(activeSpace);
 

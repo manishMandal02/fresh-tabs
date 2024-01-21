@@ -182,9 +182,9 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
     <div className="h-full mt-4">
       {/* fav tabs */}
 
-      <div className="flex items-start h-[5%] justify-between px-2">
-        <div className="flex items-center">
-          <div className="text-lg  border-r  pr-3  w-fit select-none" style={{ borderColor: space.theme }}>
+      <div className="flex items-start h-[6.5%] justify-between px-2  ">
+        <div className="flex items-center ">
+          <div className="text-lg  border-r  pr-5  w-fit select-none" style={{ borderColor: space.theme }}>
             {space.emoji}
           </div>
           <p className="text-base font-light text-slate-400 ml-2.5">{space.title}</p>
@@ -204,20 +204,20 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
       </div>
 
       {/* tabs */}
-      <div className="h-[90%] overflow-y-auto cc-scrollbar overflow-x-hidden">
+      <div className="h-[90%] overflow-y-auto cc-scrollbar overflow-x-hidden border-y border-brand-darkBgAccent/30">
         <Droppable droppableId={space.id}>
           {provided1 => (
-            <div {...provided1.droppableProps} ref={provided1.innerRef} className="min-h-full py-2">
+            <div {...provided1.droppableProps} ref={provided1.innerRef} className="min-h-full py-1 ">
               {/* render draggable  */}
               {tabs.map((tab, idx) => (
                 <Draggable draggableId={tab.id.toString()} index={idx} key={tab.id}>
-                  {provided2 => (
+                  {(provided2, { isDragging }) => (
                     <div
                       ref={provided2.innerRef}
                       {...provided2.draggableProps}
                       {...provided2.dragHandleProps}
-                      className="relative outline-none mb-[2.5px]">
-                      <div className="">
+                      className="relative outline-none mb-[2.5px] ">
+                      <div className="relative">
                         <Tab
                           tabData={tab}
                           isSpaceActive={true}
@@ -228,6 +228,25 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
                           isSelected={isTabSelected(tab.id)}
                           onClick={() => onTabClick({ ...tab, index: idx })}
                         />
+                        {/* dragging multiple tabs indicator */}
+                        {isDragging && selectedTabs?.length > 0 ? (
+                          <>
+                            {/* number of tabs being dragged */}
+                            <span
+                              className={`w-6 h-6 rounded-lg px-1 py-1 absolute -top-2.5 -left-2.5 text-[11px] z-[200]
+                            flex items-center justify-center font-semibold bg-brand-darkBgAccent text-slate-400`}>
+                              +{selectedTabs?.length}
+                            </span>
+
+                            {/* tabs stacked effect  */}
+                            {['one', 'two', 'three'].map((v, ix) => (
+                              <div
+                                key={v}
+                                className="absolute  h-full w-[98%] -z-10 rounded-lg   border border-slate-700/70 bg-brand-darkBgAccent"
+                                style={{ top: `-${(ix + 0.5) * 2}px`, left: `-${(ix + 1) * 2}px` }}></div>
+                            ))}
+                          </>
+                        ) : null}
                       </div>
                       {/* active tab indicator */}
                       {space.activeTabIndex === idx ? (

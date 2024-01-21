@@ -3,12 +3,12 @@ import { useAtom } from 'jotai';
 import { activeSpaceAtom, nonActiveSpacesAtom, selectedTabsAtom } from '@root/src/stores/app';
 import { getAllSpaces, getSpaceByWindow, updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
-import { IMessageEvent, ISpaceWithTabs } from '../../types/global.types';
-import { MutableRefObject, useCallback } from 'react';
+import { IMessageEvent, ISpaceWithTabs, ITab } from '../../types/global.types';
+import { MutableRefObject, useCallback, Dispatch, SetStateAction } from 'react';
 import { logger } from '../../utils/logger';
 import type { OnDragEndResponder, OnDragStartResponder } from 'react-beautiful-dnd';
 
-export const useSidePanel = () => {
+export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>>) => {
   // non active spaces  (global state)
   const [nonActiveSpaces, setNonActiveSpaces] = useAtom(nonActiveSpacesAtom);
 
@@ -64,8 +64,6 @@ export const useSidePanel = () => {
 
         case 'UPDATE_TABS': {
           // get updated tabs from storage
-          console.log('🚀 ~ payload.spaceId:', payload.spaceId);
-
           if (payload.spaceId !== activeSpaceRef.current?.id) return;
 
           const updatedTabs = await getTabsInSpace(payload.spaceId);
@@ -82,10 +80,20 @@ export const useSidePanel = () => {
   );
 
   // handle tab drag start
-  const onTabsDragStart: OnDragStartResponder = useCallback(() => {
-    // do thing if only 1 tab dragged
-    if (selectedTabs?.length < 1) return;
-  }, [selectedTabs.length]);
+  const onTabsDragStart: OnDragStartResponder = useCallback(
+    data => {
+      // do thing if only 1 tab dragged
+      if (selectedTabs?.length < 1) return;
+
+      // remove tabs temporarily on drag starts
+      const updatedTabs = activeSpace?.tabs.filter(
+        aT => !selectedTabs.find(sT => sT.id === aT.id && aT.id.toString() !== data.draggableId),
+      );
+
+      setActiveSpaceTabs([...updatedTabs]);
+    },
+    [selectedTabs, setActiveSpaceTabs, activeSpace?.tabs],
+  );
 
   // handle tabs drag end
   const onTabsDragEnd: OnDragEndResponder = result => {
@@ -95,8 +103,6 @@ export const useSidePanel = () => {
 
     if (result.destination.index === result.source.index) return;
 
-    // TODO - fix: moving tabs updates sets wrong active index
-
     const droppedSpaceId = result.destination.droppableId;
 
     const reOrderedTabs = [...activeSpace.tabs];
@@ -105,8 +111,6 @@ export const useSidePanel = () => {
 
     const activeTab = activeSpace?.tabs[activeSpace.activeTabIndex];
 
-    console.log('🚀 ~ useSidePanel ~ activeTab:', activeTab);
-
     // check if dropped space is active space
     if (droppedSpaceId === activeSpace?.id) {
       // if yes, then re-arrange tabs and update active tab index
@@ -114,10 +118,6 @@ export const useSidePanel = () => {
 
       // find new active tab index
       const newActiveTabIndex = reOrderedTabs.findIndex(el => el.url === activeTab.url);
-
-      console.log('🚀 ~ useSidePanel ~ reOrderedTabs:', reOrderedTabs);
-
-      console.log('🚀 ~ useSidePanel ~ newActiveTabIndex:', newActiveTabIndex);
 
       (async () => {
         // move tab in window
