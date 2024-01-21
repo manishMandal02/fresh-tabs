@@ -40,6 +40,10 @@ export interface ISpaceWithTabs extends ISpace {
   tabs: ITab[];
 }
 
+export interface ITabWithIndex extends ITab {
+  index: number;
+}
+
 type MessageEvents = 'UPDATE_SPACE_ACTIVE_TAB' | 'UPDATE_TABS' | 'REMOVE_SPACE' | 'ADD_SPACE';
 
 interface IEventPayload {

@@ -9,7 +9,7 @@ type Props = {
   title: string;
 };
 
-const Modal = ({ children, isOpen, onClose, title }: Props) => {
+const SlideModal = ({ children, isOpen, onClose, title }: Props) => {
   const [posY, setPosY] = useState('100%');
   useEffect(() => {
     if (isOpen) {
@@ -42,7 +42,7 @@ const Modal = ({ children, isOpen, onClose, title }: Props) => {
     if (!isOpen) return;
     document.addEventListener('keydown', handleKeydown);
 
-    () => document.removeEventListener('keydown', handleKeydown);
+    return () => document.removeEventListener('keydown', handleKeydown);
   }, [handleKeydown, isOpen]);
 
   return (
@@ -77,4 +77,4 @@ const Modal = ({ children, isOpen, onClose, title }: Props) => {
   );
 };
 
-export default Modal;
+export default SlideModal;

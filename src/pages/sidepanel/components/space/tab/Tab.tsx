@@ -7,32 +7,32 @@ import { copyToClipboard } from '@root/src/pages/utils/copy-to-clipboard';
 import { createTab, goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { MdClose, MdContentCopy, MdOpenInNew, MdMyLocation } from 'react-icons/md';
 import { motion } from 'framer-motion';
-import { useEffect, useCallback, useState } from 'react';
 
 type Props = {
   tabData: ITab;
   isSelected?: boolean;
-  onSelect?: () => void;
+  isModifierKeyPressed: boolean;
+  onClick?: () => void;
   showHoverOption?: boolean;
   onTabDelete?: () => Promise<void>;
   isTabActive: boolean;
   isSpaceActive?: boolean;
   showDeleteOption?: boolean;
-  onTabClick?: () => void;
+  onTabDoubleClick?: (id: number) => void;
 };
 const Tab = ({
   tabData,
   onTabDelete,
   isTabActive,
-  isSelected,
-  onSelect,
+  // isSelected,
+  onClick,
   isSpaceActive,
-  onTabClick,
+  onTabDoubleClick,
+  isModifierKeyPressed,
   showDeleteOption = true,
   showHoverOption = true,
 }: Props) => {
   // local state
-  const [isModifiesKeyPressed, setIsModifiesKeyPressed] = useState(false);
 
   // handle open tab
   const handleOpen = async () => {
@@ -44,44 +44,10 @@ const Tab = ({
 
     // if the space is active, just go to the tab
     await goToTab(tabData.id);
-    onTabClick();
+    onTabDoubleClick(tabData.id);
   };
   // handle copy tab url
   const handleCopyURL = async () => await copyToClipboard(tabData.url);
-
-  // if cmd/ctrl key is pressed save to state
-  const handleKeydown = useCallback(ev => {
-    const keyEv = ev as KeyboardEvent;
-
-    if (keyEv.ctrlKey || keyEv.metaKey) {
-      setIsModifiesKeyPressed(true);
-    } else {
-      setIsModifiesKeyPressed(false);
-    }
-  }, []);
-
-  // keyup, reset the state
-  const handleKeyUp = useCallback(() => {
-    setIsModifiesKeyPressed(false);
-  }, []);
-
-  // keeping track of cmd/ctrl key press for UI action
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeydown);
-    document.addEventListener('keyup', handleKeyUp);
-
-    () => {
-      document.removeEventListener('keydown', handleKeydown);
-      document.removeEventListener('keyup', handleKeyUp);
-    };
-  }, [handleKeydown, handleKeyUp]);
-
-  const onTabClickHandler = async () => {
-    if (isModifiesKeyPressed) {
-      await goToTab(tabData.id);
-      onTabClick();
-    }
-  };
 
   // TODO - complete multi select
 
@@ -98,22 +64,21 @@ const Tab = ({
   return (
     <motion.div
       {...tabAnimation}
-      className={` w-full select-none z-[20] px-2.5 py-1.5 flex relative  items-center justify-between shadow-sm rounded-lg overflow-hidden group h-[1.7rem]`}
-      style={{ cursor: isModifiesKeyPressed ? 'pointer' : '' }}
-      onClick={onTabClickHandler}>
+      className={` w-full select-none z-[20] px-2.5 py-[5px]  flex relative  items-center justify-between shadow-sm rounded-lg overflow-hidden group h-[1.7rem]`}
+      style={{
+        cursor: isModifierKeyPressed ? 'pointer' : '',
+      }}
+      onClick={onClick}
+      onDoubleClick={() => onTabDoubleClick(tabData.id)}>
       <div className="flex items-center w-full ">
         <div className=" flex relative items-start min-w-[1.2rem] mr-1.5">
-          <img
-            className="peer opacity-95 visible hover:invisible w-4 h-4 z-10 cursor-pointer rounded-sm  "
-            src={getFaviconURL(tabData.url)}
-            alt="icon"
-          />
-          <span
+          <img className=" opacity-95 visible  w-4 h-4 z-10 rounded-sm  " src={getFaviconURL(tabData.url)} alt="icon" />
+          {/* <span
             className="hidden peer-hover:flex bg-emerald-500/50 z-20 rounded-md absolute w-5 h-5 top-0 left-0"
             style={{
               display: isSelected ? 'flex' : 'hidden',
             }}
-            onClick={onSelect}></span>
+            onClick={onClick}></span> */}
         </div>
         <span className="text-xs text-slate-400 max-w-fit min-w-[80%] whitespace-nowrap overflow-hidden text-ellipsis">
           {tabData.title.trim()}

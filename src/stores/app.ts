@@ -1,6 +1,6 @@
 import { DefaultAppSettings } from './../constants/app';
 import { atom } from 'jotai';
-import { IAppSettings, ISpace, ISpaceWithTabs, ITab } from '../pages/types/global.types';
+import { IAppSettings, ISpace, ISpaceWithTabs, ITabWithIndex } from '../pages/types/global.types';
 
 type SnackbarAtom = {
   show: boolean;
@@ -16,7 +16,7 @@ export const nonActiveSpacesAtom = atom<ISpace[]>([]);
 export const activeSpaceAtom = atom<ISpaceWithTabs>(null as ISpaceWithTabs);
 
 // selected tabs for dragging
-export const selectedTabsAtom = atom<ITab[]>([]);
+export const selectedTabsAtom = atom<ITabWithIndex[]>([]);
 
 //  settings state
 export const appSettingsAtom = atom<IAppSettings>({ ...DefaultAppSettings });

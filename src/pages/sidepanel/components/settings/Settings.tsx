@@ -32,8 +32,6 @@ const Settings = () => {
   //
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // const [errorMsg, setErrorMsg] = useState('');
-
   // local settings state
   const [settingsUpdateData, setSettingsUpdateData] = useState<IAppSettings>(DefaultAppSettings);
 
@@ -61,8 +59,8 @@ const Settings = () => {
     setSettingsUpdateData(updatedSettings);
 
     // check if settings has changed
-    for (const key in updatedSettings) {
-      if (appSettings[key] !== updatedSettings[key]) {
+    for (const objKey in updatedSettings) {
+      if (appSettings[objKey] !== updatedSettings[objKey]) {
         setHasSettingsChanged(true);
       }
     }

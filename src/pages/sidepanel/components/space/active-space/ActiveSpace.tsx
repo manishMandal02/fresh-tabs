@@ -1,16 +1,17 @@
-import { ISpace, ISpaceWithTabs, ITab } from '@root/src/pages/types/global.types';
+import { ISpace, ISpaceWithTabs, ITab, ITabWithIndex } from '@root/src/pages/types/global.types';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 import MoreOptions from '../more-options';
 import { selectedTabsAtom, snackbarAtom } from '@root/src/stores/app';
 import { SetStateAction, useAtom } from 'jotai';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
-import { Dispatch, useState } from 'react';
+import { Dispatch, useState, useCallback, useEffect } from 'react';
 import { Tab } from '../tab';
 import DeleteSpaceModal from '../delete/DeleteSpaceModal';
 import { createPortal } from 'react-dom';
 import UpdateSpace from '../update/UpdateSpace';
 import { motion } from 'framer-motion';
+import { goToTab } from '@root/src/services/chrome-tabs/tabs';
 
 type Props = {
   space: ISpace;
@@ -19,8 +20,6 @@ type Props = {
 };
 
 const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
-  console.log('🚀 ~ ActiveSpace ~ space:', space);
-
   // snackbar atom
   const [, setSnackbar] = useAtom(snackbarAtom);
 
@@ -31,6 +30,13 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
 
   // local state - show delete modal
   const [selectedTabs, setSelectedTabs] = useAtom(selectedTabsAtom);
+
+  // local state - ctrl/cmd key press status
+  const [isModifierKeyPressed, setIsModifierKeyPressed] = useState(false);
+  // local state - left shift key press status
+  const [isShiftKeyPressed, setIsShiftKeyPressed] = useState(false);
+
+  const isTabSelected = (id: number) => !!selectedTabs.find(t => t.id == id);
 
   // sync tabs
   const handleSyncTabs = async () => {
@@ -57,7 +63,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
     setSnackbar({ msg: 'Tabs synced', show: true, isLoading: false, isSuccess: true });
   };
 
-  // handle remove tab from space
+  // handle remove a single tab
   const handleRemoveTab = async (index: number) => {
     // remove tab
     await removeTabFromSpace(space, null, index, true);
@@ -66,9 +72,99 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
     setActiveSpace({ ...space, tabs: [...tabs.filter((_t, idx) => idx !== index)] });
   };
 
-  // handle tab click/ go to tab
-  const onTabClick = (index: number) => {
+  // remove multiple tabs
+  const handleRemoveTabs = useCallback(async () => {
+    const tabsToRemovePromise = [];
+
+    // tab ids to remove
+    const ids = selectedTabs.map(t => t.id);
+
+    for (const id of ids) {
+      tabsToRemovePromise.push(removeTabFromSpace(space, id, null, true));
+    }
+
+    await Promise.all(tabsToRemovePromise);
+
+    setActiveSpace({ ...space, tabs: [...tabs.filter(t => !ids.includes(t.id))] });
+  }, [selectedTabs, setActiveSpace, tabs, space]);
+
+  // if cmd/ctrl key is pressed save to state
+  const handleKeydown = useCallback(
+    ev => {
+      const keyEv = ev as KeyboardEvent;
+
+      if (keyEv.ctrlKey || keyEv.metaKey) {
+        setIsModifierKeyPressed(true);
+      }
+
+      if (keyEv.shiftKey) {
+        setIsShiftKeyPressed(true);
+      }
+
+      if (keyEv.code.toLowerCase() === 'delete') {
+        handleRemoveTabs();
+      }
+
+      if (keyEv.code.toLowerCase() === 'escape') {
+        setSelectedTabs([]);
+      }
+    },
+    [handleRemoveTabs, setSelectedTabs],
+  );
+
+  // keyup, reset the state
+  const handleKeyUp = useCallback(() => {
+    setIsModifierKeyPressed(false);
+    setIsShiftKeyPressed(false);
+  }, []);
+
+  // keeping track of cmd/ctrl key press for UI action
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeydown);
+    document.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeydown);
+      document.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [handleKeydown, handleKeyUp]);
+
+  const onTabDoubleClickHandler = async (id: number, index: number) => {
+    // do nothing if ctl/cmd is pressed
+    if (isModifierKeyPressed) return;
+    await goToTab(id);
+
     setActiveSpace({ ...space, tabs, activeTabIndex: index });
+  };
+
+  const onTabClick = (tab: ITabWithIndex) => {
+    if (isModifierKeyPressed) {
+      // clt/cmd is pressed
+      // un-select if already selected
+      if (isTabSelected(tab.id)) return setSelectedTabs(prev => [...prev.filter(t => t.id !== tab.id)]);
+      // select
+      setSelectedTabs(prev => [...prev, tab]);
+      return;
+    }
+
+    if (isShiftKeyPressed) {
+      // shift key was pressed (multi select)
+      const lastSelectedTabIndex = selectedTabs[selectedTabs.length - 1]?.index || space.activeTabIndex;
+
+      const tabIsBeforeLastSelectedTab = tab.index < lastSelectedTabIndex;
+
+      const tabsInRange: ITabWithIndex[] = tabs
+        .map((t, idx) => ({ ...t, index: idx }))
+        .filter((_t, idx) => {
+          //
+          if (tabIsBeforeLastSelectedTab) {
+            return idx < lastSelectedTabIndex && idx >= tab.index;
+          }
+          return idx > lastSelectedTabIndex && idx <= tab.index;
+        });
+
+      setSelectedTabs(prev => [...prev, ...tabsInRange]);
+    }
   };
 
   // active tab indicator/div animation
@@ -120,23 +216,30 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
                       ref={provided2.innerRef}
                       {...provided2.draggableProps}
                       {...provided2.dragHandleProps}
-                      className="relative">
+                      className="relative outline-none mb-[2.5px]">
                       <div className="">
                         <Tab
                           tabData={tab}
                           isSpaceActive={true}
+                          isModifierKeyPressed={isModifierKeyPressed || isShiftKeyPressed}
                           isTabActive={space.activeTabIndex === idx}
                           onTabDelete={() => handleRemoveTab(idx)}
-                          onTabClick={() => onTabClick(idx)}
-                          isSelected={!!selectedTabs.find(t => t.id === tab.id)?.id}
-                          onSelect={() => setSelectedTabs(prev => [...prev, tab])}
+                          onTabDoubleClick={() => onTabDoubleClickHandler(tab.id, idx)}
+                          isSelected={isTabSelected(tab.id)}
+                          onClick={() => onTabClick({ ...tab, index: idx })}
                         />
                       </div>
                       {/* active tab indicator */}
                       {space.activeTabIndex === idx ? (
                         <motion.div
                           {...activeTabIndicatorAnimation}
-                          className="absolute h-[1.7rem] w-[98%] top-0 left-0 rounded-lg bg-brand-darkBgAccent z-10"></motion.div>
+                          className="absolute h-[1.7rem] w-[98%] top-0 left-0 rounded-lg bg-brand-darkBgAccent/70 z-10"></motion.div>
+                      ) : null}
+                      {/* selected tab indicator */}
+                      {isTabSelected(tab.id) ? (
+                        <motion.div
+                          {...activeTabIndicatorAnimation}
+                          className="absolute h-[1.7rem] w-[98%] top-0 left-0 rounded-lg border border-slate-700/60 bg-brand-darkBgAccent z-10"></motion.div>
                       ) : null}
                     </div>
                   )}

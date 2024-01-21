@@ -95,8 +95,6 @@ const Search = () => {
   const handleKeydown = ev => {
     const key = (ev as KeyboardEvent).key;
 
-    console.log('🚀 ~ handleKeydown ~ key:', key);
-
     if (key === 'f') {
       inputRef.current.focus();
       // hack to clear search as f gets added after the input is focused
@@ -105,8 +103,6 @@ const Search = () => {
         setSearchQuery(prev => (prev.trim() === 'f' ? '' : prev));
       })();
     } else if (key.toLowerCase() === 'escape') {
-      console.log('🚀 ~ handleKeydown ~ key:', key);
-
       setSearchQuery('');
       inputRef.current.blur();
     }
@@ -115,7 +111,7 @@ const Search = () => {
   useEffect(() => {
     document.addEventListener('keydown', handleKeydown);
 
-    () => {
+    return () => {
       document.removeEventListener('keydown', handleKeydown);
     };
   }, []);
@@ -169,6 +165,7 @@ const Search = () => {
               {tabs.map(tab => (
                 <Tab
                   key={tab.url}
+                  isModifierKeyPressed={false}
                   tabData={{ ...tab, id: idx }}
                   isTabActive={false}
                   isSpaceActive={false}

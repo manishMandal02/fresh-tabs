@@ -121,7 +121,7 @@ const CreateSpace = () => {
   useEffect(() => {
     document.addEventListener('keydown', handleShortcut);
 
-    () => document.removeEventListener('keydown', handleShortcut);
+    return () => document.removeEventListener('keydown', handleShortcut);
   }, [handleShortcut]);
 
   return (
