@@ -8,7 +8,7 @@ import { Tab } from '..';
 import Tooltip from '../../elements/tooltip';
 import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
 import { useAtom } from 'jotai';
-import { snackbarAtom, spacesAtom } from '@root/src/stores/app';
+import { snackbarAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
 import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
 import Spinner from '../../elements/spinner';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
@@ -27,7 +27,7 @@ const CreateSpace = () => {
   const [errorMsg, setErrorMsg] = useState('');
 
   // spaces atom (global state)
-  const [, setSpaces] = useAtom(spacesAtom);
+  const [, setSpaces] = useAtom(nonActiveSpacesAtom);
 
   // new space data
   const [newSpaceData, setNewSpaceData] = useState<DefaultSpaceFields>(defaultSpaceData);

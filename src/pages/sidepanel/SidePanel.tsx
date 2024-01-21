@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { IMessageEvent, IPinnedTab, ISpace, ISpaceWithTabs } from '../types/global.types';
+import { IMessageEvent, IPinnedTab, ISpace, ITab } from '../types/global.types';
 import { ActiveSpace } from './components/space';
 import Snackbar from './components/elements/snackbar';
 import { useAtom } from 'jotai';
@@ -27,8 +27,8 @@ const SidePanel = () => {
   // global state - app settings
   const [, setAppSetting] = useAtom(appSettingsAtom);
 
-  // local state - active space
-  const [activeSpace, setActiveSpace] = useState<ISpaceWithTabs>(null);
+  // local state - clone of active space tabs (to manipulate multi drag behavior)
+  const [activeSpaceTabs, setActiveSpaceTabs] = useState<ITab[]>(null);
 
   // local state - loading spaces state
   const [isLoadingSpaces, setIsLoadingSpaces] = useState(false);
@@ -36,13 +36,19 @@ const SidePanel = () => {
   // local state - global pinned tabs
   const [globalPinnedTabs, setGlobalPinnedTabs] = useState<IPinnedTab[]>([]);
 
-  const activeSpaceRef = useRef(activeSpace);
-
   // custom hook
-  const { nonActiveSpaces, setNonActiveSpaces, getAllSpacesStorage, handleEvents, onTabsDragEnd } = useSidePanel({
+  const {
     activeSpace,
     setActiveSpace,
-  });
+    nonActiveSpaces,
+    setNonActiveSpaces,
+    getAllSpacesStorage,
+    handleEvents,
+    onTabsDragEnd,
+    onTabsDragStart,
+  } = useSidePanel();
+
+  const activeSpaceRef = useRef(activeSpace);
 
   // loading state for save spaces to bookmarks
   const [isLoadingSaveSpaces, setIsLoadingSaveSpaces] = useState(false);
@@ -68,6 +74,7 @@ const SidePanel = () => {
 
   useEffect(() => {
     activeSpaceRef.current = activeSpace;
+    setActiveSpaceTabs(activeSpace?.tabs);
   }, [activeSpace]);
 
   // listen to  events from  background
@@ -141,15 +148,15 @@ const SidePanel = () => {
           {isLoadingSpaces ? (
             <Spinner size="md" />
           ) : (
-            <DragDropContext onDragEnd={onTabsDragEnd}>
+            <DragDropContext onDragEnd={onTabsDragEnd} onDragStart={onTabsDragStart}>
               {/* Current space */}
-              <div className="h-[80%]">
-                <ActiveSpace space={activeSpace} setActiveSpace={setActiveSpace} />
+              <div className="h-[85%]">
+                <ActiveSpace space={activeSpace} tabs={activeSpaceTabs} setActiveSpace={setActiveSpace} />
               </div>
 
               {/* other spaces */}
-              <div className=" h-[20%] bg-indigo-300 flex gap-x-2 ">
-                {[{ id: 'new-space' }, ...nonActiveSpaces].map(space => (
+              <div className=" h-[15%] mt-1.5 flex  gap-x-2 mx-auto w-fit">
+                {[...nonActiveSpaces, { id: 'new-space' }].map(space => (
                   <Droppable key={space.id} droppableId={space.id}>
                     {(provided, snapshot) => (
                       <div {...provided.droppableProps} ref={provided.innerRef} className="">
@@ -157,8 +164,8 @@ const SidePanel = () => {
                           <NonActiveSpace space={space as ISpace} isDraggedOver={snapshot.isDraggingOver} />
                         ) : (
                           // new space zone
-                          <div className="bg-brand-darkBgAccent cursor-pointer flex items-center justify-center w-[60px] h-[60px] rounded">
-                            <MdAdd className="text-2xl font-extralight text-slate-500" />
+                          <div className="bg-brand-darkBgAccent/70 cursor-pointer flex items-center justify-center w-[50px] h-[50px] rounded">
+                            <MdAdd className="text-2xl font-extralight  text-slate-600" />
                           </div>
                         )}
                       </div>

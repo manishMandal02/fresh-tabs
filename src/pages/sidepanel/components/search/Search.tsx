@@ -1,7 +1,7 @@
 import { useState, useRef, FormEvent, useEffect, useCallback, KeyboardEvent } from 'react';
 import { MdArrowForwardIos, MdSearch, MdOutlineClose } from 'react-icons/md';
 import { ITab } from '@root/src/pages/types/global.types';
-import { appSettingsAtom, spacesAtom } from '@root/src/stores/app';
+import { appSettingsAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
 import { useAtom } from 'jotai';
 import { Tab } from '../space';
 import Switch from '../elements/switch/Switch';
@@ -15,7 +15,7 @@ type SearchResult = {
 
 const Search = () => {
   // global state
-  const [spaces] = useAtom(spacesAtom);
+  const [spaces] = useAtom(nonActiveSpacesAtom);
   const [appSettings] = useAtom(appSettingsAtom);
 
   // local state

@@ -1,6 +1,6 @@
 import { AlertModal } from '../../elements/modal';
 import { useAtom } from 'jotai';
-import { snackbarAtom, spacesAtom } from '@root/src/stores/app';
+import { snackbarAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
 import { deleteSpace } from '@root/src/services/chrome-storage/spaces';
 import { AlarmNames } from '@root/src/constants/app';
 import Spinner from '../../elements/spinner';
@@ -13,7 +13,7 @@ type Props = {
 
 const DeleteSpaceModal = ({ spaceId, show, onClose }: Props) => {
   // snackbar atom
-  const [, setSpaces] = useAtom(spacesAtom);
+  const [, setSpaces] = useAtom(nonActiveSpacesAtom);
   // snackbar atom
   const [snackbar, setSnackbar] = useAtom(snackbarAtom);
 

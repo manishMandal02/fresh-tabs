@@ -282,6 +282,7 @@ chrome.tabs.onMoved.addListener(async (tabId, info) => {
       spaceId: space.id,
     },
   });
+
   // send send to side panel
   await publishEvents({
     id: generateId(),

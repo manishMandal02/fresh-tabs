@@ -1,7 +1,7 @@
-import { ISpaceWithTabs } from '@root/src/pages/types/global.types';
+import { ISpace, ISpaceWithTabs, ITab } from '@root/src/pages/types/global.types';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 import MoreOptions from '../more-options';
-import { snackbarAtom } from '@root/src/stores/app';
+import { selectedTabsAtom, snackbarAtom } from '@root/src/stores/app';
 import { SetStateAction, useAtom } from 'jotai';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
@@ -10,19 +10,27 @@ import { Tab } from '../tab';
 import DeleteSpaceModal from '../delete/DeleteSpaceModal';
 import { createPortal } from 'react-dom';
 import UpdateSpace from '../update/UpdateSpace';
-import { omitObjProps } from '@root/src/pages/utils/omit-obj-props';
 import { motion } from 'framer-motion';
 
 type Props = {
-  space: ISpaceWithTabs;
+  space: ISpace;
+  tabs: ITab[];
   setActiveSpace: Dispatch<SetStateAction<ISpaceWithTabs>>;
 };
 
-const ActiveSpace = ({ space, setActiveSpace }: Props) => {
+const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
   console.log('🚀 ~ ActiveSpace ~ space:', space);
 
   // snackbar atom
   const [, setSnackbar] = useAtom(snackbarAtom);
+
+  // local state - show delete modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // local state - show delete modal
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  // local state - show delete modal
+  const [selectedTabs, setSelectedTabs] = useAtom(selectedTabsAtom);
 
   // sync tabs
   const handleSyncTabs = async () => {
@@ -55,18 +63,13 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
     await removeTabFromSpace(space, null, index, true);
 
     // update ui
-    setActiveSpace({ ...space, tabs: [...space.tabs.filter((_t, idx) => idx !== index)] });
+    setActiveSpace({ ...space, tabs: [...tabs.filter((_t, idx) => idx !== index)] });
   };
 
   // handle tab click/ go to tab
   const onTabClick = (index: number) => {
-    setActiveSpace({ ...space, activeTabIndex: index });
+    setActiveSpace({ ...space, tabs, activeTabIndex: index });
   };
-
-  // local state - show delete modal
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  // local state - show delete modal
-  const [showEditModal, setShowEditModal] = useState(false);
 
   // active tab indicator/div animation
   const activeTabIndicatorAnimation = {
@@ -83,15 +86,17 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
     <div className="h-full mt-4">
       {/* fav tabs */}
 
-      <div className="flex items-start mb-2 h-[5%] justify-between px-2">
+      <div className="flex items-start h-[5%] justify-between px-2">
         <div className="flex items-center">
-          <div className="text-lg  border-r  pr-3 border-slate-700/60 w-fit select-none">{space.emoji}</div>
+          <div className="text-lg  border-r  pr-3  w-fit select-none" style={{ borderColor: space.theme }}>
+            {space.emoji}
+          </div>
           <p className="text-base font-light text-slate-400 ml-2.5">{space.title}</p>
         </div>
 
         {/* more options menu */}
         <div className="flex items-center select-none">
-          <span className="text-slate-500 mr-1 ">{space.tabs.length}</span>
+          <span className="text-slate-500 mr-1 ">{tabs.length}</span>
           <MoreOptions
             shouldOpenInNewWindow={false}
             isSpaceActive={true}
@@ -108,7 +113,7 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
           {provided1 => (
             <div {...provided1.droppableProps} ref={provided1.innerRef} className="min-h-full py-2">
               {/* render draggable  */}
-              {space.tabs.map((tab, idx) => (
+              {tabs.map((tab, idx) => (
                 <Draggable draggableId={tab.id.toString()} index={idx} key={tab.id}>
                   {provided2 => (
                     <div
@@ -116,13 +121,17 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
                       {...provided2.draggableProps}
                       {...provided2.dragHandleProps}
                       className="relative">
-                      <Tab
-                        tabData={tab}
-                        isSpaceActive={true}
-                        isTabActive={space.activeTabIndex === idx}
-                        onTabDelete={() => handleRemoveTab(idx)}
-                        onTabClick={() => onTabClick(idx)}
-                      />
+                      <div className="">
+                        <Tab
+                          tabData={tab}
+                          isSpaceActive={true}
+                          isTabActive={space.activeTabIndex === idx}
+                          onTabDelete={() => handleRemoveTab(idx)}
+                          onTabClick={() => onTabClick(idx)}
+                          isSelected={!!selectedTabs.find(t => t.id === tab.id)?.id}
+                          onSelect={() => setSelectedTabs(prev => [...prev, tab])}
+                        />
+                      </div>
                       {/* active tab indicator */}
                       {space.activeTabIndex === idx ? (
                         <motion.div
@@ -145,11 +154,7 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
         )}
       {showEditModal &&
         createPortal(
-          <UpdateSpace
-            space={omitObjProps(space, 'tabs')}
-            numTabs={space.tabs?.length}
-            onClose={() => setShowEditModal(false)}
-          />,
+          <UpdateSpace space={space} numTabs={tabs?.length} onClose={() => setShowEditModal(false)} />,
           document.body,
         )}
     </div>

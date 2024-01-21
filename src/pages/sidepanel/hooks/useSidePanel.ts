@@ -1,22 +1,22 @@
 import { getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { useAtom } from 'jotai';
-import { spacesAtom } from '@root/src/stores/app';
-import { getAllSpaces, getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
+import { activeSpaceAtom, nonActiveSpacesAtom, selectedTabsAtom } from '@root/src/stores/app';
+import { getAllSpaces, getSpaceByWindow, updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
 import { IMessageEvent, ISpaceWithTabs } from '../../types/global.types';
 import { MutableRefObject, useCallback } from 'react';
 import { logger } from '../../utils/logger';
-import type { OnDragEndResponder } from 'react-beautiful-dnd';
+import type { OnDragEndResponder, OnDragStartResponder } from 'react-beautiful-dnd';
 
-type UseSidePanelProps = {
-  activeSpace: ISpaceWithTabs;
-  setActiveSpace: (space: ISpaceWithTabs) => void;
-};
+export const useSidePanel = () => {
+  // non active spaces  (global state)
+  const [nonActiveSpaces, setNonActiveSpaces] = useAtom(nonActiveSpacesAtom);
 
-export const useSidePanel = ({ activeSpace, setActiveSpace }: UseSidePanelProps) => {
-  // non active spaces atom (global state)
-  const [nonActiveSpaces, setNonActiveSpaces] = useAtom(spacesAtom);
   // active space atom (global state)
+  const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);
+
+  // selected tabs (global state)
+  const [selectedTabs] = useAtom(selectedTabsAtom);
 
   // get all spaces from storage
   const getAllSpacesStorage = async () => {
@@ -38,10 +38,6 @@ export const useSidePanel = ({ activeSpace, setActiveSpace }: UseSidePanelProps)
   // handle background events
   const handleEvents = useCallback(
     async ({ event, payload }: IMessageEvent, activeSpaceRef: MutableRefObject<ISpaceWithTabs>) => {
-      console.log('🚀 ~ handleEvents ~ payload:', payload);
-
-      console.log('🚀 ~ handleEvents ~ event:', event);
-
       switch (event) {
         case 'ADD_SPACE': {
           // add new space
@@ -56,8 +52,10 @@ export const useSidePanel = ({ activeSpace, setActiveSpace }: UseSidePanelProps)
         }
 
         case 'UPDATE_SPACE_ACTIVE_TAB': {
-          console.log('🚀 ~ activeSpaceRef.current:', activeSpaceRef.current);
           if (payload.spaceId !== activeSpaceRef.current?.id) return;
+          // check if the active tab has changed from side panel, if yes do nothing
+          const tab = await chrome.tabs.get(activeSpaceRef.current.tabs[activeSpaceRef.current.activeTabIndex]?.id);
+          if (tab?.active) return;
 
           setActiveSpace({ ...activeSpaceRef.current, activeTabIndex: payload.newActiveIndex });
 
@@ -66,6 +64,8 @@ export const useSidePanel = ({ activeSpace, setActiveSpace }: UseSidePanelProps)
 
         case 'UPDATE_TABS': {
           // get updated tabs from storage
+          console.log('🚀 ~ payload.spaceId:', payload.spaceId);
+
           if (payload.spaceId !== activeSpaceRef.current?.id) return;
 
           const updatedTabs = await getTabsInSpace(payload.spaceId);
@@ -81,7 +81,12 @@ export const useSidePanel = ({ activeSpace, setActiveSpace }: UseSidePanelProps)
     [setActiveSpace, setNonActiveSpaces],
   );
 
-  // handle tab drag
+  // handle tab drag start
+  const onTabsDragStart: OnDragStartResponder = useCallback(() => {
+    // do thing if only 1 tab dragged
+    if (selectedTabs?.length < 1) return;
+  }, [selectedTabs.length]);
+
   // handle tabs drag end
   const onTabsDragEnd: OnDragEndResponder = result => {
     if (!result.destination) {
@@ -90,47 +95,64 @@ export const useSidePanel = ({ activeSpace, setActiveSpace }: UseSidePanelProps)
 
     if (result.destination.index === result.source.index) return;
 
+    // TODO - fix: moving tabs updates sets wrong active index
+
     const droppedSpaceId = result.destination.droppableId;
+
     const reOrderedTabs = [...activeSpace.tabs];
+
     const [tabToMove] = reOrderedTabs.splice(result.source.index, 1);
 
     const activeTab = activeSpace?.tabs[activeSpace.activeTabIndex];
+
+    console.log('🚀 ~ useSidePanel ~ activeTab:', activeTab);
+
     // check if dropped space is active space
     if (droppedSpaceId === activeSpace?.id) {
       // if yes, then re-arrange tabs and update active tab index
-
       reOrderedTabs.splice(result.destination.index, 0, tabToMove);
+
+      // find new active tab index
+      const newActiveTabIndex = reOrderedTabs.findIndex(el => el.url === activeTab.url);
+
+      console.log('🚀 ~ useSidePanel ~ reOrderedTabs:', reOrderedTabs);
+
+      console.log('🚀 ~ useSidePanel ~ newActiveTabIndex:', newActiveTabIndex);
+
       (async () => {
         // move tab in window
         await chrome.tabs.move(tabToMove.id, { index: result.destination.index });
         // update storage
         await setTabsForSpace(activeSpace.id, reOrderedTabs);
+        // update space's active tab index, if changed
+        if (activeSpace.activeTabIndex !== newActiveTabIndex) {
+          await updateSpace(activeSpace.id, { ...activeSpace, activeTabIndex: newActiveTabIndex });
+        }
       })();
 
       // save local ui state
       setActiveSpace({
         ...activeSpace,
-        activeTabIndex: reOrderedTabs.findIndex(el => el.url === activeTab.url),
+        activeTabIndex: newActiveTabIndex,
         tabs: reOrderedTabs,
       });
-      return;
+    } else {
+      // if no then remove tab from active space and rearrange tabs
+      (async () => {
+        // save the tabs (with removed dragged tab) in active space
+        await setTabsForSpace(activeSpace.id, reOrderedTabs);
+        // add tab to new dragged space
+        const tabsInNewSpace = await getTabsInSpace(droppedSpaceId);
+        await setTabsForSpace(droppedSpaceId, [...tabsInNewSpace, tabToMove]);
+        // save local ui state
+        setActiveSpace({
+          ...activeSpace,
+
+          activeTabIndex: reOrderedTabs.findIndex(el => el.url === activeTab.url),
+          tabs: reOrderedTabs,
+        });
+      })();
     }
-
-    // if no then remove tab from active space and rearrange tabs
-    (async () => {
-      // save the tabs (with removed dragged tab) in active space
-      await setTabsForSpace(activeSpace.id, reOrderedTabs);
-      // add tab to new dragged space
-      const tabsInNewSpace = await getTabsInSpace(droppedSpaceId);
-      await setTabsForSpace(droppedSpaceId, [...tabsInNewSpace, tabToMove]);
-      // save local ui state
-      setActiveSpace({
-        ...activeSpace,
-
-        activeTabIndex: reOrderedTabs.findIndex(el => el.url === activeTab.url),
-        tabs: reOrderedTabs,
-      });
-    })();
   };
 
   return {
@@ -139,5 +161,8 @@ export const useSidePanel = ({ activeSpace, setActiveSpace }: UseSidePanelProps)
     getAllSpacesStorage,
     handleEvents,
     onTabsDragEnd,
+    onTabsDragStart,
+    activeSpace,
+    setActiveSpace,
   };
 };

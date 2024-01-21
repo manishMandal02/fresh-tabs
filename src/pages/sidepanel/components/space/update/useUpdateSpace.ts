@@ -1,5 +1,5 @@
 import { ISpace, ISpaceWithoutId } from '@root/src/pages/types/global.types';
-import { snackbarAtom, spacesAtom } from '@root/src/stores/app';
+import { snackbarAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
 import { useAtom } from 'jotai';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { useState } from 'react';
@@ -13,7 +13,7 @@ type UseUpdateSpaceProps = {
 export const useUpdateSpace = ({ updateSpaceData, space, onClose }: UseUpdateSpaceProps) => {
   // global state
   // spaces atom
-  const [, setSpaces] = useAtom(spacesAtom);
+  const [, setSpaces] = useAtom(nonActiveSpacesAtom);
   // snackbar atom
   const [snackbar, setSnackbar] = useAtom(snackbarAtom);
 

@@ -1,3 +1,6 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import { ITab } from '@root/src/pages/types/global.types';
 import { getFaviconURL } from '@root/src/pages/utils';
 import { copyToClipboard } from '@root/src/pages/utils/copy-to-clipboard';
@@ -8,6 +11,8 @@ import { useEffect, useCallback, useState } from 'react';
 
 type Props = {
   tabData: ITab;
+  isSelected?: boolean;
+  onSelect?: () => void;
   showHoverOption?: boolean;
   onTabDelete?: () => Promise<void>;
   isTabActive: boolean;
@@ -19,6 +24,8 @@ const Tab = ({
   tabData,
   onTabDelete,
   isTabActive,
+  isSelected,
+  onSelect,
   isSpaceActive,
   onTabClick,
   showDeleteOption = true,
@@ -76,6 +83,8 @@ const Tab = ({
     }
   };
 
+  // TODO - complete multi select
+
   const tabAnimation = {
     initial: { scale: 0, opacity: 0 },
     animate: {
@@ -87,22 +96,34 @@ const Tab = ({
   };
 
   return (
-    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
     <motion.div
       {...tabAnimation}
       className={` w-full select-none z-[20] px-2.5 py-1.5 flex relative  items-center justify-between shadow-sm rounded-lg overflow-hidden group h-[1.7rem]`}
       style={{ cursor: isModifiesKeyPressed ? 'pointer' : '' }}
       onClick={onTabClickHandler}>
-      <span className="flex items-center w-full ">
-        <img className="w-4 h-4 mr-1.5 rounded-sm cursor-pointer z-10" src={getFaviconURL(tabData.url)} alt="icon" />
+      <div className="flex items-center w-full ">
+        <div className=" flex relative items-start min-w-[1.2rem] mr-1.5">
+          <img
+            className="peer opacity-95 visible hover:invisible w-4 h-4 z-10 cursor-pointer rounded-sm  "
+            src={getFaviconURL(tabData.url)}
+            alt="icon"
+          />
+          <span
+            className="hidden peer-hover:flex bg-emerald-500/50 z-20 rounded-md absolute w-5 h-5 top-0 left-0"
+            style={{
+              display: isSelected ? 'flex' : 'hidden',
+            }}
+            onClick={onSelect}></span>
+        </div>
         <span className="text-xs text-slate-400 max-w-fit min-w-[80%] whitespace-nowrap overflow-hidden text-ellipsis">
-          {tabData.title}
+          {tabData.title.trim()}
         </span>
-      </span>
+      </div>
       {showHoverOption ? (
         <motion.span
           initial={{ x: 20, opacity: 0 }}
-          whileInView={{ x: 0, opacity: 1, animationDuration: '0.4s', transition: { delay: 0.2 } }}
+          whileInView={{ x: 0, opacity: 1, animationDuration: '0.4s', transition: { delay: 0.1 } }}
+          exit={{ x: 20, opacity: 0 }}
           className="absolute hidden group-hover:flex right-2 bottom-px items-center gap-x-3 bg-brand-darkBgAccent px-2 py-1.5 rounded">
           {/* go to tab */}
           {isSpaceActive && !isTabActive ? (

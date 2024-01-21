@@ -1,6 +1,6 @@
 import { DefaultAppSettings } from './../constants/app';
 import { atom } from 'jotai';
-import { IAppSettings, ISpace, ISpaceWithTabs, ThemeColor } from '../pages/types/global.types';
+import { IAppSettings, ISpace, ISpaceWithTabs, ITab } from '../pages/types/global.types';
 
 type SnackbarAtom = {
   show: boolean;
@@ -9,23 +9,17 @@ type SnackbarAtom = {
   isSuccess?: boolean;
 };
 
-// global spaces state
-export const spacesAtom = atom<ISpace[]>([]);
+// non active spaces state
+export const nonActiveSpacesAtom = atom<ISpace[]>([]);
 
-// global spaces state
-export const activeSpaceAtom = atom<ISpaceWithTabs>({
-  id: '',
-  tabs: [],
-  theme: ThemeColor.Blue,
-  windowId: 0,
-  title: '',
-  emoji: '',
-  activeTabIndex: 0,
-  isSaved: false,
-});
+// active space
+export const activeSpaceAtom = atom<ISpaceWithTabs>(null as ISpaceWithTabs);
 
-// global settings state
+// selected tabs for dragging
+export const selectedTabsAtom = atom<ITab[]>([]);
+
+//  settings state
 export const appSettingsAtom = atom<IAppSettings>({ ...DefaultAppSettings });
 
-// global snackbar  state
+//  snackbar  state
 export const snackbarAtom = atom<SnackbarAtom>({ msg: '', show: false, isLoading: false, isSuccess: false });

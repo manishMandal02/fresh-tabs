@@ -7,7 +7,7 @@ import Tab from './tab/Tab';
 import Tooltip from '../elements/tooltip';
 import { openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { removeTabFromSpace } from '@root/src/services/chrome-storage/tabs';
-import { appSettingsAtom, snackbarAtom, spacesAtom } from '@root/src/stores/app';
+import { appSettingsAtom, snackbarAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
 import MoreOptions from './more-options';
 import DeleteSpaceModal from './delete';
 
@@ -24,7 +24,7 @@ type Props = {
 
 const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: Props) => {
   // spaces atom (global state)
-  const [, setSpaces] = useAtom(spacesAtom);
+  const [, setSpaces] = useAtom(nonActiveSpacesAtom);
 
   // snackbar atom
   const [, setSnackbar] = useAtom(snackbarAtom);
