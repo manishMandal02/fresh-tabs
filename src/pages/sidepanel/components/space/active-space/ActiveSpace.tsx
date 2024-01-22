@@ -153,6 +153,8 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
 
       const tabIsBeforeLastSelectedTab = tab.index < lastSelectedTabIndex;
 
+      // Todo - handle unselect on shift if selected
+
       const tabsInRange: ITabWithIndex[] = tabs
         .map((t, idx) => ({ ...t, index: idx }))
         .filter((_t, idx) => {
@@ -182,7 +184,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
     <div className="h-full mt-4">
       {/* fav tabs */}
 
-      <div className="flex items-start h-[6.5%] justify-between px-2  ">
+      <div className="flex items-start h-[6.5%] justify-between px-2">
         <div className="flex items-center ">
           <div className="text-lg  border-r  pr-5  w-fit select-none" style={{ borderColor: space.theme }}>
             {space.emoji}
@@ -216,8 +218,8 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
                       ref={provided2.innerRef}
                       {...provided2.draggableProps}
                       {...provided2.dragHandleProps}
-                      className="relative outline-none mb-[2.5px] ">
-                      <div className="relative">
+                      className="relative outline-none mb-[2.5px]">
+                      <div className="relative ">
                         <Tab
                           tabData={tab}
                           isSpaceActive={true}
@@ -242,7 +244,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
                             {['one', 'two', 'three'].map((v, ix) => (
                               <div
                                 key={v}
-                                className="absolute  h-full w-[98%] -z-10 rounded-lg   border border-slate-700/70 bg-brand-darkBgAccent"
+                                className="absolute  h-full w-[98%] -z-10 rounded-lg   border border-slate-700/70 bg-brand-darkBgAccent "
                                 style={{ top: `-${(ix + 0.5) * 2}px`, left: `-${(ix + 1) * 2}px` }}></div>
                             ))}
                           </>

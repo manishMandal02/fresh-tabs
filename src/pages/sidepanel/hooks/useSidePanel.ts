@@ -6,7 +6,7 @@ import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
 import { IMessageEvent, ISpaceWithTabs, ITab } from '../../types/global.types';
 import { MutableRefObject, useCallback, Dispatch, SetStateAction } from 'react';
 import { logger } from '../../utils/logger';
-import type { OnDragEndResponder, OnDragStartResponder } from 'react-beautiful-dnd';
+import type { OnDragEndResponder, OnBeforeDragStartResponder } from 'react-beautiful-dnd';
 
 export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>>) => {
   // non active spaces  (global state)
@@ -80,10 +80,13 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
   );
 
   // handle tab drag start
-  const onTabsDragStart: OnDragStartResponder = useCallback(
+  const onTabsDragStart: OnBeforeDragStartResponder = useCallback(
     data => {
       // do thing if only 1 tab dragged
+      return;
       if (selectedTabs?.length < 1) return;
+
+      console.log('🚀 ~ useSidePanel ~ data:', data);
 
       // remove tabs temporarily on drag starts
       const updatedTabs = activeSpace?.tabs.filter(
@@ -101,19 +104,63 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
       return;
     }
 
-    if (result.destination.index === result.source.index) return;
+    if (result.destination.index === result.source.index && selectedTabs.length < 1) return;
+
+    return;
 
     const droppedSpaceId = result.destination.droppableId;
 
-    const reOrderedTabs = [...activeSpace.tabs];
-
-    const [tabToMove] = reOrderedTabs.splice(result.source.index, 1);
-
     const activeTab = activeSpace?.tabs[activeSpace.activeTabIndex];
 
-    // check if dropped space is active space
+    let reOrderedTabs = [...activeSpace.tabs];
+
+    // remove selected tabs for active space
+    reOrderedTabs = reOrderedTabs.filter(tA => !selectedTabs.find(tS => tA.id === tS.id));
+
+    // check if this is multi drop
+    if (selectedTabs?.length > 0) {
+      if (droppedSpaceId === activeSpace?.id) {
+        //  dropped in same space
+        // add selected tabs at dropped pos in active space
+        reOrderedTabs.splice(
+          result.destination.index,
+          0,
+          ...selectedTabs.map(t => ({ id: t.id, title: t.title, url: t.url })),
+        );
+
+        console.log('🚀 ~ useSidePanel ~ reOrderedTabs:', reOrderedTabs);
+
+        // find new active tab index
+        const newActiveTabIndex = reOrderedTabs.findIndex(el => el.url === activeTab.url);
+
+        (async () => {
+          // move tab in window
+          selectedTabs.forEach(async (tab, idx) => {
+            await chrome.tabs.move(tab.id, { index: result.destination.index + idx });
+          });
+
+          // update storage
+          await setTabsForSpace(activeSpace.id, reOrderedTabs);
+
+          // update space's active tab index, if changed
+          if (activeSpace.activeTabIndex !== newActiveTabIndex) {
+            await updateSpace(activeSpace.id, { ...activeSpace, activeTabIndex: newActiveTabIndex });
+          }
+        })();
+      } else {
+        // dropped in different space
+        // todo - if dropped into other space, update that active space & other spaces
+        // todo - update ui - local/global state to rerender ui
+      }
+      return;
+    }
+
+    // handle single tab drop
+    const [tabToMove] = reOrderedTabs.splice(result.source.index, 1);
+
+    // check if dropped in active space or other space
     if (droppedSpaceId === activeSpace?.id) {
-      // if yes, then re-arrange tabs and update active tab index
+      // update the dropped tab position
       reOrderedTabs.splice(result.destination.index, 0, tabToMove);
 
       // find new active tab index

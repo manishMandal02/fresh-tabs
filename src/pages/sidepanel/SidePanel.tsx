@@ -148,12 +148,11 @@ const SidePanel = () => {
           {isLoadingSpaces ? (
             <Spinner size="md" />
           ) : (
-            <DragDropContext onDragEnd={onTabsDragEnd} onDragStart={onTabsDragStart}>
-              {/* Current space */}
+            <DragDropContext onDragEnd={onTabsDragEnd} onBeforeDragStart={onTabsDragStart}>
+              z{/* Current space */}
               <div className="h-[85%]">
                 <ActiveSpace space={activeSpace} tabs={activeSpaceTabs} setActiveSpace={setActiveSpace} />
               </div>
-
               {/* other spaces */}
               <div className=" h-[15%] mt-1.5 flex  gap-x-2 mx-auto w-fit">
                 {[...nonActiveSpaces, { id: 'new-space' }].map(space => (
