@@ -16,10 +16,11 @@ import { goToTab } from '@root/src/services/chrome-tabs/tabs';
 type Props = {
   space: ISpace;
   tabs: ITab[];
+  isDraggingGlobal: boolean;
   setActiveSpace: Dispatch<SetStateAction<ISpaceWithTabs>>;
 };
 
-const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
+const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) => {
   // snackbar atom
   const [, setSnackbar] = useAtom(snackbarAtom);
 
@@ -36,7 +37,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
   // local state - left shift key press status
   const [isShiftKeyPressed, setIsShiftKeyPressed] = useState(false);
 
-  const isTabSelected = (id: number) => !!selectedTabs.find(t => t.id == id);
+  const isTabSelected = (id: number) => !!selectedTabs.find(t => t.id === id);
 
   // sync tabs
   const handleSyncTabs = async () => {
@@ -138,8 +139,8 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
   };
 
   const onTabClick = (tab: ITabWithIndex) => {
+    // clt/cmd is pressed
     if (isModifierKeyPressed) {
-      // clt/cmd is pressed
       // un-select if already selected
       if (isTabSelected(tab.id)) return setSelectedTabs(prev => [...prev.filter(t => t.id !== tab.id)]);
       // select
@@ -147,25 +148,33 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
       return;
     }
 
+    // shift key was pressed (multi select)
     if (isShiftKeyPressed) {
-      // shift key was pressed (multi select)
-      const lastSelectedTabIndex = selectedTabs[selectedTabs.length - 1]?.index || space.activeTabIndex;
+      const lastSelectedTabIndex = !isNaN(Number(selectedTabs[selectedTabs.length - 1]?.index))
+        ? selectedTabs[selectedTabs.length - 1]?.index
+        : space.activeTabIndex;
 
       const tabIsBeforeLastSelectedTab = tab.index < lastSelectedTabIndex;
 
-      // Todo - handle unselect on shift if selected
+      console.log('🚀 ~ onTabClick ~ lastSelectedTabIndex:', lastSelectedTabIndex);
 
       const tabsInRange: ITabWithIndex[] = tabs
         .map((t, idx) => ({ ...t, index: idx }))
         .filter((_t, idx) => {
           //
           if (tabIsBeforeLastSelectedTab) {
-            return idx < lastSelectedTabIndex && idx >= tab.index;
+            return idx <= lastSelectedTabIndex && idx >= tab.index;
           }
-          return idx > lastSelectedTabIndex && idx <= tab.index;
+          return idx >= lastSelectedTabIndex && idx <= tab.index;
         });
 
-      setSelectedTabs(prev => [...prev, ...tabsInRange]);
+      if (isTabSelected(tab.id)) {
+        // unselect tabs
+        setSelectedTabs(prev => [...prev.filter(t1 => !tabsInRange.find(t2 => t2.id === t1.id))]);
+      } else {
+        // select tabs
+        setSelectedTabs(prev => [...prev, ...tabsInRange]);
+      }
     }
   };
 
@@ -219,7 +228,11 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
                       {...provided2.draggableProps}
                       {...provided2.dragHandleProps}
                       className="relative outline-none mb-[2.5px]">
-                      <div className="relative ">
+                      <div className="relative">
+                        {/* Todo - testing */}
+                        <span className="absolute -top-2 right-1 z-30 bg-slate-800  text-[10px] text-slate-400 px-1 rounded-lg">
+                          {idx}
+                        </span>
                         <Tab
                           tabData={tab}
                           isSpaceActive={true}
@@ -239,8 +252,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
                             flex items-center justify-center font-semibold bg-brand-darkBgAccent text-slate-400`}>
                               +{selectedTabs?.length}
                             </span>
-
-                            {/* tabs stacked effect  */}
+                            §{/* tabs stacked effect  */}
                             {['one', 'two', 'three'].map((v, ix) => (
                               <div
                                 key={v}
@@ -249,6 +261,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
                             ))}
                           </>
                         ) : null}
+                        {/* selected tabs not not dragged */}
                       </div>
                       {/* active tab indicator */}
                       {space.activeTabIndex === idx ? (
@@ -260,7 +273,8 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
                       {isTabSelected(tab.id) ? (
                         <motion.div
                           {...activeTabIndicatorAnimation}
-                          className="absolute h-[1.7rem] w-[98%] top-0 left-0 rounded-lg border border-slate-700/60 bg-brand-darkBgAccent z-10"></motion.div>
+                          className="absolute h-[1.7rem] w-[98%] top-0 left-0 rounded-lg border border-slate-700/60 bg-brand-darkBgAccent z-10 "
+                          style={{ borderWidth: isDraggingGlobal && !isDragging ? '3px' : '1px' }}></motion.div>
                       ) : null}
                     </div>
                   )}

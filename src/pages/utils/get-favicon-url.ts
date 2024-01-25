@@ -1,9 +1,11 @@
+const createChromeFaviconUrl = (url: URL) => `${chrome.runtime.getURL('/_favicon/')}?pageUrl=${url.origin}/&size=32`;
+
 export const getFaviconURL = (siteURL: string) => {
   //  chrome icon as favicon
-  if (!siteURL || siteURL.startsWith('chrome://')) return chrome.runtime.getURL('chrome.svg');
 
   const url = new URL(siteURL);
 
+  if (!siteURL || siteURL.startsWith('chrome://')) return createChromeFaviconUrl(url);
   const subdomainRegex =
     /(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}\.[a-zA-Z0-9]{2,}\.[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})?/;
 
@@ -11,7 +13,7 @@ export const getFaviconURL = (siteURL: string) => {
 
   // generate favicon link with chrome favicon url if subdomain else use google global favicon url
   if (subdomainRegex.test(url.origin) && url.hostname.split('.')[0] !== 'www') {
-    faviconURL = `${chrome.runtime.getURL('/_favicon/')}?pageUrl=${url.origin}/&size=32`;
+    faviconURL = createChromeFaviconUrl(url);
   } else {
     faviconURL = `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=${32}`;
   }

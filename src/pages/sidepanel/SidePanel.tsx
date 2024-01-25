@@ -46,6 +46,8 @@ const SidePanel = () => {
     handleEvents,
     onTabsDragEnd,
     onTabsDragStart,
+
+    isDraggingGlobal,
   } = useSidePanel(setActiveSpaceTabs);
 
   const activeSpaceRef = useRef(activeSpace);
@@ -143,22 +145,27 @@ const SidePanel = () => {
         </div>
 
         {/* spaces container */}
-        <div className="w-full h-[85%] bg-red-30 px-3 py-1  scroll-p-px scroll-m-px relative ">
+        <div className="w-full h-[85%] bg-red-30 px-3 py-1  scroll-p-px scroll-m-px relative">
           {/* un saved  */}
           {isLoadingSpaces ? (
             <Spinner size="md" />
           ) : (
             <DragDropContext onDragEnd={onTabsDragEnd} onBeforeDragStart={onTabsDragStart}>
               z{/* Current space */}
-              <div className="h-[85%]">
-                <ActiveSpace space={activeSpace} tabs={activeSpaceTabs} setActiveSpace={setActiveSpace} />
+              <div className="h-[80%]">
+                <ActiveSpace
+                  space={activeSpace}
+                  tabs={activeSpaceTabs}
+                  setActiveSpace={setActiveSpace}
+                  isDraggingGlobal={isDraggingGlobal}
+                />
               </div>
               {/* other spaces */}
-              <div className=" h-[15%] mt-1.5 flex  gap-x-2 mx-auto w-fit">
+              <div className=" h-[20%] flex  gap-x-2 mx-auto w-fit">
                 {[...nonActiveSpaces, { id: 'new-space' }].map(space => (
                   <Droppable key={space.id} droppableId={space.id}>
                     {(provided, snapshot) => (
-                      <div {...provided.droppableProps} ref={provided.innerRef} className="">
+                      <div {...provided.droppableProps} ref={provided.innerRef} className="mt-4">
                         {space.id !== 'new-space' ? (
                           <NonActiveSpace space={space as ISpace} isDraggedOver={snapshot.isDraggingOver} />
                         ) : (

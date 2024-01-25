@@ -271,6 +271,8 @@ chrome.tabs.onMoved.addListener(async (tabId, info) => {
   // update tab index
   await updateTabIndex(space.id, tabId, info.toIndex);
 
+  console.log('🚀 ~ chrome.tabs.onMoved.addListener ~ tabId, info.toIndex:', tabId, info.toIndex);
+
   // update space's active tab index
   // await updateActiveTabInSpace(info.windowId, info.toIndex);
 

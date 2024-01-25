@@ -4,7 +4,7 @@ import { activeSpaceAtom, nonActiveSpacesAtom, selectedTabsAtom } from '@root/sr
 import { getAllSpaces, getSpaceByWindow, updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
 import { IMessageEvent, ISpaceWithTabs, ITab } from '../../types/global.types';
-import { MutableRefObject, useCallback, Dispatch, SetStateAction } from 'react';
+import { MutableRefObject, useCallback, Dispatch, useState, SetStateAction } from 'react';
 import { logger } from '../../utils/logger';
 import type { OnDragEndResponder, OnBeforeDragStartResponder } from 'react-beautiful-dnd';
 
@@ -14,6 +14,9 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
 
   // active space atom (global state)
   const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);
+
+  // local state
+  const [isDraggingGlobal, setIsDraggingGlobal] = useState(false);
 
   // selected tabs (global state)
   const [selectedTabs] = useAtom(selectedTabsAtom);
@@ -67,6 +70,7 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
           if (payload.spaceId !== activeSpaceRef.current?.id) return;
 
           const updatedTabs = await getTabsInSpace(payload.spaceId);
+
           setActiveSpace({ ...activeSpaceRef.current, tabs: updatedTabs });
           break;
         }
@@ -81,16 +85,14 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
 
   // handle tab drag start
   const onTabsDragStart: OnBeforeDragStartResponder = useCallback(
-    data => {
+    start => {
       // do thing if only 1 tab dragged
-      return;
+      setIsDraggingGlobal(true);
       if (selectedTabs?.length < 1) return;
 
-      console.log('🚀 ~ useSidePanel ~ data:', data);
-
-      // remove tabs temporarily on drag starts
+      // remove tabs temporarily on drag starts, except the tab being dragged
       const updatedTabs = activeSpace?.tabs.filter(
-        aT => !selectedTabs.find(sT => sT.id === aT.id && aT.id.toString() !== data.draggableId),
+        aT => !selectedTabs.find(sT => sT.id === aT.id && sT.id.toString() !== start.draggableId),
       );
 
       setActiveSpaceTabs([...updatedTabs]);
@@ -99,108 +101,137 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
   );
 
   // handle tabs drag end
-  const onTabsDragEnd: OnDragEndResponder = result => {
-    if (!result.destination) {
-      return;
-    }
+  const onTabsDragEnd: OnDragEndResponder = useCallback(
+    result => {
+      setIsDraggingGlobal(false);
+      if (!result.destination) {
+        return;
+      }
 
-    if (result.destination.index === result.source.index && selectedTabs.length < 1) return;
+      if (result.destination.index === result.source.index && selectedTabs.length < 1) return;
 
-    return;
+      const droppedSpaceId = result.destination.droppableId;
 
-    const droppedSpaceId = result.destination.droppableId;
+      const activeTab = activeSpace?.tabs[activeSpace.activeTabIndex];
 
-    const activeTab = activeSpace?.tabs[activeSpace.activeTabIndex];
+      let reOrderedTabs = [...activeSpace.tabs];
 
-    let reOrderedTabs = [...activeSpace.tabs];
+      // check if this is multi drop
+      if (selectedTabs?.length > 0) {
+        // remove selected tabs for active space
+        reOrderedTabs = reOrderedTabs.filter(aT => !selectedTabs.find(sT => sT.id === aT.id));
 
-    // remove selected tabs for active space
-    reOrderedTabs = reOrderedTabs.filter(tA => !selectedTabs.find(tS => tA.id === tS.id));
+        console.log('🚀 ~ useSidePanel ~ reOrderedTabs: ✅', [...reOrderedTabs]);
 
-    // check if this is multi drop
-    if (selectedTabs?.length > 0) {
+        if (droppedSpaceId === activeSpace?.id) {
+          //  dropped in same space
+
+          // calculate dropped index
+          const droppedIndex = result.destination.index - selectedTabs.length + 1;
+
+          console.log('🚀 ~ useSidePanel ~ selectedTabs: ☝️', selectedTabs);
+
+          console.log('🚀 ~ useSidePanel ~ droppedIndex:', droppedIndex);
+
+          // sort the selected tabs by index
+          const sortedSelectedTabs: ITab[] = selectedTabs
+            .toSorted((t1, t2) => (t1.index > t2.index ? 1 : -1))
+            .map(t => ({ id: t.id, title: t.title, url: t.url }));
+
+          console.log('🚀 ~ useSidePanel ~ sortedSelectedTabs: 🟠', sortedSelectedTabs);
+
+          // add selected tabs at dropped pos in active space
+          reOrderedTabs = reOrderedTabs.toSpliced(droppedIndex, 0, ...sortedSelectedTabs);
+
+          console.log('🚀 ~ useSidePanel ~ reOrderedTabs: 🔵', reOrderedTabs);
+
+          // find new active tab index
+          const newActiveTabIndex = reOrderedTabs.findIndex(el => el.url === activeTab.url);
+
+          // move tab in window
+          setActiveSpace(prev => ({ ...prev, tabs: reOrderedTabs }));
+
+          // grouping all chrome api calls to move tabs
+          const moveTabsPromises = sortedSelectedTabs.map(async tab => {
+            const index = result.destination.index;
+
+            return chrome.tabs.move(tab.id, { index });
+          });
+
+          (async () => {
+            try {
+              // update storage
+              await setTabsForSpace(activeSpace.id, reOrderedTabs);
+
+              const res = await Promise.allSettled(moveTabsPromises);
+
+              console.log('🚀 ~ sortedSelectedTabs.forEach ~  moveTabsPromises ~ : 🏗️', JSON.stringify(res));
+            } catch (error) {
+              console.log('🚀 ~ error:', error);
+            }
+
+            // update space's active tab index, if changed
+            if (activeSpace.activeTabIndex !== newActiveTabIndex) {
+              await updateSpace(activeSpace.id, { ...activeSpace, activeTabIndex: newActiveTabIndex });
+            }
+          })();
+        } else {
+          // dropped in different space
+          // todo - if dropped into other space, update that active space & other spaces
+          // todo - update ui - local/global state to rerender ui
+        }
+
+        return;
+      }
+
+      // handle single tab drop
+      const [tabToMove] = reOrderedTabs.splice(result.source.index, 1);
+
+      // check if dropped in active space or other space
       if (droppedSpaceId === activeSpace?.id) {
-        //  dropped in same space
-        // add selected tabs at dropped pos in active space
-        reOrderedTabs.splice(
-          result.destination.index,
-          0,
-          ...selectedTabs.map(t => ({ id: t.id, title: t.title, url: t.url })),
-        );
-
-        console.log('🚀 ~ useSidePanel ~ reOrderedTabs:', reOrderedTabs);
+        // update the dropped tab position
+        reOrderedTabs.splice(result.destination.index, 0, tabToMove);
 
         // find new active tab index
         const newActiveTabIndex = reOrderedTabs.findIndex(el => el.url === activeTab.url);
 
         (async () => {
           // move tab in window
-          selectedTabs.forEach(async (tab, idx) => {
-            await chrome.tabs.move(tab.id, { index: result.destination.index + idx });
-          });
-
+          await chrome.tabs.move(tabToMove.id, { index: result.destination.index });
           // update storage
           await setTabsForSpace(activeSpace.id, reOrderedTabs);
-
           // update space's active tab index, if changed
           if (activeSpace.activeTabIndex !== newActiveTabIndex) {
             await updateSpace(activeSpace.id, { ...activeSpace, activeTabIndex: newActiveTabIndex });
           }
         })();
-      } else {
-        // dropped in different space
-        // todo - if dropped into other space, update that active space & other spaces
-        // todo - update ui - local/global state to rerender ui
-      }
-      return;
-    }
 
-    // handle single tab drop
-    const [tabToMove] = reOrderedTabs.splice(result.source.index, 1);
-
-    // check if dropped in active space or other space
-    if (droppedSpaceId === activeSpace?.id) {
-      // update the dropped tab position
-      reOrderedTabs.splice(result.destination.index, 0, tabToMove);
-
-      // find new active tab index
-      const newActiveTabIndex = reOrderedTabs.findIndex(el => el.url === activeTab.url);
-
-      (async () => {
-        // move tab in window
-        await chrome.tabs.move(tabToMove.id, { index: result.destination.index });
-        // update storage
-        await setTabsForSpace(activeSpace.id, reOrderedTabs);
-        // update space's active tab index, if changed
-        if (activeSpace.activeTabIndex !== newActiveTabIndex) {
-          await updateSpace(activeSpace.id, { ...activeSpace, activeTabIndex: newActiveTabIndex });
-        }
-      })();
-
-      // save local ui state
-      setActiveSpace({
-        ...activeSpace,
-        activeTabIndex: newActiveTabIndex,
-        tabs: reOrderedTabs,
-      });
-    } else {
-      // if no then remove tab from active space and rearrange tabs
-      (async () => {
-        // save the tabs (with removed dragged tab) in active space
-        await setTabsForSpace(activeSpace.id, reOrderedTabs);
-        // add tab to new dragged space
-        const tabsInNewSpace = await getTabsInSpace(droppedSpaceId);
-        await setTabsForSpace(droppedSpaceId, [...tabsInNewSpace, tabToMove]);
         // save local ui state
         setActiveSpace({
           ...activeSpace,
-
-          activeTabIndex: reOrderedTabs.findIndex(el => el.url === activeTab.url),
+          activeTabIndex: newActiveTabIndex,
           tabs: reOrderedTabs,
         });
-      })();
-    }
-  };
+      } else {
+        // if no then remove tab from active space and rearrange tabs
+        (async () => {
+          // save the tabs (with removed dragged tab) in active space
+          await setTabsForSpace(activeSpace.id, reOrderedTabs);
+          // add tab to new dragged space
+          const tabsInNewSpace = await getTabsInSpace(droppedSpaceId);
+          await setTabsForSpace(droppedSpaceId, [...tabsInNewSpace, tabToMove]);
+          // save local ui state
+          setActiveSpace({
+            ...activeSpace,
+
+            activeTabIndex: reOrderedTabs.findIndex(el => el.url === activeTab.url),
+            tabs: reOrderedTabs,
+          });
+        })();
+      }
+    },
+    [activeSpace, selectedTabs, setActiveSpace],
+  );
 
   return {
     nonActiveSpaces,
@@ -211,5 +242,6 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
     onTabsDragStart,
     activeSpace,
     setActiveSpace,
+    isDraggingGlobal,
   };
 };
