@@ -71,6 +71,9 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
 
           const updatedTabs = await getTabsInSpace(payload.spaceId);
 
+          console.log('🚀 ~ UPDATE_TABS ~ updatedTabs: ❄️', updatedTabs);
+          // TODO - testing
+          return;
           setActiveSpace({ ...activeSpaceRef.current, tabs: updatedTabs });
           break;
         }
@@ -126,8 +129,13 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
         if (droppedSpaceId === activeSpace?.id) {
           //  dropped in same space
 
+          // check if the tabs are moved up or down from it's previous pos
+          const didTabsMoveDownward = result.source.index < result.destination.index;
+
           // calculate dropped index
-          const droppedIndex = result.destination.index - selectedTabs.length + 1;
+          const droppedIndex = didTabsMoveDownward
+            ? result.destination.index - selectedTabs.length + 1
+            : result.destination.index + selectedTabs.length;
 
           console.log('🚀 ~ useSidePanel ~ selectedTabs: ☝️', selectedTabs);
 
@@ -153,7 +161,7 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
 
           // grouping all chrome api calls to move tabs
           const moveTabsPromises = sortedSelectedTabs.map(async tab => {
-            const index = result.destination.index;
+            const index = didTabsMoveDownward ? result.destination.index : result.destination.index;
 
             return chrome.tabs.move(tab.id, { index });
           });
@@ -163,9 +171,7 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
               // update storage
               await setTabsForSpace(activeSpace.id, reOrderedTabs);
 
-              const res = await Promise.allSettled(moveTabsPromises);
-
-              console.log('🚀 ~ sortedSelectedTabs.forEach ~  moveTabsPromises ~ : 🏗️', JSON.stringify(res));
+              await Promise.allSettled(moveTabsPromises);
             } catch (error) {
               console.log('🚀 ~ error:', error);
             }

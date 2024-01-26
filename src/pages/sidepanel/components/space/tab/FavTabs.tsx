@@ -20,6 +20,7 @@ const FavTab = ({ tabs, isGlobal, setGlobalPinnedTabs }: Props) => {
 
   const [newPinTab, setNewPinTab] = useState<IPinnedTab>({ url: '', title: '' });
 
+  //  TODO - fix url format check, and only then enable add btn
   // add new pinned tabs
   const handleAddNewPin = async () => {
     if (!newPinTab.url) return;
