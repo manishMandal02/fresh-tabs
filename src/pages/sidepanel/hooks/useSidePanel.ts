@@ -135,7 +135,7 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
           // calculate dropped index
           const droppedIndex = didTabsMoveDownward
             ? result.destination.index - selectedTabs.length + 1
-            : result.destination.index + selectedTabs.length;
+            : result.destination.index;
 
           console.log('🚀 ~ useSidePanel ~ selectedTabs: ☝️', selectedTabs);
 
@@ -159,9 +159,13 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
           // move tab in window
           setActiveSpace(prev => ({ ...prev, tabs: reOrderedTabs }));
 
+          if (!didTabsMoveDownward) {
+            sortedSelectedTabs.reverse();
+          }
+
           // grouping all chrome api calls to move tabs
           const moveTabsPromises = sortedSelectedTabs.map(async tab => {
-            const index = didTabsMoveDownward ? result.destination.index : result.destination.index;
+            const index = result.destination.index;
 
             return chrome.tabs.move(tab.id, { index });
           });

@@ -175,6 +175,7 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
                   transition-all duration-200 ease-in-out overflow-x-hidden overflow-y-auto cc-scrollbar scroll-smooth`}>
           {tabs.map((tab, idx) => (
             <Tab
+              isModifierKeyPressed={false}
               key={tab?.id}
               tabData={tab}
               isTabActive={space.activeTabIndex === idx}
