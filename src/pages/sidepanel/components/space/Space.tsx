@@ -113,13 +113,13 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
               <Tooltip label="Active space">
                 <span className="relative flex h-2 w-2 ml-1">
                   <span
-                    className="animate-ping absolute inline-flex h-full w-full rounded-full  opacity-75 "
+                    className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 "
                     style={{
                       backgroundColor: space.theme,
                       opacity: '0.7',
                     }}></span>
                   <span
-                    className="relative inline-flex rounded-full h-2 w-2 "
+                    className="relative inline-flex rounded-full h-2 w-2"
                     style={{
                       backgroundColor: space.theme,
                     }}></span>

@@ -106,7 +106,9 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
   // handle tabs drag end
   const onTabsDragEnd: OnDragEndResponder = useCallback(
     result => {
+      // reset dragging state
       setIsDraggingGlobal(false);
+
       if (!result.destination) {
         return;
       }
@@ -124,34 +126,27 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
         // remove selected tabs for active space
         reOrderedTabs = reOrderedTabs.filter(aT => !selectedTabs.find(sT => sT.id === aT.id));
 
-        console.log('🚀 ~ useSidePanel ~ reOrderedTabs: ✅', [...reOrderedTabs]);
-
         if (droppedSpaceId === activeSpace?.id) {
           //  dropped in same space
 
           // check if the tabs are moved up or down from it's previous pos
           const didTabsMoveDownward = result.source.index < result.destination.index;
 
+          console.log('🚀 ~ useSidePanel ~ didTabsMoveDownward:', didTabsMoveDownward);
+
           // calculate dropped index
           const droppedIndex = didTabsMoveDownward
-            ? result.destination.index - selectedTabs.length + 1
+            ? 1 + result.destination.index - selectedTabs.length
             : result.destination.index;
 
-          console.log('🚀 ~ useSidePanel ~ selectedTabs: ☝️', selectedTabs);
-
           console.log('🚀 ~ useSidePanel ~ droppedIndex:', droppedIndex);
-
           // sort the selected tabs by index
           const sortedSelectedTabs: ITab[] = selectedTabs
             .toSorted((t1, t2) => (t1.index > t2.index ? 1 : -1))
             .map(t => ({ id: t.id, title: t.title, url: t.url }));
 
-          console.log('🚀 ~ useSidePanel ~ sortedSelectedTabs: 🟠', sortedSelectedTabs);
-
           // add selected tabs at dropped pos in active space
           reOrderedTabs = reOrderedTabs.toSpliced(droppedIndex, 0, ...sortedSelectedTabs);
-
-          console.log('🚀 ~ useSidePanel ~ reOrderedTabs: 🔵', reOrderedTabs);
 
           // find new active tab index
           const newActiveTabIndex = reOrderedTabs.findIndex(el => el.url === activeTab.url);
@@ -190,6 +185,9 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
           // todo - if dropped into other space, update that active space & other spaces
           // todo - update ui - local/global state to rerender ui
         }
+        // re-add removed tabs if dropped to outside dropzone (resetting to same pos)
+
+        setActiveSpaceTabs([...activeSpace.tabs]);
 
         return;
       }

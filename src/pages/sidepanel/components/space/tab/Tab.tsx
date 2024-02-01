@@ -5,7 +5,7 @@ import { ITab } from '@root/src/pages/types/global.types';
 import { getFaviconURL } from '@root/src/pages/utils';
 import { copyToClipboard } from '@root/src/pages/utils/copy-to-clipboard';
 import { createTab, goToTab } from '@root/src/services/chrome-tabs/tabs';
-import { MdClose, MdContentCopy, MdOpenInNew, MdMyLocation } from 'react-icons/md';
+import { MdClose, MdContentCopy, MdOpenInNew, MdOutlineAdd } from 'react-icons/md';
 import { motion } from 'framer-motion';
 
 type Props = {
@@ -19,11 +19,13 @@ type Props = {
   isSpaceActive?: boolean;
   showDeleteOption?: boolean;
   onTabDoubleClick?: (id: number) => void;
+  onCreateNewTab?: () => void;
 };
 const Tab = ({
   tabData,
   onTabDelete,
   isTabActive,
+  onCreateNewTab,
   // isSelected,
   onClick,
   isSpaceActive,
@@ -48,8 +50,6 @@ const Tab = ({
   };
   // handle copy tab url
   const handleCopyURL = async () => await copyToClipboard(tabData.url);
-
-  // TODO - complete multi select
 
   const tabAnimation = {
     initial: { scale: 0, opacity: 0 },
@@ -91,12 +91,13 @@ const Tab = ({
           exit={{ x: 20, opacity: 0 }}
           className="absolute hidden group-hover:flex right-2 bottom-px items-center gap-x-3 bg-brand-darkBgAccent px-2 py-1.5 rounded">
           {/* go to tab */}
+
           {isSpaceActive && !isTabActive ? (
             <>
-              <MdMyLocation
+              {/* <MdMyLocation
                 className={` text-slate-500 text-xs cursor-pointer py-[1.5px] px-[1.5px] scale-[1.65] transition-all duration-200 hover:bg-brand-darkBg/50`}
                 onClick={handleOpen}
-              />
+              /> */}
               {/* <span className="h-px w-px bg-slate-200" /> */}
             </>
           ) : null}
@@ -107,6 +108,17 @@ const Tab = ({
               onClick={handleOpen}
             />
           ) : null}
+
+          {isSpaceActive ? (
+            <>
+              <MdOutlineAdd
+                className={` text-slate-500 text-xs cursor-pointer py-[1.5px] px-[1.5px] scale-[1.65] transition-all duration-200 hover:bg-brand-darkBg/50`}
+                onClick={onCreateNewTab}
+              />
+              {/* <span className="h-px w-px bg-slate-200" /> */}
+            </>
+          ) : null}
+
           <MdContentCopy
             className={` text-slate-500 text-xs cursor-pointer py-[1.5px] px-[1.5px] scale-[1.65] transition-all duration-200 hover:bg-brand-darkBg/50`}
             onClick={handleCopyURL}

@@ -201,8 +201,8 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
 };
 
 // create a new tab
-export const createTab = async (url: string) => {
-  await chrome.tabs.create({ active: false, url });
+export const createTab = async (url: string, isActive = false) => {
+  await chrome.tabs.create({ url, active: isActive });
 };
 
 // go to tab

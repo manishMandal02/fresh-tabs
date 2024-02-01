@@ -138,14 +138,25 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
     setActiveSpace({ ...space, tabs, activeTabIndex: index });
   };
 
+  const handleCreateNewTab = async (index: number) => {
+    const { id } = await chrome.tabs.create({ url: 'chrome://newtab', active: true, index: ++index });
+    setActiveSpace({
+      ...space,
+      tabs: [...tabs.toSpliced(index, 0, { id, title: 'New Tab', url: 'chrome://newtab' })],
+      activeTabIndex: index,
+    });
+  };
+
   const onTabClick = (tab: ITabWithIndex) => {
     // clt/cmd is pressed
     if (isModifierKeyPressed) {
       // un-select if already selected
-      if (isTabSelected(tab.id)) return setSelectedTabs(prev => [...prev.filter(t => t.id !== tab.id)]);
-      // select
-      setSelectedTabs(prev => [...prev, tab]);
-      return;
+      if (isTabSelected(tab.id)) {
+        setSelectedTabs(prev => [...prev.filter(t => t.id !== tab.id)]);
+      } else {
+        // select
+        setSelectedTabs(prev => [...prev, tab]);
+      }
     }
 
     // shift key was pressed (multi select)
@@ -155,8 +166,6 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
         : space.activeTabIndex;
 
       const tabIsBeforeLastSelectedTab = tab.index < lastSelectedTabIndex;
-
-      console.log('🚀 ~ onTabClick ~ lastSelectedTabIndex:', lastSelectedTabIndex);
 
       const tabsInRange: ITabWithIndex[] = tabs
         .map((t, idx) => ({ ...t, index: idx }))
@@ -228,14 +237,11 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
                       {...provided2.draggableProps}
                       {...provided2.dragHandleProps}
                       className="relative outline-none mb-[2.5px]">
-                      <div className="relative">
-                        {/* Todo - testing */}
-                        <span className="absolute -top-2 right-1 z-30 bg-slate-800  text-[10px] text-slate-400 px-1 rounded-lg">
-                          {idx}
-                        </span>
+                      <div className="relative ">
                         <Tab
                           tabData={tab}
                           isSpaceActive={true}
+                          onCreateNewTab={() => handleCreateNewTab(idx)}
                           isModifierKeyPressed={isModifierKeyPressed || isShiftKeyPressed}
                           isTabActive={space.activeTabIndex === idx}
                           onTabDelete={() => handleRemoveTab(idx)}
@@ -243,6 +249,8 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
                           isSelected={isTabSelected(tab.id)}
                           onClick={() => onTabClick({ ...tab, index: idx })}
                         />
+                        {/* tabs being dragged  */}
+
                         {/* dragging multiple tabs indicator */}
                         {isDragging && selectedTabs?.length > 0 ? (
                           <>
@@ -250,14 +258,14 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
                             <span
                               className={`w-6 h-6 rounded-lg px-1 py-1 absolute -top-2.5 -left-2.5 text-[11px] z-[200]
                             flex items-center justify-center font-semibold bg-brand-darkBgAccent text-slate-400`}>
-                              +{selectedTabs?.length}
+                              +{selectedTabs?.length - 1}
                             </span>
-                            §{/* tabs stacked effect  */}
+                            {/* tabs stacked effect  */}
                             {['one', 'two', 'three'].map((v, ix) => (
                               <div
                                 key={v}
-                                className="absolute  h-full w-[98%] -z-10 rounded-lg   border border-slate-700/70 bg-brand-darkBgAccent "
-                                style={{ top: `-${(ix + 0.5) * 2}px`, left: `-${(ix + 1) * 2}px` }}></div>
+                                className="absolute  h-[1.7rem] w-[98%] -z-10 rounded-lg   border border-slate-700/70 bg-brand-darkBgAccent "
+                                style={{ top: `-${(ix + 0.25) * 2}px`, left: `-${(ix + 0.25) * 2}px` }}></div>
                             ))}
                           </>
                         ) : null}
