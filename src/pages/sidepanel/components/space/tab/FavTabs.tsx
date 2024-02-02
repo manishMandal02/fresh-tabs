@@ -79,7 +79,7 @@ const FavTab = ({ tabs, isGlobal, setGlobalPinnedTabs }: Props) => {
           </div>
         }>
         <button
-          className="bg-brand-darkBgAccent/70 w-[26px] h-[24px] rounded-md flex items-center justify-center cursor-pointer focus:outline-slate-500 hover:bg-brand-darkBgAccent/80"
+          className=" bg-gradient-to-bl from-brand-darkBgAccent to-brand-darkBg w-[26px] h-[24px] rounded-md flex items-center justify-center cursor-pointer focus:outline-slate-500 hover:bg-brand-darkBgAccent/80"
           onClick={handleAddNewPin}>
           <MdAdd className="text-base font-extralight text-slate-500" />
         </button>
@@ -93,7 +93,7 @@ const FavTab = ({ tabs, isGlobal, setGlobalPinnedTabs }: Props) => {
         tab?.url ? (
           <Tooltip key={tab.url} label={tab.title || tab.url} delay={1000}>
             <button
-              className="bg-brand-darkBgAccent/70 z-10 cursor-pointer w-[26px] h-[24px] rounded-md flex items-center justify-center"
+              className="bg-gradient-to-bl from-brand-darkBgAccent to-brand-darkBgAccent/70 z-10 cursor-pointer w-[26px] h-[24px] rounded-md flex items-center justify-center"
               onClick={() => openPinnedTab(tab.url)}>
               <img className="w-[14px] h-[14px] rounded-sm cursor-pointer" src={getFaviconURL(tab.url)} alt="icon" />
             </button>

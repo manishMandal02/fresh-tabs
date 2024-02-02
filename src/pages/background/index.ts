@@ -271,19 +271,24 @@ chrome.tabs.onMoved.addListener(async (tabId, info) => {
   // update tab index
   await updateTabIndex(space.id, tabId, info.toIndex);
 
-  console.log('🚀 ~ chrome.tabs.onMoved.addListener ~ tabId, info.toIndex:', tabId, info.toIndex);
+  // check if active tab has changed
+  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  // update space's active tab index
-  // await updateActiveTabInSpace(info.windowId, info.toIndex);
+  if (space.activeTabIndex !== activeTab.index) {
+    // tabs moved from side panel
 
-  // send send to side panel
-  await publishEvents({
-    id: generateId(),
-    event: 'UPDATE_TABS',
-    payload: {
-      spaceId: space.id,
-    },
-  });
+    // update space's active tab index
+    await updateActiveTabInSpace(info.windowId, info.toIndex);
+
+    // send send to side panel
+    await publishEvents({
+      id: generateId(),
+      event: 'UPDATE_TABS',
+      payload: {
+        spaceId: space.id,
+      },
+    });
+  }
 
   // send send to side panel
   await publishEvents({

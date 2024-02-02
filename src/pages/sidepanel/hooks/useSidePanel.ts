@@ -71,9 +71,6 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
 
           const updatedTabs = await getTabsInSpace(payload.spaceId);
 
-          console.log('🚀 ~ UPDATE_TABS ~ updatedTabs: ❄️', updatedTabs);
-          // TODO - testing
-          return;
           setActiveSpace({ ...activeSpaceRef.current, tabs: updatedTabs });
           break;
         }
@@ -132,14 +129,11 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
           // check if the tabs are moved up or down from it's previous pos
           const didTabsMoveDownward = result.source.index < result.destination.index;
 
-          console.log('🚀 ~ useSidePanel ~ didTabsMoveDownward:', didTabsMoveDownward);
-
           // calculate dropped index
           const droppedIndex = didTabsMoveDownward
             ? 1 + result.destination.index - selectedTabs.length
-            : result.destination.index;
+            : result.destination.index + 1;
 
-          console.log('🚀 ~ useSidePanel ~ droppedIndex:', droppedIndex);
           // sort the selected tabs by index
           const sortedSelectedTabs: ITab[] = selectedTabs
             .toSorted((t1, t2) => (t1.index > t2.index ? 1 : -1))
