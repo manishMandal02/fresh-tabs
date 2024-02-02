@@ -49,7 +49,7 @@ const Snackbar = ({ show, msg, isSuccess, isLoading }: Props) => {
 
   return (
     <div
-      className={`fixed z-[160] bottom-4 left-0  w-fit items-center pl-2 pr-4 py-2 rounded-sm justify-start transition-all duration-300 ease-in ${bgColor}`}
+      className={`fixed select-none z-[160] bottom-4 left-0  w-fit items-center pl-2 pr-4 py-2 rounded-sm justify-start transition-all duration-300 ease-in ${bgColor}`}
       style={{
         display: msg && show ? `flex` : `none`,
         // right: isShown ? `5%` : `-50%`,
@@ -59,7 +59,7 @@ const Snackbar = ({ show, msg, isSuccess, isLoading }: Props) => {
       <div className="mr-1">{isLoading ? <Spinner size="sm" /> : RenderIcon}</div>
       {/* msg */}
       <div
-        className={`text-sm font-medium text-slate-700 -mt-px  flex items-center
+        className={`text-sm font-medium text-slate-700 -mt-px  flex items-center select-none
       `}>
         {msg}
       </div>

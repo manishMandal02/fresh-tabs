@@ -132,7 +132,7 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
           // calculate dropped index
           const droppedIndex = didTabsMoveDownward
             ? 1 + result.destination.index - selectedTabs.length
-            : result.destination.index + 1;
+            : result.destination.index;
 
           // sort the selected tabs by index
           const sortedSelectedTabs: ITab[] = selectedTabs

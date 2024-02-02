@@ -161,7 +161,7 @@ const SidePanel = () => {
                 />
               </div>
               {/* other spaces */}
-              <div className=" h-[20%] flex  gap-x-2 mx-auto w-fit">
+              <div className=" h-[20%] flex  gap-x-2.5 mx-auto w-fit">
                 {[...nonActiveSpaces, { id: 'new-space' }].map(space => (
                   <Droppable key={space.id} droppableId={space.id} direction="horizontal">
                     {(provided, snapshot) => (

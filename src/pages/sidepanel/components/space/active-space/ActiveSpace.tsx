@@ -5,7 +5,7 @@ import { selectedTabsAtom, snackbarAtom } from '@root/src/stores/app';
 import { SetStateAction, useAtom } from 'jotai';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
-import { Dispatch, useState, useCallback, useEffect } from 'react';
+import { Dispatch, useState, useCallback, useEffect , MouseEventHandler } from 'react';
 import { Tab } from '../tab';
 import DeleteSpaceModal from '../delete/DeleteSpaceModal';
 import { createPortal } from 'react-dom';
@@ -199,31 +199,50 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
     transition: { type: 'spring', stiffness: 900, damping: 40, duration: 0.2 },
   };
 
+  // mouse pos on drag start
+
+  const [mouseXOnDrag, setMouseXOnDrag] = useState(0);
+
   const TabDraggedOutside = (url: string) => {
     const faviconImg = getFaviconURL(url);
 
+    const cardSize = 35;
+
     return (
-      <>
+      <div
+        className=" z-[500]"
+        style={{
+          // transform: `translateX(${mouseXOnDrag - cardSize + 10}px)`,
+          width: cardSize,
+          maxWidth: cardSize,
+        }}>
         {selectedTabs.length > 1 ? (
           <span
             className={`w-fit rounded-md px-[5px] py-[4px] absolute -top-2 -left-2 text-[9px] z-[200]
-                        flex items-center justify-center font-bold bg-gradient-to-bl from-brand-darkBgAccent/80 to-brand-darkBg/80 text-slate-400`}>
+                        flex items-center justify-center font-bold bg-gradient-to-bl from-brand-darkBgAccent/70 to-brand-darkBg/70 text-slate-400`}>
             +{selectedTabs?.length - 1}
           </span>
         ) : null}
         <motion.div
           {...activeTabIndicatorAnimation}
-          className="w-10 h-10 max-w-10 max-h-10 rounded-lg flex items-center justify-center bg-brand-darkBgAccent">
+          className=" rounded-lg flex items-center justify-center bg-brand-darkBgAccent"
+          style={{
+            height: cardSize,
+            width: cardSize,
+          }}>
           <img className="w-5 h-5 rounded-lg" src={faviconImg} alt="favicon" />
         </motion.div>
-      </>
+      </div>
     );
   };
 
-  return space?.id ? (
-    <div className="h-full mt-4">
-      {/* fav tabs */}
+  const onTabClickMousePos: MouseEventHandler<HTMLDivElement> = ev => {
+    console.log('🚀 ~ ActiveSpace ~ ev.clientX:', ev.clientX);
+    setMouseXOnDrag(ev.clientX);
+  };
 
+  return space?.id ? (
+    <div className="h-full mt-4 ">
       <div className="flex items-start h-[6.5%] justify-between px-2">
         <div className="flex items-center ">
           <div className="text-lg  border-r  pr-5  w-fit select-none" style={{ borderColor: space.theme }}>
@@ -246,23 +265,35 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
       </div>
 
       {/* tabs */}
-      <div className="max-h-[90%] overflow-y-auto cc-scrollbar overflow-x-hidden border-y border-brand-darkBgAccent/30">
-        <Droppable droppableId={space.id}>
+      <div
+        className="max-h-[90%] overflow-y-auto cc-scrollbar  overflow-x-hidden border-y pb-2 border-brand-darkBgAccent/30"
+        style={{
+          height: tabs.length * 1.9 + 'rem',
+        }}>
+        <Droppable droppableId={space.id} ignoreContainerClipping>
           {(provided1, { isDraggingOver }) => (
-            <div {...provided1.droppableProps} ref={provided1.innerRef} className="h-full py-1 w-full">
+            <div {...provided1.droppableProps} ref={provided1.innerRef} className="h-full py-1 w-full ">
               {/* render draggable  */}
               {tabs.map((tab, idx) => (
                 <Draggable draggableId={tab.id.toString()} index={idx} key={tab.id}>
                   {(provided2, { isDragging }) => (
+                    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
                     <div
                       ref={provided2.innerRef}
                       {...provided2.draggableProps}
                       {...provided2.dragHandleProps}
-                      className="relative outline-none mb-[2.5px]">
+                      className={`relative outline-none mb-[2.5px] draggable-tab-container  
+                      ${isDraggingGlobal && isDragging && !isDraggingOver ? ` !w-[30px] ml-10` : 'w-fit'}
+                      `}
+                      style={{
+                        ...provided2.draggableProps.style,
+                        left: isDraggingGlobal && isDragging && !isDraggingOver ? `${mouseXOnDrag - 50}px` : '',
+                      }}
+                      onMouseDown={onTabClickMousePos}>
                       {isDraggingGlobal && isDragging && !isDraggingOver ? (
                         TabDraggedOutside(tab.url)
                       ) : (
-                        <div className="relative">
+                        <div className="relative w-[90vw]">
                           <Tab
                             tabData={tab}
                             isSpaceActive={true}
