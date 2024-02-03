@@ -1,11 +1,9 @@
 import { ISpace, ITab, ThemeColor } from '@root/src/pages/types/global.types';
 import ColorPicker from '../../elements/color-picker';
-import { MdAdd } from 'react-icons/md';
 import EmojiPicker from '../../elements/emoji-picker';
 import { SlideModal } from '../../elements/modal';
 import { useState, useEffect, ChangeEventHandler, useCallback } from 'react';
 import { Tab } from '..';
-import Tooltip from '../../elements/tooltip';
 import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
 import { useAtom } from 'jotai';
 import { snackbarAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
@@ -21,7 +19,12 @@ const defaultSpaceData: DefaultSpaceFields = {
   theme: ThemeColor.Fuchsia,
 };
 
-const CreateSpace = () => {
+type Props = {
+  show: boolean;
+  onClose: () => void;
+};
+
+const CreateSpace = ({ show, onClose }: Props) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentTab, setCurrentTab] = useState<null | ITab>(null);
   const [errorMsg, setErrorMsg] = useState('');
@@ -67,10 +70,9 @@ const CreateSpace = () => {
     setNewSpaceData(prev => ({ ...prev, theme }));
   };
 
-  // handle create space
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
+  useEffect(() => {
+    setIsModalOpen(show);
+  }, [show]);
 
   // create space
   const handleAddSpace = async () => {
@@ -94,8 +96,7 @@ const CreateSpace = () => {
     // space created
     if (createdSpace?.id) {
       // close modal
-      setIsModalOpen(false);
-
+      handleCloseModal();
       // re-render updated spaces
       setSpaces(prev => [...prev, { ...createdSpace }]);
 
@@ -118,6 +119,11 @@ const CreateSpace = () => {
     }
   }, []);
 
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    onClose();
+  };
+
   useEffect(() => {
     document.addEventListener('keydown', handleShortcut);
 
@@ -125,54 +131,45 @@ const CreateSpace = () => {
   }, [handleShortcut]);
 
   return (
-    <>
-      <button
-        className={`border border-slate-600/80 shadow-sm shadow-slate-800 text-2xl  bg-slate-800 text-slate-500/90 fixed bottom-5 right-5 
-        flex items-center justify-center rounded-full w-12 h-12  hover:text-slate-500/60 transition-all duration-200`}
-        onClick={handleOpenModal}>
-        <Tooltip label="Add new space">
-          <MdAdd className="w-full h-full opacity-80 " />
-        </Tooltip>
-      </button>
-      {/* modal */}
-      <SlideModal title="New Space" isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <div className=" flex flex-col  w-full h-full py-3 px-4">
-          <div className="mt-4 flex items-center gap-x-3">
-            <input
-              type="text"
-              className="rounded bg-slate-700  px-2.5 py-1.5 text-[1rem] text-slate-200 w-48 outline-slate-600"
-              placeholder="Space Title..."
-              onKeyDown={ev => {
-                ev.stopPropagation();
-              }}
-              value={newSpaceData.title}
-              onChange={onTitleChange}
-            />
-            <EmojiPicker emoji={newSpaceData.emoji} onChange={onEmojiChange} />
-            <ColorPicker color={newSpaceData.theme} onChange={onThemeChange} />
-          </div>
-
-          {/* tabs */}
-          <div className="mt-6">
-            <p className="text-slate-500 font text-sm mb-1.5">Tabs</p>
-            {currentTab ? <Tab isTabActive={false} tabData={currentTab} showHoverOption={false} /> : null}
-          </div>
-          {/* error msg */}
-          {errorMsg ? (
-            <span className="test-base mx-auto mt-6 text-slate-700 font-medium bg-red-400 px-3 py-1 w-fit text-center rounded-sm">
-              {errorMsg}
-            </span>
-          ) : null}
-          {/* add space */}
-          <button
-            className={` mt-16 mx-auto w-[90%] py-2 
-                      rounded-md text-slate-500 font-medium text-base shadow shadow-slate-500 hover:opacity-80 transition-all duration-300`}
-            onClick={handleAddSpace}>
-            {snackbar.isLoading ? <Spinner size="sm" /> : 'Add'}
-          </button>
+    <SlideModal title="New Space" isOpen={isModalOpen} onClose={handleCloseModal}>
+      <div className=" flex flex-col  w-full h-full py-3 px-4">
+        <div className="mt-4 flex items-center gap-x-3">
+          <input
+            type="text"
+            className="rounded bg-slate-700  px-2.5 py-1.5 text-[1rem] text-slate-200 w-48 outline-slate-600"
+            placeholder="Space Title..."
+            onKeyDown={ev => {
+              ev.stopPropagation();
+            }}
+            value={newSpaceData.title}
+            onChange={onTitleChange}
+          />
+          <EmojiPicker emoji={newSpaceData.emoji} onChange={onEmojiChange} />
+          <ColorPicker color={newSpaceData.theme} onChange={onThemeChange} />
         </div>
-      </SlideModal>
-    </>
+
+        {/* tabs */}
+        <div className="mt-6">
+          <p className="text-slate-500 font text-sm mb-1.5">Tabs</p>
+          {currentTab ? (
+            <Tab isModifierKeyPressed={false} isTabActive={false} tabData={currentTab} showHoverOption={false} />
+          ) : null}
+        </div>
+        {/* error msg */}
+        {errorMsg ? (
+          <span className="test-base mx-auto mt-6 text-slate-700 font-medium bg-red-400 px-3 py-1 w-fit text-center rounded-sm">
+            {errorMsg}
+          </span>
+        ) : null}
+        {/* add space */}
+        <button
+          className={` mt-16 mx-auto w-[90%] py-2 
+                      rounded-md text-slate-500 font-medium text-base shadow shadow-slate-500 hover:opacity-80 transition-all duration-300`}
+          onClick={handleAddSpace}>
+          {snackbar.isLoading ? <Spinner size="sm" /> : 'Add'}
+        </button>
+      </div>
+    </SlideModal>
   );
 };
 

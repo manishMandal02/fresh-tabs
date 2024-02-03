@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { IMessageEvent, IPinnedTab, ISpace, ITab } from '../types/global.types';
-import { ActiveSpace } from './components/space';
+import { IMessageEvent, IPinnedTab, ITab } from '../types/global.types';
+import { ActiveSpace, CreateSpace } from './components/space';
 import Snackbar from './components/elements/snackbar';
 import { useAtom } from 'jotai';
 import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
@@ -12,7 +12,7 @@ import { MdAdd, MdOutlineSync } from 'react-icons/md';
 import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
 import Tooltip from './components/elements/tooltip';
 import { getGlobalPinnedTabs } from '@root/src/services/chrome-storage/tabs';
-import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 import NonActiveSpace from './components/space/other-space/NonActiveSpace';
 import { FavTabs } from './components/space/tab';
@@ -30,13 +30,16 @@ const SidePanel = () => {
   // local state - clone of active space tabs (to manipulate multi drag behavior)
   const [activeSpaceTabs, setActiveSpaceTabs] = useState<ITab[]>(null);
 
-  // local state - loading spaces state
+  //  loading spaces state
   const [isLoadingSpaces, setIsLoadingSpaces] = useState(false);
 
-  // local state - global pinned tabs
+  //  global pinned tabs
   const [globalPinnedTabs, setGlobalPinnedTabs] = useState<IPinnedTab[]>([]);
 
-  // custom hook
+  // add new space modal
+  const [showAddSpaceModal, setShowAddSpaceModal] = useState(false);
+
+  // logics hook
   const {
     activeSpace,
     setActiveSpace,
@@ -145,14 +148,14 @@ const SidePanel = () => {
         </div>
 
         {/* spaces container */}
-        <div className="w-full h-[85%] bg-red-30 px-3 py-1  scroll-p-px scroll-m-px relative">
+        <div className="w-full h-[84%]   px-3 py-1  scroll-p-px scroll-m-px relative">
           {/* un saved  */}
           {isLoadingSpaces ? (
             <Spinner size="md" />
           ) : (
             <DragDropContext onDragEnd={onTabsDragEnd} onBeforeDragStart={onTabsDragStart}>
               z{/* Current space */}
-              <div className="h-[80%]">
+              <div className="h-[86%]">
                 <ActiveSpace
                   space={activeSpace}
                   tabs={activeSpaceTabs}
@@ -161,28 +164,74 @@ const SidePanel = () => {
                 />
               </div>
               {/* other spaces */}
-              <div className=" h-[20%] flex  gap-x-2.5 mx-auto w-fit">
-                {[...nonActiveSpaces, { id: 'new-space' }].map(space => (
-                  <Droppable key={space.id} droppableId={space.id} direction="horizontal">
-                    {(provided, snapshot) => (
-                      <div {...provided.droppableProps} ref={provided.innerRef} className="mt-4">
-                        {space.id !== 'new-space' ? (
-                          <NonActiveSpace space={space as ISpace} isDraggedOver={snapshot.isDraggingOver} />
-                        ) : (
-                          // new space zone
-                          <div className="bg-brand-darkBgAccent/70 cursor-pointer flex items-center justify-center w-[50px] h-[50px] rounded">
+              <div className="w-full h-[12%] -mt-3.5 flex items-start overflow-hidden  mx-auto ">
+                <Droppable droppableId="other-spaces" direction="horizontal" isDropDisabled={isDraggingGlobal}>
+                  {(provided1, { isDraggingOver: isDraggingOverOtherSpaces }) => (
+                    <div
+                      {...provided1.droppableProps}
+                      ref={provided1.innerRef}
+                      className="w-[80%]  pb-2 px-1 flex  gap-x-2 overflow-y-hidden overflow-x-auto scroll-smooth  cc-scrollbar shadow-inner shadow-brand-darkBgAccent/30">
+                      {[...nonActiveSpaces].map((space, idx) => {
+                        return (
+                          <Draggable
+                            key={space.id}
+                            draggableId={space.id}
+                            index={idx}
+                            isDragDisabled={isDraggingGlobal}>
+                            {provided3 => (
+                              <div
+                                ref={provided3.innerRef}
+                                {...provided3.draggableProps}
+                                {...provided3.dragHandleProps}>
+                                <Droppable
+                                  key={space.id}
+                                  droppableId={space.id}
+                                  direction="horizontal"
+                                  isDropDisabled={isDraggingOverOtherSpaces}
+                                  isCombineEnabled>
+                                  {(provided2, { isDraggingOver }) => (
+                                    <div
+                                      {...provided2.droppableProps}
+                                      ref={provided2.innerRef}
+                                      className=" h-fit w-[50px] ">
+                                      <NonActiveSpace space={space} isDraggedOver={isDraggingOver} />
+                                    </div>
+                                  )}
+                                </Droppable>
+                              </div>
+                            )}
+                          </Draggable>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Droppable>
+
+                {/* Add new space button */}
+                <div className="w-[14%] py-1 ml-1 h-fit">
+                  <Droppable droppableId={'add-new-space'} direction="horizontal" mode="standard">
+                    {(provided, { isDraggingOver }) => (
+                      <div {...provided.droppableProps} ref={provided.innerRef} className=" z-10">
+                        <Tooltip label="Add new space" delay={1500}>
+                          <button
+                            className="bg-gradient-to-bl from-brand-darkBgAccent/90 w-[38px] h-[38px] to-brand-darkBg/90 cursor-pointer flex items-center justify-center  rounded"
+                            style={{
+                              border: isDraggingOver ? '1px dashed #6b6a6a' : '',
+                              backgroundColor: isDraggingOver ? ' #21262e' : '',
+                            }}
+                            onClick={() => setShowAddSpaceModal(true)}>
                             <MdAdd className="text-2xl font-extralight  text-slate-600" />
-                          </div>
-                        )}
+                          </button>
+                        </Tooltip>
                       </div>
                     )}
                   </Droppable>
-                ))}
+                </div>
               </div>
             </DragDropContext>
           )}
           {/* add new space */}
-          {/* <CreateSpace /> */}
+          <CreateSpace show={showAddSpaceModal} onClose={() => setShowAddSpaceModal(false)} />
         </div>
 
         {/* snackbar */}

@@ -15,7 +15,8 @@ const EmojiPicker = ({ emoji, onChange }: Props) => {
         open={isOpen}
         onChange={setIsOpen}
         content={
-          <div className="">
+          // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+          <div className="" onKeyDown={ev => ev.stopPropagation()}>
             <EmojiPickerReact
               onEmojiClick={data => {
                 onChange(data.emoji);

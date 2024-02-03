@@ -86,8 +86,9 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
   // handle tab drag start
   const onTabsDragStart: OnBeforeDragStartResponder = useCallback(
     start => {
-      // do thing if only 1 tab dragged
-      setIsDraggingGlobal(true);
+      // set dragging only if tab is dragged (tab id is a number)
+      console.log('🚀 ~ useSidePanel ~ start.draggableId:', start.draggableId);
+      setIsDraggingGlobal(!isNaN(Number(start.draggableId)));
       if (selectedTabs?.length < 1) return;
 
       // remove tabs temporarily on drag starts, except the tab being dragged
@@ -97,6 +98,7 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
 
       setActiveSpaceTabs([...updatedTabs]);
     },
+
     [selectedTabs, setActiveSpaceTabs, activeSpace?.tabs],
   );
 

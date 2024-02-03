@@ -16,16 +16,18 @@ body {
 
 .cc-scrollbar::-webkit-scrollbar {
   width: 6px;
+
+  height: 4px;
 }
 
 /* Track */
 .cc-scrollbar::-webkit-scrollbar-track {
-  background: #021932a7;
+  background: #172a3fa7;
 }
 
 /* Handle */
 .cc-scrollbar::-webkit-scrollbar-thumb {
-  background: #202938b1;
+  background: #2c4165b1;
   border-radius: 16px;
 }
 

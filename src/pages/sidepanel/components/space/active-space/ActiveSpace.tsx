@@ -5,7 +5,7 @@ import { selectedTabsAtom, snackbarAtom } from '@root/src/stores/app';
 import { SetStateAction, useAtom } from 'jotai';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
-import { Dispatch, useState, useCallback, useEffect , MouseEventHandler } from 'react';
+import { Dispatch, useState, useCallback, useEffect, MouseEventHandler } from 'react';
 import { Tab } from '../tab';
 import DeleteSpaceModal from '../delete/DeleteSpaceModal';
 import { createPortal } from 'react-dom';
@@ -213,8 +213,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
         className=" z-[500]"
         style={{
           // transform: `translateX(${mouseXOnDrag - cardSize + 10}px)`,
-          width: cardSize,
-          maxWidth: cardSize,
+          width: cardSize + 5,
         }}>
         {selectedTabs.length > 1 ? (
           <span
@@ -230,7 +229,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
             height: cardSize,
             width: cardSize,
           }}>
-          <img className="w-5 h-5 rounded-lg" src={faviconImg} alt="favicon" />
+          <img className="w-4 h-4 rounded-lg" src={faviconImg} alt="favicon" />
         </motion.div>
       </div>
     );
@@ -282,12 +281,12 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
                       ref={provided2.innerRef}
                       {...provided2.draggableProps}
                       {...provided2.dragHandleProps}
-                      className={`relative outline-none mb-[2.5px] draggable-tab-container  
+                      className={`relative outline-none mb-[2.5px] draggable-tab-container 
                       ${isDraggingGlobal && isDragging && !isDraggingOver ? ` !w-[30px] ml-10` : 'w-fit'}
                       `}
                       style={{
                         ...provided2.draggableProps.style,
-                        left: isDraggingGlobal && isDragging && !isDraggingOver ? `${mouseXOnDrag - 50}px` : '',
+                        left: isDraggingGlobal && isDragging && !isDraggingOver ? `${mouseXOnDrag - 65}px` : '',
                       }}
                       onMouseDown={onTabClickMousePos}>
                       {isDraggingGlobal && isDragging && !isDraggingOver ? (
