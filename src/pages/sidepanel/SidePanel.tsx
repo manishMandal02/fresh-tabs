@@ -46,8 +46,8 @@ const SidePanel = () => {
     handleEvents,
     onTabsDragEnd,
     onTabsDragStart,
-
-    isDraggingGlobal,
+    isDraggingTabs,
+    isDraggingSpace,
   } = useSidePanel(setActiveSpaceTabs);
 
   const activeSpaceRef = useRef(activeSpace);
@@ -157,11 +157,17 @@ const SidePanel = () => {
                   space={activeSpace}
                   tabs={activeSpaceTabs}
                   setActiveSpace={setActiveSpace}
-                  isDraggingGlobal={isDraggingGlobal}
+                  isDraggingGlobal={isDraggingTabs}
                 />
               </div>
               {/* other spaces */}
-              <OtherSpacesContainer spaces={nonActiveSpaces} isDraggingGlobal={isDraggingGlobal} />
+              <div className="h-[14%]">
+                <OtherSpacesContainer
+                  spaces={nonActiveSpaces}
+                  isDraggingTabs={isDraggingTabs}
+                  isDraggingSpace={isDraggingSpace}
+                />
+              </div>
             </DragDropContext>
           )}
         </div>

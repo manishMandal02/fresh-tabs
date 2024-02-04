@@ -188,8 +188,8 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
     }
   };
 
-  // active tab indicator/div animation
-  const activeTabIndicatorAnimation = {
+  // bounce div animation
+  const bounceDivAnimation = {
     initial: { scale: 0, opacity: 0 },
     animate: {
       scale: 1,
@@ -223,7 +223,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
           </span>
         ) : null}
         <motion.div
-          {...activeTabIndicatorAnimation}
+          {...bounceDivAnimation}
           className=" rounded-lg flex items-center justify-center bg-brand-darkBgAccent"
           style={{
             height: cardSize,
@@ -269,7 +269,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
         style={{
           height: tabs.length * 1.9 + 'rem',
         }}>
-        <Droppable droppableId={space.id} ignoreContainerClipping>
+        <Droppable droppableId={space.id} ignoreContainerClipping type="TAB">
           {(provided1, { isDraggingOver }) => (
             <div {...provided1.droppableProps} ref={provided1.innerRef} className="h-full py-1 w-full ">
               {/* render draggable  */}
@@ -332,13 +332,13 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
                       {/* active tab indicator */}
                       {space.activeTabIndex === idx ? (
                         <motion.div
-                          {...activeTabIndicatorAnimation}
+                          {...bounceDivAnimation}
                           className="absolute h-[1.7rem] w-[98%] top-0 left-0 rounded-lg bg-brand-darkBgAccent/70 z-10"></motion.div>
                       ) : null}
                       {/* selected tab indicator */}
                       {!isDraggingGlobal && isTabSelected(tab.id) ? (
                         <motion.div
-                          {...activeTabIndicatorAnimation}
+                          {...bounceDivAnimation}
                           className="absolute h-[1.7rem] w-[98%] top-0 left-0 rounded-lg border border-slate-700/60 bg-brand-darkBgAccent z-10 "
                           style={{ borderWidth: isDraggingGlobal && !isDragging ? '3px' : '1px' }}></motion.div>
                       ) : null}

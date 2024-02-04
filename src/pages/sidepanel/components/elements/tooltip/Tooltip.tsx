@@ -18,7 +18,7 @@ const Tooltip = ({ label, children, delay = 1500 }: Props) => {
           </div>
           <ReactTooltip
             id={tooltipId}
-            className="!bg-brand-darkBgAccent !z-[1000] !text-[12px] !text-slate-200 !rounded">
+            className="!bg-brand-darkBgAccent  !text-[12px] !text-slate-200 !rounded !fixed !z-[9999]">
             {label}
           </ReactTooltip>
         </>

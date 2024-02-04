@@ -16,7 +16,9 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
   const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);
 
   // local state
-  const [isDraggingGlobal, setIsDraggingGlobal] = useState(false);
+  const [isDraggingTabs, setIsDraggingTabs] = useState(false);
+  // local state
+  const [isDraggingSpace, setIsDraggingSpace] = useState(false);
 
   // selected tabs (global state)
   const [selectedTabs] = useAtom(selectedTabsAtom);
@@ -88,7 +90,11 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
     start => {
       // set dragging only if tab is dragged (tab id is a number)
       console.log('🚀 ~ useSidePanel ~ start.draggableId:', start.draggableId);
-      setIsDraggingGlobal(!isNaN(Number(start.draggableId)));
+      if (!isNaN(Number(start.draggableId))) {
+        setIsDraggingTabs(true);
+      } else {
+        setIsDraggingSpace(true);
+      }
       if (selectedTabs?.length < 1) return;
 
       // remove tabs temporarily on drag starts, except the tab being dragged
@@ -106,7 +112,8 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
   const onTabsDragEnd: OnDragEndResponder = useCallback(
     result => {
       // reset dragging state
-      setIsDraggingGlobal(false);
+      setIsDraggingTabs(false);
+      setIsDraggingSpace(false);
 
       if (!result.destination) {
         return;
@@ -246,6 +253,7 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
     onTabsDragStart,
     activeSpace,
     setActiveSpace,
-    isDraggingGlobal,
+    isDraggingTabs,
+    isDraggingSpace,
   };
 };
