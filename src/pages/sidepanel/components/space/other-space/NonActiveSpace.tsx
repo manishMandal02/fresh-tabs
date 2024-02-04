@@ -10,7 +10,7 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
   return (
     <Tooltip label={!isDraggedOver ? space.title : ''} delay={500}>
       <div
-        className="text-slate-300   rounded flex items-center  justify-center w-full h-full  py-1.5 px-3  bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/90"
+        className="text-slate-300 select-none   rounded flex items-center  justify-center w-full h-full  py-1.5 px-3  bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/90"
         style={{
           ...(isDraggedOver
             ? {
