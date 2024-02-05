@@ -4,7 +4,7 @@ import { Droppable, Draggable } from 'react-beautiful-dnd';
 import { motion } from 'framer-motion';
 
 import { ISpace } from '@root/src/pages/types/global.types';
-import NonActiveSpace from './NonActiveSpace';
+import NonActiveSpace from './non-active-space';
 import CreateSpace from '../create/CreateSpace';
 import Tooltip from '../../elements/tooltip';
 

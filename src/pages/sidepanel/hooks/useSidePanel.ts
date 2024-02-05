@@ -241,7 +241,7 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
         })();
       }
     },
-    [activeSpace, selectedTabs, setActiveSpace],
+    [activeSpace, selectedTabs, setActiveSpaceTabs, setActiveSpace],
   );
 
   return {
