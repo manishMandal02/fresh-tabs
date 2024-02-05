@@ -1,3 +1,4 @@
+// TODO - remove - not being used currently
 // Function to convert emoji to image data URL
 export const emojiToDataURL = (emoji: string, size = 128) => {
   const canvas = document.createElement('canvas');

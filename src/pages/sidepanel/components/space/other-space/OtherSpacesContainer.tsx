@@ -77,7 +77,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs, spaces }: Props
                       }}>
                       <Droppable
                         key={space.id}
-                        droppableId={space.id}
+                        droppableId={'space-' + space.id}
                         direction="horizontal"
                         type="TAB"
                         isDropDisabled={isDraggingSpace}>
@@ -133,7 +133,6 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs, spaces }: Props
                 zIndex: !isDraggingSpace ? 200 : 1,
               }}>
               <Tooltip label="Add new space" delay={1500}>
-                v
                 <button
                   className="bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/90 w-[38px] h-[38px]  absolute top-px -right-px cursor-pointer flex items-center justify-center  rounded-lg"
                   style={{

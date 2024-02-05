@@ -89,8 +89,7 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
   const onTabsDragStart: OnBeforeDragStartResponder = useCallback(
     start => {
       // set dragging only if tab is dragged (tab id is a number)
-      console.log('🚀 ~ useSidePanel ~ start.draggableId:', start.draggableId);
-      if (!isNaN(Number(start.draggableId))) {
+      if (start.type === 'TAB') {
         setIsDraggingTabs(true);
       } else {
         setIsDraggingSpace(true);

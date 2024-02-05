@@ -269,12 +269,12 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
         style={{
           height: tabs.length * 1.9 + 'rem',
         }}>
-        <Droppable droppableId={space.id} ignoreContainerClipping type="TAB">
+        <Droppable droppableId={'active-space'} ignoreContainerClipping type="TAB">
           {(provided1, { isDraggingOver }) => (
             <div {...provided1.droppableProps} ref={provided1.innerRef} className="h-full py-1 w-full ">
               {/* render draggable  */}
               {tabs.map((tab, idx) => (
-                <Draggable draggableId={tab.id.toString()} index={idx} key={tab.id}>
+                <Draggable draggableId={'tab-' + tab.id} index={idx} key={tab.id}>
                   {(provided2, { isDragging }) => (
                     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
                     <div
