@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { IMessageEvent, IPinnedTab, ITab } from '../types/global.types';
-import { ActiveSpace } from './components/space';
+import { ActiveSpace, CreateSpace } from './components/space';
 import Snackbar from './components/elements/snackbar';
 import { useAtom } from 'jotai';
 import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
@@ -12,10 +12,12 @@ import { MdOutlineSync } from 'react-icons/md';
 import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
 import Tooltip from './components/elements/tooltip';
 import { getGlobalPinnedTabs } from '@root/src/services/chrome-storage/tabs';
-import { DragDropContext } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 import { FavTabs } from './components/space/tab';
 import OtherSpacesContainer from './components/space/other-space/OtherSpacesContainer';
+import DeleteSpaceModal from './components/space/delete/DeleteSpaceModal';
+import { motion } from 'framer-motion';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -114,6 +116,12 @@ const SidePanel = () => {
     setSnackbar({ show: true, isSuccess: true, msg: 'Saved spaces to bookmarks' });
   };
 
+  // animation for other spaces drop zone
+  const animationVariants = {
+    visible: { scale: 1, opacity: 1 },
+    hidden: { scale: 0, opacity: 0 },
+  };
+
   return (
     <div className="w-screen h-screen  overflow-hidden bg-brand-darkBg">
       <main className="h-full relative ">
@@ -133,35 +141,54 @@ const SidePanel = () => {
             <Settings />
           </div>
         </div>
-
         {/* search */}
         <Search />
-
         {/* <p className="text-sm font-light text-slate-400 mt-3 mb-1 ml-3 select-none">Spaces</p> */}
-
         {/* global */}
         <div className="mt-4">
           <FavTabs tabs={globalPinnedTabs} isGlobal={true} setGlobalPinnedTabs={setGlobalPinnedTabs} />
         </div>
-
         {/* spaces container */}
-        <div className="w-full h-[84%]   px-3 py-1  scroll-p-px scroll-m-px relative">
+        <div className="w-full h-[84%] px-3 py-1 scroll-p-px scroll-m-px relative">
           {/* un saved  */}
           {isLoadingSpaces ? (
             <Spinner size="md" />
           ) : (
             <DragDropContext onDragEnd={onTabsDragEnd} onBeforeDragStart={onTabsDragStart}>
               z{/* Current space */}
-              <div className="h-[86%]">
+              <div className="h-[82%] relative">
                 <ActiveSpace
                   space={activeSpace}
                   tabs={activeSpaceTabs}
                   setActiveSpace={setActiveSpace}
                   isDraggingGlobal={isDraggingTabs}
                 />
+
+                {/* dropzone for other space to open tabs in active space */}
+
+                <Droppable droppableId="open-non-active-space-tabs" type="SPACE">
+                  {(provided2, { isDraggingOver }) => (
+                    <div
+                      ref={provided2.innerRef}
+                      className="w-full h-full absolute top-0 left-0 rounded-lg"
+                      style={{
+                        border: isDraggingOver ? '2px solid #34d399' : '',
+                      }}>
+                      <motion.div
+                        animate={isDraggingSpace ? 'visible' : 'hidden'}
+                        variants={animationVariants}
+                        transition={{ type: 'spring', stiffness: 900, damping: 40, duration: 0.2 }}
+                        className=" h-full w-full bg-gradient-to-tr from-brand-darkBgAccent/80 z-[100] to-slate-800/80 flex items-center justify-center rounded-lg">
+                        <p className="text-slate-300 text-sm font-light bg-slate-900 px-4 py-2 rounded-md">
+                          {isDraggingOver ? 'Open tabs in this space' : "Drop space to open it's tabs"}
+                        </p>
+                      </motion.div>
+                    </div>
+                  )}
+                </Droppable>
               </div>
               {/* other spaces */}
-              <div className="h-[14%]">
+              <div className="h-[18%]">
                 <OtherSpacesContainer
                   spaces={nonActiveSpaces}
                   isDraggingTabs={isDraggingTabs}
@@ -170,7 +197,13 @@ const SidePanel = () => {
               </div>
             </DragDropContext>
           )}
+
+          {/* add new space */}
+          <CreateSpace />
         </div>
+
+        {/* delete space alert modal */}
+        <DeleteSpaceModal />
 
         {/* snackbar */}
         <Snackbar

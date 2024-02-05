@@ -1,7 +1,7 @@
 import { SetStateAction, useAtom } from 'jotai';
-import { ISpaceWithTabs, ITab, ThemeColor } from '../../types/global.types';
-import { activeSpaceAtom, selectedTabsAtom } from '@root/src/stores/app';
-import { createNewSpace, updateSpace } from '@root/src/services/chrome-storage/spaces';
+import { ISpaceWithTabs, ITab } from '../../types/global.types';
+import { activeSpaceAtom, deleteSpaceModalAtom, newSpaceModalAtom, selectedTabsAtom } from '@root/src/stores/app';
+import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 
 // dropped reasons to handle
@@ -30,22 +30,21 @@ type DropLocations =
 type UseTabDndProps = {
   destinationIndex: number;
   sourceIndex: number;
-  draggableType: 'TAB' | 'SPACE';
   draggableId: string;
   droppableId: string;
 };
 
-export const useTabsDnd = ({
-  //   draggableId,
-  droppableId,
-  sourceIndex,
-  destinationIndex, //   draggableType,
-}: UseTabDndProps) => {
+export const useTabsDnd = ({ draggableId, droppableId, sourceIndex, destinationIndex }: UseTabDndProps) => {
   // non active spaces  (global state)
   //   const [nonActiveSpaces, setNonActiveSpaces] = useAtom(nonActiveSpacesAtom);
 
+  // new space modal global state
+  const [, setNewSpaceModal] = useAtom(newSpaceModalAtom);
+
   // active space atom (global state)
   const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);
+  // active space atom (global state)
+  const [, setDeleteSpaceModal] = useAtom(deleteSpaceModalAtom);
 
   // selected tabs (global state)
   const [selectedTabs] = useAtom(selectedTabsAtom);
@@ -199,37 +198,59 @@ export const useTabsDnd = ({
       sourceIndex,
     });
 
-    // TODO - open create new space modal (global option to toggle new space)
-
-    // create new space with the dragged tabs
-    await createNewSpace(
-      { title: '', emoji: '', isSaved: true, activeTabIndex: 0, theme: ThemeColor.Green, windowId: 0 },
-      tabsToRemove,
-    );
+    // show modal to create new space with the dragged tabs
+    setNewSpaceModal({ show: true, tabs: tabsToRemove });
   };
 
-  // dropped in non-active spaces container
-  const spaceContainerDropHandler = () => {
+  // TODO - dropped in non-active spaces container
+  const spaceContainerDropHandler = async () => {
     // merge spaces
     // re-arrange spaces
+  };
+
+  //  open non-active space dropped in active space
+  const nonActiveSpaceOpenTabsHandler = async () => {
+    const spaceId = draggableId;
+    const tabsInSpace = await getTabsInSpace(spaceId);
+
+    // open tabs in active space window
+    await Promise.allSettled(tabsInSpace.map(tab => chrome.tabs.create({ url: tab.url })));
+
+    // add tabs to active space
+    setActiveSpace(prev => ({ ...prev, tabs: [...prev.tabs, ...tabsInSpace] }));
+  };
+
+  // dropped in delete space zone
+  const deleteSpaceDropHandler = () => {
+    const spaceId = draggableId;
+
+    setDeleteSpaceModal({ show: true, spaceId });
   };
 
   const dropHandler = async (droppedLocation: DropLocations) => {
     switch (droppedLocation) {
       case 'ACTIVE_SPACE': {
-        activeSpaceDropHandler();
+        await activeSpaceDropHandler();
         break;
       }
       case 'NON_ACTIVE_SPACE': {
-        nonActiveSpaceDropHandler();
+        await nonActiveSpaceDropHandler();
         break;
       }
       case 'NEW_SPACE_ZONE': {
-        newSpaceDropHandler();
+        await newSpaceDropHandler();
         break;
       }
       case 'SPACES_CONTAINER': {
-        spaceContainerDropHandler();
+        await spaceContainerDropHandler();
+        break;
+      }
+      case 'OPEN_NON_ACTIVE_SPACE_TABS': {
+        await nonActiveSpaceOpenTabsHandler();
+        break;
+      }
+      case 'DELETE_SPACE_ZONE': {
+        deleteSpaceDropHandler();
         break;
       }
     }

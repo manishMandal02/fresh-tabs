@@ -1,13 +1,12 @@
 import { ISpace, ISpaceWithTabs, ITab, ITabWithIndex } from '@root/src/pages/types/global.types';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 import MoreOptions from '../more-options';
-import { selectedTabsAtom, snackbarAtom } from '@root/src/stores/app';
+import { deleteSpaceModalAtom, selectedTabsAtom, snackbarAtom } from '@root/src/stores/app';
 import { SetStateAction, useAtom } from 'jotai';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { Dispatch, useState, useCallback, useEffect, MouseEventHandler } from 'react';
 import { Tab } from '../tab';
-import DeleteSpaceModal from '../delete/DeleteSpaceModal';
 import { createPortal } from 'react-dom';
 import UpdateSpace from '../update/UpdateSpace';
 import { motion } from 'framer-motion';
@@ -26,12 +25,13 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
   const [, setSnackbar] = useAtom(snackbarAtom);
 
   // local state - show delete modal
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  // local state - show delete modal
   const [showEditModal, setShowEditModal] = useState(false);
 
   // local state - show delete modal
   const [selectedTabs, setSelectedTabs] = useAtom(selectedTabsAtom);
+
+  // delete space modal  global state
+  const [, setDeleteSpaceModal] = useAtom(deleteSpaceModalAtom);
 
   // local state - ctrl/cmd key press status
   const [isModifierKeyPressed, setIsModifierKeyPressed] = useState(false);
@@ -258,7 +258,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
             isSpaceActive={true}
             onSyncClick={handleSyncTabs}
             onEditClick={() => setShowEditModal(true)}
-            onDeleteClick={() => setShowDeleteModal(true)}
+            onDeleteClick={() => setDeleteSpaceModal({ show: true, spaceId: space.id })}
           />
         </div>
       </div>
@@ -350,12 +350,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
           )}
         </Droppable>
       </div>
-      {/* delete space alert modal */}
-      {showDeleteModal &&
-        createPortal(
-          <DeleteSpaceModal spaceId={space.id} show={showDeleteModal} onClose={() => setShowDeleteModal(false)} />,
-          document.body,
-        )}
+
       {showEditModal &&
         createPortal(
           <UpdateSpace space={space} numTabs={tabs?.length} onClose={() => setShowEditModal(false)} />,

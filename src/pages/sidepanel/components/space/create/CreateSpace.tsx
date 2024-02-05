@@ -6,7 +6,7 @@ import { useState, useEffect, ChangeEventHandler, useCallback } from 'react';
 import { Tab } from '..';
 import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
 import { useAtom } from 'jotai';
-import { snackbarAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
+import { snackbarAtom, nonActiveSpacesAtom, newSpaceModalAtom } from '@root/src/stores/app';
 import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
 import Spinner from '../../elements/spinner';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
@@ -19,18 +19,16 @@ const defaultSpaceData: DefaultSpaceFields = {
   theme: ThemeColor.Fuchsia,
 };
 
-type Props = {
-  show: boolean;
-  onClose: () => void;
-};
-
-const CreateSpace = ({ show, onClose }: Props) => {
+const CreateSpace = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentTab, setCurrentTab] = useState<null | ITab>(null);
+  const [currentTabs, setCurrentTabs] = useState<ITab[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
 
   // spaces atom (global state)
   const [, setSpaces] = useAtom(nonActiveSpacesAtom);
+
+  // spaces atom (global state)
+  const [newSpaceModal, setNewSpaceModal] = useAtom(newSpaceModalAtom);
 
   // new space data
   const [newSpaceData, setNewSpaceData] = useState<DefaultSpaceFields>(defaultSpaceData);
@@ -39,7 +37,7 @@ const CreateSpace = ({ show, onClose }: Props) => {
   const [snackbar, setSnackbar] = useAtom(snackbarAtom);
 
   useEffect(() => {
-    if (isModalOpen) {
+    if (isModalOpen && currentTabs?.length < 1) {
       (async () => {
         // get current tab, and set to state
         const currentTabOpened = await getCurrentTab();
@@ -49,10 +47,10 @@ const CreateSpace = ({ show, onClose }: Props) => {
           return;
         }
 
-        setCurrentTab(currentTabOpened);
+        setCurrentTabs([currentTabOpened]);
       })();
     }
-  }, [isModalOpen]);
+  }, [isModalOpen, currentTabs]);
 
   // on title change
   const onTitleChange: ChangeEventHandler<HTMLInputElement> = ev => {
@@ -71,13 +69,16 @@ const CreateSpace = ({ show, onClose }: Props) => {
   };
 
   useEffect(() => {
-    setIsModalOpen(show);
-  }, [show]);
+    setIsModalOpen(newSpaceModal.show);
+    if (newSpaceModal.tabs?.length > 0) {
+      setCurrentTabs(newSpaceModal.tabs);
+    }
+  }, [newSpaceModal]);
 
   // create space
   const handleAddSpace = async () => {
     setErrorMsg('');
-    if (!newSpaceData.emoji || !newSpaceData.title || !newSpaceData.theme || !currentTab.url) {
+    if (!newSpaceData.emoji || !newSpaceData.title || !newSpaceData.theme || currentTabs?.length < 1) {
       setErrorMsg('Fill all the fields');
       return;
     }
@@ -87,7 +88,7 @@ const CreateSpace = ({ show, onClose }: Props) => {
 
     //  create space
     const createdSpace = await createNewSpace({ ...newSpaceData, isSaved: true, windowId: 0, activeTabIndex: 0 }, [
-      currentTab,
+      ...currentTabs,
     ]);
 
     // hide loading snackbar
@@ -100,7 +101,7 @@ const CreateSpace = ({ show, onClose }: Props) => {
       // re-render updated spaces
       setSpaces(prev => [...prev, { ...createdSpace }]);
 
-      await setTabsForSpace(createdSpace.id, [currentTab]);
+      await setTabsForSpace(createdSpace.id, [...currentTabs]);
 
       setSnackbar({ show: true, msg: 'Space created', isSuccess: true });
     } else {
@@ -121,7 +122,7 @@ const CreateSpace = ({ show, onClose }: Props) => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    onClose();
+    setNewSpaceModal({ show: false, tabs: [] });
   };
 
   useEffect(() => {
@@ -151,9 +152,9 @@ const CreateSpace = ({ show, onClose }: Props) => {
         {/* tabs */}
         <div className="mt-6">
           <p className="text-slate-500 font text-sm mb-1.5">Tabs</p>
-          {currentTab ? (
-            <Tab isModifierKeyPressed={false} isTabActive={false} tabData={currentTab} showHoverOption={false} />
-          ) : null}
+          {currentTabs?.map(tab => (
+            <Tab key={tab.id} isModifierKeyPressed={false} isTabActive={false} tabData={tab} showHoverOption={false} />
+          ))}
         </div>
         {/* error msg */}
         {errorMsg ? (
