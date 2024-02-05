@@ -170,16 +170,20 @@ const SidePanel = () => {
                   {(provided2, { isDraggingOver }) => (
                     <div
                       ref={provided2.innerRef}
-                      className="w-full h-full absolute top-0 left-0 rounded-lg"
+                      className="w-full h-full absolute top-0 mt-8 left-0 rounded-lg z-[99]"
                       style={{
-                        border: isDraggingOver ? '2px solid #34d399' : '',
+                        border: isDraggingOver ? '2px solid #05957f' : '',
+                        height: activeSpace?.tabs.length * 1.9 + 'rem',
                       }}>
                       <motion.div
                         animate={isDraggingSpace ? 'visible' : 'hidden'}
                         variants={animationVariants}
                         transition={{ type: 'spring', stiffness: 900, damping: 40, duration: 0.2 }}
-                        className=" h-full w-full bg-gradient-to-tr from-brand-darkBgAccent/80 z-[100] to-slate-800/80 flex items-center justify-center rounded-lg">
-                        <p className="text-slate-300 text-sm font-light bg-slate-900 px-4 py-2 rounded-md">
+                        className="h-full w-full bg-gradient-to-tr from-brand-darkBgAccent/30
+                              z-[100] to-slate-800/30 flex items-center justify-center rounded-lg">
+                        <p
+                          className="text-slate-200 text-xs font-light  bg-gradient-to-bl from-brand-darkBgAccent
+                              z-[100] to-slate-900 px-4 py-2 rounded-md ">
                           {isDraggingOver ? 'Open tabs in this space' : "Drop space to open it's tabs"}
                         </p>
                       </motion.div>

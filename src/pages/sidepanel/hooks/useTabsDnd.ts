@@ -1,8 +1,16 @@
 import { SetStateAction, useAtom } from 'jotai';
 import { ISpaceWithTabs, ITab } from '../../types/global.types';
-import { activeSpaceAtom, deleteSpaceModalAtom, newSpaceModalAtom, selectedTabsAtom } from '@root/src/stores/app';
-import { updateSpace } from '@root/src/services/chrome-storage/spaces';
+import {
+  activeSpaceAtom,
+  deleteSpaceModalAtom,
+  newSpaceModalAtom,
+  nonActiveSpacesAtom,
+  selectedTabsAtom,
+  snackbarAtom,
+} from '@root/src/stores/app';
+import { deleteSpace, updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
+import { logger } from '../../utils/logger';
 
 // dropped reasons to handle
 // --draggable -single/multi tab--
@@ -27,16 +35,20 @@ type DropLocations =
   | 'OPEN_NON_ACTIVE_SPACE_TABS'
   | 'DELETE_SPACE_ZONE';
 
-type UseTabDndProps = {
+type DropHandlerProps = {
+  droppedLocation: DropLocations;
   destinationIndex: number;
   sourceIndex: number;
   draggableId: string;
   droppableId: string;
+  combineDraggableId: string | null;
 };
 
-export const useTabsDnd = ({ draggableId, droppableId, sourceIndex, destinationIndex }: UseTabDndProps) => {
+export const useTabsDnd = () => {
   // non active spaces  (global state)
-  //   const [nonActiveSpaces, setNonActiveSpaces] = useAtom(nonActiveSpacesAtom);
+  const [nonActiveSpaces, setNonActiveSpaces] = useAtom(nonActiveSpacesAtom);
+
+  const [, setSnackbar] = useAtom(snackbarAtom);
 
   // new space modal global state
   const [, setNewSpaceModal] = useAtom(newSpaceModalAtom);
@@ -49,8 +61,6 @@ export const useTabsDnd = ({ draggableId, droppableId, sourceIndex, destinationI
   // selected tabs (global state)
   const [selectedTabs] = useAtom(selectedTabsAtom);
 
-  let droppedLocation: DropLocations = 'ACTIVE_SPACE';
-
   // --droppable ids
   // space-
   // active-space
@@ -59,32 +69,39 @@ export const useTabsDnd = ({ draggableId, droppableId, sourceIndex, destinationI
   // add-new-space
   // delete-space
 
-  // determine the drop location
-  if (droppableId.startsWith('space-')) {
-    droppedLocation = 'NON_ACTIVE_SPACE';
-  } else {
-    switch (droppableId) {
-      case 'active-space':
-        droppedLocation = 'ACTIVE_SPACE';
-        break;
-      case 'open-non-active-space-tabs':
-        droppedLocation = 'OPEN_NON_ACTIVE_SPACE_TABS';
-        break;
-      case 'other-spaces':
-        droppedLocation = 'SPACES_CONTAINER';
-        break;
-      case 'add-new-space':
-        droppedLocation = 'NEW_SPACE_ZONE';
-        break;
-      case 'delete-space':
-        droppedLocation = 'DELETE_SPACE_ZONE';
-        break;
+  const getDroppedLocation = (droppableId: string) => {
+    let droppedLocation: DropLocations;
+    // determine the drop location
+    if (droppableId.startsWith('space-')) {
+      droppedLocation = 'NON_ACTIVE_SPACE';
+    } else {
+      switch (droppableId) {
+        case 'active-space':
+          droppedLocation = 'ACTIVE_SPACE';
+          break;
+        case 'open-non-active-space-tabs':
+          droppedLocation = 'OPEN_NON_ACTIVE_SPACE_TABS';
+          break;
+        case 'add-new-space':
+          droppedLocation = 'NEW_SPACE_ZONE';
+          break;
+        case 'delete-space':
+          droppedLocation = 'DELETE_SPACE_ZONE';
+          break;
+        default: {
+          droppedLocation = 'SPACES_CONTAINER';
+        }
+      }
     }
-  }
+    return droppedLocation;
+  };
 
   //** drop handlers based on drop locations
   // dropped in active space
-  const activeSpaceDropHandler = async () => {
+  const activeSpaceDropHandler = async ({
+    destinationIndex,
+    sourceIndex,
+  }: Pick<DropHandlerProps, 'sourceIndex' | 'destinationIndex'>) => {
     const activeTab = activeSpace?.tabs[activeSpace.activeTabIndex];
 
     let reOrderedTabs = [...activeSpace.tabs];
@@ -161,7 +178,10 @@ export const useTabsDnd = ({ draggableId, droppableId, sourceIndex, destinationI
   };
 
   // dropped in non active space
-  const nonActiveSpaceDropHandler = async () => {
+  const nonActiveSpaceDropHandler = async ({
+    droppableId,
+    sourceIndex,
+  }: Pick<DropHandlerProps, 'droppableId' | 'sourceIndex'>) => {
     // extract space id from droppable id
     const droppedSpaceId = droppableId.split('space-')[1];
 
@@ -186,7 +206,7 @@ export const useTabsDnd = ({ draggableId, droppableId, sourceIndex, destinationI
   };
 
   // dropped in new space zone
-  const newSpaceDropHandler = async () => {
+  const newSpaceDropHandler = async ({ sourceIndex }: Pick<DropHandlerProps, 'sourceIndex'>) => {
     // active tab in current active space
     const activeTab = activeSpace?.tabs[activeSpace.activeTabIndex];
     // remove tabs
@@ -202,14 +222,50 @@ export const useTabsDnd = ({ draggableId, droppableId, sourceIndex, destinationI
     setNewSpaceModal({ show: true, tabs: tabsToRemove });
   };
 
-  // TODO - dropped in non-active spaces container
-  const spaceContainerDropHandler = async () => {
-    // merge spaces
-    // re-arrange spaces
+  const spaceContainerDropHandler = async ({
+    draggableId,
+    combineDraggableId,
+    destinationIndex,
+    sourceIndex,
+  }: Pick<DropHandlerProps, 'draggableId' | 'combineDraggableId' | 'sourceIndex' | 'destinationIndex'>) => {
+    if (combineDraggableId) {
+      // merge spaces
+
+      // the space that is to be merged (and then deleted)
+      const spaceIdToMerge = draggableId;
+
+      // space to merge the above space
+      const spaceIdToMergeTo = combineDraggableId;
+
+      // tabs of space to be merged
+      const tabsToMerge = await getTabsInSpace(spaceIdToMerge);
+
+      const currentTabsInMergedSpace = await getTabsInSpace(spaceIdToMergeTo);
+
+      const updatedTabsForMergedSpace = [...currentTabsInMergedSpace, ...tabsToMerge];
+
+      // add tabs from the draggable space to dragged on space
+      await setTabsForSpace(spaceIdToMergeTo, updatedTabsForMergedSpace);
+
+      // delete space that is merged (dragged space)
+      await deleteSpace(spaceIdToMerge);
+
+      // show success snackbar
+      setSnackbar({ show: true, msg: 'Space merged', isSuccess: true, isLoading: false });
+    } else {
+      // re-arrange spaces
+      const reOrderedSpaces = [...nonActiveSpaces];
+
+      const [spaceToMove] = reOrderedSpaces.splice(sourceIndex, 1);
+
+      reOrderedSpaces.splice(destinationIndex, 0, spaceToMove);
+
+      setNonActiveSpaces(reOrderedSpaces);
+    }
   };
 
   //  open non-active space dropped in active space
-  const nonActiveSpaceOpenTabsHandler = async () => {
+  const nonActiveSpaceOpenTabsHandler = async ({ draggableId }: Pick<DropHandlerProps, 'draggableId'>) => {
     const spaceId = draggableId;
     const tabsInSpace = await getTabsInSpace(spaceId);
 
@@ -221,44 +277,54 @@ export const useTabsDnd = ({ draggableId, droppableId, sourceIndex, destinationI
   };
 
   // dropped in delete space zone
-  const deleteSpaceDropHandler = () => {
+  const deleteSpaceDropHandler = ({ draggableId }: Pick<DropHandlerProps, 'draggableId'>) => {
     const spaceId = draggableId;
 
     setDeleteSpaceModal({ show: true, spaceId });
   };
 
-  const dropHandler = async (droppedLocation: DropLocations) => {
+  const dropHandler = async ({
+    droppedLocation,
+    combineDraggableId,
+    destinationIndex,
+    draggableId,
+    droppableId,
+    sourceIndex,
+  }: DropHandlerProps) => {
     switch (droppedLocation) {
       case 'ACTIVE_SPACE': {
-        await activeSpaceDropHandler();
+        await activeSpaceDropHandler({ destinationIndex, sourceIndex });
         break;
       }
       case 'NON_ACTIVE_SPACE': {
-        await nonActiveSpaceDropHandler();
+        await nonActiveSpaceDropHandler({ droppableId, sourceIndex });
         break;
       }
       case 'NEW_SPACE_ZONE': {
-        await newSpaceDropHandler();
+        await newSpaceDropHandler({ sourceIndex });
         break;
       }
       case 'SPACES_CONTAINER': {
-        await spaceContainerDropHandler();
+        await spaceContainerDropHandler({ combineDraggableId, destinationIndex, draggableId, sourceIndex });
         break;
       }
       case 'OPEN_NON_ACTIVE_SPACE_TABS': {
-        await nonActiveSpaceOpenTabsHandler();
+        await nonActiveSpaceOpenTabsHandler({ draggableId });
         break;
       }
       case 'DELETE_SPACE_ZONE': {
-        deleteSpaceDropHandler();
+        deleteSpaceDropHandler({ draggableId });
         break;
+      }
+      default: {
+        logger.info('[DnD] Unknown drop location.');
       }
     }
   };
 
   return {
+    getDroppedLocation,
     dropHandler,
-    droppedLocation,
   };
 };
 
