@@ -193,8 +193,6 @@ export const updateActiveTabInSpace = async (windowId: number, idx: number): Pro
     // update active tab index
     spaceToUpdate.activeTabIndex = idx;
 
-    console.log('🚀 ~ file: spaces.ts:194 ~ updateActiveTabInSpace ~ idx:', idx);
-
     // add the update space along other spaces to new array
     const newSpacesList = spaces.filter(space => space?.windowId !== windowId);
 

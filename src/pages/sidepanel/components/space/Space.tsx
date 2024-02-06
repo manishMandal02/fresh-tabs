@@ -1,5 +1,3 @@
-import { createPortal } from 'react-dom';
-import { useState } from 'react';
 import { useAtom } from 'jotai';
 import { MdArrowForwardIos, MdOutlineOpenInBrowser } from 'react-icons/md';
 import { ISpace, ISpaceWithTabs, ITab } from '@root/src/pages/types/global.types';
@@ -8,8 +6,6 @@ import Tooltip from '../elements/tooltip';
 import { openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { removeTabFromSpace } from '@root/src/services/chrome-storage/tabs';
 import { appSettingsAtom, snackbarAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
-import MoreOptions from './more-options';
-import DeleteSpaceModal from './delete';
 
 const SPACE_HEIGHT = 45;
 
@@ -19,10 +15,9 @@ type Props = {
   isActive: boolean;
   isExpanded: boolean;
   onExpand: () => void;
-  onUpdateClick: () => void;
 };
 
-const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: Props) => {
+const Space = ({ space, tabs, isActive, isExpanded, onExpand }: Props) => {
   // spaces atom (global state)
   const [, setSpaces] = useAtom(nonActiveSpacesAtom);
 
@@ -33,7 +28,6 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
   const [appSettings] = useAtom(appSettingsAtom);
 
   // local state
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // open space in new window
   const handleOpenSpace = async (shouldOpenInNewWindow: boolean) => {
@@ -155,17 +149,6 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
             />
           </span>
           {/* more options menu */}
-          <MoreOptions
-            shouldOpenInNewWindow={appSettings.openSpace === 'newWindow'}
-            onOpenSpace={() => {
-              // open space in a opposite method as set in the preferences
-              handleOpenSpace(appSettings.openSpace !== 'newWindow');
-            }}
-            isSpaceActive={isActive}
-            onEditClick={onUpdateClick}
-            onSyncClick={() => {}}
-            onDeleteClick={() => setShowDeleteModal(true)}
-          />
         </div>
       </button>
       {/* tabs within opened space */}
@@ -185,12 +168,6 @@ const Space = ({ space, tabs, onUpdateClick, isActive, isExpanded, onExpand }: P
           ))}
         </div>
       ) : null}
-      {/* delete space alert modal */}
-      {showDeleteModal &&
-        createPortal(
-          <DeleteSpaceModal spaceId={space.id} show={showDeleteModal} onClose={() => setShowDeleteModal(false)} />,
-          document.body,
-        )}
     </div>
   );
 };

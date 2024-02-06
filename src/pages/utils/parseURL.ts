@@ -1,3 +1,5 @@
+import { DiscardTabURLPrefix } from '@root/src/constants/app';
+
 import { logger } from './logger';
 
 // get tab url from html in url for discarded tabs
@@ -16,4 +18,13 @@ export const getUrlFromHTML = (htmlString: string) => {
 
   // get the full link from replacing any unwanted char
   return matches[0].replace(/\/\/{\[|\]}\/\//g, '');
+};
+
+// parse discard url
+export const parseURL = (url: string) => {
+  if (url.startsWith(DiscardTabURLPrefix)) {
+    return getUrlFromHTML(url);
+  }
+
+  return url;
 };

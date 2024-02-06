@@ -8,9 +8,12 @@ import {
   selectedTabsAtom,
   snackbarAtom,
 } from '@root/src/stores/app';
-import { deleteSpace, updateSpace } from '@root/src/services/chrome-storage/spaces';
+import { deleteSpace, setSpacesToStorage, updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { logger } from '../../utils/logger';
+import { createDiscardedTabs } from '@root/src/services/chrome-tabs/tabs';
+import { scrollActiveSpaceBottom } from '../../utils/scrollActiveSpaceBottom';
+import { wait } from '../../utils';
 
 // dropped reasons to handle
 // --draggable -single/multi tab--
@@ -70,6 +73,8 @@ export const useTabsDnd = () => {
   // delete-space
 
   const getDroppedLocation = (droppableId: string) => {
+    console.log('🚀 ~ getDroppedLocation ~ droppableId:', droppableId);
+
     let droppedLocation: DropLocations;
     // determine the drop location
     if (droppableId.startsWith('space-')) {
@@ -161,12 +166,6 @@ export const useTabsDnd = () => {
       const newActiveTabIndex = reOrderedTabs.findIndex(el => el.url === activeTab.url);
 
       await chrome.tabs.move(tabToMove.id, { index: destinationIndex });
-      // update storage
-      await setTabsForSpace(activeSpace.id, reOrderedTabs);
-      // update space's active tab index, if changed
-      if (activeSpace.activeTabIndex !== newActiveTabIndex) {
-        await updateSpace(activeSpace.id, { ...activeSpace, activeTabIndex: newActiveTabIndex });
-      }
 
       // update ui
       setActiveSpace({
@@ -174,6 +173,14 @@ export const useTabsDnd = () => {
         activeTabIndex: newActiveTabIndex,
         tabs: reOrderedTabs,
       });
+
+      // update tabs storage
+      await setTabsForSpace(activeSpace.id, reOrderedTabs);
+
+      // update space's active tab index, if changed
+      if (activeSpace.activeTabIndex !== newActiveTabIndex) {
+        await updateSpace(activeSpace.id, { ...activeSpace, activeTabIndex: newActiveTabIndex });
+      }
     }
   };
 
@@ -222,13 +229,14 @@ export const useTabsDnd = () => {
     setNewSpaceModal({ show: true, tabs: tabsToRemove });
   };
 
+  // dropped in non active space container
   const spaceContainerDropHandler = async ({
     draggableId,
     combineDraggableId,
     destinationIndex,
     sourceIndex,
   }: Pick<DropHandlerProps, 'draggableId' | 'combineDraggableId' | 'sourceIndex' | 'destinationIndex'>) => {
-    if (combineDraggableId) {
+    if (combineDraggableId && typeof combineDraggableId === 'string') {
       // merge spaces
 
       // the space that is to be merged (and then deleted)
@@ -250,6 +258,8 @@ export const useTabsDnd = () => {
       // delete space that is merged (dragged space)
       await deleteSpace(spaceIdToMerge);
 
+      setNonActiveSpaces(prev => [...prev.filter(s => s.id !== spaceIdToMerge)]);
+
       // show success snackbar
       setSnackbar({ show: true, msg: 'Space merged', isSuccess: true, isLoading: false });
     } else {
@@ -260,7 +270,12 @@ export const useTabsDnd = () => {
 
       reOrderedSpaces.splice(destinationIndex, 0, spaceToMove);
 
-      setNonActiveSpaces(reOrderedSpaces);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { tabs, ...activeSpaceWithoutTabs } = activeSpace;
+
+      await setSpacesToStorage([activeSpaceWithoutTabs, ...reOrderedSpaces]);
+
+      setNonActiveSpaces([...reOrderedSpaces]);
     }
   };
 
@@ -270,10 +285,14 @@ export const useTabsDnd = () => {
     const tabsInSpace = await getTabsInSpace(spaceId);
 
     // open tabs in active space window
-    await Promise.allSettled(tabsInSpace.map(tab => chrome.tabs.create({ url: tab.url })));
+    await createDiscardedTabs(tabsInSpace);
 
     // add tabs to active space
     setActiveSpace(prev => ({ ...prev, tabs: [...prev.tabs, ...tabsInSpace] }));
+
+    await wait(100);
+
+    scrollActiveSpaceBottom();
   };
 
   // dropped in delete space zone
@@ -291,6 +310,8 @@ export const useTabsDnd = () => {
     droppableId,
     sourceIndex,
   }: DropHandlerProps) => {
+    console.log('🚀 ~ useTabsDnd ~ droppedLocation: dropHandler:294', droppedLocation);
+
     switch (droppedLocation) {
       case 'ACTIVE_SPACE': {
         await activeSpaceDropHandler({ destinationIndex, sourceIndex });

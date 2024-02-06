@@ -11,7 +11,9 @@ import { createPortal } from 'react-dom';
 import UpdateSpace from '../update/UpdateSpace';
 import { motion } from 'framer-motion';
 import { goToTab } from '@root/src/services/chrome-tabs/tabs';
-import { getFaviconURL } from '@root/src/pages/utils';
+import TabDraggedOutsideActiveSpace from './TabDraggedOutsideActiveSpace';
+import { useKeyPressed } from '../../../hooks/useKeyPressed';
+import { logger } from '@root/src/pages/utils/logger';
 
 type Props = {
   space: ISpace;
@@ -33,10 +35,13 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
   // delete space modal  global state
   const [, setDeleteSpaceModal] = useAtom(deleteSpaceModalAtom);
 
-  // local state - ctrl/cmd key press status
-  const [isModifierKeyPressed, setIsModifierKeyPressed] = useState(false);
-  // local state - left shift key press status
-  const [isShiftKeyPressed, setIsShiftKeyPressed] = useState(false);
+  //  key press
+  const { isModifierKeyPressed, isShiftKeyPressed } = useKeyPressed({
+    onDeletePressed: () => {
+      (async () => await handleRemoveTabs())();
+    },
+    onEscapePressed: () => setSelectedTabs([]),
+  });
 
   const isTabSelected = (id: number) => !!selectedTabs.find(t => t.id === id);
 
@@ -76,32 +81,37 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
 
   // remove multiple tabs
   const handleRemoveTabs = useCallback(async () => {
-    const tabsToRemovePromise = [];
-
     // tab ids to remove
     const ids = selectedTabs.map(t => t.id);
 
+    const updatedTabs = tabs.filter(tab => !ids.includes(tab.id));
+
+    await setTabsForSpace(space.id, updatedTabs);
+
+    const tabsToRemovePromise = [];
+
+    // remove tabs from window
     for (const id of ids) {
-      tabsToRemovePromise.push(removeTabFromSpace(space, id, null, true));
+      try {
+        const tab = await chrome.tabs.get(id);
+        if (!tab?.id) return;
+
+        tabsToRemovePromise.push(chrome.tabs.remove(id));
+      } catch (err) {
+        logger.info(`Tab not found: ${err}`);
+        continue;
+      }
     }
 
-    await Promise.all(tabsToRemovePromise);
+    await Promise.allSettled(tabsToRemovePromise);
 
-    setActiveSpace({ ...space, tabs: [...tabs.filter(t => !ids.includes(t.id))] });
+    setActiveSpace({ ...space, tabs: updatedTabs });
   }, [selectedTabs, setActiveSpace, tabs, space]);
 
   // if cmd/ctrl key is pressed save to state
   const handleKeydown = useCallback(
     ev => {
       const keyEv = ev as KeyboardEvent;
-
-      if (keyEv.ctrlKey || keyEv.metaKey) {
-        setIsModifierKeyPressed(true);
-      }
-
-      if (keyEv.shiftKey) {
-        setIsShiftKeyPressed(true);
-      }
 
       if (keyEv.code.toLowerCase() === 'delete') {
         handleRemoveTabs();
@@ -114,22 +124,14 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
     [handleRemoveTabs, setSelectedTabs],
   );
 
-  // keyup, reset the state
-  const handleKeyUp = useCallback(() => {
-    setIsModifierKeyPressed(false);
-    setIsShiftKeyPressed(false);
-  }, []);
-
   // keeping track of cmd/ctrl key press for UI action
   useEffect(() => {
     document.addEventListener('keydown', handleKeydown);
-    document.addEventListener('keyup', handleKeyUp);
 
     return () => {
       document.removeEventListener('keydown', handleKeydown);
-      document.removeEventListener('keyup', handleKeyUp);
     };
-  }, [handleKeydown, handleKeyUp]);
+  }, [handleKeydown]);
 
   const onTabDoubleClickHandler = async (id: number, index: number) => {
     // do nothing if ctl/cmd is pressed
@@ -203,38 +205,6 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
 
   const [mouseXOnDrag, setMouseXOnDrag] = useState(0);
 
-  const TabDraggedOutside = (url: string) => {
-    const faviconImg = getFaviconURL(url);
-
-    const cardSize = 35;
-
-    return (
-      <div
-        className=" z-[500]"
-        style={{
-          // transform: `translateX(${mouseXOnDrag - cardSize + 10}px)`,
-          width: cardSize + 5,
-        }}>
-        {selectedTabs.length > 1 ? (
-          <span
-            className={`w-fit rounded-md px-[5px] py-[4px] absolute -top-2 -left-2 text-[9px] z-[200]
-                        flex items-center justify-center font-bold bg-gradient-to-bl from-brand-darkBgAccent/70 to-brand-darkBg/70 text-slate-400`}>
-            +{selectedTabs?.length - 1}
-          </span>
-        ) : null}
-        <motion.div
-          {...bounceDivAnimation}
-          className=" rounded-lg flex items-center justify-center bg-brand-darkBgAccent"
-          style={{
-            height: cardSize,
-            width: cardSize,
-          }}>
-          <img className="w-4 h-4 rounded-lg" src={faviconImg} alt="favicon" />
-        </motion.div>
-      </div>
-    );
-  };
-
   const onTabClickMousePos: MouseEventHandler<HTMLDivElement> = ev => {
     console.log('🚀 ~ ActiveSpace ~ ev.clientX:', ev.clientX);
     setMouseXOnDrag(ev.clientX);
@@ -265,6 +235,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
 
       {/* tabs */}
       <div
+        id="active-space-scrollable-container"
         className="max-h-[90%] overflow-y-auto cc-scrollbar  overflow-x-hidden border-y pb-2 border-brand-darkBgAccent/30"
         style={{
           height: tabs.length * 1.9 + 'rem',
@@ -290,7 +261,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
                       }}
                       onMouseDown={onTabClickMousePos}>
                       {isDraggingGlobal && isDragging && !isDraggingOver ? (
-                        TabDraggedOutside(tab.url)
+                        <TabDraggedOutsideActiveSpace numSelectedTabs={selectedTabs?.length} tabURL={tab.url} />
                       ) : (
                         <div className="relative w-[90vw]">
                           <Tab

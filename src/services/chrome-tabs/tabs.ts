@@ -3,7 +3,7 @@ import { getSpaceByWindow, updateSpace } from '../chrome-storage/spaces';
 import { getFaviconURL } from '@root/src/pages/utils';
 import { getTabsInSpace, setTabsForSpace } from '../chrome-storage/tabs';
 import { DiscardTabURLPrefix } from '@root/src/constants/app';
-import { getUrlFromHTML } from '@root/src/pages/utils/get-url-from-html';
+import { parseURL } from '@root/src/pages/utils/parseURL';
 
 type OpenSpaceProps = {
   space: ISpace;
@@ -23,13 +23,14 @@ const createActiveTab = async (url: string, index: number, windowId) => {
 };
 
 // creates a html url tabs that doesn't load tab until user visits them
-const createDiscardedTabs = async (tabs: ITab[], windowId: number) => {
+export const createDiscardedTabs = async (tabs: ITab[], windowId?: number) => {
   //  set html for discard tabs so they load only after visited by user
+  // TODO - handle already discarded urls here
   const discardedTabHTML = (tab: ITab) => `
       <!DOCTYPE html>
       <html>
       <head>
-      <link rel="icon" href="${getFaviconURL(tab.url)}">
+      <link rel="icon" href="${getFaviconURL(parseURL(tab.url))}">
       <title>${tab.title}</title>
       <link href="//{[${tab.url}]}//">
       </head>
@@ -38,16 +39,28 @@ const createDiscardedTabs = async (tabs: ITab[], windowId: number) => {
       </html>`;
 
   // batch all the promise to process at once (create's discarded tabs)
-  const createMultipleTabsPromise = tabs.map((tab, index) =>
-    chrome.tabs.create({
-      windowId,
-      index,
-      active: false,
-      url: `${DiscardTabURLPrefix}${encodeURIComponent(discardedTabHTML(tab))}`,
-    }),
-  );
+  const createMultipleTabsPromise = tabs.map((tab, index) => {
+    if (isNaN(windowId)) {
+      return chrome.tabs.create({
+        url: `${DiscardTabURLPrefix}${encodeURIComponent(discardedTabHTML(tab))}`,
+        active: false,
+      });
+    } else {
+      return chrome.tabs.create({
+        windowId,
+        index,
+        active: false,
+        url: `${DiscardTabURLPrefix}${encodeURIComponent(discardedTabHTML(tab))}`,
+      });
+    }
+  });
 
   const responses = await Promise.allSettled(createMultipleTabsPromise);
+
+  // if the just create flag is passed it will only create tabs and strop the fn
+  if (!windowId) {
+    return true;
+  }
 
   const createdTabs: ITab[] = [];
 
@@ -59,7 +72,7 @@ const createDiscardedTabs = async (tabs: ITab[], windowId: number) => {
 
     const tabDiscardedURL = url || pendingUrl;
 
-    const tabURL = getUrlFromHTML(tabDiscardedURL.replace(DiscardTabURLPrefix, ''));
+    const tabURL = parseURL(tabDiscardedURL);
 
     // get the tab details (as the new tab doesn't have title)
     const matchedTab = tabs.find(tab => tab.url === tabURL);
@@ -177,7 +190,7 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
   // set current window in side panel UI
   onNewWindowCreated(windowId);
 
-  const discardTabs = await createDiscardedTabs(discardedTabsToCreate, windowId);
+  const discardTabs = (await createDiscardedTabs(discardedTabsToCreate, windowId)) as ITab[];
 
   const activeTabCreated = await createActiveTab(activeTab.url, activeTabIndex, windowId);
 

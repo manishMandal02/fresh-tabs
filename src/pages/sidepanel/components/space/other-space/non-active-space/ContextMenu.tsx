@@ -9,8 +9,6 @@ type Props = {
 };
 
 const CustomContextMenu = ({ children, space }: Props) => {
-  console.log('🚀 ~ CustomContextMenu ~ children:', children);
-
   return (
     <ContextMenuRadix.Root>
       <ContextMenuRadix.Trigger>{children}</ContextMenuRadix.Trigger>

@@ -2,20 +2,23 @@ import { MdAdd, MdDelete } from 'react-icons/md';
 import { useState, useCallback, useEffect } from 'react';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 import { motion } from 'framer-motion';
-
-import { ISpace } from '@root/src/pages/types/global.types';
-import NonActiveSpace from './non-active-space';
-import Tooltip from '../../elements/tooltip';
-import { newSpaceModalAtom } from '@root/src/stores/app';
 import { useAtom } from 'jotai';
+
+import Tooltip from '../../elements/tooltip';
+import { newSpaceModalAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
+import { NonActiveSpace } from './non-active-space';
 
 type Props = {
   isDraggingSpace: boolean;
   isDraggingTabs: boolean;
-  spaces: ISpace[];
 };
 
-const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs, spaces }: Props) => {
+const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
+  // non active spaces  (global state)
+  const [spaces] = useAtom(nonActiveSpacesAtom);
+
+  console.log('🚀 ~ OtherSpacesContainer ~ re-rendered 🔁');
+
   // add new space modal
   const [isModifierKeyPressed, setIsModifierKeyPressed] = useState(false);
 
@@ -49,11 +52,20 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs, spaces }: Props
     hidden: { scale: 0, opacity: 0 },
   };
 
+  // bounce div animation
+  const bounceDivAnimation = {
+    initial: { scale: 0, opacity: 0 },
+    animate: {
+      scale: 1,
+      opacity: 1,
+    },
+    exit: { scale: 0, opacity: 0 },
+    transition: { type: 'spring', stiffness: 900, damping: 40, duration: 0.2 },
+  };
+
   return (
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-    <div
-      className=" relative w-full h-[full] pt-1 flex items-start overflow-hidden  mx-auto "
-      onKeyDown={ev => ev.stopPropagation()}>
+    <div className="relative w-full h-[full] flex items-start justify-center overflow-hidden mx-auto gap-x-1 ">
       <Droppable
         droppableId="other-spaces"
         direction="horizontal"
@@ -64,7 +76,8 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs, spaces }: Props
           <div
             {...provided1.droppableProps}
             ref={provided1.innerRef}
-            className="w-[80%] pb-2 py-1.5 px-1.5  flex gap-x-2 overflow-y-hidden overflow-x-auto scroll-smooth rounded-md cc-scrollbar shadow-inner shadow-brand-darkBgAccent/20">
+            className={`max-w-[83.5%] w-fit pb-2 py-1.5 px-1.5  flex gap-x-2 overflow-y-hidden overflow-x-auto scroll-smooth 
+                        rounded-md cc-scrollbar shadow-inner shadow-brand-darkBgAccent/20`}>
             {spaces.map((space, idx) => {
               return (
                 <Draggable key={space.id} draggableId={space.id} index={idx} isDragDisabled={isDraggingTabs}>
@@ -73,7 +86,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs, spaces }: Props
                       ref={provided3.innerRef}
                       {...provided3.draggableProps}
                       {...provided3.dragHandleProps}
-                      className="z-10 transition-all duration-200"
+                      className="z-10 "
                       style={{
                         ...provided3.draggableProps.style,
                         opacity: !combineWith || (!isDraggingOverOtherSpaces && isDraggingSpace) ? '1' : '0.75',
@@ -85,9 +98,13 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs, spaces }: Props
                         type="TAB"
                         isDropDisabled={isDraggingSpace}>
                         {(provided2, { isDraggingOver }) => (
-                          <div {...provided2.droppableProps} ref={provided2.innerRef} className=" h-fit w-[50px]">
+                          <motion.div
+                            {...provided2.droppableProps}
+                            {...bounceDivAnimation}
+                            ref={provided2.innerRef}
+                            className=" h-[35px] w-[50px] mt-1 mb-1.5">
                             <NonActiveSpace space={space} isDraggedOver={isDraggingOver || !!combineTargetFor} />
-                          </div>
+                          </motion.div>
                         )}
                       </Droppable>
                     </div>
@@ -99,7 +116,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs, spaces }: Props
         )}
       </Droppable>
 
-      <div className="relative w-[14%]  py-1.5 ml-1 h-fit">
+      <div className="relative w-[17%]  py-1.5 bg-red-30 h-full mt-1">
         {/* delete space drop box */}
         <Droppable droppableId="delete-space" direction="horizontal" type="SPACE" isDropDisabled={isDraggingTabs}>
           {(provided, { isDraggingOver }) => (
@@ -108,7 +125,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs, spaces }: Props
               ref={provided.innerRef}
               animate={isDraggingSpace ? 'visible' : 'hidden'}
               variants={animationVariants}
-              transition={{ type: 'spring', stiffness: 900, damping: 40, duration: 0.2 }}
+              transition={{ type: 'spring', stiffness: 1000, damping: 40, duration: 0.2 }}
               className="rounded-lg absolute top-2 -right-px w-[45px] h-[40px] flex bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/90 items-center justify-center "
               style={{
                 // display: 'flex',
@@ -130,14 +147,15 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs, spaces }: Props
               ref={provided.innerRef}
               animate={!isDraggingSpace ? 'visible' : 'hidden'}
               variants={animationVariants}
-              transition={{ type: 'spring', stiffness: 900, damping: 40, duration: 0.2 }}
+              transition={{ type: 'spring', stiffness: 1000, damping: 40, duration: 0.2 }}
               style={{
                 visibility: !isDraggingSpace ? 'visible' : 'hidden',
                 zIndex: !isDraggingSpace ? 200 : 1,
               }}>
               <Tooltip label="Add new space" delay={1500}>
                 <button
-                  className="bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/90 w-[45px] h-[40px]  absolute top-px -right-px cursor-pointer flex items-center justify-center  rounded-lg"
+                  className={`bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/90 w-[45px] h-[40px]  
+                            absolute top-px -right-px cursor-pointer flex items-center justify-center  rounded-lg`}
                   style={{
                     border: isDraggingOver ? '1px dashed #6b6a6a' : '',
                     backgroundColor: isDraggingOver ? ' #21262e' : '',

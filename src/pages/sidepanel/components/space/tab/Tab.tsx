@@ -7,6 +7,7 @@ import { copyToClipboard } from '@root/src/pages/utils/copy-to-clipboard';
 import { createTab, goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { MdClose, MdContentCopy, MdOpenInNew, MdOutlineAdd } from 'react-icons/md';
 import { motion } from 'framer-motion';
+import { parseURL } from '@root/src/pages/utils/parseURL';
 
 type Props = {
   tabData: ITab;
@@ -61,6 +62,12 @@ const Tab = ({
     transition: { type: 'spring', stiffness: 900, damping: 40 },
   };
 
+  const generateFaviconURL = () => {
+    const tabURL = parseURL(tabData.url);
+
+    return getFaviconURL(tabURL);
+  };
+
   return (
     <motion.div
       {...tabAnimation}
@@ -72,7 +79,7 @@ const Tab = ({
       onDoubleClick={() => onTabDoubleClick(tabData.id)}>
       <div className="flex items-center w-full ">
         <div className=" flex relative items-start min-w-[1.2rem] mr-1.5">
-          <img className=" opacity-95 visible  w-4 h-4 z-10 rounded-sm  " src={getFaviconURL(tabData.url)} alt="icon" />
+          <img className=" opacity-95 visible  w-4 h-4 z-10 rounded-sm  " src={generateFaviconURL()} alt="icon" />
           {/* <span
             className="hidden peer-hover:flex bg-emerald-500/50 z-20 rounded-md absolute w-5 h-5 top-0 left-0"
             style={{

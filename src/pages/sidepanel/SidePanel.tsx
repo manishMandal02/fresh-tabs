@@ -42,7 +42,6 @@ const SidePanel = () => {
   const {
     activeSpace,
     setActiveSpace,
-    nonActiveSpaces,
     setNonActiveSpaces,
     getAllSpacesStorage,
     handleEvents,
@@ -56,11 +55,14 @@ const SidePanel = () => {
 
   // loading state for save spaces to bookmarks
   const [isLoadingSaveSpaces, setIsLoadingSaveSpaces] = useState(false);
+
   useEffect(() => {
     (async () => {
       setIsLoadingSpaces(true);
 
       const { activeSpaceWithTabs, otherSpaces } = await getAllSpacesStorage();
+
+      console.log('🚀 ~ activeSpaceWithTabs:', activeSpaceWithTabs);
 
       setActiveSpace({ ...activeSpaceWithTabs });
 
@@ -155,8 +157,8 @@ const SidePanel = () => {
             <Spinner size="md" />
           ) : (
             <DragDropContext onDragEnd={onTabsDragEnd} onBeforeDragStart={onTabsDragStart}>
-              z{/* Current space */}
-              <div className="h-[82%] relative">
+              {/* Current space */}
+              <div className="h-[82%] relative mb-5">
                 <ActiveSpace
                   space={activeSpace}
                   tabs={activeSpaceTabs}
@@ -170,17 +172,23 @@ const SidePanel = () => {
                   {(provided2, { isDraggingOver }) => (
                     <div
                       ref={provided2.innerRef}
-                      className="w-full h-full absolute top-0 mt-8 left-0 rounded-lg z-[99]"
+                      className="max-h-[90%] w-full absolute top-0 mt-8 left-0 rounded-lg transition-all duration-300 ease-in-out"
                       style={{
-                        border: isDraggingOver ? '2px solid #05957f' : '',
-                        height: activeSpace?.tabs.length * 1.9 + 'rem',
+                        border: isDraggingOver ? '2px solid #05957f' : '#082545',
+                        height: `${activeSpace?.tabs?.length * 1.9}rem`,
+                        visibility: isDraggingSpace ? 'visible' : 'hidden',
+                        zIndex: isDraggingSpace ? 200 : 1,
                       }}>
                       <motion.div
                         animate={isDraggingSpace ? 'visible' : 'hidden'}
                         variants={animationVariants}
                         transition={{ type: 'spring', stiffness: 900, damping: 40, duration: 0.2 }}
-                        className="h-full w-full bg-gradient-to-tr from-brand-darkBgAccent/30
-                              z-[100] to-slate-800/30 flex items-center justify-center rounded-lg">
+                        style={{
+                          visibility: isDraggingSpace ? 'visible' : 'hidden',
+                          zIndex: isDraggingSpace ? 200 : 1,
+                        }}
+                        className="h-full w-full bg-gradient-to-tr from-brand-darkBgAccent/40
+                              z-[100] to-slate-800/40 flex items-center justify-center rounded-lg">
                         <p
                           className="text-slate-200 text-xs font-light  bg-gradient-to-bl from-brand-darkBgAccent
                               z-[100] to-slate-900 px-4 py-2 rounded-md ">
@@ -193,11 +201,7 @@ const SidePanel = () => {
               </div>
               {/* other spaces */}
               <div className="h-[18%]">
-                <OtherSpacesContainer
-                  spaces={nonActiveSpaces}
-                  isDraggingTabs={isDraggingTabs}
-                  isDraggingSpace={isDraggingSpace}
-                />
+                <OtherSpacesContainer isDraggingTabs={isDraggingTabs} isDraggingSpace={isDraggingSpace} />
               </div>
             </DragDropContext>
           )}

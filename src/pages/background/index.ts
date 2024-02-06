@@ -1,7 +1,6 @@
 import { ITab } from './../types/global.types';
 import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
-import { getUrlFromHTML } from '../utils/get-url-from-html';
 import {
   checkNewWindowTabs,
   createSampleSpaces,
@@ -27,6 +26,7 @@ import {
 } from '@root/src/services/chrome-bookmarks/bookmarks';
 import { AlarmNames, DiscardTabURLPrefix, DefaultAppSettings, DefaultPinnedTabs } from '@root/src/constants/app';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
+import { parseURL } from '../utils/parseURL';
 
 reloadOnUpdate('pages/background');
 
@@ -46,14 +46,6 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
     fileTrace: 'src/pages/background/index.ts:35 ~ chrome.sidePanel.setPanelBehavior()',
   });
 });
-
-// parse url if it's a discard tab url
-const parseURL = (url: string) => {
-  if (!url.startsWith(DiscardTabURLPrefix)) return url;
-
-  // get url from html data url
-  return getUrlFromHTML(url.replace(DiscardTabURLPrefix, ''));
-};
 
 //* common event handlers
 
@@ -220,14 +212,10 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   // get tab info
   const tab = await chrome.tabs.get(tabId);
 
-  // update tab with original link if it was discarded
   if (tab.url.startsWith(DiscardTabURLPrefix)) {
-    // get url from html in the url
-    const url = getUrlFromHTML(tab.url.replace(DiscardTabURLPrefix, ''));
-
     // update tab with original url
     await chrome.tabs.update(tabId, {
-      url,
+      url: parseURL(tab.url),
     });
   }
 

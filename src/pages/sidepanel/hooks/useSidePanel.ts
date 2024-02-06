@@ -11,7 +11,7 @@ import { useTabsDnd } from './useTabsDnd';
 
 export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>>) => {
   // non active spaces  (global state)
-  const [nonActiveSpaces, setNonActiveSpaces] = useAtom(nonActiveSpacesAtom);
+  const [, setNonActiveSpaces] = useAtom(nonActiveSpacesAtom);
 
   // active space atom (global state)
   const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);
@@ -71,23 +71,28 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
       // reset dragging state
       setIsDraggingTabs(false);
       setIsDraggingSpace(false);
-      if (!result.destination) {
+
+      if (!result.destination && !result?.combine?.draggableId) {
         return;
       }
 
       // TODO - test the full DnD flow
       // check the flag conditions to run the drop handler, and when to not execute
 
-      const droppableId = result.destination.droppableId;
+      const droppableId = result.destination?.droppableId || result.combine?.droppableId;
+
+      // determine drop location
       const droppedLocation = getDroppedLocation(droppableId);
+
+      // main drop handler
       (async () => {
         await dropHandler({
           droppedLocation,
           droppableId,
           draggableId: result.draggableId,
           sourceIndex: result.source.index,
-          destinationIndex: result.destination.index,
-          combineDraggableId: result.combine.draggableId,
+          destinationIndex: result.destination?.index || 0,
+          combineDraggableId: result.combine?.draggableId || null,
         });
       })();
     },
@@ -112,12 +117,18 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
 
         case 'UPDATE_SPACE_ACTIVE_TAB': {
           if (payload.spaceId !== activeSpaceRef.current?.id) return;
-          // check if the active tab has changed from side panel, if yes do nothing
-          const tab = await chrome.tabs.get(activeSpaceRef.current.tabs[activeSpaceRef.current.activeTabIndex]?.id);
-          if (tab?.active) return;
 
-          setActiveSpace({ ...activeSpaceRef.current, activeTabIndex: payload.newActiveIndex });
+          try {
+            // check if the active tab has changed from side panel, if yes do nothing
+            const [activeTab] = await chrome.tabs.query({ active: true, windowId: activeSpaceRef.current.windowId });
 
+            if (activeTab?.index === activeSpaceRef.current.activeTabIndex) break;
+
+            setActiveSpace({ ...activeSpaceRef.current, activeTabIndex: activeTab?.index });
+          } catch (err) {
+            logger.info(`Tab not found: ${err}`);
+            setActiveSpace({ ...activeSpaceRef.current, activeTabIndex: payload?.newActiveIndex });
+          }
           break;
         }
 
@@ -140,7 +151,6 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
   );
 
   return {
-    nonActiveSpaces,
     setNonActiveSpaces,
     getAllSpacesStorage,
     handleEvents,
