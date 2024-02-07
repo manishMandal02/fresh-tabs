@@ -1,4 +1,5 @@
 import { MouseEventHandler, ReactNode } from 'react';
+import { motion } from 'framer-motion';
 // import { MdClose } from 'react-icons/md';
 
 type Props = {
@@ -13,6 +14,17 @@ const AlertModal = ({ children, isOpen, onClose, title }: Props) => {
   const handleClose: MouseEventHandler = ev => {
     ev.stopPropagation();
     onClose();
+  };
+
+  // bounce div animation
+  const bounceDivAnimation = {
+    initial: { scale: 0, opacity: 0 },
+    animate: {
+      scale: 1,
+      opacity: 1,
+    },
+    exit: { scale: 0, opacity: 0 },
+    transition: { type: 'spring', stiffness: 900, damping: 40, duration: 0.2 },
   };
 
   return (
@@ -39,7 +51,11 @@ const AlertModal = ({ children, isOpen, onClose, title }: Props) => {
             <MdClose size={26} className="" />
           </button> */}
         </div>
-        {isOpen ? children : null}
+        {isOpen ? (
+          <motion.div {...bounceDivAnimation} className="h-full w-full">
+            {children}
+          </motion.div>
+        ) : null}
       </div>
     </div>
   );

@@ -17,8 +17,6 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
   // non active spaces  (global state)
   const [spaces] = useAtom(nonActiveSpacesAtom);
 
-  console.log('🚀 ~ OtherSpacesContainer ~ re-rendered 🔁');
-
   // add new space modal
   const [isModifierKeyPressed, setIsModifierKeyPressed] = useState(false);
 

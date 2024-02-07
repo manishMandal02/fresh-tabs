@@ -1,23 +1,24 @@
-import { useState, useEffect, useRef } from 'react';
-import { IMessageEvent, IPinnedTab, ITab } from '../types/global.types';
-import { ActiveSpace, CreateSpace } from './components/space';
-import Snackbar from './components/elements/snackbar';
 import { useAtom } from 'jotai';
-import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
-import Spinner from './components/elements/spinner';
-import { useSidePanel } from './hooks/useSidePanel';
-import Settings from './components/settings/Settings';
-import Search from './components/search';
-import { MdOutlineSync } from 'react-icons/md';
-import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
-import Tooltip from './components/elements/tooltip';
-import { getGlobalPinnedTabs } from '@root/src/services/chrome-storage/tabs';
-import { DragDropContext, Droppable } from 'react-beautiful-dnd';
-import { getAppSettings } from '@root/src/services/chrome-storage/settings';
-import { FavTabs } from './components/space/tab';
-import OtherSpacesContainer from './components/space/other-space/OtherSpacesContainer';
-import DeleteSpaceModal from './components/space/delete/DeleteSpaceModal';
 import { motion } from 'framer-motion';
+import { MdOutlineSync } from 'react-icons/md';
+import { useState, useEffect, useRef } from 'react';
+import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+
+import Search from './components/search';
+import { FavTabs } from './components/space/tab';
+import Tooltip from './components/elements/tooltip';
+import { useSidePanel } from './hooks/useSidePanel';
+import Spinner from './components/elements/spinner';
+import Snackbar from './components/elements/snackbar';
+import Settings from './components/settings/Settings';
+import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
+import { IMessageEvent, IPinnedTab, ITab } from '../types/global.types';
+import DeleteSpaceModal from './components/space/delete/DeleteSpaceModal';
+import { ActiveSpace, CreateSpace, UpdateSpace } from './components/space';
+import { getAppSettings } from '@root/src/services/chrome-storage/settings';
+import { getGlobalPinnedTabs } from '@root/src/services/chrome-storage/tabs';
+import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
+import OtherSpacesContainer from './components/space/other-space/OtherSpacesContainer';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -61,8 +62,6 @@ const SidePanel = () => {
       setIsLoadingSpaces(true);
 
       const { activeSpaceWithTabs, otherSpaces } = await getAllSpacesStorage();
-
-      console.log('🚀 ~ activeSpaceWithTabs:', activeSpaceWithTabs);
 
       setActiveSpace({ ...activeSpaceWithTabs });
 
@@ -209,6 +208,9 @@ const SidePanel = () => {
           {/* add new space */}
           <CreateSpace />
         </div>
+
+        {/* Edit/view space modal */}
+        <UpdateSpace />
 
         {/* delete space alert modal */}
         <DeleteSpaceModal />

@@ -3,11 +3,14 @@
 import { useState, useEffect } from 'react';
 
 export const useDeviceInfo = () => {
-  // TODO - get device info
   const [isMac, setIsMac] = useState(false);
 
   useEffect(() => {
-    setIsMac(true);
+    if (navigator.userAgent.toLowerCase().includes('Mac')) {
+      setIsMac(true);
+    } else {
+      setIsMac(false);
+    }
   }, []);
 
   return { isMac };

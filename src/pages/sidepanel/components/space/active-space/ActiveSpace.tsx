@@ -1,14 +1,12 @@
 import { ISpace, ISpaceWithTabs, ITab, ITabWithIndex } from '@root/src/pages/types/global.types';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 import MoreOptions from '../more-options';
-import { deleteSpaceModalAtom, selectedTabsAtom, snackbarAtom } from '@root/src/stores/app';
+import { deleteSpaceModalAtom, selectedTabsAtom, snackbarAtom, updateSpaceModalAtom } from '@root/src/stores/app';
 import { SetStateAction, useAtom } from 'jotai';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { Dispatch, useState, useCallback, useEffect, MouseEventHandler } from 'react';
 import { Tab } from '../tab';
-import { createPortal } from 'react-dom';
-import UpdateSpace from '../update/UpdateSpace';
 import { motion } from 'framer-motion';
 import { goToTab } from '@root/src/services/chrome-tabs/tabs';
 import TabDraggedOutsideActiveSpace from './TabDraggedOutsideActiveSpace';
@@ -25,9 +23,8 @@ type Props = {
 const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) => {
   // snackbar atom
   const [, setSnackbar] = useAtom(snackbarAtom);
-
-  // local state - show delete modal
-  const [showEditModal, setShowEditModal] = useState(false);
+  // snackbar atom
+  const [, setUpdateSpaceModal] = useAtom(updateSpaceModalAtom);
 
   // local state - show delete modal
   const [selectedTabs, setSelectedTabs] = useAtom(selectedTabsAtom);
@@ -227,7 +224,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
             shouldOpenInNewWindow={false}
             isSpaceActive={true}
             onSyncClick={handleSyncTabs}
-            onEditClick={() => setShowEditModal(true)}
+            onEditClick={() => setUpdateSpaceModal({ ...space, tabs })}
             onDeleteClick={() => setDeleteSpaceModal({ show: true, spaceId: space.id })}
           />
         </div>
@@ -321,12 +318,6 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
           )}
         </Droppable>
       </div>
-
-      {showEditModal &&
-        createPortal(
-          <UpdateSpace space={space} numTabs={tabs?.length} onClose={() => setShowEditModal(false)} />,
-          document.body,
-        )}
     </div>
   ) : null;
 };

@@ -29,5 +29,8 @@ export const snackbarAtom = atom<SnackbarAtom>({ msg: '', show: false, isLoading
 // create new space modal
 export const newSpaceModalAtom = atom<{ show: boolean; tabs: ITab[] }>({ show: false, tabs: [] });
 
+// edit space modal
+export const updateSpaceModalAtom = atom<ISpaceWithTabs>(null as ISpaceWithTabs);
+
 // delete space modal
 export const deleteSpaceModalAtom = atom<{ show: boolean; spaceId: string }>({ show: false, spaceId: '' });

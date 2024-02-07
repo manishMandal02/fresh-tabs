@@ -2,7 +2,7 @@ import { ISpace, ITab, ThemeColor } from '@root/src/pages/types/global.types';
 import ColorPicker from '../../elements/color-picker';
 import EmojiPicker from '../../elements/emoji-picker';
 import { SlideModal } from '../../elements/modal';
-import { useState, useEffect, ChangeEventHandler, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Tab } from '..';
 import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
 import { useAtom } from 'jotai';
@@ -10,6 +10,7 @@ import { snackbarAtom, nonActiveSpacesAtom, newSpaceModalAtom } from '@root/src/
 import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
 import Spinner from '../../elements/spinner';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
+import TextInput from '../../elements/TextInput/TextInput';
 
 type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;
 
@@ -53,8 +54,8 @@ const CreateSpace = () => {
   }, [isModalOpen, currentTabs]);
 
   // on title change
-  const onTitleChange: ChangeEventHandler<HTMLInputElement> = ev => {
-    setNewSpaceData(prev => ({ ...prev, title: ev.target.value }));
+  const onTitleChange = (title: string) => {
+    setNewSpaceData(prev => ({ ...prev, title }));
   };
   // on emoji change
   const onEmojiChange = (emoji: string) => {
@@ -132,19 +133,11 @@ const CreateSpace = () => {
   }, [handleShortcut]);
 
   return (
-    <SlideModal title="New Space" isOpen={isModalOpen} onClose={handleCloseModal}>
+    <SlideModal isOpen={isModalOpen} onClose={handleCloseModal}>
       <div className=" flex flex-col  w-full h-full py-3 px-4">
         <div className="mt-4 flex items-center gap-x-3">
-          <input
-            type="text"
-            className="rounded bg-slate-700  px-2.5 py-1.5 text-[1rem] text-slate-200 w-48 outline-slate-600"
-            placeholder="Space Title..."
-            onKeyDown={ev => {
-              ev.stopPropagation();
-            }}
-            value={newSpaceData.title}
-            onChange={onTitleChange}
-          />
+          <TextInput placeholder="Space Title..." value={newSpaceData.title} onChange={onTitleChange} />
+
           <EmojiPicker emoji={newSpaceData.emoji} onChange={onEmojiChange} />
           <ColorPicker color={newSpaceData.theme} onChange={onThemeChange} />
         </div>

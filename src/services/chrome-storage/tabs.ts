@@ -192,8 +192,7 @@ export const saveGlobalPinnedTabs = async (tabs: IPinnedTab[]): Promise<boolean>
 // save pinned tabs
 export const getGlobalPinnedTabs = async (): Promise<IPinnedTab[]> => {
   try {
-    const pinnedTabs = await getStorage<IPinnedTab[]>({ type: 'sync', key: 'PinnedTabs' });
-    return pinnedTabs;
+    return await getStorage<IPinnedTab[]>({ type: 'sync', key: 'PinnedTabs' });
   } catch (error) {
     logger.error({
       error,

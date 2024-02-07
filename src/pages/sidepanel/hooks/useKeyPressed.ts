@@ -15,14 +15,18 @@ export const useKeyPressed = ({ onDeletePressed, onEscapePressed }: useKeyPresse
   // device details
   const { isMac } = useDeviceInfo();
 
-  console.log('🚀 ~ useKeyPressed ~ isMac:', isMac);
-
   // if cmd/ctrl key is pressed save to state
   const handleKeydown = useCallback(
     ev => {
       const keyEv = ev as KeyboardEvent;
 
-      if (onDeletePressed && (keyEv.code.toLowerCase() === 'delete' || keyEv.code.toLowerCase() === 'backspace')) {
+      console.log('🚀 ~ useKeyPressed ~ keyEv:', keyEv);
+
+      if (onDeletePressed && keyEv.code.toLowerCase() === 'delete') {
+        onDeletePressed();
+      }
+
+      if (isMac && onDeletePressed && keyEv.code.toLowerCase() === 'backspace') {
         onDeletePressed();
       }
 
@@ -38,7 +42,7 @@ export const useKeyPressed = ({ onDeletePressed, onEscapePressed }: useKeyPresse
         setIsShiftKeyPressed(true);
       }
     },
-    [onDeletePressed, onEscapePressed],
+    [onDeletePressed, onEscapePressed, isMac],
   );
 
   // keyup, reset the state
@@ -49,12 +53,12 @@ export const useKeyPressed = ({ onDeletePressed, onEscapePressed }: useKeyPresse
 
   // keeping track of cmd/ctrl key press for UI action
   useEffect(() => {
-    document.addEventListener('keydown', handleKeydown);
-    document.addEventListener('keyup', handleKeyUp);
+    document.body.addEventListener('keydown', handleKeydown);
+    document.body.addEventListener('keyup', handleKeyUp);
 
     return () => {
-      document.removeEventListener('keydown', handleKeydown);
-      document.removeEventListener('keyup', handleKeyUp);
+      document.body.removeEventListener('keydown', handleKeydown);
+      document.body.removeEventListener('keyup', handleKeyUp);
     };
   }, [handleKeydown, handleKeyUp]);
 
