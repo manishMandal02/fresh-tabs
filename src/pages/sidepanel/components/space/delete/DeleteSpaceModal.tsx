@@ -123,7 +123,8 @@ const DeleteSpaceModal = () => {
             {/* TODO - show a extra caution warning for active space */}
             <p className="font-light text-sm">
               Are you sure you want to delete <br />{' '}
-              <strong className="text-slate-400 font-medium m-0">{spaceToDelete?.title.trim() || 'this space'}</strong>?
+              <strong className="text-slate-400 font-medium m-0">{spaceToDelete?.title?.trim() || 'this space'}</strong>
+              ?
             </p>
 
             <div className=" absolute bottom-4 right-3 ">

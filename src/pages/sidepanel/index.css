@@ -14,6 +14,10 @@ body {
   position: relative;
 }
 
+* {
+  outline-color: #262b49;
+}
+
 .cc-scrollbar::-webkit-scrollbar {
   width: 6px;
 

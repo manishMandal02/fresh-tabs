@@ -85,6 +85,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                       {...provided3.draggableProps}
                       {...provided3.dragHandleProps}
                       className="z-10 "
+                      tabIndex={-1}
                       style={{
                         ...provided3.draggableProps.style,
                         opacity: !combineWith || (!isDraggingOverOtherSpaces && isDraggingSpace) ? '1' : '0.75',
@@ -100,7 +101,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                             {...provided2.droppableProps}
                             {...bounceDivAnimation}
                             ref={provided2.innerRef}
-                            className=" h-[35px] w-[50px] mt-1 mb-1.5">
+                            className=" h-[35px] w-[50px] mt-1 mb-1.5 ">
                             <NonActiveSpace space={space} isDraggedOver={isDraggingOver || !!combineTargetFor} />
                           </motion.div>
                         )}
@@ -152,8 +153,8 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
               }}>
               <Tooltip label="Add new space" delay={1500}>
                 <button
-                  className={`bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/90 w-[45px] h-[40px]  
-                            absolute top-px -right-px cursor-pointer flex items-center justify-center  rounded-lg`}
+                  className={`bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/90 w-[45px] h-[40px] 
+                            absolute top-px -right-px cursor-pointer flex items-center outline-brand-darkBgAccent border-none justify-center  rounded-lg`}
                   style={{
                     border: isDraggingOver ? '1px dashed #6b6a6a' : '',
                     backgroundColor: isDraggingOver ? ' #21262e' : '',

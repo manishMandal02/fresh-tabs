@@ -122,6 +122,7 @@ const CreateSpace = () => {
   }, []);
 
   const handleCloseModal = () => {
+    console.log('🚀 ~ CreateSpace.tsx ~ handleCloseModal: ✅');
     setIsModalOpen(false);
     setNewSpaceModal({ show: false, tabs: [] });
   };
@@ -133,7 +134,13 @@ const CreateSpace = () => {
   }, [handleShortcut]);
 
   return (
-    <SlideModal isOpen={isModalOpen} onClose={handleCloseModal}>
+    <SlideModal
+      isOpen={isModalOpen}
+      onClose={() => {
+        console.log('settings modal onClose');
+
+        handleCloseModal();
+      }}>
       <div className=" flex flex-col  w-full h-full py-3 px-4">
         <div className="mt-4 flex items-center gap-x-3">
           <TextInput placeholder="Space Title..." value={newSpaceData.title} onChange={onTitleChange} />

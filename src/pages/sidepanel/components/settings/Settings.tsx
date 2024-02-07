@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import RadioGroup, { RadioOptions } from '../elements/radio-group/RadioGroup';
 import { useAtom } from 'jotai';
 import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
@@ -116,7 +116,12 @@ const Settings = () => {
         className="text-slate-600 mt-1 cursor-pointer"
         onClick={() => setIsModalOpen(true)}
       />
-      <SlideModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+      <SlideModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          console.log('settings modal onClose');
+          setIsModalOpen(false);
+        }}>
         <div className="relative flex flex-col  w-full h-[32rem] py-4 px-3.5 text-slate-400 ">
           {/* shortcuts */}
           <div className="mt-1">
@@ -195,4 +200,4 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+export default memo(Settings);

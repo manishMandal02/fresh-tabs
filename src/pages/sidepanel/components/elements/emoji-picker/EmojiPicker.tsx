@@ -25,6 +25,7 @@ const EmojiPicker = ({ emoji, onChange }: Props) => {
               height={'400px'}
               width={'350px'}
               theme={Theme.DARK}
+              className="!bg-brand-darkBg !shadow !shadow-slate-500 [&_input]:!bg-brand-darkBgAccent/80 [&_li>h2]:!bg-brand-darkBgAccent/60"
             />
           </div>
         }>

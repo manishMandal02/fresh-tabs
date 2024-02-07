@@ -22,6 +22,7 @@ const MoreOptions = ({
     <DropdownMenuRadix.Root>
       <DropdownMenuRadix.Trigger className="outline-none">
         <MdMoreVert
+          tabIndex={0}
           className="text-slate-500 z-50 text-lg  hover:text-slate-400 transition-all duration-200 "
           onClick={() => {}}
         />

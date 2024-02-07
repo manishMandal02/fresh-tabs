@@ -10,7 +10,6 @@ import Tooltip from './components/elements/tooltip';
 import { useSidePanel } from './hooks/useSidePanel';
 import Spinner from './components/elements/spinner';
 import Snackbar from './components/elements/snackbar';
-import Settings from './components/settings/Settings';
 import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
 import { IMessageEvent, IPinnedTab, ITab } from '../types/global.types';
 import DeleteSpaceModal from './components/space/delete/DeleteSpaceModal';
@@ -19,6 +18,7 @@ import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 import { getGlobalPinnedTabs } from '@root/src/services/chrome-storage/tabs';
 import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
 import OtherSpacesContainer from './components/space/other-space/OtherSpacesContainer';
+import Settings from './components/settings/Settings';
 
 // event ids of processed events
 const processedEvents: string[] = [];

@@ -9,14 +9,17 @@ type Props = {
 };
 
 const Popover = ({ children, content, open, onChange }: Props) => {
+  // TODO - temp fix to show popover
+  const portalAnchor = [...document.getElementsByTagName('dialog')][1];
+
   return (
     <>
       <PopoverRadix.Root open={open} onOpenChange={onChange}>
         <PopoverRadix.Trigger className="outline-none" asChild>
           {children}
         </PopoverRadix.Trigger>
-        <PopoverRadix.Portal>
-          <PopoverRadix.Content className=" z-[150]" sideOffset={5}>
+        <PopoverRadix.Portal container={portalAnchor}>
+          <PopoverRadix.Content className="z-[99]" sideOffset={5}>
             {content}
           </PopoverRadix.Content>
         </PopoverRadix.Portal>

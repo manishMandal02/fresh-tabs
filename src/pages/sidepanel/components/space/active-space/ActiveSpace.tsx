@@ -249,7 +249,8 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
                       ref={provided2.innerRef}
                       {...provided2.draggableProps}
                       {...provided2.dragHandleProps}
-                      className={`relative outline-none mb-[2.5px] draggable-tab-container 
+                      tabIndex={-1}
+                      className={`relative outline-none mb-[2.5px] draggable-tab-container outline-none
                       ${isDraggingGlobal && isDragging && !isDraggingOver ? ` !w-[30px] ml-10` : 'w-fit'}
                       `}
                       style={{
@@ -260,7 +261,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
                       {isDraggingGlobal && isDragging && !isDraggingOver ? (
                         <TabDraggedOutsideActiveSpace numSelectedTabs={selectedTabs?.length} tabURL={tab.url} />
                       ) : (
-                        <div className="relative w-[90vw]">
+                        <div className="relative w-[90vw]" tabIndex={-1}>
                           <Tab
                             tabData={tab}
                             isSpaceActive={true}

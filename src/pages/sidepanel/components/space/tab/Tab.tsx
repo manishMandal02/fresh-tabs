@@ -52,7 +52,7 @@ const Tab = ({
   // handle copy tab url
   const handleCopyURL = async () => await copyToClipboard(tabData.url);
 
-  const tabAnimation = {
+  const bounceDivAnimation = {
     initial: { scale: 0, opacity: 0 },
     animate: {
       scale: 1,
@@ -70,8 +70,10 @@ const Tab = ({
 
   return (
     <motion.div
-      {...tabAnimation}
-      className={` w-full select-none z-[20] px-2.5 py-[5px]  flex relative  items-center justify-between shadow-sm rounded-lg overflow-hidden group h-[1.7rem]`}
+      {...bounceDivAnimation}
+      tabIndex={0}
+      className={` w-full select-none z-[20] px-2.5 py-[5px] flex relative 
+                 items-center justify-between shadow-sm rounded-lg overflow-hidden group h-[1.7rem]`}
       style={{
         cursor: isModifierKeyPressed ? 'pointer' : '',
       }}
