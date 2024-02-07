@@ -9,6 +9,7 @@ import { useAtom } from 'jotai';
 import { updateSpaceModalAtom } from '@root/src/stores/app';
 import { createPortal } from 'react-dom';
 import TextInput from '../../elements/TextInput/TextInput';
+import { Tab } from '../tab';
 
 const UpdateSpace = () => {
   // update space modal global state/atom
@@ -58,16 +59,11 @@ const UpdateSpace = () => {
   };
 
   // set update button label
-  const updateBtnLabel = (updateSpaceData?.isSaved && 'Update') || 'Save';
+  const updateBtnLabel = (updateSpaceData?.isSaved && 'Update Space') || 'Save';
 
   return updateSpaceModal?.id && typeof updateSpaceData?.title === 'string'
     ? createPortal(
-        <SlideModal
-          isOpen={typeof updateSpaceData?.title === 'string'}
-          onClose={() => {
-            console.log('👋 On close called!!');
-            onClose();
-          }}>
+        <SlideModal title="" isOpen={typeof updateSpaceData?.title === 'string'} onClose={onClose}>
           <div className=" flex flex-col  w-full h-full py-3 px-4">
             <div className="mt-4 flex items-center gap-x-3">
               <TextInput placeholder="Enter space title..." value={updateSpaceData.title} onChange={onTitleChange} />
@@ -75,11 +71,22 @@ const UpdateSpace = () => {
               <EmojiPicker emoji={updateSpaceData.emoji} onChange={onEmojiChange} />
               <ColorPicker color={updateSpaceData.theme} onChange={onThemeChange} />
             </div>
+            {/* <hr
+              tabIndex={-1}
+              className="bg-brand-darkBgAccent/40 border-none mt-4 mb-2  h-[0.5px] w-[60%] mx-auto rounded-md"
+            /> */}
 
             {/* numTabs */}
-            <div className="mt-6 flex justify-between items-center">
-              <p className="text-slate-500 font-light text-base">{tabs.length} tabs in space</p>
+            <p className="text-slate-500 font-extralight mt-3 text-[14px] ml-px mb-px ">
+              {tabs.length} {tabs.length > 1 ? 'Tabs' : 'Tab'}
+            </p>
+
+            <div className="w-full h-fit max-h-[16rem] border-y border-brand-darkBgAccent/20 bg-red-30 overflow-x-hidden overflow-y-auto cc-scrollbar">
+              {tabs.map(tab => (
+                <Tab key={tab.id} tabData={tab} isModifierKeyPressed={false} isTabActive={false} />
+              ))}
             </div>
+
             {/* error msg */}
             {errorMsg ? (
               <span className="test-base mx-auto mt-6 text-slate-700 font-medium bg-red-400 px-3 py-1 w-fit text-center rounded-sm">
@@ -87,14 +94,12 @@ const UpdateSpace = () => {
               </span>
             ) : null}
             {/* update space */}
-            <div className="absolute bottom-5 w-full flex flex-col items-center justify-center left-1/2 -translate-x-1/2">
-              <button
-                className={` w-[65%] py-2  rounded-md text-slate-700  bg-brand-primary
-                font-semibold text-sm hover:opacity-90 transition-all duration-300`}
-                onClick={handleUpdateSpace}>
-                {snackbar.isLoading ? <Spinner size="sm" /> : updateBtnLabel}
-              </button>
-            </div>
+            <button
+              className={` mt-5 mx-auto w-[70%] py-2 rounded-md text-slate-700 font-semibold
+                  text-[13px] bg-brand-primary/90 hover:opacity-80 transition-all  duration-300`}
+              onClick={handleUpdateSpace}>
+              {snackbar.isLoading ? <Spinner size="sm" /> : updateBtnLabel}
+            </button>
           </div>
         </SlideModal>,
         document.body,

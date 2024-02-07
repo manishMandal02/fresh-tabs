@@ -10,7 +10,9 @@ type Props = {
 
 const Popover = ({ children, content, open, onChange }: Props) => {
   // TODO - temp fix to show popover
-  const portalAnchor = [...document.getElementsByTagName('dialog')][1];
+  const portalAnchor = document.querySelector('dialog');
+
+  console.log('🚀 ~ Popover ~ portalAnchor:', portalAnchor);
 
   return (
     <>

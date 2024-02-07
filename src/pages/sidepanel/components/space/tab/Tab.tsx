@@ -72,7 +72,7 @@ const Tab = ({
     <motion.div
       {...bounceDivAnimation}
       tabIndex={0}
-      className={` w-full select-none z-[20] px-2.5 py-[5px] flex relative 
+      className={` w-full select-none z-[20] px-2 py-[5px] flex relative 
                  items-center justify-between shadow-sm rounded-lg overflow-hidden group h-[1.7rem]`}
       style={{
         cursor: isModifierKeyPressed ? 'pointer' : '',

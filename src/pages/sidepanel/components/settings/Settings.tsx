@@ -117,6 +117,7 @@ const Settings = () => {
         onClick={() => setIsModalOpen(true)}
       />
       <SlideModal
+        title="Preferences"
         isOpen={isModalOpen}
         onClose={() => {
           console.log('settings modal onClose');

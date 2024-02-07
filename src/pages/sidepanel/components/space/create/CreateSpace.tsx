@@ -135,6 +135,7 @@ const CreateSpace = () => {
 
   return (
     <SlideModal
+      title=""
       isOpen={isModalOpen}
       onClose={() => {
         console.log('settings modal onClose');
@@ -164,10 +165,10 @@ const CreateSpace = () => {
         ) : null}
         {/* add space */}
         <button
-          className={` mt-16 mx-auto w-[90%] py-2 
-                      rounded-md text-slate-500 font-medium text-base shadow shadow-slate-500 hover:opacity-80 transition-all duration-300`}
+          className={` mt-6 mx-auto w-[70%] py-2 
+                      rounded-md text-slate-700 font-semibold text-[13px] bg-brand-primary/90 hover:opacity-80 transition-all  duration-300`}
           onClick={handleAddSpace}>
-          {snackbar.isLoading ? <Spinner size="sm" /> : 'Add'}
+          {snackbar.isLoading ? <Spinner size="sm" /> : 'Add Space'}
         </button>
       </div>
     </SlideModal>

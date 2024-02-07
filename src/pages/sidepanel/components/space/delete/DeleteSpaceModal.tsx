@@ -120,7 +120,7 @@ const DeleteSpaceModal = () => {
     ? createPortal(
         <AlertModal isOpen={deleteSpaceModal.show} title="Confirm Delete" onClose={onClose}>
           <div className=" px-4 py-2.5 text-slate-400  ">
-            {/* TODO - show a extra caution warning for active space */}
+            {/* TODO - show a extra caution warning for active space, and also for   space opened in other window  */}
             <p className="font-light text-sm">
               Are you sure you want to delete <br />{' '}
               <strong className="text-slate-400 font-medium m-0">{spaceToDelete?.title?.trim() || 'this space'}</strong>

@@ -36,11 +36,13 @@ export const useUpdateSpace = ({ updateSpaceData, spaceId, onClose }: UseUpdateS
     // hide loading snackbar
     setSnackbar({ show: false, msg: '', isLoading: false });
 
-    // space update
     if (res) {
+      // update spaces list ui with same order
+
+      setSpaces(prev => prev.map(s => (s.id === spaceId ? { ...updateSpaceData, id: spaceId } : s)));
+
       // close modal
       onClose();
-      setSpaces(prev => [...prev.filter(s => s.id !== spaceId), { id: spaceId, ...updateSpaceData }]);
       setSnackbar({ show: true, msg: 'Space updated', isSuccess: true });
     } else {
       // failed

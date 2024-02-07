@@ -35,9 +35,7 @@ const AlertModal = ({ children, isOpen, onClose, title }: Props) => {
       }}>
       {/* backdrop */}
       {/* eslint-disable-next-line */}
-      <div
-        className="z-[125] top-0 left-0 w-screen h-screen absolute bg-brand-darkBgAccent/40"
-        onClick={handleClose}></div>
+      <div className="z-[125] top-0 left-0 w-screen h-screen absolute bg-brand-darkBg/25" onClick={handleClose}></div>
       {/* modal card */}
       <div
         className={`z-[130] absolute top-[35%] flex flex-col left-1/2 -translate-x-1/2 w-[90%]    mx-auto h-[20%] rounded-md  bg-slate-900 

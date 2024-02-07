@@ -63,7 +63,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
 
   return (
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-    <div className="relative w-full h-[full] flex items-start justify-center overflow-hidden mx-auto gap-x-1 ">
+    <div className="relative w-full h-[full] flex items-start justify-center overflow-hidden mx-auto gap-x-1 px-1">
       <Droppable
         droppableId="other-spaces"
         direction="horizontal"
@@ -74,8 +74,8 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
           <div
             {...provided1.droppableProps}
             ref={provided1.innerRef}
-            className={`max-w-[83.5%] w-fit pb-2 py-1.5 px-1.5  flex gap-x-2 overflow-y-hidden overflow-x-auto scroll-smooth 
-                        rounded-md cc-scrollbar shadow-inner shadow-brand-darkBgAccent/20`}>
+            className={`max-w-[83.5%] w-fit pb-2 pt-1 px-2  flex gap-x-2 overflow-y-hidden  overflow-x-auto scroll-smooth 
+                        rounded-md cc-scrollbar shadow-inner shadow-brand-darkBgAccent/10`}>
             {spaces.map((space, idx) => {
               return (
                 <Draggable key={space.id} draggableId={space.id} index={idx} isDragDisabled={isDraggingTabs}>
@@ -115,7 +115,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
         )}
       </Droppable>
 
-      <div className="relative w-[17%]  py-1.5 bg-red-30 h-full mt-1">
+      <div className="relative w-[16%]  py-1.5 bg-red-30 h-full mt-1">
         {/* delete space drop box */}
         <Droppable droppableId="delete-space" direction="horizontal" type="SPACE" isDropDisabled={isDraggingTabs}>
           {(provided, { isDraggingOver }) => (
