@@ -17,7 +17,7 @@ import {
 } from '@root/src/services/chrome-storage/tabs';
 import { getFaviconURL, wait } from '../utils';
 import { logger } from '../utils/logger';
-import { publishEvents } from '../utils/publish-events';
+import { publishEvents, publishEventsTab } from '../utils/publish-events';
 import { generateId } from '../utils/generateId';
 import {
   checkParentBMFolder,
@@ -181,6 +181,19 @@ chrome.runtime.onInstalled.addListener(async info => {
   }
 });
 
+// shortcuts
+chrome.commands.onCommand.addListener(async (command, tab) => {
+  console.log('🚀 ~ chrome.commands.onCommand.addListener ~ command:', command);
+  if (command === 'cmdPalette') {
+    // TODO - redirect to different tab if user on chrome:// url
+    // TODO - handle new tab
+
+    if (tab?.url.startsWith('chrome://')) return;
+
+    await publishEventsTab(tab.id, { event: 'SHOW_COMMAND_PALETTE' });
+  }
+});
+
 // handle chrome alarms triggers
 chrome.alarms.onAlarm.addListener(async alarm => {
   // handle delete unsaved space
@@ -200,6 +213,11 @@ chrome.alarms.onAlarm.addListener(async alarm => {
 
 // IIFE - checks for alarms, its not guaranteed to persist
 (async () => {
+  //TODO - testing
+  const sites = await chrome.topSites.get();
+
+  console.log('🚀 ~ sites:', sites);
+
   const alarm = await chrome.alarms.get(AlarmNames.saveToBM);
   if (alarm?.name) return;
 

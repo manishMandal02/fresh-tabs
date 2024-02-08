@@ -3,7 +3,7 @@ import { useAtom } from 'jotai';
 import { activeSpaceAtom, nonActiveSpacesAtom, selectedTabsAtom } from '@root/src/stores/app';
 import { getAllSpaces, getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
-import { IMessageEvent, ISpaceWithTabs, ITab } from '../../types/global.types';
+import { IMessageEventSidePanel, ISpaceWithTabs, ITab } from '../../types/global.types';
 import { MutableRefObject, useCallback, Dispatch, useState, SetStateAction } from 'react';
 import { logger } from '../../utils/logger';
 import type { OnDragEndResponder, OnBeforeDragStartResponder } from 'react-beautiful-dnd';
@@ -101,7 +101,7 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
 
   // handle background events
   const handleEvents = useCallback(
-    async ({ event, payload }: IMessageEvent, activeSpaceRef: MutableRefObject<ISpaceWithTabs>) => {
+    async ({ event, payload }: IMessageEventSidePanel, activeSpaceRef: MutableRefObject<ISpaceWithTabs>) => {
       switch (event) {
         case 'ADD_SPACE': {
           // add new space

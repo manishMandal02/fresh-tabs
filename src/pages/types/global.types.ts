@@ -44,18 +44,29 @@ export interface ITabWithIndex extends ITab {
   index: number;
 }
 
-type MessageEvents = 'UPDATE_SPACE_ACTIVE_TAB' | 'UPDATE_TABS' | 'REMOVE_SPACE' | 'ADD_SPACE';
+type MessageEventsSidePanel = 'UPDATE_SPACE_ACTIVE_TAB' | 'UPDATE_TABS' | 'REMOVE_SPACE' | 'ADD_SPACE';
 
-interface IEventPayload {
+interface IEventPayloadSidePanel {
   spaceId?: string;
   space?: ISpace | ISpaceWithTabs;
   newActiveIndex?: number;
 }
 
-export interface IMessageEvent {
-  event: MessageEvents;
+export interface IMessageEventSidePanel {
+  event: MessageEventsSidePanel;
   id: string;
-  payload: IEventPayload;
+  payload: IEventPayloadSidePanel;
+}
+
+type MessageEventsContentScript = 'SHOW_COMMAND_PALETTE';
+
+interface IEventPayloadContentScript {
+  spaceId?: string;
+}
+
+export interface IMessageEventContentScript {
+  event: MessageEventsContentScript;
+  payload?: IEventPayloadContentScript;
 }
 
 export interface IAppSettings {

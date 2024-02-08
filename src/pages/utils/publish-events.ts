@@ -1,8 +1,8 @@
-import { IMessageEvent } from '../types/global.types';
+import { IMessageEventSidePanel, IMessageEventContentScript } from '../types/global.types';
 import { logger } from './logger';
 
 // used to send message to side panel to update ui, if side panel is open
-export const publishEvents = async (event: IMessageEvent): Promise<boolean> => {
+export const publishEvents = async (event: IMessageEventSidePanel): Promise<boolean> => {
   try {
     await chrome.runtime.sendMessage(event);
 
@@ -14,7 +14,21 @@ export const publishEvents = async (event: IMessageEvent): Promise<boolean> => {
     logger.error({
       error,
       msg: 'Failed to send message to side panel',
-      fileTrace: 'src/pages/background/index.ts:108 ~ sendMessageSidePanel() ~ catch block',
+      fileTrace: 'src/pages/background/index.ts:17 ~ publishEvents() ~ catch block',
+    });
+    return false;
+  }
+};
+
+export const publishEventsTab = async (tabId: number, event: IMessageEventContentScript) => {
+  try {
+    await chrome.tabs.sendMessage(tabId, event);
+    return true;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: 'Failed to send message to active tab',
+      fileTrace: 'src/pages/background/index.ts:31 ~ publishEventsTab() ~ catch block',
     });
     return false;
   }

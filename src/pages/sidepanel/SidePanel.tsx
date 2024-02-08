@@ -11,7 +11,7 @@ import { useSidePanel } from './hooks/useSidePanel';
 import Spinner from './components/elements/spinner';
 import Snackbar from './components/elements/snackbar';
 import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
-import { IMessageEvent, IPinnedTab, ITab } from '../types/global.types';
+import { IMessageEventSidePanel, IPinnedTab, ITab } from '../types/global.types';
 import DeleteSpaceModal from './components/space/delete/DeleteSpaceModal';
 import { ActiveSpace, CreateSpace, UpdateSpace } from './components/space';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
@@ -84,7 +84,7 @@ const SidePanel = () => {
 
   // listen to  events from  background
   chrome.runtime.onMessage.addListener(async (msg, _sender, response) => {
-    const event = msg as IMessageEvent;
+    const event = msg as IMessageEventSidePanel;
 
     if (!event?.id) {
       response(true);
@@ -101,7 +101,7 @@ const SidePanel = () => {
     // add to processed events
     processedEvents.push(event.id);
 
-    await handleEvents(msg as IMessageEvent, activeSpaceRef);
+    await handleEvents(msg as IMessageEventSidePanel, activeSpaceRef);
 
     response(true);
   });

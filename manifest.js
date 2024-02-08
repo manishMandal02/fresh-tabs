@@ -7,7 +7,7 @@ const manifest = {
   name: 'Fresh Tabs',
   version: '0.0.1',
   description: 'Manage tabs like pro',
-  permissions: ['sidePanel', 'tabs', 'storage', 'bookmarks', 'favicon', 'alarms'],
+  permissions: ['sidePanel', 'tabs', 'storage', 'bookmarks', 'favicon', 'alarms', 'scripting', 'activeTab', 'topSites'],
   commands: {
     cmdE: {
       suggested_key: {
@@ -15,6 +15,13 @@ const manifest = {
         mac: 'Command+E',
       },
       description: 'Set above ☝️',
+    },
+    cmdPalette: {
+      suggested_key: {
+        default: 'Ctrl+Period',
+        mac: 'Command+Period',
+      },
+      description: 'Command Palette',
     },
   },
   side_panel: {
@@ -30,6 +37,12 @@ const manifest = {
     default_icon: 'icon-34.png',
     default_title: 'open Fresh Tabs',
   },
+  content_scripts: [
+    {
+      matches: ['http://*/*', 'https://*/*', '<all_urls>'],
+      js: ['src/pages/content/index.js'],
+    },
+  ],
   icons: {
     128: 'icon-128.png',
   },
