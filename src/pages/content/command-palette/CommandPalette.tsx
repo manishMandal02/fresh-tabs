@@ -1,12 +1,31 @@
 import { MdNewLabel, MdSearch, MdSwitchLeft } from 'react-icons/md';
 import { motion } from 'framer-motion';
-import { useEffect, useRef, MouseEventHandler, ReactEventHandler } from 'react';
+import { useEffect, useRef, MouseEventHandler, ReactEventHandler, useState, useCallback } from 'react';
 import type { IconType } from 'react-icons/lib';
 
 import { getFaviconURL } from '../../utils';
 import { ITab } from '../../types/global.types';
 import { useKeyPressed } from '../../sidepanel/hooks/useKeyPressed';
 import { CommandPaletteContainerId } from '@root/src/constants/app';
+import Tooltip from '../../sidepanel/components/elements/tooltip';
+
+type Command = {
+  index: number;
+  type: 'static' | 'recent-site' | 'top-site' | 'divider';
+  label: string;
+  icon?: string | IconType;
+};
+
+const staticCommands: Command[] = [
+  { index: 1, type: 'static', label: 'Switch Space', icon: MdSwitchLeft },
+  { index: 2, type: 'static', label: 'New Space', icon: MdNewLabel },
+];
+
+const commandDivider: Command = {
+  index: -1,
+  label: 'divider',
+  type: 'divider',
+};
 
 type Props = {
   recentSites: ITab[];
@@ -14,10 +33,16 @@ type Props = {
 };
 
 const CommandPalette = ({ recentSites, topSites }: Props) => {
-  const spaceCommands = [
-    { label: 'New Space', icon: MdNewLabel },
-    { label: 'Switch Space', icon: MdSwitchLeft },
-  ];
+  // local state
+  // search query
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // search/commands suggestions
+  const [suggestedCommands, setSuggestedCommands] = useState<Command[]>([]);
+
+  const [selectedCommand, setSelectedCommand] = useState(0);
+
+  const [commandPaletteContainerEl, setCommandPaletteContainerEl] = useState<HTMLElement | null>(null);
 
   const modalRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -26,25 +51,31 @@ const CommandPalette = ({ recentSites, topSites }: Props) => {
     console.log('🚀 ~ CommandPalette ~ useEffect: 🎉🎉');
     modalRef.current?.showModal();
     inputRef.current?.focus();
-  }, [recentSites]);
+
+    const recentSitesCommands = recentSites.map<Command>((site, idx) => ({
+      index: 1 + idx + staticCommands.length,
+      type: `recent-site`,
+      label: site.title,
+      icon: site.url,
+    }));
+
+    setSuggestedCommands([...staticCommands, commandDivider, ...recentSitesCommands]);
+
+    const containerEl = document.getElementById(CommandPaletteContainerId);
+    if (containerEl) {
+      setCommandPaletteContainerEl(containerEl);
+    }
+  }, [recentSites, topSites]);
 
   const handleSearchIconClick = () => {
     inputRef.current?.focus();
   };
 
-  useKeyPressed({
-    onEscapePressed: () => {
-      handleCloseCommandPalette();
-    },
-  });
-
   const handleCloseCommandPalette = () => {
     modalRef.current?.close();
     // remove parent container
-    const container = document.getElementById(CommandPaletteContainerId);
-    if (container) {
-      container.remove();
-    }
+    commandPaletteContainerEl?.remove();
+    document.body.style.overflow = 'auto';
   };
 
   // check if modal's backdrop was clicked
@@ -77,16 +108,81 @@ const CommandPalette = ({ recentSites, topSites }: Props) => {
     transition: { type: 'spring', stiffness: 900, damping: 40 },
   };
 
+  const focusSuggestedCommand = useCallback(
+    (index: number) => {
+      const selectedEl = commandPaletteContainerEl?.shadowRoot.querySelector(`button#fresh-tabs-command-${index}`);
+
+      if (!selectedEl) return;
+
+      (selectedEl as HTMLButtonElement).focus();
+    },
+    [commandPaletteContainerEl],
+  );
+
+  useEffect(() => {
+    if (selectedCommand === 0) {
+      // focus input
+      inputRef.current.focus();
+    }
+
+    // focus command
+    focusSuggestedCommand(selectedCommand);
+
+    // set search
+    if (selectedCommand > 2) {
+      const command = suggestedCommands.find(cmd => cmd.index === selectedCommand);
+      setSearchQuery(command.icon as string);
+    } else {
+      setSearchQuery('');
+    }
+  }, [selectedCommand, focusSuggestedCommand, suggestedCommands]);
+
+  // handle key press
+  useKeyPressed({
+    parentConTainerEl: modalRef.current,
+    monitorModifierKeys: false,
+    onEscapePressed: () => {
+      handleCloseCommandPalette();
+    },
+    onArrowDownPressed: () => {
+      if (selectedCommand === 0) {
+        setSelectedCommand(1);
+        return;
+      }
+
+      if (selectedCommand < 1) {
+        return;
+      }
+
+      if (selectedCommand === suggestedCommands.filter(c => c.type !== 'divider').length) return;
+
+      setSelectedCommand(prev => prev + 1);
+    },
+    onArrowUpPressed: () => {
+      if (selectedCommand < 1) {
+        return;
+      }
+
+      setSelectedCommand(prev => prev - 1);
+    },
+  });
+
+  const onCommandClick = (index: number) => {
+    setSelectedCommand(index);
+  };
+
+  // handle fallback image for favicon icons
   const handleImageLoadError: ReactEventHandler<HTMLImageElement> = ev => {
     ev.stopPropagation();
     ev.currentTarget.src = 'https://freshinbox.xyz/favicon.ico';
   };
 
-  const Command = (label: string, Icon?: IconType | string, onSelect?: () => void) => {
+  const Command = (index: number, label: string, Icon?: IconType | string) => {
     return (
       <button
-        className="w-full flex items-center justify-start px-3 py-[7px] outline-none focus:bg-brand-darkBgAccent/70 transition-all duration-300 ease-in-out"
-        onClick={onSelect}>
+        id={`fresh-tabs-command-${index}`}
+        className="w-full flex items-center justify-start px-3 py-[7px] outline-none focus:bg-brand-darkBgAccent/70 transition-all duration-200 ease-in"
+        onClick={() => onCommandClick(index)}>
         <div className="w-[5%]">
           {typeof Icon === 'string' ? (
             <img
@@ -107,18 +203,40 @@ const CommandPalette = ({ recentSites, topSites }: Props) => {
   };
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center fixed top-0 left-0 overflow-hidden">
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+    <div className="w-screen h-screen flex items-center justify-center fixed top-0 left-0 overflow-hidden ">
       <motion.dialog
         aria-modal
+        tabIndex={-1}
         ref={modalRef}
+        onKeyDown={ev => {
+          ev.stopPropagation();
+        }}
         {...bounceDivAnimation}
         onClick={handleBackdropClick}
-        className="absolute m-0  top-[20%] h-fit w-[520px] left-[33.5%] backdrop:to-brand-darkBg/30 p-px bg-transparent">
-        {/* backdrop*/}
-        {/* <div className="w-screen h-screen bg-brand-darkBg/30 z-[999999]  fixed top-0 left-0"></div> */}
-
+        className="absolute m-0 flex flex-col justify-center top-[20%] h-fit w-[520px] left-[33.5%] backdrop:to-brand-darkBg/30 p-px bg-transparent">
+        {/* most visited sites */}
+        <div className="mb-[8px]  overflow-hidden w-[98%] mx-auto ">
+          <p className="text-slate-500 text-[11px] font-thin m-0 bg-brand-darkBg px-3 py-px mx-auto rounded-tr-lg -mb-1 rounded-tl-lg w-fit text-center">
+            Most visited
+          </p>
+          <div className="flex w-full items-center py-2 rounded-lg justify-around bg-brand-darkBg px-2">
+            {topSites?.map(site => (
+              <Tooltip key={site.url} label={site.title} delay={500}>
+                <button className="bg-brand-darkBgAccent rounded-md flex items-center justify-center outline-none p-1 px-1.5 border border-brand-darkBgAccent focus:border-slate-500/80 focus:bg-slate-700 transition-all duration-200 ease-in-out">
+                  <img
+                    alt="icon"
+                    src={getFaviconURL(site.url, false)}
+                    onError={handleImageLoadError}
+                    className="w-[16px] h-[16px] object-scale-down object-center"
+                  />
+                </button>
+              </Tooltip>
+            ))}
+          </div>
+        </div>
         <div
-          className={`w-full h-[50px] bg-brand-darkBg rounded-xl flex items-center justify-start overflow-hidden
+          className={`w-full h-[50px] bg-brand-darkBg rounded-xl flex items-center justify-start border-collapse overflow-hidden
                     shadow-lg shadow-slate-800 border border-slate-600/70`}>
           {/* search box */}
           <button
@@ -128,50 +246,45 @@ const CommandPalette = ({ recentSites, topSites }: Props) => {
             <MdSearch className="fill-slate-700 bg-transparent -mb-px" size={24} />
           </button>
           <input
-            ref={inputRef}
-            type="text"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
-            className="text-[18px] text-slate-300  w-[92%] px-px  py-2.5 bg-transparent rounded-tr-xl caret-slate-200 caret rounded-br-xl outline-none border-none bg-indigo-20"
+            ref={inputRef}
+            onChange={ev => setSearchQuery(ev.currentTarget.value)}
+            type="text"
+            value={searchQuery}
+            className="text-[15px] text-slate-300  w-[90%] px-px  py-2.5 bg-transparent rounded-tr-xl caret-slate-200 caret rounded-br-xl outline-none border-none bg-indigo-20"
           />
         </div>
         {/* search suggestions and result */}
-        <div className="bg-brand-darkBg shadow-sm w-full mx-auto overflow-hidden shadow-slate-800/80 border border-slate-600/60 mt-2 rounded-xl">
+        <div className="bg-brand-darkBg shadow-sm w-full mx-auto overflow-hidden shadow-slate-800/80 border mt-1 border-t-0 border-slate-600/60 border-collapse rounded-xl">
           {/* actions */}
-          {/* create space */}
           <div>
-            {spaceCommands.map(cmd => (
-              <>{Command(cmd.label, cmd.icon)}</>
-            ))}
+            {suggestedCommands.map(cmd => {
+              if (cmd.type === 'static') {
+                return <>{Command(cmd.index, cmd.label, cmd.icon)}</>;
+              }
+
+              if (cmd.type === 'recent-site') {
+                return <>{Command(cmd.index, cmd.label, cmd.icon)}</>;
+              }
+
+              return (
+                <hr key={cmd.index} className="h-px bg-brand-darkBgAccent border-none w-full m-0 p-0" tabIndex={-1} />
+              );
+            })}
           </div>
-
-          <hr className="h-px bg-brand-darkBgAccent border-none w-full m-0 p-0" tabIndex={-1} />
-
-          {/* recently visited sites */}
-          <div className="w-full">
-            <p className="text-slate-600 text-[13px] font-thin ml-2 mt-1 ">Recent visits</p>
-            {recentSites?.map(site => <>{Command(site.title, getFaviconURL(site.url, false))}</>)}
-          </div>
-
-          <hr className="h-px bg-brand-darkBgAccent border-none w-full m-0 p-0" tabIndex={-1} />
-
-          {/* most visited sites */}
-          <div className=" mb-1">
-            <p className="text-slate-600 text-[13px] font-thin ml-2 mt-1 pb-px">Most visited</p>
-            <div className="flex w-full items-center justify-around px-2 py-1 mt-px">
-              {topSites?.map(site => (
-                <button
-                  key={site.url}
-                  className="bg-brand-darkBgAccent rounded-md flex items-center justify-center outline-none p-1 px-1.5 border border-brand-darkBgAccent focus:border-slate-500/80 focus:bg-slate-700 transition-all duration-200 ease-in-out">
-                  <img
-                    alt="icon"
-                    src={getFaviconURL(site.url, false)}
-                    onError={handleImageLoadError}
-                    className="w-[18px] h-[18px] object-scale-down object-center"
-                  />
-                </button>
-              ))}
-            </div>
+          <div
+            className={`bg-brand-darkBg rounded-bl-lg rounded-br-lg flex items-center justify-center px-4 py-2 
+                        border-t border-brand-darkBgAccent text-slate-400 font-light text-[12px] `}>
+            <span className="mr-2">
+              <kbd>Up</kbd>
+            </span>
+            <span className="mr-2">
+              <kbd>Down</kbd>
+            </span>
+            <span className="mr-2">
+              <kbd>Tab</kbd>
+            </span>
           </div>
         </div>
       </motion.dialog>

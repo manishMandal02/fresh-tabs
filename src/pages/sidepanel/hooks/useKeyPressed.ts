@@ -2,11 +2,24 @@ import { useCallback, useEffect, useState } from 'react';
 import { useDeviceInfo } from './useDeviceInfo';
 
 type useKeyPressedProps = {
+  monitorModifierKeys?: boolean;
   onDeletePressed?: () => void;
   onEscapePressed?: () => void;
+  onEnterPressed?: () => void;
+  onArrowUpPressed?: () => void;
+  onArrowDownPressed?: () => void;
+  parentConTainerEl?: HTMLElement;
 };
 
-export const useKeyPressed = ({ onDeletePressed, onEscapePressed }: useKeyPressedProps) => {
+export const useKeyPressed = ({
+  monitorModifierKeys = true,
+  parentConTainerEl,
+  onDeletePressed,
+  onEscapePressed,
+  onEnterPressed,
+  onArrowUpPressed,
+  onArrowDownPressed,
+}: useKeyPressedProps) => {
   // local state - ctrl/cmd key press status
   const [isModifierKeyPressed, setIsModifierKeyPressed] = useState(false);
   // local state - left shift key press status
@@ -20,29 +33,44 @@ export const useKeyPressed = ({ onDeletePressed, onEscapePressed }: useKeyPresse
     ev => {
       const keyEv = ev as KeyboardEvent;
 
-      console.log('🚀 ~ useKeyPressed ~ keyEv:', keyEv);
+      console.log('🚀 ~ keyEv.code:', keyEv.code);
 
-      if (onDeletePressed && keyEv.code.toLowerCase() === 'delete') {
+      if (onEnterPressed && keyEv.code === 'enter') {
+        onEnterPressed();
+      }
+
+      if (onArrowUpPressed && keyEv.code === 'ArrowUp') {
+        onArrowUpPressed();
+      }
+      if (onArrowDownPressed && keyEv.code === 'ArrowDown') {
+        onArrowDownPressed();
+      }
+
+      if (onDeletePressed && keyEv.code === 'Delete') {
         onDeletePressed();
       }
 
-      if (isMac && onDeletePressed && keyEv.code.toLowerCase() === 'backspace') {
+      if (isMac && onDeletePressed && keyEv.code === 'Backspace') {
         onDeletePressed();
       }
 
-      if (onEscapePressed && keyEv.code.toLowerCase() === 'escape') {
+      if (onEscapePressed && keyEv.code === 'Escape') {
         onEscapePressed();
       }
 
-      if (keyEv.ctrlKey || keyEv.metaKey) {
+      if (monitorModifierKeys && (keyEv.ctrlKey || keyEv.metaKey)) {
         setIsModifierKeyPressed(true);
       }
-
-      if (keyEv.shiftKey) {
-        setIsShiftKeyPressed(true);
-      }
     },
-    [onDeletePressed, onEscapePressed, isMac],
+    [
+      isMac,
+      onDeletePressed,
+      onEscapePressed,
+      onEnterPressed,
+      onArrowDownPressed,
+      onArrowUpPressed,
+      monitorModifierKeys,
+    ],
   );
 
   // keyup, reset the state
@@ -53,14 +81,24 @@ export const useKeyPressed = ({ onDeletePressed, onEscapePressed }: useKeyPresse
 
   // keeping track of cmd/ctrl key press for UI action
   useEffect(() => {
-    document.body.addEventListener('keydown', handleKeydown);
-    document.body.addEventListener('keyup', handleKeyUp);
+    if (!parentConTainerEl) {
+      document.body.addEventListener('keydown', handleKeydown);
+      monitorModifierKeys && document.body.addEventListener('keyup', handleKeyUp);
+    } else {
+      parentConTainerEl.addEventListener('keydown', handleKeydown);
+      monitorModifierKeys && parentConTainerEl.addEventListener('keyup', handleKeyUp);
+    }
 
     return () => {
-      document.body.removeEventListener('keydown', handleKeydown);
-      document.body.removeEventListener('keyup', handleKeyUp);
+      if (!parentConTainerEl) {
+        document.body.removeEventListener('keydown', handleKeydown);
+        monitorModifierKeys && document.body.removeEventListener('keyup', handleKeyUp);
+      } else {
+        parentConTainerEl.removeEventListener('keydown', handleKeydown);
+        monitorModifierKeys && parentConTainerEl.removeEventListener('keyup', handleKeyUp);
+      }
     };
-  }, [handleKeydown, handleKeyUp]);
+  }, [handleKeydown, handleKeyUp, monitorModifierKeys, parentConTainerEl]);
 
   return {
     isModifierKeyPressed,

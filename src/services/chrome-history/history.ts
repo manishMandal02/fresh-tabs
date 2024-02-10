@@ -17,7 +17,11 @@ export const getRecentlyVisitedSites = async (maxResults = 4): Promise<ITab[]> =
     sites.pop();
   }
 
-  return sites.map(site => ({ url: site.url, title: site.title, id: 0 }));
+  // remove duplicates and return site url & title
+
+  return sites
+    .filter(s1 => sites.find(s2 => s2.url === s1.url))
+    .map(site => ({ url: site.url, title: site.title, id: 0 }));
 };
 
 // get top sites for chrome

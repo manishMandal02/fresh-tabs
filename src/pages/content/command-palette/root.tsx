@@ -24,6 +24,8 @@ const appendCommandPaletteContainer = ({ recentSites, topSites }: AppendContaine
   commandPaletteContainer.style.top = '0';
   commandPaletteContainer.style.left = '0';
 
+  document.body.style.overflow = 'hidden';
+
   // append root react component for command palette
   document.body.append(commandPaletteContainer);
   const rootIntoShadow = document.createElement('div');
