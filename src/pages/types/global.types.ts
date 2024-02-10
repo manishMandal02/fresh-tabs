@@ -62,6 +62,7 @@ type MessageEventsContentScript = 'SHOW_COMMAND_PALETTE';
 
 interface IEventPayloadContentScript {
   recentSites?: ITab[];
+  topSites?: ITab[];
 }
 
 export interface IMessageEventContentScript {

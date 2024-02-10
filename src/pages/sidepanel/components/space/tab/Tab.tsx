@@ -10,17 +10,18 @@ import { motion } from 'framer-motion';
 
 type Props = {
   tabData: ITab;
-  isSelected?: boolean;
-  isModifierKeyPressed: boolean;
-  onClick?: () => void;
-  showHoverOption?: boolean;
-  onTabDelete?: () => Promise<void>;
   isTabActive: boolean;
+  isModifierKeyPressed: boolean;
+  isSelected?: boolean;
+  showHoverOption?: boolean;
   isSpaceActive?: boolean;
   showDeleteOption?: boolean;
-  onTabDoubleClick?: (id: number) => void;
+  onClick?: () => void;
+  onTabDelete?: () => Promise<void>;
   onCreateNewTab?: () => void;
+  onTabDoubleClick?: (id: number) => void;
 };
+
 const Tab = ({
   tabData,
   onTabDelete,

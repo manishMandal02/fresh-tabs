@@ -1,4 +1,4 @@
-import { recentlyVisitedSites } from '@root/src/services/chrome-history/history';
+import { getMostVisitedSites, getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
 import { ITab } from './../types/global.types';
 import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
@@ -184,16 +184,17 @@ chrome.runtime.onInstalled.addListener(async info => {
 
 // shortcuts
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  console.log('🚀 ~ chrome.commands.onCommand.addListener ~ command:', command);
   if (command === 'cmdPalette') {
     // TODO - redirect to different tab if user on chrome:// url
     // TODO - handle new tab
 
     if (tab?.url.startsWith('chrome://')) return;
 
-    const recentSites = await recentlyVisitedSites();
+    const recentSites = await getRecentlyVisitedSites();
 
-    await publishEventsTab(tab.id, { event: 'SHOW_COMMAND_PALETTE', payload: { recentSites } });
+    const topSites = await getMostVisitedSites();
+
+    await publishEventsTab(tab.id, { event: 'SHOW_COMMAND_PALETTE', payload: { recentSites, topSites } });
   }
 });
 
@@ -216,11 +217,6 @@ chrome.alarms.onAlarm.addListener(async alarm => {
 
 // IIFE - checks for alarms, its not guaranteed to persist
 (async () => {
-  //TODO - testing
-  const sites = await chrome.topSites.get();
-
-  console.log('🚀 ~ sites:', sites);
-
   const alarm = await chrome.alarms.get(AlarmNames.saveToBM);
   if (alarm?.name) return;
 
