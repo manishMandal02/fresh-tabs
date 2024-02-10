@@ -1,12 +1,15 @@
 import { createRoot } from 'react-dom/client';
-import CommandPalette from './CommandPalette';
 import refreshOnUpdate from 'virtual:reload-on-update-in-view';
 import injectedStyle from './injected.css?inline';
 import { CommandPaletteContainerId } from '@root/src/constants/app';
+import CommandPalette from './CommandPalette';
+import { ITab } from '../../types/global.types';
 
 refreshOnUpdate('pages/content');
 
-const appendCommandPaletteContainer = () => {
+const appendCommandPaletteContainer = (recentSites: ITab[]) => {
+  if (document.getElementById(CommandPaletteContainerId)) return;
+
   const commandPaletteContainer = document.createElement('div');
   commandPaletteContainer.id = CommandPaletteContainerId;
 
@@ -31,14 +34,14 @@ const appendCommandPaletteContainer = () => {
   styleElement.innerHTML = injectedStyle;
   shadowRoot.appendChild(styleElement);
 
-  createRoot(rootIntoShadow).render(<CommandPalette />);
+  createRoot(rootIntoShadow).render(<CommandPalette recentSitesPayload={recentSites} />);
 };
 
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ msg:', msg);
 
   if (msg.event === 'SHOW_COMMAND_PALETTE') {
-    appendCommandPaletteContainer();
+    appendCommandPaletteContainer(msg?.payload?.recentSites);
   }
 
   sendResponse(true);

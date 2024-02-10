@@ -1,9 +1,12 @@
+import { parseURL } from '@root/src/pages/utils/parseURL';
 const createChromeFaviconUrl = (url: URL) => `${chrome.runtime.getURL('/_favicon/')}?pageUrl=${url.origin}/&size=32`;
 
 export const getFaviconURL = (siteURL: string) => {
   //  chrome icon as favicon
 
-  const url = new URL(siteURL);
+  const parsedURL = parseURL(siteURL);
+
+  const url = new URL(parsedURL);
 
   if (!siteURL || siteURL.startsWith('chrome://')) return createChromeFaviconUrl(url);
   const subdomainRegex =

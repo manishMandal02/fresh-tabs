@@ -1,3 +1,4 @@
+import { recentlyVisitedSites } from '@root/src/services/chrome-history/history';
 import { ITab } from './../types/global.types';
 import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
@@ -190,7 +191,9 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
     if (tab?.url.startsWith('chrome://')) return;
 
-    await publishEventsTab(tab.id, { event: 'SHOW_COMMAND_PALETTE' });
+    const recentSites = await recentlyVisitedSites();
+
+    await publishEventsTab(tab.id, { event: 'SHOW_COMMAND_PALETTE', payload: { recentSites } });
   }
 });
 

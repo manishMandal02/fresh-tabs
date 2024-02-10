@@ -61,7 +61,7 @@ export interface IMessageEventSidePanel {
 type MessageEventsContentScript = 'SHOW_COMMAND_PALETTE';
 
 interface IEventPayloadContentScript {
-  spaceId?: string;
+  recentSites?: ITab[];
 }
 
 export interface IMessageEventContentScript {

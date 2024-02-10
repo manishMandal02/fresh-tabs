@@ -7,7 +7,18 @@ const manifest = {
   name: 'Fresh Tabs',
   version: '0.0.1',
   description: 'Manage tabs like pro',
-  permissions: ['sidePanel', 'tabs', 'storage', 'bookmarks', 'favicon', 'alarms', 'scripting', 'activeTab', 'topSites'],
+  permissions: [
+    'sidePanel',
+    'tabs',
+    'storage',
+    'bookmarks',
+    'favicon',
+    'alarms',
+    'scripting',
+    'activeTab',
+    'topSites',
+    'history',
+  ],
   commands: {
     cmdE: {
       suggested_key: {
