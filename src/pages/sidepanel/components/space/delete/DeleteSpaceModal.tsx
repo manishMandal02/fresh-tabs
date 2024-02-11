@@ -1,7 +1,7 @@
 import { AlertModal } from '../../elements/modal';
 import { useAtom } from 'jotai';
 import { snackbarAtom, nonActiveSpacesAtom, deleteSpaceModalAtom } from '@root/src/stores/app';
-import { deleteSpace, getAllSpaces } from '@root/src/services/chrome-storage/spaces';
+import { deleteSpace, getSpace } from '@root/src/services/chrome-storage/spaces';
 import { AlarmNames } from '@root/src/constants/app';
 import Spinner from '../../elements/spinner';
 import { createPortal } from 'react-dom';
@@ -26,11 +26,7 @@ const DeleteSpaceModal = () => {
       console.log('🚀 ~ deleteInit ~ spaceId:', spaceId);
 
       // get space from storage
-      const allSpaces = await getAllSpaces();
-
-      console.log('🚀 ~ deleteInit ~ allSpaces:', allSpaces);
-
-      const spaceToDelete = allSpaces.find(space => space.id === deleteSpaceModal.spaceId);
+      const spaceToDelete = await getSpace(deleteSpaceModal.spaceId);
 
       console.log('🚀 ~ deleteInit ~ spaceToDelete:', spaceToDelete);
 

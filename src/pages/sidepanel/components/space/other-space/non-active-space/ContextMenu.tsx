@@ -5,6 +5,7 @@ import { MdDelete, MdEdit, MdOpenInNew } from 'react-icons/md';
 import { useAtom } from 'jotai';
 import { deleteSpaceModalAtom, updateSpaceModalAtom } from '@root/src/stores/app';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
+import { openSpace } from '@root/src/services/chrome-tabs/tabs';
 
 type Props = {
   children: ReactNode;
@@ -20,8 +21,17 @@ const CustomContextMenu = ({ children, space }: Props) => {
     const tabs = await getTabsInSpace(space.id);
     setUpdateModal({ ...space, tabs });
   };
+
   const handleDeleteClick = async () => {
     setDeleteModal({ show: true, spaceId: space.id });
+  };
+
+  const handleOpenSpace = async () => {
+    const tabs = await getTabsInSpace(space.id);
+
+    console.log('🚀 ~ handleOpenSpace ~ tabs:', tabs);
+
+    await openSpace({ space, tabs, shouldOpenInNewWindow: true });
   };
 
   return (
@@ -38,7 +48,9 @@ const CustomContextMenu = ({ children, space }: Props) => {
           </ContextMenuRadix.Label>
           <ContextMenuRadix.Separator className="h-[1px] bg-brand-darkBg/40 my-px" />
 
-          <ContextMenuRadix.Item className="group hover:bg-brand-darkBg/70 text-[12px]  py-1.5 cursor-pointer leading-none text-slate-200 rounded-[3px] flex items-center h-[25px] px-[5px] relative pl-2 select-none outline-none data-[highlighted]:bg-violet9 data-[highlighted]:text-violet1">
+          <ContextMenuRadix.Item
+            className="group hover:bg-brand-darkBg/70 text-[12px]  py-1.5 cursor-pointer leading-none text-slate-200 rounded-[3px] flex items-center h-[25px] px-[5px] relative pl-2 select-none outline-none data-[highlighted]:bg-violet9 data-[highlighted]:text-violet1"
+            onClick={handleOpenSpace}>
             <MdOpenInNew className="text-slate-400 mr-1" /> Open in New Window
           </ContextMenuRadix.Item>
 

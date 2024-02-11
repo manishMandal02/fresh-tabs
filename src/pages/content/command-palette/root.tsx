@@ -16,6 +16,9 @@ const appendCommandPaletteContainer = ({ recentSites, topSites }: AppendContaine
   if (document.getElementById(CommandPaletteContainerId)) return;
 
   const commandPaletteContainer = document.createElement('div');
+
+  console.log('🚀 ~ appendCommandPaletteContainer ~ commandPaletteContainer:', commandPaletteContainer);
+
   commandPaletteContainer.id = CommandPaletteContainerId;
 
   commandPaletteContainer.style.height = '100vh';

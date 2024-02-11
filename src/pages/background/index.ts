@@ -7,10 +7,12 @@ import {
   createSampleSpaces,
   createUnsavedSpace,
   deleteSpace,
+  getSpace,
   getSpaceByWindow,
   updateActiveTabInSpace,
 } from '@root/src/services/chrome-storage/spaces';
 import {
+  getTabsInSpace,
   removeTabFromSpace,
   saveGlobalPinnedTabs,
   updateTab,
@@ -28,7 +30,7 @@ import {
 import { AlarmNames, DiscardTabURLPrefix, DefaultAppSettings, DefaultPinnedTabs } from '@root/src/constants/app';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
 import { parseURL } from '../utils/parseURL';
-import { getCurrentTab, goToTab } from '@root/src/services/chrome-tabs/tabs';
+import { getCurrentTab, goToTab, openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { retryAtIntervals } from '../utils/retryAtIntervals';
 
 reloadOnUpdate('pages/background');
@@ -45,7 +47,7 @@ logger.info('🏁 background loaded');
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error => {
   logger.error({
     error,
-    msg: `Error at ~ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }) `,
+    msg: `Error at ~ chrome.sidePanel.setPanelBehavior()`,
     fileTrace: 'src/pages/background/index.ts:35 ~ chrome.sidePanel.setPanelBehavior()',
   });
 });
@@ -61,7 +63,11 @@ chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
 
       console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ spaceId:', spaceId);
 
-      // TODO - switch space
+      const space = await getSpace(spaceId);
+
+      const tabs = await getTabsInSpace(spaceId);
+
+      await openSpace({ space, tabs, shouldOpenInNewWindow: false });
       break;
     }
     case 'NEW_SPACE': {
@@ -228,17 +234,21 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
       // get last visited url
       const recentlyVisitedURL = await getRecentlyVisitedSites(1);
 
-      console.log('🚀 ~ chrome.commands.onCommand.addListener ~ recentlyVisitedURL:', recentlyVisitedURL[0].title);
-
       // find the tab based on the url
       const [lastActiveTab] = await chrome.tabs.query({ title: recentlyVisitedURL[0].title, currentWindow: true });
 
-      console.log('🚀 ~ chrome.commands.onCommand.addListener ~ lastActiveTab:', lastActiveTab);
+      if (lastActiveTab?.id) {
+        activeTabId = lastActiveTab.id;
+      } else {
+        // get next tab if last active tab not found
+        const [nextTab] = await chrome.tabs.query({ index: tab.index + 1, currentWindow: true });
 
-      // go to the last active tab
-      await goToTab(lastActiveTab.id);
+        console.log('🚀 ~ chrome.commands.onCommand.addListener ~ nextTab:', nextTab);
 
-      activeTabId = lastActiveTab.id;
+        if (!nextTab) return;
+        activeTabId = nextTab.id;
+      }
+      await goToTab(activeTabId);
     }
 
     const recentSites = await getRecentlyVisitedSites();

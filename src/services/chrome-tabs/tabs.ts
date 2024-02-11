@@ -8,7 +8,7 @@ import { parseURL } from '@root/src/pages/utils/parseURL';
 type OpenSpaceProps = {
   space: ISpace;
   tabs: ITab[];
-  onNewWindowCreated: (windowId: number) => void;
+  onNewWindowCreated?: (windowId: number) => void;
   shouldOpenInNewWindow: boolean;
 };
 
@@ -121,10 +121,10 @@ const checkIfSpaceActiveInAnotherWindow = async (space: ISpace) => {
 // opens a space in new window
 export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInNewWindow }: OpenSpaceProps) => {
   // focus window is space already active
-  const isAlreadyActive = checkIfSpaceActiveInAnotherWindow(space);
+  const isAlreadyActive = await checkIfSpaceActiveInAnotherWindow(space);
 
   if (isAlreadyActive) {
-    onNewWindowCreated(space.windowId);
+    onNewWindowCreated && onNewWindowCreated(space.windowId);
     return;
   }
 
@@ -176,6 +176,8 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
     //  create new window
     const window = await chrome.windows.create({ focused: true });
 
+    console.log('🚀 ~ openSpace ~ window:', window);
+
     if (window) {
       windowId = window.id;
       defaultWindowTabId = window.tabs[0].id;
@@ -188,7 +190,7 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
   await updateSpace(space.id, { ...space, windowId });
 
   // set current window in side panel UI
-  onNewWindowCreated(windowId);
+  onNewWindowCreated && onNewWindowCreated(windowId);
 
   const discardTabs = (await createDiscardedTabs(discardedTabsToCreate, windowId)) as ITab[];
 

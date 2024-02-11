@@ -177,6 +177,25 @@ export const getSpaceByWindow = async (windowId: number): Promise<ISpace | null>
   }
 };
 
+// get space by window id
+export const getSpace = async (id: string): Promise<ISpace | null> => {
+  try {
+    // get all spaces from storage
+    const spaces = await getStorage<ISpace[]>({ key: 'SPACES', type: 'sync' });
+
+    if (spaces.length < 1) throw new Error('No found spaces in storage.');
+
+    return spaces.find(s => s.id === id) || null;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Error getting space by id: ${id}`,
+      fileTrace: 'src/services/chrome-storage/spaces.ts:157 ~ getSpace() ~ catch block',
+    });
+    return null;
+  }
+};
+
 // update active tab in space
 export const updateActiveTabInSpace = async (windowId: number, idx: number): Promise<ISpace | null> => {
   try {
