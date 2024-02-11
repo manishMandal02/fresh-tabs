@@ -2,7 +2,7 @@ import { IMessageEventSidePanel, IMessageEventContentScript } from '../types/glo
 import { logger } from './logger';
 
 // used to send message to side panel to update ui, if side panel is open
-export const publishEvents = async (event: IMessageEventSidePanel): Promise<boolean> => {
+export const publishEvents = async (event: IMessageEventSidePanel | IMessageEventContentScript): Promise<boolean> => {
   try {
     await chrome.runtime.sendMessage(event);
 

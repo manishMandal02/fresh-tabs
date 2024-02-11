@@ -5,6 +5,14 @@ import { getCurrentTab } from '../chrome-tabs/tabs';
 export const getRecentlyVisitedSites = async (maxResults = 4): Promise<ITab[]> => {
   const sites = await chrome.history.search({ maxResults, text: '' });
 
+  if (sites?.length < 1) {
+    return [];
+  }
+
+  if (sites.length === 1) {
+    return [{ url: sites[0].url, title: sites[0].title, id: 0 }];
+  }
+
   const currentTab = await getCurrentTab();
 
   const currentSiteIndex = sites.findIndex(site => site.url === currentTab.url);

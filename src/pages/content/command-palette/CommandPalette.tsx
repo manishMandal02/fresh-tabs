@@ -8,6 +8,7 @@ import { ITab } from '../../types/global.types';
 import { useKeyPressed } from '../../sidepanel/hooks/useKeyPressed';
 import { CommandPaletteContainerId } from '@root/src/constants/app';
 import Tooltip from '../../sidepanel/components/elements/tooltip';
+import { publishEvents } from '../../utils/publish-events';
 
 type Command = {
   index: number;
@@ -40,7 +41,7 @@ const CommandPalette = ({ recentSites, topSites }: Props) => {
   // search/commands suggestions
   const [suggestedCommands, setSuggestedCommands] = useState<Command[]>([]);
 
-  const [selectedCommand, setSelectedCommand] = useState(0);
+  const [focusedCommandIndex, setFocusedCommandIndex] = useState(0);
 
   const [commandPaletteContainerEl, setCommandPaletteContainerEl] = useState<HTMLElement | null>(null);
 
@@ -120,22 +121,22 @@ const CommandPalette = ({ recentSites, topSites }: Props) => {
   );
 
   useEffect(() => {
-    if (selectedCommand === 0) {
+    if (focusedCommandIndex === 0) {
       // focus input
       inputRef.current.focus();
     }
 
     // focus command
-    focusSuggestedCommand(selectedCommand);
+    focusSuggestedCommand(focusedCommandIndex);
 
     // set search
-    if (selectedCommand > 2) {
-      const command = suggestedCommands.find(cmd => cmd.index === selectedCommand);
+    if (focusedCommandIndex > 2) {
+      const command = suggestedCommands.find(cmd => cmd.index === focusedCommandIndex);
       setSearchQuery(command.icon as string);
     } else {
       setSearchQuery('');
     }
-  }, [selectedCommand, focusSuggestedCommand, suggestedCommands]);
+  }, [focusedCommandIndex, focusSuggestedCommand, suggestedCommands]);
 
   // handle key press
   useKeyPressed({
@@ -144,31 +145,69 @@ const CommandPalette = ({ recentSites, topSites }: Props) => {
     onEscapePressed: () => {
       handleCloseCommandPalette();
     },
+    onTabPressed: () => {
+      (async () => {
+        await handleSelectCommand();
+      })();
+    },
+    onEnterPressed: () => {
+      (async () => {
+        await handleSelectCommand();
+      })();
+    },
     onArrowDownPressed: () => {
-      if (selectedCommand === 0) {
-        setSelectedCommand(1);
+      if (focusedCommandIndex === 0) {
+        setFocusedCommandIndex(1);
         return;
       }
 
-      if (selectedCommand < 1) {
+      if (focusedCommandIndex < 1) {
         return;
       }
 
-      if (selectedCommand === suggestedCommands.filter(c => c.type !== 'divider').length) return;
+      if (focusedCommandIndex === suggestedCommands.filter(c => c.type !== 'divider').length) return;
 
-      setSelectedCommand(prev => prev + 1);
+      setFocusedCommandIndex(prev => prev + 1);
     },
     onArrowUpPressed: () => {
-      if (selectedCommand < 1) {
+      if (focusedCommandIndex < 1) {
         return;
       }
 
-      setSelectedCommand(prev => prev - 1);
+      setFocusedCommandIndex(prev => prev - 1);
     },
   });
 
-  const onCommandClick = (index: number) => {
-    setSelectedCommand(index);
+  // handle select command
+  const handleSelectCommand = async () => {
+    const focusedCommand = suggestedCommands.find(cmd => cmd.index === focusedCommandIndex);
+
+    console.log('🚀 ~ handleSelectCommand ~ suggestedCommands:', suggestedCommands);
+
+    console.log('🚀 ~ handleSelectCommand ~ focusedCommand:', focusedCommand);
+
+    if (!focusedCommand?.type) return;
+
+    switch (focusedCommand.type) {
+      case 'static': {
+        if (focusedCommandIndex === 0) {
+          await publishEvents({ event: 'SWITCH_SPACE', payload: { spaceId: '' } });
+        }
+        if (focusedCommandIndex === 1) {
+          await publishEvents({ event: 'NEW_SPACE', payload: { spaceTitle: searchQuery } });
+        }
+        break;
+      }
+      case 'recent-site': {
+        await publishEvents({ event: 'GO_TO_URL', payload: { url: focusedCommand.icon as string } });
+        break;
+      }
+    }
+  };
+
+  const onCommandClick = async (index: number) => {
+    setFocusedCommandIndex(index);
+    await handleSelectCommand();
   };
 
   // handle fallback image for favicon icons
@@ -240,7 +279,7 @@ const CommandPalette = ({ recentSites, topSites }: Props) => {
                     shadow-lg shadow-slate-800 border border-slate-600/70`}>
           {/* search box */}
           <button
-            className="flex items-center justify-center outline-none border-none ring-0 w-[8%] py-2.5 bg-slate-60 rounded-tl-xl rounded-bl-xl pl-[6px] pr-[3px]"
+            className="flex items-center justify-center outline-none border-none ring-0 w-[7%] py-2.5 bg-slate-60 rounded-tl-xl rounded-bl-xl pl-[6px] pr-[3px]"
             tabIndex={-1}
             onClick={handleSearchIconClick}>
             <MdSearch className="fill-slate-700 bg-transparent -mb-px" size={24} />
@@ -252,7 +291,7 @@ const CommandPalette = ({ recentSites, topSites }: Props) => {
             onChange={ev => setSearchQuery(ev.currentTarget.value)}
             type="text"
             value={searchQuery}
-            className="text-[15px] text-slate-300  w-[90%] px-px  py-2.5 bg-transparent rounded-tr-xl caret-slate-200 caret rounded-br-xl outline-none border-none bg-indigo-20"
+            className="text-[14px] text-slate-300  w-[90%] px-px  py-2.5 bg-transparent rounded-tr-xl caret-slate-300 caret rounded-br-xl outline-none border-none bg-indigo-20"
           />
         </div>
         {/* search suggestions and result */}
@@ -273,9 +312,10 @@ const CommandPalette = ({ recentSites, topSites }: Props) => {
               );
             })}
           </div>
+          {/* navigation guide */}
           <div
-            className={`bg-brand-darkBg rounded-bl-lg rounded-br-lg flex items-center justify-center px-4 py-2 
-                        border-t border-brand-darkBgAccent text-slate-400 font-light text-[12px] `}>
+            className={`bg-brand-darkBgAccent/20 rounded-bl-lg rounded-br-lg flex items-center justify-center px-4 py-2 
+                        border-t border-brand-darkBgAccent text-slate-500 font-light text-[12px] `}>
             <span className="mr-2">
               <kbd>Up</kbd>
             </span>

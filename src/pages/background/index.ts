@@ -1,5 +1,5 @@
 import { getMostVisitedSites, getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
-import { ITab } from './../types/global.types';
+import { IMessageEventContentScript, ITab } from './../types/global.types';
 import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
 import {
@@ -28,6 +28,8 @@ import {
 import { AlarmNames, DiscardTabURLPrefix, DefaultAppSettings, DefaultPinnedTabs } from '@root/src/constants/app';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
 import { parseURL } from '../utils/parseURL';
+import { getCurrentTab, goToTab } from '@root/src/services/chrome-tabs/tabs';
+import { retryAtIntervals } from '../utils/retryAtIntervals';
 
 reloadOnUpdate('pages/background');
 
@@ -46,6 +48,40 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
     msg: `Error at ~ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }) `,
     fileTrace: 'src/pages/background/index.ts:35 ~ chrome.sidePanel.setPanelBehavior()',
   });
+});
+
+// handle events from content script (command palette)
+
+chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
+  const { event, payload } = msg as IMessageEventContentScript;
+
+  switch (event) {
+    case 'SWITCH_SPACE': {
+      const { spaceId } = payload;
+
+      console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ spaceId:', spaceId);
+
+      // TODO - switch space
+      break;
+    }
+    case 'NEW_SPACE': {
+      const { spaceTitle } = payload;
+
+      console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ spaceTitle:', spaceTitle);
+
+      // TODO - new space with title
+      break;
+    }
+
+    case 'GO_TO_URL': {
+      const { url } = payload;
+      const tab = await getCurrentTab();
+      await chrome.tabs.update(tab.id, { url });
+      break;
+    }
+  }
+
+  sendResponse(true);
 });
 
 //* common event handlers
@@ -182,19 +218,52 @@ chrome.runtime.onInstalled.addListener(async info => {
   }
 });
 
-// shortcuts
+// shortcut commands
 chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command === 'cmdPalette') {
-    // TODO - redirect to different tab if user on chrome:// url
     // TODO - handle new tab
+    let activeTabId = tab.id;
 
-    if (tab?.url.startsWith('chrome://')) return;
+    if (tab?.url.startsWith('chrome://')) {
+      // get last visited url
+      const recentlyVisitedURL = await getRecentlyVisitedSites(1);
+
+      console.log('🚀 ~ chrome.commands.onCommand.addListener ~ recentlyVisitedURL:', recentlyVisitedURL[0].title);
+
+      // find the tab based on the url
+      const [lastActiveTab] = await chrome.tabs.query({ title: recentlyVisitedURL[0].title, currentWindow: true });
+
+      console.log('🚀 ~ chrome.commands.onCommand.addListener ~ lastActiveTab:', lastActiveTab);
+
+      // go to the last active tab
+      await goToTab(lastActiveTab.id);
+
+      activeTabId = lastActiveTab.id;
+    }
 
     const recentSites = await getRecentlyVisitedSites();
 
     const topSites = await getMostVisitedSites();
 
-    await publishEventsTab(tab.id, { event: 'SHOW_COMMAND_PALETTE', payload: { recentSites, topSites } });
+    //  wait for 0.5s if tab was changed
+    if (activeTabId !== tab.id) {
+      // TODO - check if tab fully loaded
+      // wait for 0.2s
+      await wait(500);
+    }
+
+    retryAtIntervals({
+      interval: 500,
+      retries: 3,
+      callback: () => {
+        (async () => {
+          return await publishEventsTab(activeTabId, {
+            event: 'SHOW_COMMAND_PALETTE',
+            payload: { recentSites, topSites },
+          });
+        })();
+      },
+    });
   }
 });
 

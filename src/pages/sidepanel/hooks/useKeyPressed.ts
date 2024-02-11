@@ -6,6 +6,7 @@ type useKeyPressedProps = {
   onDeletePressed?: () => void;
   onEscapePressed?: () => void;
   onEnterPressed?: () => void;
+  onTabPressed?: () => void;
   onArrowUpPressed?: () => void;
   onArrowDownPressed?: () => void;
   parentConTainerEl?: HTMLElement;
@@ -17,6 +18,7 @@ export const useKeyPressed = ({
   onDeletePressed,
   onEscapePressed,
   onEnterPressed,
+  onTabPressed,
   onArrowUpPressed,
   onArrowDownPressed,
 }: useKeyPressedProps) => {
@@ -35,8 +37,13 @@ export const useKeyPressed = ({
 
       console.log('🚀 ~ keyEv.code:', keyEv.code);
 
-      if (onEnterPressed && keyEv.code === 'enter') {
+      if (onEnterPressed && keyEv.code === 'Enter') {
         onEnterPressed();
+        keyEv.preventDefault();
+      }
+      if (onTabPressed && keyEv.code === 'Tab') {
+        onTabPressed();
+        keyEv.preventDefault();
       }
 
       if (onArrowUpPressed && keyEv.code === 'ArrowUp') {
@@ -61,6 +68,9 @@ export const useKeyPressed = ({
       if (monitorModifierKeys && (keyEv.ctrlKey || keyEv.metaKey)) {
         setIsModifierKeyPressed(true);
       }
+      if (monitorModifierKeys && keyEv.shiftKey) {
+        setIsShiftKeyPressed(true);
+      }
     },
     [
       isMac,
@@ -70,6 +80,7 @@ export const useKeyPressed = ({
       onArrowDownPressed,
       onArrowUpPressed,
       monitorModifierKeys,
+      onTabPressed,
     ],
   );
 

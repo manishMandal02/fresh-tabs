@@ -58,11 +58,14 @@ export interface IMessageEventSidePanel {
   payload: IEventPayloadSidePanel;
 }
 
-type MessageEventsContentScript = 'SHOW_COMMAND_PALETTE';
+type MessageEventsContentScript = 'SHOW_COMMAND_PALETTE' | 'SWITCH_SPACE' | 'NEW_SPACE' | 'GO_TO_URL';
 
 interface IEventPayloadContentScript {
   recentSites?: ITab[];
   topSites?: ITab[];
+  url?: string;
+  spaceId?: string;
+  spaceTitle?: string;
 }
 
 export interface IMessageEventContentScript {
