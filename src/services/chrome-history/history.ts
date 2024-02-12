@@ -1,8 +1,7 @@
 import { ITab } from '@root/src/pages/types/global.types';
 import { getCurrentTab } from '../chrome-tabs/tabs';
 
-// recent visited sites
-export const getRecentlyVisitedSites = async (maxResults = 4): Promise<ITab[]> => {
+const getSitesFromHistory = async (maxResults = 4) => {
   const sites = await chrome.history.search({ maxResults, text: '' });
 
   if (sites?.length < 1) {
@@ -19,11 +18,27 @@ export const getRecentlyVisitedSites = async (maxResults = 4): Promise<ITab[]> =
 
   // remove duplicates and return site url & title
 
-  return sites
-    .filter(
-      s1 => sites.find(s2 => s2.url !== s1.url) || s1.url === currentTab.url || s1.url.toLowerCase() === 'new tab',
-    )
-    .map(site => ({ url: site.url, title: site.title, id: 0 }));
+  return sites.filter(
+    (s1, idx) =>
+      sites.findIndex(s2 => s2.url === s1.url) === idx && s1.url !== currentTab.url && !s1.url.startsWith('chrome://'),
+  );
+};
+
+// recent visited sites
+export const getRecentlyVisitedSites = async (maxResults = 4): Promise<ITab[]> => {
+  let sites = [];
+
+  let i = 1;
+
+  while (sites.length < maxResults) {
+    sites = await getSitesFromHistory(maxResults * i);
+
+    console.log(' ~ getRecentlyVisitedSites ~ 🔂 while loop ~ sites:', sites);
+
+    i++;
+  }
+
+  return sites.map<ITab>(site => ({ url: site.url, title: site.title, id: 0 }));
 };
 
 // get top sites for chrome

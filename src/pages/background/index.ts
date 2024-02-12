@@ -1,9 +1,10 @@
 import { getMostVisitedSites, getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
-import { IMessageEventContentScript, ITab } from './../types/global.types';
+import { IMessageEventContentScript, ITab, ThemeColor } from './../types/global.types';
 import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
 import {
   checkNewWindowTabs,
+  createNewSpace,
   createSampleSpaces,
   createUnsavedSpace,
   deleteSpace,
@@ -15,6 +16,7 @@ import {
   getTabsInSpace,
   removeTabFromSpace,
   saveGlobalPinnedTabs,
+  setTabsForSpace,
   updateTab,
   updateTabIndex,
 } from '@root/src/services/chrome-storage/tabs';
@@ -61,8 +63,6 @@ chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
     case 'SWITCH_SPACE': {
       const { spaceId } = payload;
 
-      console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ spaceId:', spaceId);
-
       const space = await getSpace(spaceId);
 
       const tabs = await getTabsInSpace(spaceId);
@@ -73,9 +73,23 @@ chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
     case 'NEW_SPACE': {
       const { spaceTitle } = payload;
 
-      console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ spaceTitle:', spaceTitle);
+      const tab = await getCurrentTab();
 
       // TODO - new space with title
+      const newSpace = await createNewSpace(
+        {
+          title: spaceTitle,
+          emoji: '🚀',
+          theme: ThemeColor.Teal,
+          activeTabIndex: 0,
+          isSaved: true,
+          windowId: 0,
+        },
+        [tab],
+      );
+
+      await openSpace({ space: newSpace, tabs: [tab], shouldOpenInNewWindow: false });
+
       break;
     }
 
@@ -83,6 +97,16 @@ chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
       const { url } = payload;
       const tab = await getCurrentTab();
       await chrome.tabs.update(tab.id, { url: parseURL(url) });
+      break;
+    }
+    case 'Add_TO_SPACE': {
+      const { spaceId } = payload;
+      const tabsInSpace = await getTabsInSpace(spaceId);
+
+      const tab = await getCurrentTab();
+
+      await setTabsForSpace(spaceId, [...tabsInSpace, tab]);
+
       break;
     }
   }

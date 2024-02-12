@@ -27,6 +27,14 @@ const manifest = {
       },
       description: 'Set above ☝️',
     },
+    // TODO - new tab shortcut
+    // newTab: {
+    //   suggested_key: {
+    //     default: 'Ctrl+T',
+    //     mac: 'Command+T',
+    //   },
+    //   description: 'New Tab',
+    // },
     cmdPalette: {
       suggested_key: {
         default: 'Ctrl+Period',

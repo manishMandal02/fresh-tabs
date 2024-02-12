@@ -1,18 +1,16 @@
-import { MdNewLabel, MdSearch, MdSwitchLeft } from 'react-icons/md';
+import { MdAdd, MdNewLabel, MdSearch, MdSwitchLeft } from 'react-icons/md';
 import { motion } from 'framer-motion';
-import { useEffect, useRef, MouseEventHandler, ReactEventHandler, useState , useCallback } from 'react';
+import { useEffect, useRef, MouseEventHandler, ReactEventHandler, useState, useCallback } from 'react';
 import type { IconType } from 'react-icons/lib';
 
 import { getFaviconURL } from '../../utils';
 import { isValidURL } from '../../utils/isValidURL';
-import { publishEvents } from '../../utils/publish-events';
 import Tooltip from '../../sidepanel/components/elements/tooltip';
-import { useKeyPressed } from '../../sidepanel/hooks/useKeyPressed';
-import { CommandPaletteContainerId } from '@root/src/constants/app';
 import { CommandType, ISpace, ITab } from '../../types/global.types';
-import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
+import { useCommandPalette } from './useCommandPalette';
+import { debounce } from '../../utils/debounce';
 
-type Command = {
+export type Command = {
   index: number;
   type: CommandType;
   label: string;
@@ -42,20 +40,26 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
   // search query
   const [searchQuery, setSearchQuery] = useState('');
 
-  // search/commands suggestions
-  const [suggestedCommands, setSuggestedCommands] = useState<Command[]>([]);
-
-  // current focused command index
-  const [subCommand, setSubCommand] = useState<CommandType | null>(null);
-
-  // current focused command index
-  const [focusedCommandIndex, setFocusedCommandIndex] = useState(1);
-
-  const [commandPaletteContainerEl, setCommandPaletteContainerEl] = useState<HTMLElement | null>(null);
+  // snackbar sate
+  // const [snackbar, setSnackbar] = useState({ isSuccess: false, msg: '' });
 
   // elements ref
   const modalRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    handleSelectCommand,
+    searchQueryPlaceholder,
+    setSubCommand,
+    subCommand,
+    suggestedCommands,
+    suggestedCommandsForSubCommand,
+    setSuggestedCommands,
+    focusedCommandIndex,
+    setFocusedCommandIndex,
+    handleCloseCommandPalette,
+    setSuggestedCommandsForSubCommand,
+  } = useCommandPalette({ activeSpace, modalRef, searchQuery });
 
   // set default suggested commands
   const setDefaultSuggestedCommands = useCallback(() => {
@@ -67,7 +71,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
     }));
 
     setSuggestedCommands([...staticCommands, commandDivider, ...recentSitesCommands]);
-  }, [recentSites]);
+  }, [recentSites, setSuggestedCommands]);
 
   // initialize component
   useEffect(() => {
@@ -76,23 +80,10 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
     inputRef.current?.focus();
 
     setDefaultSuggestedCommands();
-
-    const containerEl = document.getElementById(CommandPaletteContainerId);
-    if (containerEl) {
-      setCommandPaletteContainerEl(containerEl);
-    }
   }, [setDefaultSuggestedCommands]);
 
   const handleSearchIconClick = () => {
     inputRef.current?.focus();
-  };
-
-  const handleCloseCommandPalette = () => {
-    modalRef.current?.close();
-    // remove parent container
-    commandPaletteContainerEl.replaceChildren();
-    commandPaletteContainerEl?.remove();
-    document.body.style.overflow = 'auto';
   };
 
   // check if modal's backdrop was clicked
@@ -115,101 +106,47 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
     }
   };
 
-  const bounceDivAnimation = {
-    initial: { scale: 0, opacity: 0 },
-    whileInView: {
-      scale: 1,
-      opacity: 1,
-    },
-    exit: { scale: 0, opacity: 0 },
-    transition: { type: 'spring', stiffness: 900, damping: 40 },
-  };
+  const handleGlobalSearch = useCallback(async () => {
+    const commands: Command[] = [];
 
-  // handle key press
-  useKeyPressed({
-    parentConTainerEl: modalRef.current,
-    monitorModifierKeys: false,
-    onEscapePressed: () => {
-      handleCloseCommandPalette();
-    },
-    onTabPressed: () => {
-      (async () => {
-        await handleSelectCommand();
-      })();
-    },
-    onEnterPressed: () => {
-      (async () => {
-        await handleSelectCommand();
-      })();
-    },
-    onArrowDownPressed: () => {
-      if (focusedCommandIndex >= suggestedCommands.length) {
-        return;
-      }
+    // query static commands label
 
-      if (focusedCommandIndex === suggestedCommands.filter(c => c.type !== 'divider').length) return;
+    // query space title
 
-      setFocusedCommandIndex(prev => prev + 1);
-    },
-    onArrowUpPressed: () => {
-      if (focusedCommandIndex < 2) {
-        return;
-      }
+    // query current tab url/title (words match)
 
-      setFocusedCommandIndex(prev => prev - 1);
-    },
-  });
+    // google search with input query
 
-  // handle select command
-  const handleSelectCommand = async () => {
-    const focusedCommand = suggestedCommands.find(cmd => cmd.index === focusedCommandIndex);
+    // query history (words match)
 
-    if (!focusedCommand?.type) return;
+    // query bookmark (words match)
 
-    switch (focusedCommand.type) {
-      case CommandType.SwitchSpace: {
-        if (!subCommand) {
-          const allSpaces = await getAllSpaces();
+    setSuggestedCommands(commands);
+  }, [setSuggestedCommands]);
 
-          setSubCommand(CommandType.SwitchSpace);
-
-          const switchSpaceCommands = allSpaces
-            .filter(s => s.windowId !== activeSpace.windowId)
-            .map<Command>((space, idx) => ({
-              label: space.title,
-              type: CommandType.SwitchSpace,
-              index: idx + 1,
-              icon: space.emoji,
-              metadata: space.id,
-            }));
-
-          setSuggestedCommands(switchSpaceCommands);
-          setFocusedCommandIndex(1);
-        } else {
-          const space = suggestedCommands.find(cmd => cmd.index === focusedCommandIndex);
-
-          console.log('🚀 ~ handleSelectCommand ~ space:', space);
-
-          if (!space) return;
-
-          await publishEvents({ event: 'SWITCH_SPACE', payload: { spaceId: space.metadata } });
-          handleCloseCommandPalette();
-        }
-
-        break;
-      }
-      case CommandType.NewSpace: {
-        await publishEvents({ event: 'NEW_SPACE', payload: { spaceTitle: searchQuery } });
-
-        break;
-      }
-      case CommandType.RecentSite: {
-        await publishEvents({ event: 'GO_TO_URL', payload: { url: focusedCommand.icon as string } });
-        handleCloseCommandPalette();
-        break;
-      }
+  // on global search
+  useEffect(() => {
+    if (searchQuery) {
+      // debounce search
+      debounce(handleGlobalSearch, 500)();
     }
-  };
+  }, [searchQuery, handleGlobalSearch]);
+
+  // on search for sub command
+  useEffect(() => {
+    console.log('🚀 ~ useEffect ~ searchQuery:', searchQuery);
+    if (subCommand && searchQuery && suggestedCommandsForSubCommand.length > 0) {
+      // filter the suggested sub commands based on search query, also update the index
+      const filteredSubCommands = suggestedCommandsForSubCommand
+        .filter(c => c.label.toLowerCase().includes(searchQuery.toLowerCase()))
+        .map((cmd, idx) => ({ ...cmd, index: idx + 1 }));
+      setSuggestedCommands(filteredSubCommands);
+      setFocusedCommandIndex(1);
+    } else if (subCommand && !searchQuery && suggestedCommandsForSubCommand.length > 0) {
+      setSuggestedCommands(suggestedCommandsForSubCommand);
+      setFocusedCommandIndex(1);
+    }
+  }, [searchQuery, subCommand, suggestedCommandsForSubCommand, setFocusedCommandIndex, setSuggestedCommands]);
 
   const onCommandClick = async (index: number) => {
     setFocusedCommandIndex(index);
@@ -222,16 +159,36 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
     ev.currentTarget.src = 'https://freshinbox.xyz/favicon.ico';
   };
 
+  // bounce animation
+  const bounceDivAnimation = {
+    initial: { scale: 0, opacity: 0 },
+    whileInView: {
+      scale: 1,
+      opacity: 1,
+    },
+    exit: { scale: 0, opacity: 0 },
+    transition: { type: 'spring', stiffness: 900, damping: 40 },
+  };
+
   // show sub command indicator instead of search icon in search box
   const SubCommandIndicator = () => {
-    if (subCommand === CommandType.SwitchSpace) {
-      return (
-        <div className="flex items-center justify-start h-full border-r border-brand-darkBgAccent px-[7px] mr-2">
-          <MdSwitchLeft className=" fill-slate-500/90 mr-1" size={18} />
-          <p className="text-slate-400 text-[12px] font-light m-0 p-0 whitespace-nowrap">Switch Space</p>
-        </div>
-      );
+    let Icon = MdSwitchLeft;
+    let label = 'Switch Space';
+
+    if (subCommand === CommandType.NewSpace) {
+      Icon = MdNewLabel;
+      label = 'New Space';
+    } else if (subCommand === CommandType.AddToSpace) {
+      Icon = MdAdd;
+      label = 'Add To Space';
     }
+
+    return (
+      <div className="flex items-center justify-start h-full border-r border-brand-darkBgAccent px-[7px] mr-2">
+        <Icon className=" fill-slate-500/90 mr-1" size={18} />
+        <p className="text-slate-400 text-[12px] font-light m-0 p-0 whitespace-nowrap">{label}</p>
+      </div>
+    );
   };
 
   const Command = (index: number, label: string, Icon?: IconType | string) => {
@@ -320,17 +277,23 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
             ref={inputRef}
+            placeholder={searchQueryPlaceholder}
             onChange={ev => setSearchQuery(ev.currentTarget.value)}
             type="text"
             onKeyDown={ev => {
               if (ev.key === 'Backspace' && searchQuery === '') {
                 setSubCommand(null);
                 setDefaultSuggestedCommands();
+                setSuggestedCommandsForSubCommand([]);
                 setFocusedCommandIndex(1);
+                return;
+              }
+              if (ev.key.includes('ArrowDown') || ev.key.includes('ArrowUp')) {
+                ev.preventDefault();
               }
             }}
             value={searchQuery}
-            className={`text-[14px] text-slate-300 w-auto flex-grow px-px  py-2.5 bg-transparent 
+            className={`text-[14px] text-slate-300 w-auto flex-grow px-px  py-2.5 bg-transparent placeholder:text-slate-500
                     rounded-tr-xl caret-slate-300 caret rounded-br-xl outline-none border-none`}
           />
         </div>

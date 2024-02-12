@@ -67,7 +67,7 @@ export interface IMessageEventSidePanel {
   payload: IEventPayloadSidePanel;
 }
 
-type MessageEventsContentScript = 'SHOW_COMMAND_PALETTE' | 'SWITCH_SPACE' | 'NEW_SPACE' | 'GO_TO_URL';
+type MessageEventsContentScript = 'SHOW_COMMAND_PALETTE' | 'SWITCH_SPACE' | 'NEW_SPACE' | 'Add_TO_SPACE' | 'GO_TO_URL';
 
 interface IEventPayloadContentScript {
   recentSites?: ITab[];
