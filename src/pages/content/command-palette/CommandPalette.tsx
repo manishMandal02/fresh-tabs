@@ -9,13 +9,15 @@ import Tooltip from '../../sidepanel/components/elements/tooltip';
 import { CommandType, ISpace, ITab } from '../../types/global.types';
 import { useCommandPalette } from './useCommandPalette';
 import { debounce } from '../../utils/debounce';
+import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
+import { publishEvents } from '../../utils/publish-events';
 
 export type Command = {
   index: number;
   type: CommandType;
   label: string;
   icon?: string | IconType;
-  metadata?: string;
+  metadata?: string | number;
 };
 
 const staticCommands: Command[] = [
@@ -110,27 +112,82 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
     const commands: Command[] = [];
 
     // query static commands label
+    staticCommands
+      .filter(cmd => cmd.label.toLowerCase().includes(searchQuery.toLowerCase()))
+      .forEach((cmd, idx) => {
+        commands.push({ ...cmd, index: idx + 1 });
+      });
 
     // query space title
+    const spaces = await getAllSpaces();
+
+    spaces
+      .filter(s => s.id !== activeSpace.id && s.title.toLowerCase().includes(searchQuery.toLowerCase()))
+      .forEach((space, idx) => {
+        if (idx === 0) {
+          commands.push(commandDivider);
+        }
+        commands.push({
+          index: 1 + idx + commands.length,
+          type: CommandType.SwitchSpace,
+          label: space.title,
+          icon: space.emoji,
+          metadata: space.id,
+        });
+      });
+
+    // Todo -  send search event to handle tab query & history search & bookmark search
+    const res = await publishEvents<Command[]>({ event: 'SEARCH', payload: { searchQuery } });
+    if (res.length > 0) {
+      commands.push(...res);
+    }
+    // also look at google search keywords
 
     // query current tab url/title (words match)
+    // const tabs = await chrome.tabs.query({ currentWindow: true, title: searchQuery });
+
+    // tabs.forEach((tab, idx) => {
+    //   commands.push({
+    //     index: 1 + idx + commands.length,
+    //     type: CommandType.SwitchTab,
+    //     label: tab.title,
+    //     icon: tab.favIconUrl,
+    //     metadata: tab.id,
+    //   });
+    // });
 
     // google search with input query
 
     // query history (words match)
+    // const history = await chrome.history.search({ text: searchQuery, maxResults: 4 });
+
+    // history.forEach((item, idx) => {
+    //   commands.push({
+    //     index: 1 + idx + commands.length,
+    //     type: CommandType.RecentSite,
+    //     label: item.title,
+    //     icon: item.url,
+    //   });
+    // });
 
     // query bookmark (words match)
+    console.log('🚀 ~ handleGlobalSearch ~ commands:', commands);
 
     setSuggestedCommands(commands);
-  }, [setSuggestedCommands]);
+    setFocusedCommandIndex(1);
+  }, [setSuggestedCommands, setFocusedCommandIndex, activeSpace, searchQuery]);
 
   // on global search
   useEffect(() => {
     if (searchQuery) {
       // debounce search
-      debounce(handleGlobalSearch, 500)();
+      debounce(handleGlobalSearch)();
+    } else {
+      // reset search
+      setDefaultSuggestedCommands();
+      setFocusedCommandIndex(1);
     }
-  }, [searchQuery, handleGlobalSearch]);
+  }, [searchQuery, handleGlobalSearch, setFocusedCommandIndex, setSuggestedCommands, setDefaultSuggestedCommands]);
 
   // on search for sub command
   useEffect(() => {
@@ -303,7 +360,10 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
           <div>
             {suggestedCommands.map(cmd => {
               const renderCommands: JSX.Element[] = [];
-              if (cmd.index === suggestedCommands.findIndex(cmd1 => cmd1.type === CommandType.RecentSite)) {
+              if (
+                cmd.index !== -1 &&
+                cmd.index === suggestedCommands.findIndex(cmd1 => cmd1.type === CommandType.RecentSite)
+              ) {
                 renderCommands.push(
                   <p key={cmd.index} className="text-[10px] text-slate-500 font-light mt-1 ml-2  -mb-px" tabIndex={-1}>
                     Recently Visited

@@ -2,11 +2,11 @@ import { IMessageEventSidePanel, IMessageEventContentScript } from '../types/glo
 import { logger } from './logger';
 
 // used to send message to side panel to update ui, if side panel is open
-export const publishEvents = async (event: IMessageEventSidePanel | IMessageEventContentScript): Promise<boolean> => {
+export const publishEvents = async <T = boolean>(
+  event: IMessageEventSidePanel | IMessageEventContentScript,
+): Promise<T> => {
   try {
-    await chrome.runtime.sendMessage(event);
-
-    return true;
+    return await chrome.runtime.sendMessage(event);
   } catch (error) {
     // if errored because of the side-panel not opened then do nothing
     if (error instanceof Error && error.message.includes('Receiving end does not exist.')) return;
@@ -16,7 +16,7 @@ export const publishEvents = async (event: IMessageEventSidePanel | IMessageEven
       msg: 'Failed to send message to side panel',
       fileTrace: 'src/pages/background/index.ts:17 ~ publishEvents() ~ catch block',
     });
-    return false;
+    return false as T;
   }
 };
 

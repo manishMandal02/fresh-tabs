@@ -31,7 +31,7 @@ export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCom
   const [focusedCommandIndex, setFocusedCommandIndex] = useState(1);
 
   // close command palette
-  const handleCloseCommandPalette = () => {
+  const handleCloseCommandPalette = useCallback(() => {
     modalRef.current?.close();
     // remove parent container
     const commandPaletteContainerEl = document.getElementById(CommandPaletteContainerId);
@@ -39,7 +39,7 @@ export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCom
     commandPaletteContainerEl.replaceChildren();
     commandPaletteContainerEl?.remove();
     document.body.style.overflow = 'auto';
-  };
+  }, [modalRef]);
 
   // handle select command
   const handleSelectCommand = useCallback(async () => {
@@ -74,7 +74,7 @@ export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCom
 
           if (!space) return;
 
-          await publishEvents({ event: 'SWITCH_SPACE', payload: { spaceId: space.metadata } });
+          await publishEvents({ event: 'SWITCH_SPACE', payload: { spaceId: space.metadata as string } });
           handleCloseCommandPalette();
         }
 
@@ -127,7 +127,7 @@ export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCom
 
           console.log('🚀 ~ handleSelectCommand ~ space:', space);
 
-          await publishEvents({ event: 'Add_TO_SPACE', payload: { spaceId: space.metadata } });
+          await publishEvents({ event: 'Add_TO_SPACE', payload: { spaceId: space.metadata as string } });
           handleCloseCommandPalette();
         }
         break;
@@ -139,7 +139,7 @@ export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCom
         break;
       }
     }
-  }, [activeSpace, focusedCommandIndex, suggestedCommands, handleCloseCommandPalette, subCommand]);
+  }, [activeSpace, focusedCommandIndex, suggestedCommands, handleCloseCommandPalette, searchQuery, subCommand]);
 
   // handle key press
   useKeyPressed({

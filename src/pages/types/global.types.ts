@@ -16,6 +16,7 @@ export enum CommandType {
   SwitchSpace = 'switch-space',
   AddToSpace = 'add-to-space',
   RecentSite = 'recent-site',
+  SwitchTab = 'switch-tab',
   TopSite = 'top-site',
   Divider = 'divider',
 }
@@ -67,7 +68,13 @@ export interface IMessageEventSidePanel {
   payload: IEventPayloadSidePanel;
 }
 
-type MessageEventsContentScript = 'SHOW_COMMAND_PALETTE' | 'SWITCH_SPACE' | 'NEW_SPACE' | 'Add_TO_SPACE' | 'GO_TO_URL';
+type MessageEventsContentScript =
+  | 'SHOW_COMMAND_PALETTE'
+  | 'SWITCH_SPACE'
+  | 'NEW_SPACE'
+  | 'Add_TO_SPACE'
+  | 'GO_TO_URL'
+  | 'SEARCH';
 
 interface IEventPayloadContentScript {
   recentSites?: ITab[];
@@ -75,6 +82,7 @@ interface IEventPayloadContentScript {
   url?: string;
   spaceId?: string;
   spaceTitle?: string;
+  searchQuery?: string;
   activeSpace?: ISpace;
 }
 

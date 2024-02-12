@@ -54,8 +54,9 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// handle events from content script (command palette)
+// TODO - don't switch space in same window if meeting is in place
 
+// handle events from content script (command palette)
 chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
   const { event, payload } = msg as IMessageEventContentScript;
 
