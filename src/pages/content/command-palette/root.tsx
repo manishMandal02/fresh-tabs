@@ -3,16 +3,17 @@ import refreshOnUpdate from 'virtual:reload-on-update-in-view';
 import injectedStyle from './injected.css?inline';
 import { CommandPaletteContainerId } from '@root/src/constants/app';
 import CommandPalette from './CommandPalette';
-import { IMessageEventContentScript, ITab } from '../../types/global.types';
+import { IMessageEventContentScript, ISpace, ITab } from '../../types/global.types';
 
 refreshOnUpdate('pages/content');
 
 type AppendContainerProps = {
   recentSites: ITab[];
   topSites: ITab[];
+  activeSpace: ISpace;
 };
 
-const appendCommandPaletteContainer = ({ recentSites, topSites }: AppendContainerProps) => {
+const appendCommandPaletteContainer = ({ recentSites, topSites, activeSpace }: AppendContainerProps) => {
   if (document.getElementById(CommandPaletteContainerId)) return;
 
   const commandPaletteContainer = document.createElement('div');
@@ -44,7 +45,9 @@ const appendCommandPaletteContainer = ({ recentSites, topSites }: AppendContaine
   styleElement.innerHTML = injectedStyle;
   shadowRoot.appendChild(styleElement);
 
-  createRoot(rootIntoShadow).render(<CommandPalette recentSites={recentSites} topSites={topSites} />);
+  createRoot(rootIntoShadow).render(
+    <CommandPalette recentSites={recentSites} topSites={topSites} activeSpace={activeSpace} />,
+  );
 };
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
@@ -52,12 +55,13 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
   const event = msg as IMessageEventContentScript;
 
-  const { recentSites, topSites } = event.payload;
+  const { recentSites, topSites, activeSpace } = event.payload;
 
   if (msg.event === 'SHOW_COMMAND_PALETTE') {
     appendCommandPaletteContainer({
       recentSites,
       topSites,
+      activeSpace,
     });
   }
 

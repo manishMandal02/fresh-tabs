@@ -82,7 +82,7 @@ chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
     case 'GO_TO_URL': {
       const { url } = payload;
       const tab = await getCurrentTab();
-      await chrome.tabs.update(tab.id, { url });
+      await chrome.tabs.update(tab.id, { url: parseURL(url) });
       break;
     }
   }
@@ -231,29 +231,46 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
     let activeTabId = tab.id;
 
     if (tab?.url.startsWith('chrome://')) {
+      // switch tab as content script doesn't work on chrome pages
+
       // get last visited url
       const recentlyVisitedURL = await getRecentlyVisitedSites(1);
 
-      // find the tab based on the url
-      const [lastActiveTab] = await chrome.tabs.query({ title: recentlyVisitedURL[0].title, currentWindow: true });
+      const tabs = await chrome.tabs.query({ currentWindow: true });
 
-      if (lastActiveTab?.id) {
-        activeTabId = lastActiveTab.id;
+      if (tabs.length < 2 || tabs.filter(t => t.url.startsWith('chrome://')).length === tabs.length) {
+        // create new tab if one 1 tab exists
+        const newTab = await chrome.tabs.create({ url: recentlyVisitedURL[0].url, active: true });
+        activeTabId = newTab.id;
       } else {
-        // get next tab if last active tab not found
-        const [nextTab] = await chrome.tabs.query({ index: tab.index + 1, currentWindow: true });
+        // find the tab based on the url
+        const [lastActiveTab] = await chrome.tabs.query({ title: recentlyVisitedURL[0].title, currentWindow: true });
 
-        console.log('🚀 ~ chrome.commands.onCommand.addListener ~ nextTab:', nextTab);
+        if (lastActiveTab?.id) {
+          activeTabId = lastActiveTab.id;
+        } else {
+          // get next tab if last active tab not found
+          const [nextTab] = await chrome.tabs.query({ index: tab.index + 1, currentWindow: true });
 
-        if (!nextTab) return;
-        activeTabId = nextTab.id;
+          if (nextTab) {
+            activeTabId = nextTab.id;
+          } else {
+            // get first tab
+            const [previousTab] = await chrome.tabs.query({ index: tab.index - 1, currentWindow: true });
+            if (previousTab) {
+              activeTabId = previousTab.id;
+            }
+          }
+        }
+        await goToTab(activeTabId);
       }
-      await goToTab(activeTabId);
     }
 
     const recentSites = await getRecentlyVisitedSites();
 
     const topSites = await getMostVisitedSites();
+
+    const activeSpace = await getSpaceByWindow(tab.windowId);
 
     //  wait for 0.5s if tab was changed
     if (activeTabId !== tab.id) {
@@ -269,7 +286,7 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
         (async () => {
           return await publishEventsTab(activeTabId, {
             event: 'SHOW_COMMAND_PALETTE',
-            payload: { recentSites, topSites },
+            payload: { activeSpace, recentSites, topSites },
           });
         })();
       },

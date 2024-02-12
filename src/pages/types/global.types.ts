@@ -11,6 +11,15 @@ export enum ThemeColor {
   Fuchsia = '#d946ef',
 }
 
+export enum CommandType {
+  NewSpace = 'new-space',
+  SwitchSpace = 'switch-space',
+  AddToSpace = 'add-to-space',
+  RecentSite = 'recent-site',
+  TopSite = 'top-site',
+  Divider = 'divider',
+}
+
 export interface ITab {
   id: number;
   url: string;
@@ -66,6 +75,7 @@ interface IEventPayloadContentScript {
   url?: string;
   spaceId?: string;
   spaceTitle?: string;
+  activeSpace?: ISpace;
 }
 
 export interface IMessageEventContentScript {

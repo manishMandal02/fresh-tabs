@@ -15,20 +15,14 @@ export const getRecentlyVisitedSites = async (maxResults = 4): Promise<ITab[]> =
 
   const currentTab = await getCurrentTab();
 
-  const currentSiteIndex = sites.findIndex(site => site.url === currentTab.url);
-
-  console.log('🚀 ~ getRecentlyVisitedSites ~ currentSiteIndex:', currentSiteIndex);
-
-  if (currentSiteIndex !== -1) {
-    sites.splice(currentSiteIndex, 1);
-  } else {
-    sites.pop();
-  }
+  console.log('🚀 ~ getRecentlyVisitedSites ~ sites:', sites);
 
   // remove duplicates and return site url & title
 
   return sites
-    .filter(s1 => sites.find(s2 => s2.url === s1.url))
+    .filter(
+      s1 => sites.find(s2 => s2.url !== s1.url) || s1.url === currentTab.url || s1.url.toLowerCase() === 'new tab',
+    )
     .map(site => ({ url: site.url, title: site.title, id: 0 }));
 };
 
