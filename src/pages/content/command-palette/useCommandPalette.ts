@@ -180,16 +180,16 @@ export const useCommandPalette = ({ activeSpace, modalRef }: UseCommandPalettePr
       })();
     },
     onArrowDownPressed: () => {
-      if (focusedCommandIndex >= suggestedCommands.filter(cmd => cmd.type !== CommandType.Divider).length) {
+      if (focusedCommandIndex >= suggestedCommands.length) {
+        setFocusedCommandIndex(1);
         return;
       }
-
-      if (focusedCommandIndex === suggestedCommands.filter(c => c.type !== 'divider').length) return;
 
       setFocusedCommandIndex(prev => prev + 1);
     },
     onArrowUpPressed: () => {
       if (focusedCommandIndex < 2) {
+        setFocusedCommandIndex(suggestedCommands.length);
         return;
       }
 

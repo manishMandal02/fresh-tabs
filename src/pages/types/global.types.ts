@@ -20,7 +20,6 @@ export enum CommandType {
   RecentSite = 'recent-site',
   SwitchTab = 'switch-tab',
   TopSite = 'top-site',
-  Divider = 'divider',
 }
 
 export interface ICommand {

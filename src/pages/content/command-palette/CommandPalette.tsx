@@ -24,13 +24,7 @@ const staticCommands: ICommand[] = [
 
 const COMMAND_HEIGHT = 30;
 
-const SUGGESTED_COMMANDS_MAX_HEIGHT = 420;
-
-const commandDivider: ICommand = {
-  index: -1,
-  label: 'divider',
-  type: CommandType.Divider,
-};
+const SUGGESTED_COMMANDS_MAX_HEIGHT = 400;
 
 type Props = {
   activeSpace: ISpace;
@@ -39,8 +33,6 @@ type Props = {
 };
 
 const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
-  // snackbar sate
-
   // elements ref
   const modalRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -84,7 +76,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
       metadata: site.url,
     }));
 
-    setSuggestedCommands([...staticCommands, commandDivider, ...recentSitesCommands]);
+    setSuggestedCommands([...staticCommands, ...recentSitesCommands]);
   }, [recentSites, setSuggestedCommands]);
 
   // initialize component
@@ -135,12 +127,9 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
 
     spaces
       .filter(s => s.id !== activeSpace.id && s.title.toLowerCase().includes(searchQuery.toLowerCase()))
-      .forEach((space, idx) => {
-        if (idx === 0) {
-          matchedCommands.push(commandDivider);
-        }
+      .forEach(space => {
         matchedCommands.push({
-          index: matchedCommands.filter(c => c.type !== CommandType.Divider).length + 1,
+          index: matchedCommands.length + 1,
           type: CommandType.SwitchSpace,
           label: space.title,
           icon: space.emoji,
@@ -153,12 +142,9 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
 
     if (res?.length > 0) {
       res.forEach(cmd => {
-        if (cmd.index === 0) {
-          matchedCommands.push(commandDivider);
-        }
         matchedCommands.push({
           ...cmd,
-          index: matchedCommands.filter(c => c.type !== CommandType.Divider).length + 1,
+          index: matchedCommands.length + 1,
         });
       });
     }
@@ -252,7 +238,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
     }
 
     return (
-      <div className="flex items-center justify-start h-full border-r border-brand-darkBgAccent px-[7px] mr-2">
+      <div className="flex items-center justify-start h-full border-r border-brand-darkBgAccent/50 pl-[8.5px] pr-[6.5px] mr-1.5 bg-brand-darkBgAccent/40">
         <Icon className=" fill-slate-600 text-slate-600 mr-1.5" size={16} />
         <p className="text-slate-400 text-[12px] font-light m-0 p-0 whitespace-nowrap">{label}</p>
       </div>
@@ -265,13 +251,18 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
 
     let sectionLabel = '';
 
-    if (searchQuery.trim() && index === suggestedCommands.find(cmd1 => cmd1.type === CommandType.SwitchTab)?.index) {
+    if (
+      index ===
+      suggestedCommands.find(cmd1 => cmd1.type === CommandType.SwitchTab && staticCommands[0].label !== cmd1.label)
+        ?.index
+    ) {
       sectionLabel = 'Opened tabs';
     } else if (index === suggestedCommands.find(cmd1 => cmd1.type === CommandType.RecentSite)?.index) {
       sectionLabel = 'Recently Visited';
     } else if (
-      searchQuery.trim() &&
-      index === suggestedCommands.find(cmd1 => cmd1.type === CommandType.SwitchSpace)?.index
+      index ===
+      suggestedCommands.find(cmd1 => cmd1.type === CommandType.SwitchSpace && staticCommands[1].label !== cmd1.label)
+        ?.index
     ) {
       sectionLabel = 'Spaces';
     }
@@ -279,9 +270,12 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
     if (!sectionLabel) return;
 
     return (
-      <p key={index} className="text-[12px] text-slate-500 font-light mt-1 ml-2.5" tabIndex={-1}>
-        {sectionLabel}
-      </p>
+      <>
+        <p key={index} className="text-[12px] text-slate-500 font-light mt-1.5 ml-2.5 mb-1" tabIndex={-1}>
+          {sectionLabel}
+        </p>
+        <hr key={index} className="h-px bg-brand-darkBgAccent border-none w-full m-0 p-0 mb-1" tabIndex={-1} />
+      </>
     );
   };
 
@@ -321,6 +315,34 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
     );
   };
 
+  const MostVisitedSites = () => {
+    return (
+      <div className="bg-brand-darkBg w-full">
+        <p className="text-[12px] text-slate-500 font-light mt-1.5 ml-2.5 mb-1" tabIndex={-1}>
+          Most Visited Sites
+        </p>
+        <hr className="h-px bg-brand-darkBgAccent border-none w-full m-0 p-0 mb-1" tabIndex={-1} />
+        <div className="flex w-full items-center py-2 rounded-lg justify-around  px-2">
+          {topSites?.map(site => (
+            // TODO - fix tooltip
+            <Tooltip key={site.url} label={site.title} delay={500}>
+              <button
+                className={`bg-brand-darkBgAccent rounded-md flex items-center justify-center outline-none p-1 px-1.5 
+                    border border-brand-darkBgAccent focus:border-slate-500/80 focus:bg-slate-700 transition-all duration-200 ease-in-out1`}>
+                <img
+                  alt="icon"
+                  src={getFaviconURL(site.url, false)}
+                  onError={handleImageLoadError}
+                  className="w-[16px] h-[16px] object-scale-down object-center opacity-80"
+                />
+              </button>
+            </Tooltip>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div className="w-screen h-screen flex items-center justify-center fixed top-0 left-0 overflow-hidden ">
@@ -334,28 +356,6 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
         {...bounceDivAnimation}
         onClick={handleBackdropClick}
         className=" m-0 flex items-center outline-none flex-col justify-center top-[20%] h-fit max-h-[75vh] w-[520px] left-[33.5%] backdrop:to-brand-darkBg/30 p-px bg-transparent">
-        {/* most visited sites */}
-        <div className="mb-[8px]  overflow-hidden w-[98%] mx-auto ">
-          <p className="text-slate-500 text-[11px] font-thin m-0 bg-brand-darkBg px-3 py-px mx-auto rounded-tr-lg -mb-1 rounded-tl-lg w-fit text-center">
-            Most visited
-          </p>
-          <div className="flex w-full items-center py-2 rounded-lg justify-around bg-brand-darkBg px-2">
-            {topSites?.map(site => (
-              <Tooltip key={site.url} label={site.title} delay={500}>
-                <button
-                  className={`bg-brand-darkBgAccent rounded-md flex items-center justify-center outline-none p-1 px-1.5 
-                        border border-brand-darkBgAccent focus:border-slate-500/80 focus:bg-slate-700 transition-all duration-200 ease-in-out1`}>
-                  <img
-                    alt="icon"
-                    src={getFaviconURL(site.url, false)}
-                    onError={handleImageLoadError}
-                    className="w-[16px] h-[16px] object-scale-down object-center"
-                  />
-                </button>
-              </Tooltip>
-            ))}
-          </div>
-        </div>
         {/* search box */}
         <div
           className={`w-full h-[50px] min-h-[50px]: bg-brand-darkBg rounded-xl flex items-center justify-start border-collapse overflow-hidden
@@ -367,7 +367,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
             onClick={handleSearchIconClick}
             role="img">
             {!subCommand ? (
-              <MdSearch className="fill-slate-700 bg-transparent ml-1.5 mr-1" size={24} />
+              <MdSearch className="fill-slate-700 bg-transparent ml-2 mr-1.5" size={24} />
             ) : (
               SubCommandIndicator()
             )}
@@ -381,7 +381,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
             type="text"
             spellCheck={false}
             onKeyDown={ev => {
-              if (ev.key === 'Backspace' && searchQuery === '') {
+              if (ev.key === 'Backspace' && !searchQuery.trim()) {
                 setSubCommand(null);
                 setDefaultSuggestedCommands();
                 setSuggestedCommandsForSubCommand([]);
@@ -410,17 +410,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
               const renderCommands: JSX.Element[] = [];
               renderCommands.push(CommandSectionLabel(cmd.index, cmd.label));
 
-              if (cmd.type !== CommandType.Divider) {
-                renderCommands.push(Command(cmd.index, cmd.label, cmd.type, cmd.icon));
-              } else {
-                renderCommands.push(
-                  <hr
-                    key={cmd.index}
-                    className="h-px bg-brand-darkBgAccent border-none w-full m-0 p-0"
-                    tabIndex={-1}
-                  />,
-                );
-              }
+              renderCommands.push(Command(cmd.index, cmd.label, cmd.type, cmd.icon));
 
               return <>{renderCommands.map(cmd1 => cmd1)}</>;
             })}
@@ -432,7 +422,10 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
               No result for {searchQuery || ''}
             </div>
           ) : null}
+          {/* most visited sites */}
+          {MostVisitedSites()}
         </div>
+
         {/* navigation guide */}
         <div
           className={`bg-brand-darkBg shadow-sm shadow-slate-800/70 rounded-bl-md rounded-br-md w-[99%] flex items-center justify-center px-4 py-1.5 

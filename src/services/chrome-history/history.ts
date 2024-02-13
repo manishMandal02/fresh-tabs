@@ -38,7 +38,7 @@ export const getRecentlyVisitedSites = async (maxResults = 4): Promise<ITab[]> =
   let i = 1;
 
   while (sites.length < maxResults) {
-    sites = await getSitesFromHistory(maxResults * i);
+    sites = await getSitesFromHistory((maxResults * i) / 2);
 
     console.log(' ~ getRecentlyVisitedSites ~ 🔂 while loop ~ sites:', sites);
 
