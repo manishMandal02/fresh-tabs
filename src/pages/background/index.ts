@@ -363,13 +363,12 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
     retryAtIntervals({
       interval: 500,
       retries: 3,
-      callback: () => {
-        (async () => {
-          return await publishEventsTab(activeTabId, {
-            event: 'SHOW_COMMAND_PALETTE',
-            payload: { activeSpace, recentSites, topSites },
-          });
-        })();
+      callback: async () => {
+        console.log('🚀 ~ retryAtIntervals ~ SHOW_COMMAND_PALETTE:');
+        return await publishEventsTab(activeTabId, {
+          event: 'SHOW_COMMAND_PALETTE',
+          payload: { activeSpace, recentSites, topSites },
+        });
       },
     });
   }
