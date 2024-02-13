@@ -63,6 +63,13 @@ chrome.runtime.onMessage.addListener(
     const { event, payload } = request;
 
     switch (event) {
+      case 'SWITCH_TAB': {
+        const { tabId } = payload;
+
+        await goToTab(tabId);
+
+        return true;
+      }
       case 'SWITCH_SPACE': {
         const { spaceId } = payload;
 
@@ -104,13 +111,15 @@ chrome.runtime.onMessage.addListener(
 
         return true;
       }
-      case 'Add_TO_SPACE': {
+      case 'MOVE_TAB_TO_SPACE': {
         const { spaceId } = payload;
         const tabsInSpace = await getTabsInSpace(spaceId);
 
         const tab = await getCurrentTab();
 
         await setTabsForSpace(spaceId, [...tabsInSpace, tab]);
+
+        await chrome.tabs.remove(tab.id);
 
         return true;
       }

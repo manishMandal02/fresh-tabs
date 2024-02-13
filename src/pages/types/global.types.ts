@@ -80,9 +80,10 @@ export interface IMessageEventSidePanel {
 
 type MessageEventsContentScript =
   | 'SHOW_COMMAND_PALETTE'
+  | 'SWITCH_TAB'
   | 'SWITCH_SPACE'
   | 'NEW_SPACE'
-  | 'Add_TO_SPACE'
+  | 'MOVE_TAB_TO_SPACE'
   | 'GO_TO_URL'
   | 'SEARCH';
 
@@ -91,6 +92,7 @@ interface IEventPayloadContentScript {
   topSites?: ITab[];
   url?: string;
   spaceId?: string;
+  tabId?: number;
   spaceTitle?: string;
   searchQuery?: string;
   activeSpace?: ISpace;

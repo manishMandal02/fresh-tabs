@@ -11,13 +11,15 @@ import { getFaviconURL } from '../../utils';
 type UseCommandPaletteProps = {
   activeSpace: ISpace;
   modalRef: React.RefObject<HTMLDialogElement>;
-  searchQuery: string;
 };
 
-export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCommandPaletteProps) => {
+export const useCommandPalette = ({ activeSpace, modalRef }: UseCommandPaletteProps) => {
   // local state
   // search/commands suggestions
   const [suggestedCommands, setSuggestedCommands] = useState<ICommand[]>([]);
+
+  // search query
+  const [searchQuery, setSearchQuery] = useState('');
 
   // save suggestedCommands for sub commands if search query is not empty for during sub command action
   // we can revert to this suggested commands if search query is empty again
@@ -47,7 +49,6 @@ export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCom
     const focusedCommand = suggestedCommands.find(cmd => cmd.index === focusedCommandIndex);
 
     if (!focusedCommand?.type) return;
-
     switch (focusedCommand.type) {
       case CommandType.SwitchTab: {
         if (!subCommand) {
@@ -70,6 +71,9 @@ export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCom
           setFocusedCommandIndex(1);
         } else {
           // Todo - switch tab event
+
+          await publishEvents({ event: 'SWITCH_TAB', payload: { tabId: focusedCommand.metadata as number } });
+          handleCloseCommandPalette();
         }
         break;
       }
@@ -94,13 +98,7 @@ export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCom
           setSearchQueryPlaceholder('Select space');
           setFocusedCommandIndex(1);
         } else {
-          const space = suggestedCommands.find(cmd => cmd.index === focusedCommandIndex);
-
-          console.log('🚀 ~ handleSelectCommand ~ space:', space);
-
-          if (!space) return;
-
-          await publishEvents({ event: 'SWITCH_SPACE', payload: { spaceId: space.metadata as string } });
+          await publishEvents({ event: 'SWITCH_SPACE', payload: { spaceId: focusedCommand.metadata as string } });
           handleCloseCommandPalette();
         }
 
@@ -149,7 +147,7 @@ export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCom
           setSearchQueryPlaceholder('Select space');
           setFocusedCommandIndex(1);
         } else {
-          await publishEvents({ event: 'Add_TO_SPACE', payload: { spaceId: focusedCommand.metadata as string } });
+          await publishEvents({ event: 'MOVE_TAB_TO_SPACE', payload: { spaceId: focusedCommand.metadata as string } });
           handleCloseCommandPalette();
         }
         break;
@@ -161,6 +159,7 @@ export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCom
         break;
       }
     }
+    setSearchQuery('');
   }, [activeSpace, focusedCommandIndex, suggestedCommands, handleCloseCommandPalette, searchQuery, subCommand]);
 
   // handle key press
@@ -203,6 +202,8 @@ export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCom
     suggestedCommands,
     searchQueryPlaceholder,
     subCommand,
+    searchQuery,
+    setSearchQuery,
     setSubCommand,
     suggestedCommandsForSubCommand,
     setSuggestedCommands,
@@ -210,5 +211,6 @@ export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCom
     setFocusedCommandIndex,
     focusedCommandIndex,
     setSuggestedCommandsForSubCommand,
+    setSearchQueryPlaceholder,
   };
 };

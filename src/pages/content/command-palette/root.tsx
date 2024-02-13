@@ -25,8 +25,8 @@ const appendCommandPaletteContainer = ({ recentSites, topSites, activeSpace }: A
   commandPaletteContainer.style.height = '100vh';
   commandPaletteContainer.style.width = '100vw';
   commandPaletteContainer.style.position = 'fixed';
-  commandPaletteContainer.style.top = '0';
-  commandPaletteContainer.style.left = '0';
+  commandPaletteContainer.style.top = 'auto';
+  commandPaletteContainer.style.left = 'auto';
 
   document.body.style.overflow = 'hidden';
 
