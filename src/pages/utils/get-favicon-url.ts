@@ -20,8 +20,8 @@ export const getFaviconURL = (siteURL: string, isSidePanel = true) => {
     //  TODO - some sub domains like google products don't work,
     // need to check if the image was loaded if not then try diff method
 
-    return url.origin + '/favicon.ico';
-    // return googleFaviconURL(url);
+    // return url.origin + '/favicon.ico';
+    return googleFaviconURL(url);
   }
 
   // generate favicon link with chrome favicon url if subdomain else use google global favicon url

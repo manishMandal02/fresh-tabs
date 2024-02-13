@@ -1,4 +1,7 @@
-import { MdAdd, MdNewLabel, MdSearch, MdSwitchLeft } from 'react-icons/md';
+import { MdSearch, MdKeyboardTab } from 'react-icons/md';
+import { FaLocationArrow, FaFolder } from 'react-icons/fa';
+import { TbArrowMoveRight } from 'react-icons/tb';
+
 import { motion } from 'framer-motion';
 import { useEffect, useRef, MouseEventHandler, ReactEventHandler, useState, useCallback } from 'react';
 import type { IconType } from 'react-icons/lib';
@@ -6,27 +9,24 @@ import type { IconType } from 'react-icons/lib';
 import { getFaviconURL } from '../../utils';
 import { isValidURL } from '../../utils/isValidURL';
 import Tooltip from '../../sidepanel/components/elements/tooltip';
-import { CommandType, ISpace, ITab } from '../../types/global.types';
+import { CommandType, ICommand, ISpace, ITab } from '../../types/global.types';
 import { useCommandPalette } from './useCommandPalette';
 import { debounce } from '../../utils/debounce';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { publishEvents } from '../../utils/publish-events';
 
-export type Command = {
-  index: number;
-  type: CommandType;
-  label: string;
-  icon?: string | IconType;
-  metadata?: string | number;
-};
-
-const staticCommands: Command[] = [
-  { index: 1, type: CommandType.SwitchSpace, label: 'Switch Space', icon: MdSwitchLeft },
-  { index: 2, type: CommandType.NewSpace, label: 'New Space', icon: MdNewLabel },
-  { index: 3, type: CommandType.AddToSpace, label: 'Add To Space', icon: MdNewLabel },
+const staticCommands: ICommand[] = [
+  { index: 1, type: CommandType.SwitchTab, label: 'Go to Tab', icon: MdKeyboardTab },
+  { index: 2, type: CommandType.SwitchSpace, label: 'Switch Space', icon: FaLocationArrow },
+  { index: 3, type: CommandType.NewSpace, label: 'New Space', icon: FaFolder },
+  { index: 4, type: CommandType.AddToSpace, label: 'Move Tab', icon: TbArrowMoveRight },
 ];
 
-const commandDivider: Command = {
+const COMMAND_HEIGHT = 30;
+
+const SUGGESTED_COMMANDS_MAX_HEIGHT = 420;
+
+const commandDivider: ICommand = {
   index: -1,
   label: 'divider',
   type: CommandType.Divider,
@@ -48,6 +48,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
   // elements ref
   const modalRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionContainerRef = useRef<HTMLDivElement>(null);
 
   const {
     handleSelectCommand,
@@ -63,13 +64,25 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
     setSuggestedCommandsForSubCommand,
   } = useCommandPalette({ activeSpace, modalRef, searchQuery });
 
+  // check if the focused command is visible
+  useEffect(() => {
+    const numOfVisibleCommands = SUGGESTED_COMMANDS_MAX_HEIGHT / COMMAND_HEIGHT;
+
+    if (focusedCommandIndex < numOfVisibleCommands && suggestionContainerRef.current?.scrollTop < 1) return;
+
+    const focusedEl = suggestionContainerRef.current?.querySelector(`#fresh-tabs-command-${focusedCommandIndex}`);
+
+    focusedEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [focusedCommandIndex, suggestedCommands]);
+
   // set default suggested commands
   const setDefaultSuggestedCommands = useCallback(() => {
-    const recentSitesCommands = recentSites.map<Command>((site, idx) => ({
+    const recentSitesCommands = recentSites.map<ICommand>((site, idx) => ({
       index: 1 + idx + staticCommands.length,
       type: CommandType.RecentSite,
       label: site.title,
-      icon: site.url,
+      icon: getFaviconURL(site.url, false),
+      metadata: site.url,
     }));
 
     setSuggestedCommands([...staticCommands, commandDivider, ...recentSitesCommands]);
@@ -109,13 +122,13 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
   };
 
   const handleGlobalSearch = useCallback(async () => {
-    const commands: Command[] = [];
+    const matchedCommands: ICommand[] = [];
 
-    // query static commands label
+    // query static matchedCommands label
     staticCommands
       .filter(cmd => cmd.label.toLowerCase().includes(searchQuery.toLowerCase()))
       .forEach((cmd, idx) => {
-        commands.push({ ...cmd, index: idx + 1 });
+        matchedCommands.push({ ...cmd, index: idx + 1 });
       });
 
     // query space title
@@ -125,10 +138,10 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
       .filter(s => s.id !== activeSpace.id && s.title.toLowerCase().includes(searchQuery.toLowerCase()))
       .forEach((space, idx) => {
         if (idx === 0) {
-          commands.push(commandDivider);
+          matchedCommands.push(commandDivider);
         }
-        commands.push({
-          index: 1 + idx + commands.length,
+        matchedCommands.push({
+          index: matchedCommands.filter(c => c.type !== CommandType.Divider).length + 1,
           type: CommandType.SwitchSpace,
           label: space.title,
           icon: space.emoji,
@@ -137,48 +150,32 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
       });
 
     // Todo -  send search event to handle tab query & history search & bookmark search
-    const res = await publishEvents<Command[]>({ event: 'SEARCH', payload: { searchQuery } });
-    if (res.length > 0) {
-      commands.push(...res);
+    const res = await publishEvents<ICommand[]>({ event: 'SEARCH', payload: { searchQuery, spaceId: activeSpace.id } });
+
+    if (res?.length > 0) {
+      res.forEach(cmd => {
+        if (cmd.index === 0) {
+          matchedCommands.push(commandDivider);
+        }
+        matchedCommands.push({
+          ...cmd,
+          index: matchedCommands.filter(c => c.type !== CommandType.Divider).length + 1,
+        });
+      });
     }
+
     // also look at google search keywords
 
-    // query current tab url/title (words match)
-    // const tabs = await chrome.tabs.query({ currentWindow: true, title: searchQuery });
-
-    // tabs.forEach((tab, idx) => {
-    //   commands.push({
-    //     index: 1 + idx + commands.length,
-    //     type: CommandType.SwitchTab,
-    //     label: tab.title,
-    //     icon: tab.favIconUrl,
-    //     metadata: tab.id,
-    //   });
-    // });
-
-    // google search with input query
-
-    // query history (words match)
-    // const history = await chrome.history.search({ text: searchQuery, maxResults: 4 });
-
-    // history.forEach((item, idx) => {
-    //   commands.push({
-    //     index: 1 + idx + commands.length,
-    //     type: CommandType.RecentSite,
-    //     label: item.title,
-    //     icon: item.url,
-    //   });
-    // });
-
     // query bookmark (words match)
-    console.log('🚀 ~ handleGlobalSearch ~ commands:', commands);
+    console.log('🚀 ~ handleGlobalSearch ~ matchedCommands:', matchedCommands);
 
-    setSuggestedCommands(commands);
+    setSuggestedCommands(matchedCommands);
     setFocusedCommandIndex(1);
   }, [setSuggestedCommands, setFocusedCommandIndex, activeSpace, searchQuery]);
 
   // on global search
   useEffect(() => {
+    console.log('🚀 ~ useEffect global search ~ searchQuery:', searchQuery);
     if (searchQuery) {
       // debounce search
       debounce(handleGlobalSearch)();
@@ -191,7 +188,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
 
   // on search for sub command
   useEffect(() => {
-    console.log('🚀 ~ useEffect ~ searchQuery:', searchQuery);
+    console.log('🚀 ~ useEffect sub command search ~ searchQuery:', searchQuery);
     if (subCommand && searchQuery && suggestedCommandsForSubCommand.length > 0) {
       // filter the suggested sub commands based on search query, also update the index
       const filteredSubCommands = suggestedCommandsForSubCommand
@@ -228,16 +225,23 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
   };
 
   // show sub command indicator instead of search icon in search box
-  const SubCommandIndicator = () => {
-    let Icon = MdSwitchLeft;
+  const SubCommandIndicator = (type?: CommandType) => {
+    let Icon = staticCommands[1].icon;
     let label = 'Switch Space';
 
-    if (subCommand === CommandType.NewSpace) {
-      Icon = MdNewLabel;
+    const cmdType = type || subCommand;
+
+    console.log('🚀 ~ SubCommandIndicator ~ cmdType:', cmdType);
+
+    if (cmdType === CommandType.NewSpace) {
+      Icon = staticCommands[2].icon;
       label = 'New Space';
-    } else if (subCommand === CommandType.AddToSpace) {
-      Icon = MdAdd;
+    } else if (cmdType === CommandType.AddToSpace) {
+      Icon = staticCommands[3].icon;
       label = 'Add To Space';
+    } else if (cmdType === CommandType.SwitchTab) {
+      Icon = staticCommands[0].icon;
+      label = 'Switch Tab';
     }
 
     return (
@@ -248,14 +252,39 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
     );
   };
 
-  const Command = (index: number, label: string, Icon?: IconType | string) => {
+  // command section label
+  const CommandSectionLabel = (index: number) => {
+    if (index < 1) return;
+
+    let label = '';
+
+    if (searchQuery && index === suggestedCommands.find(cmd1 => cmd1.type === CommandType.SwitchTab)?.index) {
+      label = 'Opened tabs';
+    } else if (index === suggestedCommands.find(cmd1 => cmd1.type === CommandType.RecentSite)?.index) {
+      label = 'Recently Visited';
+    }
+    if (!label) return;
+
+    return (
+      <p key={index} className="text-[10px] text-slate-500 font-light mt-1 ml-2  -mb-px" tabIndex={-1}>
+        {label}
+      </p>
+    );
+  };
+
+  // command component
+  const Command = (index: number, label: string, type: CommandType, Icon?: IconType | string) => {
     const isFocused = focusedCommandIndex === index;
+
     return (
       <button
         id={`fresh-tabs-command-${index}`}
         className={`w-full flex items-center justify-start px-3 py-[6px] outline-none 
         transition-all duration-200 ease-in ${isFocused ? 'bg-brand-darkBgAccent/70' : ''} `}
-        onClick={() => onCommandClick(index)}>
+        onClick={() => onCommandClick(index)}
+        style={{ height: COMMAND_HEIGHT + 'px' }}>
+        {/* special commands */}
+        {!!searchQuery && type === CommandType.SwitchTab ? SubCommandIndicator(CommandType.SwitchTab) : null}
         <div className="w-[5%]">
           {typeof Icon === 'string' ? (
             !isValidURL(Icon) ? (
@@ -269,7 +298,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
               />
             )
           ) : (
-            <Icon className="fill-slate-500" size={18} />
+            <Icon className="fill-slate-600 text-slate-500" size={16} />
           )}
         </div>
         <p className="text-[13px] text-start text-slate-400 font-light min-w-[50%] max-w-[85%] whitespace-nowrap  overflow-hidden text-ellipsis">
@@ -291,7 +320,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
         }}
         {...bounceDivAnimation}
         onClick={handleBackdropClick}
-        className="absolute m-0 flex outline-none flex-col justify-center top-[20%] h-fit w-[520px] left-[33.5%] backdrop:to-brand-darkBg/30 p-px bg-transparent">
+        className="absolute m-0 flex items-center outline-none flex-col justify-center top-[20%] h-fit max-h-[75vh] w-[520px] left-[33.5%] backdrop:to-brand-darkBg/30 p-px bg-transparent">
         {/* most visited sites */}
         <div className="mb-[8px]  overflow-hidden w-[98%] mx-auto ">
           <p className="text-slate-500 text-[11px] font-thin m-0 bg-brand-darkBg px-3 py-px mx-auto rounded-tr-lg -mb-1 rounded-tl-lg w-fit text-center">
@@ -314,10 +343,10 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
             ))}
           </div>
         </div>
+        {/* search box */}
         <div
-          className={`w-full h-[50px] bg-brand-darkBg rounded-xl flex items-center justify-start border-collapse overflow-hidden
+          className={`w-full h-[50px] min-h-[50px]: bg-brand-darkBg rounded-xl flex items-center justify-start border-collapse overflow-hidden
                     shadow-lg shadow-slate-800 border border-slate-600/70`}>
-          {/* search box */}
           {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events */}
           <div
             className="flex items-center justify-center w-fit h-full bg-slate-60 rounded-tl-xl rounded-bl-xl"
@@ -355,24 +384,20 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
           />
         </div>
         {/* search suggestions and result */}
-        <div className="bg-brand-darkBg shadow-sm w-full mx-auto overflow-hidden shadow-slate-800/80 border mt-1 border-t-0 border-slate-600/60 border-collapse rounded-xl">
+        <div
+          ref={suggestionContainerRef}
+          style={{
+            maxHeight: SUGGESTED_COMMANDS_MAX_HEIGHT + 'px',
+          }}
+          className="bg-brand-darkBg w-full h-fit overflow-hidden overflow-y-auto cc-scrollbar mx-auto   shadow-sm shadow-slate-800/70 border mt-2 border-y-0 border-slate-600/60 border-collapse rounded-md">
           {/* actions */}
-          <div>
-            {suggestedCommands.map(cmd => {
+          {suggestedCommands.length > 0 &&
+            suggestedCommands?.map(cmd => {
               const renderCommands: JSX.Element[] = [];
-              if (
-                cmd.index !== -1 &&
-                cmd.index === suggestedCommands.findIndex(cmd1 => cmd1.type === CommandType.RecentSite)
-              ) {
-                renderCommands.push(
-                  <p key={cmd.index} className="text-[10px] text-slate-500 font-light mt-1 ml-2  -mb-px" tabIndex={-1}>
-                    Recently Visited
-                  </p>,
-                );
-              }
+              renderCommands.push(CommandSectionLabel(cmd.index));
 
               if (cmd.type !== CommandType.Divider) {
-                renderCommands.push(Command(cmd.index, cmd.label, cmd.icon));
+                renderCommands.push(Command(cmd.index, cmd.label, cmd.type, cmd.icon));
               } else {
                 renderCommands.push(
                   <hr
@@ -385,21 +410,28 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
 
               return <>{renderCommands.map(cmd1 => cmd1)}</>;
             })}
-          </div>
-          {/* navigation guide */}
-          <div
-            className={`bg-brand-darkBgAccent/20 rounded-bl-lg rounded-br-lg flex items-center justify-center px-4 py-2 
-                        border-t border-brand-darkBgAccent text-slate-500 font-light text-[12px] `}>
-            <span className="mr-2">
-              <kbd>Up</kbd>
-            </span>
-            <span className="mr-2">
-              <kbd>Down</kbd>
-            </span>
-            <span className="mr-2">
-              <kbd>Tab</kbd>
-            </span>
-          </div>
+          {/* no commands found */}
+          {suggestedCommands.length === 0 ? (
+            <div
+              className="w-full flex items-center justify-center text-slate-500 text-sm font-light py-1"
+              style={{ height: COMMAND_HEIGHT + 'px' }}>
+              No result for {searchQuery || ''}
+            </div>
+          ) : null}
+        </div>
+        {/* navigation guide */}
+        <div
+          className={`bg-brand-darkBg shadow-sm shadow-slate-800/70 rounded-bl-md rounded-br-md w-[99%] flex items-center justify-center px-4 py-1.5 
+                        border-t border-brand-darkBgAccent/80 text-slate-500/90 font-light text-[11px] `}>
+          <span className="mr-2">
+            <kbd>Up</kbd>
+          </span>
+          <span className="mr-2">
+            <kbd>Down</kbd>
+          </span>
+          <span className="mr-2">
+            <kbd>Tab</kbd>
+          </span>
         </div>
       </motion.dialog>
     </div>

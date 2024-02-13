@@ -1,11 +1,12 @@
 import { useState, useCallback } from 'react';
-import { Command } from './CommandPalette';
-import { CommandType, ISpace } from '../../types/global.types';
+import { CommandType, ICommand, ISpace } from '../../types/global.types';
 import { publishEvents } from '../../utils/publish-events';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { CommandPaletteContainerId } from '@root/src/constants/app';
 import { useKeyPressed } from '../../sidepanel/hooks/useKeyPressed';
 import { MdNewLabel } from 'react-icons/md';
+import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
+import { getFaviconURL } from '../../utils';
 
 type UseCommandPaletteProps = {
   activeSpace: ISpace;
@@ -16,11 +17,11 @@ type UseCommandPaletteProps = {
 export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCommandPaletteProps) => {
   // local state
   // search/commands suggestions
-  const [suggestedCommands, setSuggestedCommands] = useState<Command[]>([]);
+  const [suggestedCommands, setSuggestedCommands] = useState<ICommand[]>([]);
 
   // save suggestedCommands for sub commands if search query is not empty for during sub command action
   // we can revert to this suggested commands if search query is empty again
-  const [suggestedCommandsForSubCommand, setSuggestedCommandsForSubCommand] = useState<Command[]>([]);
+  const [suggestedCommandsForSubCommand, setSuggestedCommandsForSubCommand] = useState<ICommand[]>([]);
 
   // current focused command index
   const [subCommand, setSubCommand] = useState<CommandType | null>(null);
@@ -48,21 +49,46 @@ export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCom
     if (!focusedCommand?.type) return;
 
     switch (focusedCommand.type) {
+      case CommandType.SwitchTab: {
+        if (!subCommand) {
+          const tabs = await getTabsInSpace(activeSpace.id);
+
+          const tabCommands = tabs.map((tab, idx) => {
+            return {
+              label: tab.title,
+              type: CommandType.SwitchTab,
+              index: 1 + idx,
+              icon: getFaviconURL(tab.url, false),
+              metadata: tab.id,
+            };
+          });
+
+          setSubCommand(CommandType.SwitchTab);
+          setSuggestedCommandsForSubCommand(tabCommands);
+          setSuggestedCommands(tabCommands);
+          setSearchQueryPlaceholder('Select tab');
+          setFocusedCommandIndex(1);
+        } else {
+          // Todo - switch tab event
+        }
+        break;
+      }
+
       case CommandType.SwitchSpace: {
         if (!subCommand) {
           const allSpaces = await getAllSpaces();
 
-          setSubCommand(CommandType.SwitchSpace);
-
           const switchSpaceCommands = allSpaces
             .filter(s => s.windowId !== activeSpace.windowId)
-            .map<Command>((space, idx) => ({
+            .map<ICommand>((space, idx) => ({
               label: space.title,
               type: CommandType.SwitchSpace,
               index: idx + 1,
               icon: space.emoji,
               metadata: space.id,
             }));
+
+          setSubCommand(CommandType.SwitchSpace);
           setSuggestedCommandsForSubCommand(switchSpaceCommands);
           setSuggestedCommands(switchSpaceCommands);
           setSearchQueryPlaceholder('Select space');
@@ -109,7 +135,7 @@ export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCom
 
           const addToSpaceCommands = allSpaces
             .filter(s => s.windowId !== activeSpace.windowId)
-            .map<Command>((space, idx) => ({
+            .map<ICommand>((space, idx) => ({
               label: space.title,
               type: CommandType.AddToSpace,
               index: idx + 1,
@@ -123,18 +149,14 @@ export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCom
           setSearchQueryPlaceholder('Select space');
           setFocusedCommandIndex(1);
         } else {
-          const space = suggestedCommands.find(cmd => cmd.index === focusedCommandIndex);
-
-          console.log('🚀 ~ handleSelectCommand ~ space:', space);
-
-          await publishEvents({ event: 'Add_TO_SPACE', payload: { spaceId: space.metadata as string } });
+          await publishEvents({ event: 'Add_TO_SPACE', payload: { spaceId: focusedCommand.metadata as string } });
           handleCloseCommandPalette();
         }
         break;
       }
 
       case CommandType.RecentSite: {
-        await publishEvents({ event: 'GO_TO_URL', payload: { url: focusedCommand.icon as string } });
+        await publishEvents({ event: 'GO_TO_URL', payload: { url: focusedCommand.metadata as string } });
         handleCloseCommandPalette();
         break;
       }
@@ -159,9 +181,7 @@ export const useCommandPalette = ({ activeSpace, modalRef, searchQuery }: UseCom
       })();
     },
     onArrowDownPressed: () => {
-      console.log('🚀 ~ onArrowDownPressed ~ focusedCommandIndex:', focusedCommandIndex);
-      console.log('🚀 ~ onArrowDownPressed ~ suggestedCommands:', suggestedCommands);
-      if (focusedCommandIndex >= suggestedCommands.length) {
+      if (focusedCommandIndex >= suggestedCommands.filter(cmd => cmd.type !== CommandType.Divider).length) {
         return;
       }
 

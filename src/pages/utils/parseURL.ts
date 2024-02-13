@@ -22,7 +22,7 @@ export const getUrlFromHTML = (htmlString: string) => {
 
 // parse discard url
 export const parseURL = (url: string) => {
-  if (url.startsWith(DiscardTabURLPrefix)) {
+  if (url?.startsWith(DiscardTabURLPrefix)) {
     return getUrlFromHTML(url);
   }
 

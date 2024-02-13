@@ -18,10 +18,17 @@ const getSitesFromHistory = async (maxResults = 4) => {
 
   // remove duplicates and return site url & title
 
-  return sites.filter(
-    (s1, idx) =>
-      sites.findIndex(s2 => s2.url === s1.url) === idx && s1.url !== currentTab.url && !s1.url.startsWith('chrome://'),
-  );
+  return sites.filter((s1, idx) => {
+    if (
+      sites.findIndex(s2 => s2.title === s1.title) === idx &&
+      s1.url !== currentTab.url &&
+      !s1.url.startsWith('chrome://')
+    ) {
+      return true;
+    } else {
+      return false;
+    }
+  });
 };
 
 // recent visited sites

@@ -6,7 +6,11 @@ export const publishEvents = async <T = boolean>(
   event: IMessageEventSidePanel | IMessageEventContentScript,
 ): Promise<T> => {
   try {
-    return await chrome.runtime.sendMessage(event);
+    const res = await chrome.runtime.sendMessage(event);
+
+    console.log('🚀 ~publishEvents ~~ res:', res);
+
+    return res;
   } catch (error) {
     // if errored because of the side-panel not opened then do nothing
     if (error instanceof Error && error.message.includes('Receiving end does not exist.')) return;

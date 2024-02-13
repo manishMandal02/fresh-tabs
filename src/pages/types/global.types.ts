@@ -1,3 +1,5 @@
+import type { IconType } from 'react-icons';
+
 export enum ThemeColor {
   Green = '#34d399',
   Orange = '#f97316',
@@ -19,6 +21,14 @@ export enum CommandType {
   SwitchTab = 'switch-tab',
   TopSite = 'top-site',
   Divider = 'divider',
+}
+
+export interface ICommand {
+  index: number;
+  type: CommandType;
+  label: string;
+  icon?: string | IconType;
+  metadata?: string | number;
 }
 
 export interface ITab {

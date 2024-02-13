@@ -1,5 +1,5 @@
 import { getMostVisitedSites, getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
-import { IMessageEventContentScript, ITab, ThemeColor } from './../types/global.types';
+import { CommandType, ICommand, IMessageEventContentScript, ITab, ThemeColor } from './../types/global.types';
 import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
 import {
@@ -34,6 +34,7 @@ import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/
 import { parseURL } from '../utils/parseURL';
 import { getCurrentTab, goToTab, openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { retryAtIntervals } from '../utils/retryAtIntervals';
+import { asyncMessageHandler } from '../utils/asyncMessageHandler';
 
 reloadOnUpdate('pages/background');
 
@@ -57,63 +58,109 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 // TODO - don't switch space in same window if meeting is in place
 
 // handle events from content script (command palette)
-chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
-  const { event, payload } = msg as IMessageEventContentScript;
+chrome.runtime.onMessage.addListener(
+  asyncMessageHandler<IMessageEventContentScript, boolean | ICommand[]>(async request => {
+    const { event, payload } = request;
 
-  switch (event) {
-    case 'SWITCH_SPACE': {
-      const { spaceId } = payload;
+    switch (event) {
+      case 'SWITCH_SPACE': {
+        const { spaceId } = payload;
 
-      const space = await getSpace(spaceId);
+        const space = await getSpace(spaceId);
 
-      const tabs = await getTabsInSpace(spaceId);
+        const tabs = await getTabsInSpace(spaceId);
 
-      await openSpace({ space, tabs, shouldOpenInNewWindow: false });
-      break;
+        await openSpace({ space, tabs, shouldOpenInNewWindow: false });
+
+        return true;
+      }
+      case 'NEW_SPACE': {
+        const { spaceTitle } = payload;
+
+        const tab = await getCurrentTab();
+
+        // TODO - new space with title
+        const newSpace = await createNewSpace(
+          {
+            title: spaceTitle,
+            emoji: '🚀',
+            theme: ThemeColor.Teal,
+            activeTabIndex: 0,
+            isSaved: true,
+            windowId: 0,
+          },
+          [tab],
+        );
+
+        await openSpace({ space: newSpace, tabs: [tab], shouldOpenInNewWindow: false });
+
+        return true;
+      }
+
+      case 'GO_TO_URL': {
+        const { url } = payload;
+        const tab = await getCurrentTab();
+        await chrome.tabs.update(tab.id, { url: parseURL(url) });
+
+        return true;
+      }
+      case 'Add_TO_SPACE': {
+        const { spaceId } = payload;
+        const tabsInSpace = await getTabsInSpace(spaceId);
+
+        const tab = await getCurrentTab();
+
+        await setTabsForSpace(spaceId, [...tabsInSpace, tab]);
+
+        return true;
+      }
+      case 'SEARCH': {
+        const { searchQuery, spaceId } = payload;
+
+        const matchedCommands: ICommand[] = [];
+
+        // query current tab url/title (words match)
+        let tabs = await getTabsInSpace(spaceId);
+
+        if (tabs?.length > 0) {
+          tabs = tabs.filter(tab => tab.title.toLowerCase().includes(searchQuery.toLowerCase()));
+
+          console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ tabs:', tabs);
+
+          tabs.forEach((tab, idx) => {
+            matchedCommands.push({
+              index: idx,
+              type: CommandType.SwitchTab,
+              label: tab.title,
+              icon: getFaviconURL(tab.url, false),
+              metadata: tab.id,
+            });
+          });
+        }
+
+        // google search with input query
+
+        // query history (words match)
+        const history = await chrome.history.search({ text: searchQuery, maxResults: 4 });
+
+        if (history?.length > 0) {
+          history.forEach((item, idx) => {
+            matchedCommands.push({
+              index: idx,
+              type: CommandType.RecentSite,
+              label: item.title,
+              icon: getFaviconURL(item.url, false),
+              metadata: item.url,
+            });
+          });
+        }
+
+        console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ matchedCommands:', matchedCommands);
+        return matchedCommands;
+      }
     }
-    case 'NEW_SPACE': {
-      const { spaceTitle } = payload;
-
-      const tab = await getCurrentTab();
-
-      // TODO - new space with title
-      const newSpace = await createNewSpace(
-        {
-          title: spaceTitle,
-          emoji: '🚀',
-          theme: ThemeColor.Teal,
-          activeTabIndex: 0,
-          isSaved: true,
-          windowId: 0,
-        },
-        [tab],
-      );
-
-      await openSpace({ space: newSpace, tabs: [tab], shouldOpenInNewWindow: false });
-
-      break;
-    }
-
-    case 'GO_TO_URL': {
-      const { url } = payload;
-      const tab = await getCurrentTab();
-      await chrome.tabs.update(tab.id, { url: parseURL(url) });
-      break;
-    }
-    case 'Add_TO_SPACE': {
-      const { spaceId } = payload;
-      const tabsInSpace = await getTabsInSpace(spaceId);
-
-      const tab = await getCurrentTab();
-
-      await setTabsForSpace(spaceId, [...tabsInSpace, tab]);
-
-      break;
-    }
-  }
-
-  sendResponse(true);
-});
+  }),
+);
 
 //* common event handlers
 
