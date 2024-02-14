@@ -17,8 +17,9 @@ export enum CommandType {
   NewSpace = 'new-space',
   SwitchSpace = 'switch-space',
   AddToSpace = 'add-to-space',
-  RecentSite = 'recent-site',
   SwitchTab = 'switch-tab',
+  WebSearch = 'web-search',
+  RecentSite = 'recent-site',
   TopSite = 'top-site',
 }
 
@@ -84,6 +85,7 @@ type MessageEventsContentScript =
   | 'NEW_SPACE'
   | 'MOVE_TAB_TO_SPACE'
   | 'GO_TO_URL'
+  | 'WEB_SEARCH'
   | 'SEARCH';
 
 interface IEventPayloadContentScript {

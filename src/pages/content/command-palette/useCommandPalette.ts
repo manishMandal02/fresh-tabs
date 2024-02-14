@@ -51,7 +51,7 @@ export const useCommandPalette = ({ activeSpace, modalRef }: UseCommandPalettePr
     if (!focusedCommand?.type) return;
     switch (focusedCommand.type) {
       case CommandType.SwitchTab: {
-        if (!subCommand) {
+        if (!subCommand && !focusedCommand.metadata) {
           const tabs = await getTabsInSpace(activeSpace.id);
 
           const tabCommands = tabs.map((tab, idx) => {
@@ -70,16 +70,16 @@ export const useCommandPalette = ({ activeSpace, modalRef }: UseCommandPalettePr
           setSearchQueryPlaceholder('Select tab');
           setFocusedCommandIndex(1);
         } else {
-          // Todo - switch tab event
-
+          console.log('🚀 ~ handleSelectCommand ~ focusedCommand.metadata:', focusedCommand.metadata);
           await publishEvents({ event: 'SWITCH_TAB', payload: { tabId: focusedCommand.metadata as number } });
+
           handleCloseCommandPalette();
         }
         break;
       }
 
       case CommandType.SwitchSpace: {
-        if (!subCommand) {
+        if (!subCommand && !focusedCommand.metadata) {
           const allSpaces = await getAllSpaces();
 
           const switchSpaceCommands = allSpaces
@@ -150,6 +150,10 @@ export const useCommandPalette = ({ activeSpace, modalRef }: UseCommandPalettePr
           await publishEvents({ event: 'MOVE_TAB_TO_SPACE', payload: { spaceId: focusedCommand.metadata as string } });
           handleCloseCommandPalette();
         }
+        break;
+      }
+      case CommandType.WebSearch: {
+        await publishEvents({ event: 'WEB_SEARCH', payload: { searchQuery } });
         break;
       }
 

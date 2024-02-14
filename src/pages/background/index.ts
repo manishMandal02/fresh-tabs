@@ -66,6 +66,8 @@ chrome.runtime.onMessage.addListener(
       case 'SWITCH_TAB': {
         const { tabId } = payload;
 
+        console.log('🚀 ~ tabId:', tabId);
+
         await goToTab(tabId);
 
         return true;
@@ -124,30 +126,11 @@ chrome.runtime.onMessage.addListener(
         return true;
       }
       case 'SEARCH': {
-        const { searchQuery, spaceId } = payload;
+        const { searchQuery } = payload;
 
         const matchedCommands: ICommand[] = [];
 
-        // query current tab url/title (words match)
-        let tabs = await getTabsInSpace(spaceId);
-
-        if (tabs?.length > 0) {
-          tabs = tabs.filter(tab => tab.title.toLowerCase().includes(searchQuery.toLowerCase()));
-
-          console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ tabs:', tabs);
-
-          tabs.forEach((tab, idx) => {
-            matchedCommands.push({
-              index: idx,
-              type: CommandType.SwitchTab,
-              label: tab.title,
-              icon: getFaviconURL(tab.url, false),
-              metadata: tab.id,
-            });
-          });
-        }
-
-        // google search with input query
+        // TODO - query bookmark (words match)
 
         // query history (words match)
         const history = await chrome.history.search({ text: searchQuery, maxResults: 4 });
@@ -166,6 +149,14 @@ chrome.runtime.onMessage.addListener(
 
         console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ matchedCommands:', matchedCommands);
         return matchedCommands;
+      }
+      case 'WEB_SEARCH': {
+        const { searchQuery } = payload;
+
+        console.log('🚀 ~ searchQuery:', searchQuery);
+
+        await chrome.search.query({ text: searchQuery });
+        return true;
       }
     }
   }),

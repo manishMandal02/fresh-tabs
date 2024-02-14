@@ -30,7 +30,6 @@ const UpdateSpace = () => {
   }, [updateSpaceModal]);
 
   const onClose = () => {
-    console.log('🚀 ~ onClose ~ setUpdateSpaceModal: 🔵');
     setUpdateSpaceModal(null);
     setUpdateSpaceData(undefined);
   };

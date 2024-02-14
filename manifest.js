@@ -18,6 +18,7 @@ const manifest = {
     'activeTab',
     'topSites',
     'history',
+    'search',
   ],
   commands: {
     cmdE: {

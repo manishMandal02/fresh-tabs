@@ -8,12 +8,12 @@ import type { IconType } from 'react-icons/lib';
 
 import { getFaviconURL } from '../../utils';
 import { isValidURL } from '../../utils/isValidURL';
-import Tooltip from '../../sidepanel/components/elements/tooltip';
 import { CommandType, ICommand, ISpace, ITab } from '../../types/global.types';
 import { useCommandPalette } from './useCommandPalette';
 import { debounce } from '../../utils/debounce';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { publishEvents } from '../../utils/publish-events';
+import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 
 const staticCommands: ICommand[] = [
   { index: 1, type: CommandType.SwitchTab, label: 'Go to Tab', icon: MdKeyboardTab },
@@ -21,6 +21,15 @@ const staticCommands: ICommand[] = [
   { index: 3, type: CommandType.NewSpace, label: 'New Space', icon: FaFolder },
   { index: 4, type: CommandType.AddToSpace, label: 'Move Tab', icon: TbArrowMoveRight },
 ];
+
+const webSearchCommand = (query: string, index: number) => {
+  return {
+    index,
+    label: `web search: <b className="text-slate-300">${query}</b>`,
+    type: CommandType.WebSearch,
+    icon: MdSearch,
+  };
+};
 
 const COMMAND_HEIGHT = 30;
 
@@ -33,6 +42,9 @@ type Props = {
 };
 
 const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
+  // loading search result
+  // const [isLoadingResults, setIsLoadingResults] = useState(false);
+
   // elements ref
   const modalRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -137,24 +149,44 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
         });
       });
 
-    // Todo -  send search event to handle tab query & history search & bookmark search
-    const res = await publishEvents<ICommand[]>({ event: 'SEARCH', payload: { searchQuery, spaceId: activeSpace.id } });
+    // query current tab url/title (words match)
+    let tabs = await getTabsInSpace(activeSpace.id);
 
-    if (res?.length > 0) {
-      res.forEach(cmd => {
+    if (tabs?.length > 0) {
+      tabs = tabs.filter(tab => tab.title.toLowerCase().includes(searchQuery.toLowerCase()));
+      console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ tabs:', tabs);
+
+      tabs.forEach(tab => {
         matchedCommands.push({
-          ...cmd,
           index: matchedCommands.length + 1,
+          type: CommandType.SwitchTab,
+          label: tab.title,
+          icon: getFaviconURL(tab.url, false),
+          metadata: tab.id,
         });
       });
     }
 
-    // also look at google search keywords
-
-    // query bookmark (words match)
-    console.log('🚀 ~ handleGlobalSearch ~ matchedCommands:', matchedCommands);
+    matchedCommands.push(webSearchCommand(searchQuery, matchedCommands.length + 1));
 
     setSuggestedCommands(matchedCommands);
+
+    const res = await publishEvents<ICommand[]>({ event: 'SEARCH', payload: { searchQuery } });
+
+    if (res?.length > 0) {
+      const resMatchedCommands: ICommand[] = [];
+      res.forEach(cmd => {
+        resMatchedCommands.push({
+          ...cmd,
+          index: matchedCommands.length + 1,
+        });
+      });
+      console.log('🚀 ~ handleGlobalSearch ~ resMatchedCommands:', resMatchedCommands);
+      setSuggestedCommands(prev => [...prev, ...resMatchedCommands]);
+    }
+
+    // also look at google search keywords
+
     setFocusedCommandIndex(1);
   }, [setSuggestedCommands, setFocusedCommandIndex, activeSpace, searchQuery]);
 
@@ -238,9 +270,9 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
     }
 
     return (
-      <div className="flex items-center justify-start h-full border-r border-brand-darkBgAccent/50 pl-[8.5px] pr-[6.5px] mr-1.5 bg-brand-darkBgAccent/40">
-        <Icon className=" fill-slate-600 text-slate-600 mr-1.5" size={16} />
-        <p className="text-slate-400 text-[12px] font-light m-0 p-0 whitespace-nowrap">{label}</p>
+      <div className="flex items-center justify-start h-full border-r border-brand-darkBgAccent/50 pl-[9px] pr-[6.5px] mr-1.5 bg-brand-darkBgAccent/40">
+        <Icon className=" fill-slate-600 text-slate-600 mr-1.5" size={14} />
+        <p className="text-slate-400 text-[12px]  m-0 p-0 whitespace-nowrap">{label}</p>
       </div>
     );
   };
@@ -281,6 +313,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
 
   // command component
   const Command = (index: number, label: string, type: CommandType, Icon?: IconType | string) => {
+    // TODO - use type or remove
     const isFocused = focusedCommandIndex === index;
 
     return (
@@ -308,9 +341,9 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
             <Icon className="fill-slate-600 text-slate-500" size={14} />
           )}
         </div>
-        <p className="text-[12px] text-start text-slate-400 font-light min-w-[50%] max-w-[85%] whitespace-nowrap  overflow-hidden text-ellipsis">
-          {label}
-        </p>
+        <p
+          className="text-[12px] text-start text-slate-400 font-light min-w-[50%] max-w-[85%] whitespace-nowrap  overflow-hidden text-ellipsis"
+          dangerouslySetInnerHTML={{ __html: label }}></p>
       </button>
     );
   };
@@ -323,20 +356,19 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
         </p>
         <hr className="h-px bg-brand-darkBgAccent border-none w-full m-0 p-0 mb-1" tabIndex={-1} />
         <div className="flex w-full items-center py-2 rounded-lg justify-around  px-2">
+          {/* // TODO - fix tooltip */}
           {topSites?.map(site => (
-            // TODO - fix tooltip
-            <Tooltip key={site.url} label={site.title} delay={500}>
-              <button
-                className={`bg-brand-darkBgAccent rounded-md flex items-center justify-center outline-none p-1 px-1.5 
+            <button
+              key={site.title}
+              className={`bg-brand-darkBgAccent rounded-md flex items-center justify-center outline-none p-1 px-1.5 
                     border border-brand-darkBgAccent focus:border-slate-500/80 focus:bg-slate-700 transition-all duration-200 ease-in-out1`}>
-                <img
-                  alt="icon"
-                  src={getFaviconURL(site.url, false)}
-                  onError={handleImageLoadError}
-                  className="w-[16px] h-[16px] object-scale-down object-center opacity-80"
-                />
-              </button>
-            </Tooltip>
+              <img
+                alt="icon"
+                src={getFaviconURL(site.url, false)}
+                onError={handleImageLoadError}
+                className="w-[16px] h-[16px] object-scale-down object-center opacity-80"
+              />
+            </button>
           ))}
         </div>
       </div>
@@ -403,7 +435,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
           style={{
             maxHeight: SUGGESTED_COMMANDS_MAX_HEIGHT + 'px',
           }}
-          className="bg-brand-darkBg w-full h-fit overflow-hidden overflow-y-auto cc-scrollbar mx-auto   shadow-sm shadow-slate-800/70 border mt-2 border-y-0 border-slate-600/60 border-collapse rounded-md">
+          className="bg-brand-darkBg w-full h-fit overflow-hidden overflow-y-auto cc-scrollbar mx-auto   shadow-sm shadow-slate-800/70 border mt-[6px] border-y-0 border-slate-600/60 border-collapse rounded-md">
           {/* actions */}
           {suggestedCommands.length > 0 &&
             suggestedCommands?.map(cmd => {
