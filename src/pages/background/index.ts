@@ -86,7 +86,8 @@ chrome.runtime.onMessage.addListener(
       case 'NEW_SPACE': {
         const { spaceTitle } = payload;
 
-        const tab = await getCurrentTab();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { index, ...tab } = await getCurrentTab();
 
         // TODO - new space with title
         const newSpace = await createNewSpace(
@@ -107,9 +108,22 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'GO_TO_URL': {
-        const { url } = payload;
-        const tab = await getCurrentTab();
-        await chrome.tabs.update(tab.id, { url: parseURL(url) });
+        const { url, shouldOpenInNewTab } = payload;
+
+        // check if url already opened indifferent tab
+        const [openedTab] = await chrome.tabs.query({ url, currentWindow: true });
+
+        if (openedTab?.id) {
+          await goToTab(openedTab.id);
+          return true;
+        }
+
+        const { index, ...tab } = await getCurrentTab();
+        if (!shouldOpenInNewTab) {
+          await chrome.tabs.update(tab.id, { url: parseURL(url) });
+        } else {
+          await chrome.tabs.create({ index, url, active: true });
+        }
 
         return true;
       }
@@ -117,7 +131,8 @@ chrome.runtime.onMessage.addListener(
         const { spaceId } = payload;
         const tabsInSpace = await getTabsInSpace(spaceId);
 
-        const tab = await getCurrentTab();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { index, ...tab } = await getCurrentTab();
 
         await setTabsForSpace(spaceId, [...tabsInSpace, tab]);
 
@@ -151,11 +166,11 @@ chrome.runtime.onMessage.addListener(
         return matchedCommands;
       }
       case 'WEB_SEARCH': {
-        const { searchQuery } = payload;
+        const { searchQuery, shouldOpenInNewTab } = payload;
 
         console.log('🚀 ~ searchQuery:', searchQuery);
 
-        await chrome.search.query({ text: searchQuery });
+        await chrome.search.query({ text: searchQuery, disposition: shouldOpenInNewTab ? 'NEW_TAB' : 'CURRENT_TAB' });
         return true;
       }
     }
@@ -351,8 +366,10 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
       await wait(500);
     }
 
+    console.log('🚀 ~ chrome.commands.onCommand.addListener ~ activeTabId:', activeTabId);
+
     retryAtIntervals({
-      interval: 500,
+      interval: 1000,
       retries: 3,
       callback: async () => {
         console.log('🚀 ~ retryAtIntervals ~ SHOW_COMMAND_PALETTE:');

@@ -97,6 +97,7 @@ interface IEventPayloadContentScript {
   spaceTitle?: string;
   searchQuery?: string;
   activeSpace?: ISpace;
+  shouldOpenInNewTab?: boolean;
 }
 
 export interface IMessageEventContentScript {

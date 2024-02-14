@@ -1,9 +1,10 @@
-import { MdSearch, MdKeyboardTab } from 'react-icons/md';
-import { FaLocationArrow, FaFolder } from 'react-icons/fa';
+import { MdSearch } from 'react-icons/md';
+import { FaArrowRight, FaFolder, FaSearch } from 'react-icons/fa';
 import { TbArrowMoveRight } from 'react-icons/tb';
+import { FaArrowRightFromBracket } from 'react-icons/fa6';
 
 import { motion } from 'framer-motion';
-import { useEffect, useRef, MouseEventHandler, ReactEventHandler, useCallback } from 'react';
+import { useState, useEffect, useRef, MouseEventHandler, ReactEventHandler, useCallback } from 'react';
 import type { IconType } from 'react-icons/lib';
 
 import { getFaviconURL } from '../../utils';
@@ -14,10 +15,12 @@ import { debounce } from '../../utils/debounce';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { publishEvents } from '../../utils/publish-events';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
+import Tooltip from '../../sidepanel/components/elements/tooltip';
+import { limitCharLength } from '../../utils/limitCharLength';
 
 const staticCommands: ICommand[] = [
-  { index: 1, type: CommandType.SwitchTab, label: 'Go to Tab', icon: MdKeyboardTab },
-  { index: 2, type: CommandType.SwitchSpace, label: 'Switch Space', icon: FaLocationArrow },
+  { index: 1, type: CommandType.SwitchTab, label: 'Go to Tab', icon: FaArrowRight },
+  { index: 2, type: CommandType.SwitchSpace, label: 'Switch Space', icon: FaArrowRightFromBracket },
   { index: 3, type: CommandType.NewSpace, label: 'New Space', icon: FaFolder },
   { index: 4, type: CommandType.AddToSpace, label: 'Move Tab', icon: TbArrowMoveRight },
 ];
@@ -25,9 +28,9 @@ const staticCommands: ICommand[] = [
 const webSearchCommand = (query: string, index: number) => {
   return {
     index,
-    label: `web search: <b className="text-slate-300">${query}</b>`,
+    label: `Web Search: <b className="text-slate-300">${query}</b>`,
     type: CommandType.WebSearch,
-    icon: MdSearch,
+    icon: FaSearch,
   };
 };
 
@@ -43,7 +46,7 @@ type Props = {
 
 const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
   // loading search result
-  // const [isLoadingResults, setIsLoadingResults] = useState(false);
+  const [isLoadingResults, setIsLoadingResults] = useState(false);
 
   // elements ref
   const modalRef = useRef<HTMLDialogElement>(null);
@@ -69,6 +72,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
 
   // check if the focused command is visible
   useEffect(() => {
+    console.log('🚀 ~ CommandPalette ~ suggestedCommands:', suggestedCommands);
     const numOfVisibleCommands = SUGGESTED_COMMANDS_MAX_HEIGHT / COMMAND_HEIGHT;
 
     if (focusedCommandIndex < numOfVisibleCommands && suggestionContainerRef.current?.scrollTop < 1) return;
@@ -175,17 +179,17 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
 
     if (res?.length > 0) {
       const resMatchedCommands: ICommand[] = [];
-      res.forEach(cmd => {
+      res.forEach((cmd, idx) => {
         resMatchedCommands.push({
           ...cmd,
-          index: matchedCommands.length + 1,
+          index: idx + matchedCommands.length + 1,
         });
       });
       console.log('🚀 ~ handleGlobalSearch ~ resMatchedCommands:', resMatchedCommands);
       setSuggestedCommands(prev => [...prev, ...resMatchedCommands]);
     }
 
-    // also look at google search keywords
+    setIsLoadingResults(false);
 
     setFocusedCommandIndex(1);
   }, [setSuggestedCommands, setFocusedCommandIndex, activeSpace, searchQuery]);
@@ -194,6 +198,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
   useEffect(() => {
     console.log('🚀 ~ useEffect global search ~ searchQuery:', searchQuery);
     if (searchQuery.trim() && !subCommand) {
+      setIsLoadingResults(true);
       // debounce search
       debounce(handleGlobalSearch)();
     } else if (!searchQuery.trim() && !subCommand) {
@@ -306,7 +311,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
         <p key={index} className="text-[12px] text-slate-500 font-light mt-1.5 ml-2.5 mb-1" tabIndex={-1}>
           {sectionLabel}
         </p>
-        <hr key={index} className="h-px bg-brand-darkBgAccent border-none w-full m-0 p-0 mb-1" tabIndex={-1} />
+        <hr key={index} className="h-px bg-brand-darkBgAccent border-none w-full m-0 p-0" tabIndex={-1} />
       </>
     );
   };
@@ -319,7 +324,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
     return (
       <button
         id={`fresh-tabs-command-${index}`}
-        className={`w-full flex items-center justify-start px-3 py-[6px] outline-none 
+        className={`w-full flex items-center justify-start px-3 py-[6px] outline-none first:pt-[7.5px]
         transition-all duration-200 ease-in ${isFocused ? 'bg-brand-darkBgAccent/70' : ''} `}
         onClick={() => onCommandClick(index)}
         style={{ height: COMMAND_HEIGHT + 'px' }}>
@@ -328,7 +333,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
         <div className="w-[22px]">
           {typeof Icon === 'string' ? (
             !isValidURL(Icon) ? (
-              <span className="w-[18px] h-fit">{Icon}</span>
+              <span className="w-[16px] h-fit text-start">{Icon}</span>
             ) : (
               <img
                 alt="icon"
@@ -338,11 +343,14 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
               />
             )
           ) : (
-            <Icon className="fill-slate-600 text-slate-500" size={14} />
+            <Icon
+              className="fill-slate-600 text-slate-500 w-[14px]  object-scale-down object-center"
+              size={label !== 'Go to Tab' ? 16 : 14}
+            />
           )}
         </div>
         <p
-          className="text-[12px] text-start text-slate-400 font-light min-w-[50%] max-w-[85%] whitespace-nowrap  overflow-hidden text-ellipsis"
+          className="text-[12px] text-start text-slate-400 font-light min-w-[50%] max-w-[90%] whitespace-nowrap  overflow-hidden text-ellipsis"
           dangerouslySetInnerHTML={{ __html: label }}></p>
       </button>
     );
@@ -356,19 +364,23 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
         </p>
         <hr className="h-px bg-brand-darkBgAccent border-none w-full m-0 p-0 mb-1" tabIndex={-1} />
         <div className="flex w-full items-center py-2 rounded-lg justify-around  px-2">
-          {/* // TODO - fix tooltip */}
           {topSites?.map(site => (
-            <button
+            <Tooltip
               key={site.title}
-              className={`bg-brand-darkBgAccent rounded-md flex items-center justify-center outline-none p-1 px-1.5 
-                    border border-brand-darkBgAccent focus:border-slate-500/80 focus:bg-slate-700 transition-all duration-200 ease-in-out1`}>
-              <img
-                alt="icon"
-                src={getFaviconURL(site.url, false)}
-                onError={handleImageLoadError}
-                className="w-[16px] h-[16px] object-scale-down object-center opacity-80"
-              />
-            </button>
+              label={limitCharLength(site.title, 42)}
+              delay={500}
+              containerEl={suggestionContainerRef.current}>
+              <button
+                className={`bg-brand-darkBgAccent rounded-md flex items-center justify-center outline-none p-1 px-1.5 
+            border border-brand-darkBgAccent focus:border-slate-500/80 focus:bg-slate-700 transition-all duration-200 ease-in-out1`}>
+                <img
+                  alt="icon"
+                  src={getFaviconURL(site.url, false)}
+                  onError={handleImageLoadError}
+                  className="w-[16px] h-[16px] object-scale-down object-center opacity-80"
+                />
+              </button>
+            </Tooltip>
           ))}
         </div>
       </div>
@@ -435,7 +447,8 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
           style={{
             maxHeight: SUGGESTED_COMMANDS_MAX_HEIGHT + 'px',
           }}
-          className="bg-brand-darkBg w-full h-fit overflow-hidden overflow-y-auto cc-scrollbar mx-auto   shadow-sm shadow-slate-800/70 border mt-[6px] border-y-0 border-slate-600/60 border-collapse rounded-md">
+          className={`bg-brand-darkBg w-full h-fit overflow-hidden overflow-y-auto cc-scrollbar  cc-scrollbar mx-auto shadow-sm 
+                    shadow-slate-800/70 border mt-[6px] border-y-0 border-slate-600/60 border-collapse rounded-md`}>
           {/* actions */}
           {suggestedCommands.length > 0 &&
             suggestedCommands?.map(cmd => {
@@ -446,10 +459,22 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
 
               return <>{renderCommands.map(cmd1 => cmd1)}</>;
             })}
+          {/* lading commands ui (skeleton) */}
+          {isLoadingResults
+            ? [1, 2].map(v => (
+                <div key={v} className="w-full  mb-[5px] mt-1.5 flex items-center justify-start">
+                  <span className="w-[24px] h-[25px] bg-brand-darkBgAccent/70 ml-2  rounded animate-pulse"></span>
+                  <div
+                    style={{ width: v % 2 !== 0 ? '40%' : '75%' }}
+                    className="bg-brand-darkBgAccent/70 h-[25px] ml-2 rounded animate-pulse"></div>
+                </div>
+              ))
+            : null}
+
           {/* no commands found */}
           {suggestedCommands.length === 0 ? (
             <div
-              className="w-full flex items-center justify-center text-slate-500 text-sm font-light py-1"
+              className="w-full flex items-center  justify-center text-slate-500 text-sm font-light py-1"
               style={{ height: COMMAND_HEIGHT + 'px' }}>
               No result for {searchQuery || ''}
             </div>

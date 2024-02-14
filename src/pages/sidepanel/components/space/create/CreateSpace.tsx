@@ -17,7 +17,7 @@ type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;
 const defaultSpaceData: DefaultSpaceFields = {
   title: 'Side projects',
   emoji: '🚀',
-  theme: ThemeColor.Fuchsia,
+  theme: ThemeColor.Blue,
 };
 
 const CreateSpace = () => {
@@ -41,7 +41,8 @@ const CreateSpace = () => {
     if (isModalOpen && currentTabs?.length < 1) {
       (async () => {
         // get current tab, and set to state
-        const currentTabOpened = await getCurrentTab();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { index, ...currentTabOpened } = await getCurrentTab();
 
         if (!currentTabOpened) {
           setErrorMsg('Failed to get current tab, Please try again.');

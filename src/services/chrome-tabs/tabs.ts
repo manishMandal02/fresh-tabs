@@ -226,7 +226,7 @@ export const goToTab = async (id: number) => {
 };
 
 // get current tab
-export const getCurrentTab = async (): Promise<ITab> => {
+export const getCurrentTab = async (): Promise<ITab & { index: number }> => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   if (!tab?.id) return null;
@@ -235,6 +235,7 @@ export const getCurrentTab = async (): Promise<ITab> => {
     id: tab.id,
     title: tab.title,
     url: tab.url,
+    index: tab.index,
   };
 };
 

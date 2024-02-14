@@ -44,6 +44,41 @@ export const useCommandPalette = ({ activeSpace, modalRef }: UseCommandPalettePr
     document.body.style.overflow = 'auto';
   }, [modalRef]);
 
+  // handle key press
+  const { isModifierKeyPressed } = useKeyPressed({
+    parentConTainerEl: modalRef.current,
+    monitorModifierKeys: true,
+    onEscapePressed: () => {
+      handleCloseCommandPalette();
+    },
+    onTabPressed: () => {
+      (async () => {
+        await handleSelectCommand();
+      })();
+    },
+    onEnterPressed: () => {
+      (async () => {
+        await handleSelectCommand();
+      })();
+    },
+    onArrowDownPressed: () => {
+      if (focusedCommandIndex >= suggestedCommands.length) {
+        setFocusedCommandIndex(1);
+        return;
+      }
+
+      setFocusedCommandIndex(prev => prev + 1);
+    },
+    onArrowUpPressed: () => {
+      if (focusedCommandIndex < 2) {
+        setFocusedCommandIndex(suggestedCommands.length);
+        return;
+      }
+
+      setFocusedCommandIndex(prev => prev - 1);
+    },
+  });
+
   // handle select command
   const handleSelectCommand = useCallback(async () => {
     const focusedCommand = suggestedCommands.find(cmd => cmd.index === focusedCommandIndex);
@@ -153,53 +188,32 @@ export const useCommandPalette = ({ activeSpace, modalRef }: UseCommandPalettePr
         break;
       }
       case CommandType.WebSearch: {
-        await publishEvents({ event: 'WEB_SEARCH', payload: { searchQuery } });
+        await publishEvents({
+          event: 'WEB_SEARCH',
+          payload: { searchQuery, shouldOpenInNewTab: isModifierKeyPressed },
+        });
         break;
       }
 
       case CommandType.RecentSite: {
-        await publishEvents({ event: 'GO_TO_URL', payload: { url: focusedCommand.metadata as string } });
+        await publishEvents({
+          event: 'GO_TO_URL',
+          payload: { url: focusedCommand.metadata as string, shouldOpenInNewTab: isModifierKeyPressed },
+        });
         handleCloseCommandPalette();
         break;
       }
     }
     setSearchQuery('');
-  }, [activeSpace, focusedCommandIndex, suggestedCommands, handleCloseCommandPalette, searchQuery, subCommand]);
-
-  // handle key press
-  useKeyPressed({
-    parentConTainerEl: modalRef.current,
-    monitorModifierKeys: false,
-    onEscapePressed: () => {
-      handleCloseCommandPalette();
-    },
-    onTabPressed: () => {
-      (async () => {
-        await handleSelectCommand();
-      })();
-    },
-    onEnterPressed: () => {
-      (async () => {
-        await handleSelectCommand();
-      })();
-    },
-    onArrowDownPressed: () => {
-      if (focusedCommandIndex >= suggestedCommands.length) {
-        setFocusedCommandIndex(1);
-        return;
-      }
-
-      setFocusedCommandIndex(prev => prev + 1);
-    },
-    onArrowUpPressed: () => {
-      if (focusedCommandIndex < 2) {
-        setFocusedCommandIndex(suggestedCommands.length);
-        return;
-      }
-
-      setFocusedCommandIndex(prev => prev - 1);
-    },
-  });
+  }, [
+    activeSpace,
+    focusedCommandIndex,
+    isModifierKeyPressed,
+    suggestedCommands,
+    handleCloseCommandPalette,
+    searchQuery,
+    subCommand,
+  ]);
 
   return {
     handleSelectCommand,

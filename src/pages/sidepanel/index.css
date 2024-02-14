@@ -18,6 +18,7 @@ body {
   outline-color: #262b49;
 }
 
+/* custom scroll bar */
 .cc-scrollbar::-webkit-scrollbar {
   width: 6px;
 

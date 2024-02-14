@@ -1,29 +1,29 @@
-import { generateId } from '@root/src/pages/utils/generateId';
-import { Tooltip as ReactTooltip } from 'react-tooltip';
+import * as TooltipRadix from '@radix-ui/react-tooltip';
 
 type Props = {
   label: string;
   children: React.ReactNode;
   delay?: number;
+  containerEl?: HTMLElement;
 };
-
-const Tooltip = ({ label, children, delay = 1500 }: Props) => {
-  const tooltipId = generateId();
+const Tooltip = ({ children, label, containerEl, delay = 700 }: Props) => {
   return (
-    <>
-      {typeof label === 'string' ? (
-        <>
-          <div className="relative " data-tooltip data-tooltip-id={tooltipId} data-tooltip-delay-show={delay}>
-            {children}
-          </div>
-          <ReactTooltip
-            id={tooltipId}
-            className="!bg-brand-darkBgAccent  !text-[12px] !text-slate-200 !rounded !fixed !z-[9999]">
+    <TooltipRadix.Provider delayDuration={delay}>
+      <TooltipRadix.Root>
+        <TooltipRadix.Trigger asChild>{children}</TooltipRadix.Trigger>
+        <TooltipRadix.Portal container={containerEl || null}>
+          <TooltipRadix.Content
+            className={`
+            z-[999999] data-[state=delayed-open]:data-[side=top]:animate-slideDownAndFade data-[state=delayed-open]:data-[side=right]:animate-slideLeftAndFade data-[state=delayed-open]:data-[side=left]:animate-slideRightAndFade data-[state=delayed-open]:data-[side=bottom]:animate-slideUpAndFade 
+                text-slate-400 select-none rounded-md bg-brand-darkBgAccent px-[16px] py-[8px] text-[11px] 
+             shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] will-change-[transform,opacity]`}
+            sideOffset={5}>
             {label}
-          </ReactTooltip>
-        </>
-      ) : null}
-    </>
+            <TooltipRadix.Arrow className="fill-brand-darkBgAccent" />
+          </TooltipRadix.Content>
+        </TooltipRadix.Portal>
+      </TooltipRadix.Root>
+    </TooltipRadix.Provider>
   );
 };
 
