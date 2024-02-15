@@ -62,6 +62,8 @@ chrome.runtime.onMessage.addListener(
   asyncMessageHandler<IMessageEventContentScript, boolean | ICommand[]>(async request => {
     const { event, payload } = request;
 
+    console.log('🚀 ~ event, payload:', event);
+
     switch (event) {
       case 'SWITCH_TAB': {
         const { tabId } = payload;
@@ -365,8 +367,6 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
       // wait for 0.2s
       await wait(500);
     }
-
-    console.log('🚀 ~ chrome.commands.onCommand.addListener ~ activeTabId:', activeTabId);
 
     retryAtIntervals({
       interval: 1000,

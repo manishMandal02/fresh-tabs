@@ -1,7 +1,10 @@
 import { ITab } from '@root/src/pages/types/global.types';
 import { getCurrentTab } from '../chrome-tabs/tabs';
+import { logger } from '@root/src/pages/utils/logger';
 
-const getSitesFromHistory = async (maxResults = 4) => {
+const getSitesFromHistory = async (maxResults: number) => {
+  console.log('🚀 ~ getSitesFromHistory ~ maxResults:', maxResults);
+
   const sites = await chrome.history.search({ maxResults, text: '' });
 
   if (sites?.length < 1) {
@@ -14,6 +17,8 @@ const getSitesFromHistory = async (maxResults = 4) => {
 
   const currentTab = await getCurrentTab();
 
+  console.log('🚀 ~ getSitesFromHistory ~ currentTab:', currentTab);
+
   console.log('🚀 ~ getRecentlyVisitedSites ~ sites:', sites);
 
   // remove duplicates and return site url & title
@@ -21,7 +26,7 @@ const getSitesFromHistory = async (maxResults = 4) => {
   return sites.filter((s1, idx) => {
     if (
       sites.findIndex(s2 => s2.title === s1.title) === idx &&
-      s1.url !== currentTab.url &&
+      s1.url !== currentTab?.url &&
       !s1.url.startsWith('chrome://')
     ) {
       return true;
@@ -33,19 +38,26 @@ const getSitesFromHistory = async (maxResults = 4) => {
 
 // recent visited sites
 export const getRecentlyVisitedSites = async (maxResults = 4): Promise<ITab[]> => {
-  let sites = [];
+  try {
+    let sites = [];
 
-  let i = 1;
+    let i = 1;
 
-  while (sites.length < maxResults) {
-    sites = await getSitesFromHistory((maxResults * i) / 2);
+    while (sites.length < maxResults) {
+      sites = await getSitesFromHistory(Math.ceil((maxResults * i) / 2));
 
-    console.log(' ~ getRecentlyVisitedSites ~ 🔂 while loop ~ sites:', sites);
+      i++;
+    }
 
-    i++;
+    return sites.map<ITab>(site => ({ url: site.url, title: site.title, id: 0 }));
+  } catch (error) {
+    logger.error({
+      error,
+      msg: 'Failed to recent sites form history.',
+      fileTrace: 'src/services/chrome-history/history.ts:53 ~ getRecentlyVisitedSites() ~ catch block',
+    });
+    return [];
   }
-
-  return sites.map<ITab>(site => ({ url: site.url, title: site.title, id: 0 }));
 };
 
 // get top sites for chrome

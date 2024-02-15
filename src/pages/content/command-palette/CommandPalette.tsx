@@ -1,11 +1,10 @@
-import { MdSearch } from 'react-icons/md';
-import { FaArrowRight, FaFolder, FaSearch } from 'react-icons/fa';
+import { MdSearch, MdOutlineKeyboardReturn } from 'react-icons/md';
+import { FaFolder, FaSearch, FaLongArrowAltUp } from 'react-icons/fa';
 import { TbArrowMoveRight } from 'react-icons/tb';
-import { FaArrowRightFromBracket } from 'react-icons/fa6';
+import { FaArrowRightFromBracket, FaArrowRight, FaLink } from 'react-icons/fa6';
 
 import { motion } from 'framer-motion';
 import { useState, useEffect, useRef, MouseEventHandler, ReactEventHandler, useCallback } from 'react';
-import type { IconType } from 'react-icons/lib';
 
 import { getFaviconURL } from '../../utils';
 import { isValidURL } from '../../utils/isValidURL';
@@ -19,11 +18,25 @@ import Tooltip from '../../sidepanel/components/elements/tooltip';
 import { limitCharLength } from '../../utils/limitCharLength';
 
 const staticCommands: ICommand[] = [
-  { index: 1, type: CommandType.SwitchTab, label: 'Go to Tab', icon: FaArrowRight },
+  { index: 1, type: CommandType.SwitchTab, label: 'Switch Tab', icon: FaArrowRight },
   { index: 2, type: CommandType.SwitchSpace, label: 'Switch Space', icon: FaArrowRightFromBracket },
   { index: 3, type: CommandType.NewSpace, label: 'New Space', icon: FaFolder },
   { index: 4, type: CommandType.AddToSpace, label: 'Move Tab', icon: TbArrowMoveRight },
 ];
+
+const isStaticCommands = (label: string) => {
+  return staticCommands.some(cmd => cmd.label === label);
+};
+
+const getCommandIcon = (type: CommandType) => {
+  // if (type === CommandType.RecentSite) {
+  //   return { label: 'Open', Icon: MdLink };
+  // }
+
+  const cmd = staticCommands.find(cmd => cmd.type === type);
+
+  return { Icon: cmd.icon, label: cmd.label };
+};
 
 const webSearchCommand = (query: string, index: number) => {
   return {
@@ -256,21 +269,21 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
 
   // show sub command indicator instead of search icon in search box
   const SubCommandIndicator = (type?: CommandType) => {
-    let Icon = staticCommands[1].icon;
+    // get command icon
+
     let label = 'Switch Space';
 
     const cmdType = type || subCommand;
 
     console.log('🚀 ~ SubCommandIndicator ~ cmdType:', cmdType);
 
+    const { Icon } = getCommandIcon(cmdType);
+
     if (cmdType === CommandType.NewSpace) {
-      Icon = staticCommands[2].icon;
       label = 'New Space';
     } else if (cmdType === CommandType.AddToSpace) {
-      Icon = staticCommands[3].icon;
       label = 'Move Tab';
     } else if (cmdType === CommandType.SwitchTab) {
-      Icon = staticCommands[0].icon;
       label = 'Switch Tab';
     }
 
@@ -284,52 +297,72 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
 
   // command section label
   const CommandSectionLabel = (index: number, cmdLabel: string) => {
-    if (index < 1 || staticCommands.filter(c => c.label === cmdLabel).length > 0) return;
+    if (index < 1 || isStaticCommands(cmdLabel)) return;
 
     let sectionLabel = '';
+
+    let Icon = FaLink;
 
     if (
       index ===
       suggestedCommands.find(cmd1 => cmd1.type === CommandType.SwitchTab && staticCommands[0].label !== cmd1.label)
         ?.index
     ) {
-      sectionLabel = 'Opened tabs';
+      sectionLabel = 'Switch to opened tabs';
+      Icon = FaArrowRight;
     } else if (index === suggestedCommands.find(cmd1 => cmd1.type === CommandType.RecentSite)?.index) {
-      sectionLabel = 'Recently Visited';
+      sectionLabel = 'Open recently visited sites';
     } else if (
       index ===
       suggestedCommands.find(cmd1 => cmd1.type === CommandType.SwitchSpace && staticCommands[1].label !== cmd1.label)
         ?.index
     ) {
-      sectionLabel = 'Spaces';
+      sectionLabel = 'Switch space';
+      Icon = FaArrowRightFromBracket;
     }
 
     if (!sectionLabel) return;
 
     return (
       <>
-        <p key={index} className="text-[12px] text-slate-500 font-light mt-1.5 ml-2.5 mb-1" tabIndex={-1}>
-          {sectionLabel}
-        </p>
+        <div className="flex items-center justify-start gap-x-1 mt-1.5 ml-2.5 mb-1">
+          <p key={index} className="text-[12.5px] font-light text-slate-500 " tabIndex={-1}>
+            {sectionLabel}
+          </p>
+          <Icon className=" fill-slate-700 text-slate-700 ml-px" size={14} />
+        </div>
         <hr key={index} className="h-px bg-brand-darkBgAccent border-none w-full m-0 p-0" tabIndex={-1} />
       </>
     );
   };
 
+  // const CommandTypeLabel = (type: CommandType) => {
+  //   // get command icon
+  //   const { Icon, label } = getCommandIcon(type);
+
+  //   return (
+  //     <div className="flex items-center justify-start border-r border-brand-darkBgAccent/50 pl-[3px] pr-[4px] mr-1 bg-brand-darkBgAccent/30 ml-2 h-full">
+  //       <Icon className=" fill-slate-600 text-slate-600 mr-1.5" size={12} />
+  //       {/* <p className="text-slate-500 text-[10px]  m-0 p-0 whitespace-nowrap">{label}</p> */}
+  //     </div>
+  //   );
+  // };
+
   // command component
-  const Command = (index: number, label: string, type: CommandType, Icon?: IconType | string) => {
-    // TODO - use type or remove
+  const Command = ({ index, label, icon: Icon }: ICommand) => {
     const isFocused = focusedCommandIndex === index;
 
     return (
       <button
         id={`fresh-tabs-command-${index}`}
-        className={`w-full flex items-center justify-start px-3 py-[6px] outline-none first:pt-[7.5px]
-        transition-all duration-200 ease-in ${isFocused ? 'bg-brand-darkBgAccent/70' : ''} `}
+        className={`w-full flex items-center justify-start px-[9px] py-[6px] outline-none first:pt-[7.5px]
+        transition-all duration-200 ease-in ${isFocused ? 'bg-brand-darkBgAccent/50' : ''} `}
         onClick={() => onCommandClick(index)}
         style={{ height: COMMAND_HEIGHT + 'px' }}>
         {/* special commands */}
-        {/* {!!searchQuery && type === CommandType.SwitchTab ? SubCommandIndicator(CommandType.SwitchTab) : null} */}
+
+        {/* {!isStaticCommands(label) && type !== CommandType.WebSearch ? CommandTypeLabel(type) : null} */}
+
         <div className="w-[22px]">
           {typeof Icon === 'string' ? (
             !isValidURL(Icon) ? (
@@ -350,7 +383,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
           )}
         </div>
         <p
-          className="text-[12px] text-start text-slate-400 font-light min-w-[50%] max-w-[90%] whitespace-nowrap  overflow-hidden text-ellipsis"
+          className="text-[12px] text-start text-slate-400 font-light min-w-[50%] max-w-[95%] whitespace-nowrap  overflow-hidden text-ellipsis"
           dangerouslySetInnerHTML={{ __html: label }}></p>
       </button>
     );
@@ -358,7 +391,8 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
 
   const MostVisitedSites = () => {
     return (
-      <div className="bg-brand-darkBg w-full">
+      // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+      <div className="bg-brand-darkBg w-full" onClick={() => inputRef.current?.focus()}>
         <p className="text-[12px] text-slate-500 font-light mt-1.5 ml-2.5 mb-1" tabIndex={-1}>
           Most Visited Sites
         </p>
@@ -371,7 +405,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
               delay={500}
               containerEl={suggestionContainerRef.current}>
               <button
-                className={`bg-brand-darkBgAccent rounded-md flex items-center justify-center outline-none p-1 px-1.5 
+                className={`bg-brand-darkBgAccent/80 rounded-md flex items-center justify-center outline-none p-1 px-1.5 
             border border-brand-darkBgAccent focus:border-slate-500/80 focus:bg-slate-700 transition-all duration-200 ease-in-out1`}>
                 <img
                   alt="icon"
@@ -447,15 +481,15 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
           style={{
             maxHeight: SUGGESTED_COMMANDS_MAX_HEIGHT + 'px',
           }}
-          className={`bg-brand-darkBg w-full h-fit overflow-hidden overflow-y-auto cc-scrollbar  cc-scrollbar mx-auto shadow-sm 
-                    shadow-slate-800/70 border mt-[6px] border-y-0 border-slate-600/60 border-collapse rounded-md`}>
+          className={`bg-brand-darkBg w-full h-fit overflow-hidden overflow-y-auto cc-scrollbar  cc-scrollbar mx-auto shadow-sm rounded-md
+                        rounded-bl-none rounded-br-none shadow-slate-800/70 border mt-[6px] border-y-0 border-slate-600/60 border-collapse `}>
           {/* actions */}
           {suggestedCommands.length > 0 &&
             suggestedCommands?.map(cmd => {
               const renderCommands: JSX.Element[] = [];
               renderCommands.push(CommandSectionLabel(cmd.index, cmd.label));
 
-              renderCommands.push(Command(cmd.index, cmd.label, cmd.type, cmd.icon));
+              renderCommands.push(Command(cmd));
 
               return <>{renderCommands.map(cmd1 => cmd1)}</>;
             })}
@@ -480,22 +514,30 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
             </div>
           ) : null}
           {/* most visited sites */}
-          {MostVisitedSites()}
+          {searchQuery.trim() === '' ? MostVisitedSites() : null}
         </div>
 
         {/* navigation guide */}
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions*/}
         <div
-          className={`bg-brand-darkBg shadow-sm shadow-slate-800/70 rounded-bl-md rounded-br-md w-[99%] flex items-center justify-center px-4 py-1.5 
-                        border-t border-brand-darkBgAccent/80 text-slate-500/90 font-light text-[11px] `}>
-          <span className="mr-2">
-            <kbd>Up</kbd>
-          </span>
-          <span className="mr-2">
-            <kbd>Down</kbd>
-          </span>
-          <span className="mr-2">
-            <kbd>Tab</kbd>
-          </span>
+          className={`bg-slate-900 shadow-sm shadow-slate-800/70  w-full flex items-center justify-between px-3 py-2 select-none
+                      rounded-bl-md rounded-br-md border-t border-brand-darkBgAccent/80   `}
+          onClick={() => inputRef.current?.focus()}>
+          <div className=" text-slate-600/90 text-[11px]">FreshTabs</div>
+          <div className="gap-x-1  text-slate-600 text-[10px] flex items-center ">
+            <span className="mr-2 flex items-center bg-brand-darkBgAccent/50 px-1.5 py-px pt-1 rounded-sm shadow-sm shadow-brand-darkBgAccent">
+              <FaLongArrowAltUp className="text-slate-600 mr-[0.5px]" size={11} />
+              <kbd>Up</kbd>
+            </span>
+            <span className="mr-2 flex items-center bg-brand-darkBgAccent/50 px-1.5 py-px pt-1 rounded-sm shadow-sm shadow-brand-darkBgAccent">
+              <FaLongArrowAltUp className="text-slate-600 mr-[0.5px] rotate-180" size={11} />
+              <kbd>Down</kbd>
+            </span>
+            <span className="mr-2 flex items-center bg-brand-darkBgAccent/50 px-1.5 py-px pt-1 rounded-sm shadow-sm shadow-brand-darkBgAccent">
+              <MdOutlineKeyboardReturn className="text-slate-600 mr-1 font-medium -mb-px " size={16} />
+              <kbd>Enter</kbd>
+            </span>
+          </div>
         </div>
       </motion.dialog>
     </div>
