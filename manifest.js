@@ -19,6 +19,7 @@ const manifest = {
     'topSites',
     'history',
     'search',
+    'sessions',
   ],
   commands: {
     cmdE: {

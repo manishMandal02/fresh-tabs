@@ -124,7 +124,7 @@ chrome.runtime.onMessage.addListener(
         if (!shouldOpenInNewTab) {
           await chrome.tabs.update(tab.id, { url: parseURL(url) });
         } else {
-          await chrome.tabs.create({ index, url, active: true });
+          await chrome.tabs.create({ index: index + 1, url, active: true });
         }
 
         return true;
@@ -171,6 +171,8 @@ chrome.runtime.onMessage.addListener(
         const { searchQuery, shouldOpenInNewTab } = payload;
 
         console.log('🚀 ~ searchQuery:', searchQuery);
+
+        // TODO - new tab search opens a tab in the end (open a new next tab and search)
 
         await chrome.search.query({ text: searchQuery, disposition: shouldOpenInNewTab ? 'NEW_TAB' : 'CURRENT_TAB' });
         return true;
