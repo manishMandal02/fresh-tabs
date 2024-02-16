@@ -24,7 +24,7 @@ const staticCommands: ICommand[] = [
   { index: 2, type: CommandType.SwitchSpace, label: 'Switch Space', icon: FaArrowRightFromBracket },
   { index: 3, type: CommandType.NewSpace, label: 'New Space', icon: FaFolder },
   { index: 4, type: CommandType.AddToSpace, label: 'Move Tab', icon: MdMoveDown },
-  { index: 5, type: CommandType.AddToSpace, label: 'Snooze Tab', icon: MdMoveDown },
+  { index: 5, type: CommandType.SnoozeTab, label: 'Snooze Tab', icon: MdMoveDown },
   { index: 6, type: CommandType.DiscardTabs, label: 'Discard Tabs', icon: BsFillMoonStarsFill },
 ];
 
@@ -397,7 +397,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
     return (
       // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
       <div className="bg-brand-darkBg w-full" onClick={() => inputRef.current?.focus()}>
-        <p className="text-[12px] text-slate-500 font-light mt-1.5 ml-2.5 mb-1" tabIndex={-1}>
+        <p className="text-[12px] text-slate-500 font-light mt-px ml-2.5 mb-1" tabIndex={-1}>
           Most Visited Sites
         </p>
         <hr className="h-px bg-brand-darkBgAccent border-none w-full m-0 p-0 mb-1" tabIndex={-1} />
@@ -440,8 +440,8 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
         className=" m-0 flex items-center outline-none flex-col justify-center top-[20%] h-fit max-h-[75vh] w-[520px] left-[33.5%] backdrop:to-brand-darkBg/30 p-px bg-transparent">
         {/* search box */}
         <div
-          className={`w-full h-[50px] min-h-[50px]: bg-brand-darkBg rounded-xl flex items-center justify-start border-collapse overflow-hidden
-                    shadow-lg shadow-slate-800 border border-slate-600/70`}>
+          className={`w-full h-[50px] min-h-[50px]: bg-brand-darkBg rounded-xl  border-collapse overflow-hidden
+             flex items-center justify-start  shadow-md shadow-slate-800 border border-slate-600/70`}>
           {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events */}
           <div
             className="flex items-center justify-center w-fit h-full bg-slate-60 rounded-tl-xl rounded-bl-xl"
@@ -485,8 +485,8 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
           style={{
             maxHeight: SUGGESTED_COMMANDS_MAX_HEIGHT + 'px',
           }}
-          className={`bg-brand-darkBg w-full h-fit overflow-hidden overflow-y-auto cc-scrollbar  cc-scrollbar mx-auto shadow-sm rounded-md
-                        rounded-bl-none rounded-br-none shadow-slate-800/70 border mt-[6px] border-y-0 border-slate-600/60 border-collapse `}>
+          className={`bg-brand-darkBg w-full h-fit overflow-hidden overflow-y-auto cc-scrollbar mt-1 cc-scrollbar mx-auto shadow-sm rounded-md
+                        rounded-bl-none rounded-br-none shadow-slate-800/70 border border-y-0 border-slate-600/60 border-collapse `}>
           {/* actions */}
           {suggestedCommands.length > 0 &&
             suggestedCommands?.map(cmd => {

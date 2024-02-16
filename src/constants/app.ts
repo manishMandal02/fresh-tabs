@@ -28,19 +28,18 @@ export enum CommandType {
   RecentSite = 'recent-site',
   TopSite = 'top-site',
   DiscardTabs = 'discard-tabs',
+  SnoozeTab = 'snooze-tab',
 }
 
-export enum AlarmName {
-  DeleteSpace = 'delete-space-',
-  AutoSaveToBM = 'auto-save-to-bm',
-  AutoDiscardTabs = 'auto-discard-tabs',
-}
+export type AlarmName = 'auto-save-to-bm' | 'auto-discard-tabs' | `deleteSpace-${string}` | `snoozedTab-${string}`;
 
-export enum StorageKeys {
-  SPACES = 'SPACES',
-  SETTINGS = 'SETTINGS',
-  PinnedTabs = 'PinnedTabs',
-}
+export const StorageKeys = {
+  SPACES: 'SPACES',
+  SETTINGS: 'SETTINGS',
+  PinnedTabs: 'PinnedTabs',
+  TABS: (spaceId: string) => `TABS-${spaceId}`,
+  SNOOZED_TABS: (spaceId: string) => `SNOOZED-${spaceId}`,
+};
 
 export const DefaultAppSettings: IAppSettings = {
   includeBookmarksInSearch: false,

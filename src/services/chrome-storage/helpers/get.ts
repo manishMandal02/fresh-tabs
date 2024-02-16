@@ -4,7 +4,7 @@ import { logger } from '@root/src/pages/utils/logger';
 
 type GetStorageParams = {
   type: 'local' | 'sync';
-  key: keyof typeof StorageKeys | `tabs-${string}`;
+  key: keyof typeof StorageKeys | `tabs-${string}` | `snoozed-${string}`;
 };
 
 // sets chrome storage by key

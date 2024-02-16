@@ -30,7 +30,6 @@ import {
   syncSpacesToBookmark,
 } from '@root/src/services/chrome-bookmarks/bookmarks';
 import {
-  AlarmName,
   CommandType,
   ThemeColor,
   DiscardTabURLPrefix,
@@ -39,10 +38,12 @@ import {
 } from '@root/src/constants/app';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
 import { parseURL } from '../utils/parseURL';
-import { getCurrentTab, goToTab, openSpace } from '@root/src/services/chrome-tabs/tabs';
+import { getCurrentTab, getCurrentWindowId, goToTab, openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { retryAtIntervals } from '../utils/retryAtIntervals';
 import { asyncMessageHandler } from '../utils/asyncMessageHandler';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
+import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/alarm';
+import { addSnoozedTab, getSnoozedTab, removeSnoozedTab } from '@root/src/services/chrome-storage/snooze-tabs';
 
 reloadOnUpdate('pages/background');
 
@@ -191,6 +192,24 @@ chrome.runtime.onMessage.addListener(
       case 'DISCARD_TABS': {
         return await discardTabs();
       }
+      case 'SNOOZE_TAB': {
+        const { snoozedUntil } = payload;
+
+        console.log('🚀 ~ snoozedUntil:', snoozedUntil);
+
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        // add snooze tab to storage
+        await addSnoozedTab({
+          id: generateId(),
+          url: tab.url,
+          title: tab.title,
+          faviconURL: tab.favIconUrl,
+          snoozeUntil: 2,
+        });
+        // create a alarm trigger
+        // close the tab
+        return true;
+      }
     }
     // end switch statement
   }),
@@ -324,9 +343,9 @@ chrome.runtime.onInstalled.addListener(async info => {
 
     // set alarm schedules to save space to bookmark,
     // default preference is save daily (1d = 1440m)
-    await chrome.alarms.create(AlarmName.AutoSaveToBM, { periodInMinutes: 1440 });
+    await createAlarm('auto-save-to-bm', 1440, true);
     // auto discard  tabs (if non-active for more than 10 minutes)
-    await chrome.alarms.create(AlarmName.AutoDiscardTabs, { periodInMinutes: 5 });
+    await createAlarm('auto-discard-tabs', 5, true);
 
     logger.info('✅ Successfully initialized app.');
   }
@@ -334,11 +353,22 @@ chrome.runtime.onInstalled.addListener(async info => {
 
 // shortcut commands
 chrome.commands.onCommand.addListener(async (command, tab) => {
+  let currentTab = tab;
+
+  console.log('🚀 ~ chrome.commands.onCommand.addListener ~ currentTab:', currentTab);
+
+  if (!currentTab?.id) {
+    const [activeTab] = await chrome.tabs.query({ currentWindow: true, active: true });
+    currentTab = activeTab;
+  }
+
   if (command === 'cmdPalette') {
     // TODO - handle new tab
-    let activeTabId = tab?.id;
+    let activeTabId = currentTab?.id;
 
-    if (tab?.url.startsWith('chrome://')) {
+    console.log('🚀 ~ chrome.commands.onCommand.addListener ~ activeTabId:', activeTabId);
+
+    if (currentTab?.url.startsWith('chrome://')) {
       // switch tab as content script doesn't work on chrome pages
 
       // get last visited url
@@ -358,13 +388,13 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
           activeTabId = lastActiveTab.id;
         } else {
           // get next tab if last active tab not found
-          const [nextTab] = await chrome.tabs.query({ index: tab.index + 1, currentWindow: true });
+          const [nextTab] = await chrome.tabs.query({ index: currentTab.index + 1, currentWindow: true });
 
           if (nextTab) {
             activeTabId = nextTab.id;
           } else {
             // get first tab
-            const [previousTab] = await chrome.tabs.query({ index: tab.index - 1, currentWindow: true });
+            const [previousTab] = await chrome.tabs.query({ index: currentTab.index - 1, currentWindow: true });
             if (previousTab) {
               activeTabId = previousTab.id;
             }
@@ -378,10 +408,10 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
     const topSites = await getMostVisitedSites();
 
-    const activeSpace = await getSpaceByWindow(tab.windowId);
+    const activeSpace = await getSpaceByWindow(currentTab.windowId);
 
     //  wait for 0.5s if tab was changed
-    if (activeTabId !== tab.id) {
+    if (activeTabId !== currentTab.id) {
       // TODO - check if tab fully loaded
       // wait for 0.2s
       await wait(500);
@@ -404,38 +434,65 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 // handle chrome alarms triggers
 chrome.alarms.onAlarm.addListener(async alarm => {
   // handle delete unsaved space
-  if (alarm.name.startsWith('deleteSpace')) {
+  if (alarm.name.startsWith('deleteSpace-')) {
     const spaceId = alarm.name.split('-')[1];
     await deleteSpace(spaceId);
     await publishEvents({ id: generateId(), event: 'REMOVE_SPACE', payload: { spaceId } });
     return;
+  } else if (alarm.name.startsWith('snoozedTab-')) {
+    //  un-snooze tab
+    // extract snoozed id from name
+    const snoozedTabId = alarm.name.split('-')[1];
+
+    const windowId = await getCurrentWindowId();
+
+    // get the snoozed tab info
+    const { url } = await getSnoozedTab(snoozedTabId);
+    // create un-snoozed tab
+    const unSnoozedTab = await chrome.tabs.create({ url, windowId, active: false });
+    // create a group for snoozed tab
+    const snoozedGroup = await chrome.tabs.group({ tabIds: unSnoozedTab.id, createProperties: { windowId } });
+
+    // update group info
+    await chrome.tabGroups.update(snoozedGroup, { title: '⏰ Snoozed', color: 'orange', collapsed: false });
+
+    // remove the tab from the snoozed storage
+    await removeSnoozedTab(snoozedTabId);
+    return;
   }
 
-  // auto save spaces to bookmark
-  if (alarm.name === AlarmName.AutoSaveToBM) {
-    await syncSpacesToBookmark();
-    logger.info('✅ Synced Spaces to Bookmark');
-  }
-
-  // auto discard non active tabs
-  if (alarm.name === AlarmName.AutoDiscardTabs) {
-    await discardTabs(true);
-    console.log('🚀 onAlarm ~ AlarmName.AutoDiscardTabs: ⏰ 10mins');
+  // handle other alarm types
+  switch (alarm.name) {
+    case alarm.name: {
+      break;
+    }
+    case 'auto-save-to-bm': {
+      await syncSpacesToBookmark();
+      logger.info('⏰ 1day: Synced Spaces to Bookmark');
+      break;
+    }
+    case 'auto-discard-tabs': {
+      await discardTabs(true);
+      logger.info('⏰ 5 mins: Auto discard tabs ');
+      break;
+    }
   }
 });
 
 // IIFE - checks for alarms, its not guaranteed to persist
 (async () => {
-  const autoSaveToBMAlarm = await chrome.alarms.get(AlarmName.AutoSaveToBM);
+  const autoSaveToBMAlarm = await getAlarm('auto-save-to-bm');
 
-  const autoDiscardTabsAlarm = await chrome.alarms.get(AlarmName.AutoDiscardTabs);
+  const autoDiscardTabsAlarm = await getAlarm('auto-discard-tabs');
+
+  // create alarms if not found
 
   if (!autoSaveToBMAlarm?.name) {
-    await chrome.alarms.create(AlarmName.AutoSaveToBM, { periodInMinutes: 1440 });
+    await createAlarm('auto-save-to-bm', 1440, true);
   }
 
   if (!autoDiscardTabsAlarm?.name) {
-    await chrome.alarms.create(AlarmName.AutoDiscardTabs, { periodInMinutes: 10 });
+    await createAlarm('auto-discard-tabs', 5, true);
   }
 })();
 
@@ -602,7 +659,7 @@ chrome.windows.onRemoved.addListener(async windowId => {
     // if user preference is to delete unsaved after a week
     // set an alarm for after a week (1w = 10080m)
     if (deleteUnsavedSpace === 'week') {
-      await chrome.alarms.create(AlarmName.DeleteSpace + space.id, { delayInMinutes: 10080 });
+      await createAlarm(`deleteSpace-${space.id}`, 10080);
       return;
     }
     // delete space immediately

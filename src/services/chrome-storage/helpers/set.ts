@@ -1,12 +1,12 @@
 import { StorageKeys } from '@root/src/constants/app';
-import { IAppSettings, IPinnedTab, ISpace, ITab } from '@root/src/pages/types/global.types';
+import { IAppSettings, IPinnedTab, ISnoozedTab, ISpace, ITab } from '@root/src/pages/types/global.types';
 import { logger } from '@root/src/pages/utils/logger';
 
-type StorageValue = ISpace | ISpace[] | ITab[] | IAppSettings | IPinnedTab[] | string;
+type StorageValue = ISpace | ISpace[] | ITab[] | ISnoozedTab[] | IAppSettings | IPinnedTab[] | string;
 
 type SetStorageParams = {
   type: 'local' | 'sync';
-  key: keyof typeof StorageKeys | `tabs-${string}`;
+  key: keyof typeof StorageKeys | `tabs-${string}` | `snoozed-${string}`;
   value: StorageValue;
 };
 

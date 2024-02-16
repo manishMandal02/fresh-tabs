@@ -42,6 +42,14 @@ export interface ITabWithIndex extends ITab {
   index: number;
 }
 
+export interface ISnoozedTab {
+  id: string;
+  url: string;
+  title: string;
+  faviconURL: string;
+  snoozeUntil: number;
+}
+
 type MessageEventsSidePanel = 'UPDATE_SPACE_ACTIVE_TAB' | 'UPDATE_TABS' | 'REMOVE_SPACE' | 'ADD_SPACE';
 
 interface IEventPayloadSidePanel {
@@ -65,6 +73,7 @@ type MessageEventsContentScript =
   | 'GO_TO_URL'
   | 'WEB_SEARCH'
   | 'DISCARD_TABS'
+  | 'SNOOZE_TAB'
   | 'SEARCH';
 
 interface IEventPayloadContentScript {
@@ -77,6 +86,7 @@ interface IEventPayloadContentScript {
   searchQuery?: string;
   activeSpace?: ISpace;
   shouldOpenInNewTab?: boolean;
+  snoozedUntil?: '30min' | '1hr' | '2hr' | '4hr' | '8hr' | '1day' | '2day' | '3d' | '1week' | '1month';
 }
 
 export interface IMessageEventContentScript {

@@ -3,8 +3,6 @@ import { getCurrentTab } from '../chrome-tabs/tabs';
 import { logger } from '@root/src/pages/utils/logger';
 
 const getSitesFromHistory = async (maxResults: number) => {
-  console.log('🚀 ~ getSitesFromHistory ~ maxResults:', maxResults);
-
   const sites = await chrome.history.search({ maxResults, text: '' });
 
   if (sites?.length < 1) {
@@ -16,10 +14,6 @@ const getSitesFromHistory = async (maxResults: number) => {
   }
 
   const currentTab = await getCurrentTab();
-
-  console.log('🚀 ~ getSitesFromHistory ~ currentTab:', currentTab);
-
-  console.log('🚀 ~ getRecentlyVisitedSites ~ sites:', sites);
 
   // remove duplicates and return site url & title
 
