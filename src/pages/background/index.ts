@@ -1,5 +1,5 @@
 import { getMostVisitedSites, getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
-import { CommandType, ICommand, IMessageEventContentScript, ITab, ThemeColor } from './../types/global.types';
+import { ICommand, IMessageEventContentScript, ITab } from './../types/global.types';
 import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
 import {
@@ -29,12 +29,20 @@ import {
   syncSpacesFromBookmarks,
   syncSpacesToBookmark,
 } from '@root/src/services/chrome-bookmarks/bookmarks';
-import { AlarmNames, DiscardTabURLPrefix, DefaultAppSettings, DefaultPinnedTabs } from '@root/src/constants/app';
+import {
+  AlarmName,
+  CommandType,
+  ThemeColor,
+  DiscardTabURLPrefix,
+  DefaultAppSettings,
+  DefaultPinnedTabs,
+} from '@root/src/constants/app';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
 import { parseURL } from '../utils/parseURL';
 import { getCurrentTab, goToTab, openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { retryAtIntervals } from '../utils/retryAtIntervals';
 import { asyncMessageHandler } from '../utils/asyncMessageHandler';
+import { discardTabs } from '@root/src/services/chrome-discard/discard';
 
 reloadOnUpdate('pages/background');
 
@@ -57,12 +65,15 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 
 // TODO - don't switch space in same window if meeting is in place
 
+// TODO - remove the concept of unsaved spaces, make the necessary changes
+// all spaces will be saved by default
+
 // handle events from content script (command palette)
 chrome.runtime.onMessage.addListener(
   asyncMessageHandler<IMessageEventContentScript, boolean | ICommand[]>(async request => {
     const { event, payload } = request;
 
-    console.log('🚀 ~ event, payload:', event);
+    console.log('🚀 ~ onMessage: event:', event);
 
     switch (event) {
       case 'SWITCH_TAB': {
@@ -177,7 +188,11 @@ chrome.runtime.onMessage.addListener(
         await chrome.search.query({ text: searchQuery, disposition: shouldOpenInNewTab ? 'NEW_TAB' : 'CURRENT_TAB' });
         return true;
       }
+      case 'DISCARD_TABS': {
+        return await discardTabs();
+      }
     }
+    // end switch statement
   }),
 );
 
@@ -309,7 +324,9 @@ chrome.runtime.onInstalled.addListener(async info => {
 
     // set alarm schedules to save space to bookmark,
     // default preference is save daily (1d = 1440m)
-    await chrome.alarms.create(AlarmNames.saveToBM, { periodInMinutes: 1440 });
+    await chrome.alarms.create(AlarmName.AutoSaveToBM, { periodInMinutes: 1440 });
+    // auto discard  tabs (if non-active for more than 10 minutes)
+    await chrome.alarms.create(AlarmName.AutoDiscardTabs, { periodInMinutes: 5 });
 
     logger.info('✅ Successfully initialized app.');
   }
@@ -319,7 +336,7 @@ chrome.runtime.onInstalled.addListener(async info => {
 chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command === 'cmdPalette') {
     // TODO - handle new tab
-    let activeTabId = tab.id;
+    let activeTabId = tab?.id;
 
     if (tab?.url.startsWith('chrome://')) {
       // switch tab as content script doesn't work on chrome pages
@@ -394,20 +411,32 @@ chrome.alarms.onAlarm.addListener(async alarm => {
     return;
   }
 
-  // handle save spaces to bookmark
-  if (alarm.name === AlarmNames.saveToBM) {
+  // auto save spaces to bookmark
+  if (alarm.name === AlarmName.AutoSaveToBM) {
     await syncSpacesToBookmark();
     logger.info('✅ Synced Spaces to Bookmark');
+  }
+
+  // auto discard non active tabs
+  if (alarm.name === AlarmName.AutoDiscardTabs) {
+    await discardTabs(true);
+    console.log('🚀 onAlarm ~ AlarmName.AutoDiscardTabs: ⏰ 10mins');
   }
 });
 
 // IIFE - checks for alarms, its not guaranteed to persist
 (async () => {
-  const alarm = await chrome.alarms.get(AlarmNames.saveToBM);
-  if (alarm?.name) return;
+  const autoSaveToBMAlarm = await chrome.alarms.get(AlarmName.AutoSaveToBM);
 
-  // create alarm if not found
-  await chrome.alarms.create(AlarmNames.saveToBM, { periodInMinutes: 1440 });
+  const autoDiscardTabsAlarm = await chrome.alarms.get(AlarmName.AutoDiscardTabs);
+
+  if (!autoSaveToBMAlarm?.name) {
+    await chrome.alarms.create(AlarmName.AutoSaveToBM, { periodInMinutes: 1440 });
+  }
+
+  if (!autoDiscardTabsAlarm?.name) {
+    await chrome.alarms.create(AlarmName.AutoDiscardTabs, { periodInMinutes: 10 });
+  }
 })();
 
 // When the new tab is selected, get the link in the title and load the page
@@ -573,7 +602,7 @@ chrome.windows.onRemoved.addListener(async windowId => {
     // if user preference is to delete unsaved after a week
     // set an alarm for after a week (1w = 10080m)
     if (deleteUnsavedSpace === 'week') {
-      await chrome.alarms.create(AlarmNames.deleteSpace(space.id), { delayInMinutes: 10080 });
+      await chrome.alarms.create(AlarmName.DeleteSpace + space.id, { delayInMinutes: 10080 });
       return;
     }
     // delete space immediately

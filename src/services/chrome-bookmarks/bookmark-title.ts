@@ -1,4 +1,5 @@
-import { ISpace, ThemeColor } from '@root/src/pages/types/global.types';
+import { ThemeColor } from '@root/src/constants/app';
+import { ISpace } from '@root/src/pages/types/global.types';
 
 // create bookmark title from space details
 export const generateBMTitle = (space: ISpace) =>

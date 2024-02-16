@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
-import { CommandType, ICommand, ISpace } from '../../types/global.types';
+import { ICommand, ISpace } from '../../types/global.types';
 import { publishEvents } from '../../utils/publish-events';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
-import { CommandPaletteContainerId } from '@root/src/constants/app';
+import { CommandPaletteContainerId, CommandType } from '@root/src/constants/app';
 import { useKeyPressed } from '../../sidepanel/hooks/useKeyPressed';
 import { MdNewLabel } from 'react-icons/md';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
@@ -192,6 +192,7 @@ export const useCommandPalette = ({ activeSpace, modalRef }: UseCommandPalettePr
           event: 'WEB_SEARCH',
           payload: { searchQuery, shouldOpenInNewTab: isModifierKeyPressed },
         });
+        handleCloseCommandPalette();
         break;
       }
 
@@ -203,7 +204,13 @@ export const useCommandPalette = ({ activeSpace, modalRef }: UseCommandPalettePr
         handleCloseCommandPalette();
         break;
       }
+      case CommandType.DiscardTabs: {
+        await publishEvents({ event: 'DISCARD_TABS' });
+        handleCloseCommandPalette();
+        break;
+      }
     }
+
     setSearchQuery('');
   }, [
     activeSpace,

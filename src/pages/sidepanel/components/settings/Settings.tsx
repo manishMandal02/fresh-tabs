@@ -3,7 +3,7 @@ import RadioGroup, { RadioOptions } from '../elements/radio-group/RadioGroup';
 import { useAtom } from 'jotai';
 import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
 import { IAppSettings } from '@root/src/pages/types/global.types';
-import { AlarmNames, DefaultAppSettings } from '@root/src/constants/app';
+import { AlarmName, DefaultAppSettings } from '@root/src/constants/app';
 import { MdOpenInNew, MdOutlineSettings } from 'react-icons/md';
 import { SlideModal } from '../elements/modal';
 import Switch from '../elements/switch/Switch';
@@ -75,12 +75,12 @@ const Settings = () => {
     // check if auto save to bookmark preference has changed
     if (settingsUpdateData.autoSaveToBookmark !== appSettings.autoSaveToBookmark) {
       // clear the previous trigger
-      await chrome.alarms.clear(AlarmNames.saveToBM);
+      await chrome.alarms.clear(AlarmName.AutoSaveToBM);
       // create new trigger ( 1d = 1440m)
       if (settingsUpdateData.autoSaveToBookmark === 'daily') {
-        await chrome.alarms.create(AlarmNames.saveToBM, { delayInMinutes: 1440 });
+        await chrome.alarms.create(AlarmName.AutoSaveToBM, { delayInMinutes: 1440 });
       } else if (settingsUpdateData.autoSaveToBookmark == 'weekly') {
-        await chrome.alarms.create(AlarmNames.saveToBM, { delayInMinutes: 1440 * 7 });
+        await chrome.alarms.create(AlarmName.AutoSaveToBM, { delayInMinutes: 1440 * 7 });
       }
     }
 
@@ -111,11 +111,7 @@ const Settings = () => {
 
   return (
     <>
-      <MdOutlineSettings
-        size={20}
-        className="text-slate-600 mt-1 cursor-pointer"
-        onClick={() => setIsModalOpen(true)}
-      />
+      <MdOutlineSettings size={18} className="text-slate-600 cursor-pointer" onClick={() => setIsModalOpen(true)} />
       <SlideModal
         title="Preferences"
         isOpen={isModalOpen}

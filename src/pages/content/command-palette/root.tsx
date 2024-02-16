@@ -2,8 +2,8 @@ import { createRoot } from 'react-dom/client';
 import refreshOnUpdate from 'virtual:reload-on-update-in-view';
 import injectedStyle from './injected.css?inline';
 import { CommandPaletteContainerId } from '@root/src/constants/app';
-import CommandPalette from './CommandPalette';
 import { IMessageEventContentScript, ISpace, ITab } from '../../types/global.types';
+import CommandPalette from '.';
 
 refreshOnUpdate('pages/content');
 

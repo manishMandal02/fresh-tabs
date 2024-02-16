@@ -1,8 +1,9 @@
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
-import { MdOutlineSync } from 'react-icons/md';
+import { MdSave } from 'react-icons/md';
 import { useState, useEffect, useRef } from 'react';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import { GiNightSleep } from 'react-icons/gi';
 
 import Search from './components/search';
 import { FavTabs } from './components/space/tab';
@@ -19,6 +20,7 @@ import { getGlobalPinnedTabs } from '@root/src/services/chrome-storage/tabs';
 import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
 import OtherSpacesContainer from './components/space/other-space/OtherSpacesContainer';
 import Settings from './components/settings/Settings';
+import { discardTabs } from '@root/src/services/chrome-discard/discard';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -53,9 +55,6 @@ const SidePanel = () => {
   } = useSidePanel(setActiveSpaceTabs);
 
   const activeSpaceRef = useRef(activeSpace);
-
-  // loading state for save spaces to bookmarks
-  const [isLoadingSaveSpaces, setIsLoadingSaveSpaces] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -108,13 +107,19 @@ const SidePanel = () => {
 
   // sync/save spaces to bookmarks
   const handleSaveSpacesToBM = async () => {
-    setIsLoadingSaveSpaces(true);
+    setSnackbar({ show: true, isLoading: true, msg: 'Saving spaces to bookmarks' });
 
     await syncSpacesToBookmark();
 
-    setIsLoadingSaveSpaces(false);
+    setSnackbar({ show: true, isLoading: false, isSuccess: true, msg: 'Saved spaces to bookmarks' });
+  };
 
-    setSnackbar({ show: true, isSuccess: true, msg: 'Saved spaces to bookmarks' });
+  // discard tabs
+  const handleDiscardTabs = async () => {
+    setSnackbar({ show: true, isLoading: true, msg: 'Discarding tabs' });
+
+    await discardTabs();
+    setSnackbar({ show: true, isLoading: false, isSuccess: true, msg: 'Discarded non active tabs' });
   };
 
   // animation for other spaces drop zone
@@ -127,17 +132,16 @@ const SidePanel = () => {
     <div className="w-screen h-screen  overflow-hidden bg-brand-darkBg">
       <main className="h-full relative ">
         {/* app name */}
-        <div className="h-[4%] pt-2.5 flex items-start justify-between px-3">
+        <div className="h-[4%] pt-2.5 flex items-center justify-between px-3">
           <span className="invisible">Hide</span>
           <p className=" text-slate-400 text-base font-light tracking-wide  text-center">Fresh Tabs</p>
           {/* opens settings modal */}
-          <div className="flex items-center gap-[3.5px]">
+          <div className="flex items-center gap-x-2 bg-red-10 mt-px">
+            <Tooltip label="Discard non active tabs">
+              <GiNightSleep size={18} className={`text-slate-600 cursor-pointer`} onClick={handleDiscardTabs} />
+            </Tooltip>
             <Tooltip label="Save spaces to bookmarks">
-              <MdOutlineSync
-                size={20}
-                className={`text-slate-600 -mb-[1.5px] cursor-pointer ${isLoadingSaveSpaces ? 'animate-spin' : ''}`}
-                onClick={handleSaveSpacesToBM}
-              />
+              <MdSave size={18} className={`text-slate-600 cursor-pointer `} onClick={handleSaveSpacesToBM} />
             </Tooltip>
             <Settings />
           </div>

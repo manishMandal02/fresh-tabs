@@ -1,4 +1,4 @@
-import { ISpace, ITab, ThemeColor } from '@root/src/pages/types/global.types';
+import { ISpace, ITab } from '@root/src/pages/types/global.types';
 import ColorPicker from '../../elements/color-picker';
 import EmojiPicker from '../../elements/emoji-picker';
 import { SlideModal } from '../../elements/modal';
@@ -11,13 +11,14 @@ import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
 import Spinner from '../../elements/spinner';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import TextInput from '../../elements/TextInput/TextInput';
+import { ThemeColor } from '@root/src/constants/app';
 
 type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;
 
 const defaultSpaceData: DefaultSpaceFields = {
   title: 'Side projects',
   emoji: '🚀',
-  theme: ThemeColor.Blue,
+  theme: ThemeColor.Fuchsia,
 };
 
 const CreateSpace = () => {

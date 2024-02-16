@@ -1,4 +1,4 @@
-import { ThemeColor } from '@root/src/pages/types/global.types';
+import { ThemeColor } from '@root/src/constants/app';
 import Popover from '../popover';
 import { useState } from 'react';
 

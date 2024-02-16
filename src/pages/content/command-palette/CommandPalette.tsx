@@ -1,6 +1,7 @@
-import { MdSearch, MdOutlineKeyboardReturn } from 'react-icons/md';
+import { MdSearch, MdOutlineKeyboardReturn, MdMoveDown } from 'react-icons/md';
 import { FaFolder, FaSearch, FaLongArrowAltUp } from 'react-icons/fa';
-import { TbArrowMoveRight } from 'react-icons/tb';
+
+import { BsFillMoonStarsFill } from 'react-icons/bs';
 import { FaArrowRightFromBracket, FaArrowRight, FaLink } from 'react-icons/fa6';
 
 import { motion } from 'framer-motion';
@@ -8,7 +9,7 @@ import { useState, useEffect, useRef, MouseEventHandler, ReactEventHandler, useC
 
 import { getFaviconURL } from '../../utils';
 import { isValidURL } from '../../utils/isValidURL';
-import { CommandType, ICommand, ISpace, ITab } from '../../types/global.types';
+import { ICommand, ISpace, ITab } from '../../types/global.types';
 import { useCommandPalette } from './useCommandPalette';
 import { debounce } from '../../utils/debounce';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
@@ -16,12 +17,15 @@ import { publishEvents } from '../../utils/publish-events';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import Tooltip from '../../sidepanel/components/elements/tooltip';
 import { limitCharLength } from '../../utils/limitCharLength';
+import { CommandType } from '@root/src/constants/app';
 
 const staticCommands: ICommand[] = [
   { index: 1, type: CommandType.SwitchTab, label: 'Switch Tab', icon: FaArrowRight },
   { index: 2, type: CommandType.SwitchSpace, label: 'Switch Space', icon: FaArrowRightFromBracket },
   { index: 3, type: CommandType.NewSpace, label: 'New Space', icon: FaFolder },
-  { index: 4, type: CommandType.AddToSpace, label: 'Move Tab', icon: TbArrowMoveRight },
+  { index: 4, type: CommandType.AddToSpace, label: 'Move Tab', icon: MdMoveDown },
+  { index: 5, type: CommandType.AddToSpace, label: 'Snooze Tab', icon: MdMoveDown },
+  { index: 6, type: CommandType.DiscardTabs, label: 'Discard Tabs', icon: BsFillMoonStarsFill },
 ];
 
 const isStaticCommands = (label: string) => {

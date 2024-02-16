@@ -2,7 +2,7 @@ import { AlertModal } from '../../elements/modal';
 import { useAtom } from 'jotai';
 import { snackbarAtom, nonActiveSpacesAtom, deleteSpaceModalAtom } from '@root/src/stores/app';
 import { deleteSpace, getSpace } from '@root/src/services/chrome-storage/spaces';
-import { AlarmNames } from '@root/src/constants/app';
+import { AlarmName } from '@root/src/constants/app';
 import Spinner from '../../elements/spinner';
 import { createPortal } from 'react-dom';
 import { useEffect, useCallback, useState } from 'react';
@@ -100,7 +100,7 @@ const DeleteSpaceModal = () => {
 
       // if the space was unsaved, check if it had any delete trigger scheduled
 
-      const schedule = await chrome.alarms.get(AlarmNames.deleteSpace(spaceToDeleteId));
+      const schedule = await chrome.alarms.get(AlarmName.DeleteSpace + spaceToDeleteId);
 
       if (schedule?.name) {
         // delete scheduled trigger

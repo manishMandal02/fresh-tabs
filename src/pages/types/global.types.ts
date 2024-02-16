@@ -1,27 +1,5 @@
+import { CommandType, ThemeColor } from '@root/src/constants/app';
 import type { IconType } from 'react-icons';
-
-export enum ThemeColor {
-  Green = '#34d399',
-  Orange = '#f97316',
-  Yellow = '#fbbf24',
-  Blue = '#38bdf8',
-  Purple = '#c084fc',
-  Pink = '#f472b6',
-  Red = '#f43f5e',
-  Indigo = '#6366f1',
-  Teal = '#5eead4',
-  Fuchsia = '#d946ef',
-}
-
-export enum CommandType {
-  NewSpace = 'new-space',
-  SwitchSpace = 'switch-space',
-  AddToSpace = 'add-to-space',
-  SwitchTab = 'switch-tab',
-  WebSearch = 'web-search',
-  RecentSite = 'recent-site',
-  TopSite = 'top-site',
-}
 
 export interface ICommand {
   index: number;
@@ -86,6 +64,7 @@ type MessageEventsContentScript =
   | 'MOVE_TAB_TO_SPACE'
   | 'GO_TO_URL'
   | 'WEB_SEARCH'
+  | 'DISCARD_TABS'
   | 'SEARCH';
 
 interface IEventPayloadContentScript {

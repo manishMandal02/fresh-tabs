@@ -1,4 +1,4 @@
-import { IAppSettings, IPinnedTab, ISpaceWithTabs, ThemeColor } from '../pages/types/global.types';
+import { IAppSettings, IPinnedTab, ISpaceWithTabs } from '../pages/types/global.types';
 
 export const CommandPaletteContainerId = 'fresh-tabs-command-palette-container';
 
@@ -6,10 +6,35 @@ export const FRESH_TABS_BOOKMARK_TITLE = '#Fresh Tabs ~ ⚠️ Do not delete thi
 
 export const DiscardTabURLPrefix = 'data:text/html,';
 
-export const AlarmNames = {
-  deleteSpace: (spaceId: string) => `deleteSpace-${spaceId}`,
-  saveToBM: 'SaveToBookmark',
-};
+export enum ThemeColor {
+  Green = '#34d399',
+  Orange = '#f97316',
+  Yellow = '#fbbf24',
+  Blue = '#38bdf8',
+  Purple = '#c084fc',
+  Pink = '#f472b6',
+  Red = '#f43f5e',
+  Indigo = '#6366f1',
+  Teal = '#5eead4',
+  Fuchsia = '#d946ef',
+}
+
+export enum CommandType {
+  NewSpace = 'new-space',
+  SwitchSpace = 'switch-space',
+  AddToSpace = 'add-to-space',
+  SwitchTab = 'switch-tab',
+  WebSearch = 'web-search',
+  RecentSite = 'recent-site',
+  TopSite = 'top-site',
+  DiscardTabs = 'discard-tabs',
+}
+
+export enum AlarmName {
+  DeleteSpace = 'delete-space-',
+  AutoSaveToBM = 'auto-save-to-bm',
+  AutoDiscardTabs = 'auto-discard-tabs',
+}
 
 export enum StorageKeys {
   SPACES = 'SPACES',

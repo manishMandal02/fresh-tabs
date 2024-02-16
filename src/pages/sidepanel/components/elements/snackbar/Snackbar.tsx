@@ -47,6 +47,8 @@ const Snackbar = ({ show, msg, isSuccess, isLoading }: Props) => {
     <MdCancel size={20} className="opacity-70" />
   );
 
+  // TODO - update ui
+
   return (
     <div
       className={`fixed select-none z-[160] bottom-4 left-0  w-fit items-center pl-2 pr-4 py-2 rounded-sm justify-start transition-all duration-300 ease-in ${bgColor}`}
