@@ -2,8 +2,9 @@ import { ISpace, ITab } from '@root/src/pages/types/global.types';
 import { getSpaceByWindow, updateSpace } from '../chrome-storage/spaces';
 import { getFaviconURL } from '@root/src/pages/utils';
 import { getTabsInSpace, setTabsForSpace } from '../chrome-storage/tabs';
-import { DiscardTabURLPrefix } from '@root/src/constants/app';
+import { DISCARD_TAB_URL_PREFIX, SNOOZED_TAB_GROUP_TITLE } from '@root/src/constants/app';
 import { parseURL } from '@root/src/pages/utils/parseURL';
+import { getTabToUnSnooze } from '../chrome-storage/snooze-tabs';
 
 type OpenSpaceProps = {
   space: ISpace;
@@ -42,7 +43,7 @@ export const createDiscardedTabs = async (tabs: ITab[], windowId?: number) => {
   const createMultipleTabsPromise = tabs.map((tab, index) => {
     if (isNaN(windowId)) {
       return chrome.tabs.create({
-        url: `${DiscardTabURLPrefix}${encodeURIComponent(discardedTabHTML(tab))}`,
+        url: `${DISCARD_TAB_URL_PREFIX}${encodeURIComponent(discardedTabHTML(tab))}`,
         active: false,
       });
     } else {
@@ -50,7 +51,7 @@ export const createDiscardedTabs = async (tabs: ITab[], windowId?: number) => {
         windowId,
         index,
         active: false,
-        url: `${DiscardTabURLPrefix}${encodeURIComponent(discardedTabHTML(tab))}`,
+        url: `${DISCARD_TAB_URL_PREFIX}${encodeURIComponent(discardedTabHTML(tab))}`,
       });
     }
   });
@@ -211,8 +212,15 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
   // delete the default tab created (an empty tab gets created along with window)
   await chrome.tabs.remove(defaultWindowTabId);
 
-  // making sure the deleted tabs are not removed from space
+  // making sure the tabs are updated & synced with window
   await setTabsForSpace(currentSpaceInfo.id, currentSpaceInfo.tabs);
+
+  //  check if a snoozed tab has to be added
+  // some tab might've been un-snoozed when the space was not active, so show it now
+  const tabToUnSnooze = await getTabToUnSnooze(space.id);
+  if (tabToUnSnooze?.title) {
+    await newTabGroup(SNOOZED_TAB_GROUP_TITLE, tabToUnSnooze.url, windowId);
+  }
 };
 
 // create a new tab
@@ -244,4 +252,21 @@ export const getCurrentWindowId = async () => {
   const { id } = await chrome.windows.getCurrent();
   if (!id) return null;
   return id;
+};
+
+export const newTabGroup = async (groupTitle: string, tabURL: string, windowId: number) => {
+  // create un-snoozed tab
+  const newTab = await chrome.tabs.create({ windowId, url: tabURL, active: false });
+  // create a group for snoozed tab
+  const snoozedGroup = await chrome.tabs.group({
+    tabIds: newTab.id,
+    createProperties: { windowId },
+  });
+
+  // update group info
+  await chrome.tabGroups.update(snoozedGroup, {
+    title: groupTitle,
+    color: 'orange',
+    collapsed: false,
+  });
 };

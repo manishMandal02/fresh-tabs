@@ -134,7 +134,7 @@ export const syncSpacesToBookmark = async () => {
       const spaceDetailsStr = generateBMTitle(space);
 
       // get all tabs for this space
-      const tabs = await getStorage<ITab[]>({ type: 'local', key: `tabs-${space.id}` });
+      const tabs = await getStorage<ITab[]>({ type: 'local', key: `TABS-${space.id}` });
 
       // group all tab promises to process at once
       const tabsPromises: Promise<chrome.bookmarks.BookmarkTreeNode>[] = [];

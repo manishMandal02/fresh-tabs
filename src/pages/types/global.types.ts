@@ -43,7 +43,6 @@ export interface ITabWithIndex extends ITab {
 }
 
 export interface ISnoozedTab {
-  id: string;
   url: string;
   title: string;
   faviconURL: string;
@@ -65,6 +64,7 @@ export interface IMessageEventSidePanel {
 }
 
 type MessageEventsContentScript =
+  | 'CHECK_CONTENT_SCRIPT_LOADED'
   | 'SHOW_COMMAND_PALETTE'
   | 'SWITCH_TAB'
   | 'SWITCH_SPACE'

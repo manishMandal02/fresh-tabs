@@ -86,6 +86,11 @@ const CreateSpace = () => {
       return;
     }
 
+    if (newSpaceData.title.length > 20) {
+      setErrorMsg('Space title should be less than 20 characters');
+      return;
+    }
+
     // show loading snackbar
     setSnackbar({ show: true, msg: 'Creating new space', isLoading: true });
 

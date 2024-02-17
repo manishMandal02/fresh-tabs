@@ -1,4 +1,4 @@
-import { DiscardTabURLPrefix } from '@root/src/constants/app';
+import { DISCARD_TAB_URL_PREFIX } from '@root/src/constants/app';
 
 import { logger } from './logger';
 
@@ -22,7 +22,7 @@ export const getUrlFromHTML = (htmlString: string) => {
 
 // parse discard url
 export const parseURL = (url: string) => {
-  if (url?.startsWith(DiscardTabURLPrefix)) {
+  if (url?.startsWith(DISCARD_TAB_URL_PREFIX)) {
     return getUrlFromHTML(url);
   }
 

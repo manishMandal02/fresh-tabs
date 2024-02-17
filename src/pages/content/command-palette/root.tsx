@@ -59,8 +59,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
   if (msg.event === 'SHOW_COMMAND_PALETTE') {
     appendCommandPaletteContainer({
-      recentSites,
       topSites,
+      recentSites,
       activeSpace,
     });
   }

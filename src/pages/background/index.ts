@@ -1,5 +1,5 @@
 import { getMostVisitedSites, getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
-import { ICommand, IMessageEventContentScript, ITab } from './../types/global.types';
+import { ICommand, IMessageEventContentScript, ISpace, ITab } from './../types/global.types';
 import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
 import {
@@ -32,18 +32,20 @@ import {
 import {
   CommandType,
   ThemeColor,
-  DiscardTabURLPrefix,
+  DISCARD_TAB_URL_PREFIX,
   DefaultAppSettings,
   DefaultPinnedTabs,
+  SNOOZED_TAB_GROUP_TITLE,
 } from '@root/src/constants/app';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
 import { parseURL } from '../utils/parseURL';
-import { getCurrentTab, getCurrentWindowId, goToTab, openSpace } from '@root/src/services/chrome-tabs/tabs';
+import { getCurrentTab, goToTab, newTabGroup, openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { retryAtIntervals } from '../utils/retryAtIntervals';
 import { asyncMessageHandler } from '../utils/asyncMessageHandler';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
 import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/alarm';
 import { addSnoozedTab, getTabToUnSnooze, removeSnoozedTab } from '@root/src/services/chrome-storage/snooze-tabs';
+import { showUnSnoozedNotification } from '@root/src/services/chrome-notification/notification';
 
 reloadOnUpdate('pages/background');
 
@@ -54,6 +56,24 @@ reloadOnUpdate('pages/background');
 reloadOnUpdate('pages/content/style.scss');
 
 logger.info('🏁 background loaded');
+
+// IIFE - checks for alarms, its not guaranteed to persist
+(async () => {
+  const autoSaveToBMAlarm = await getAlarm('auto-save-to-bm');
+
+  const autoDiscardTabsAlarm = await getAlarm('auto-discard-tabs');
+
+  // TODO - testing
+
+  // create alarms if not found
+  if (!autoSaveToBMAlarm?.name) {
+    await createAlarm('auto-save-to-bm', 1440, true);
+  }
+
+  if (!autoDiscardTabsAlarm?.name) {
+    await createAlarm('auto-discard-tabs', 5, true);
+  }
+})();
 
 // open side panel on extension icon clicked
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error => {
@@ -193,22 +213,27 @@ chrome.runtime.onMessage.addListener(
         return await discardTabs();
       }
       case 'SNOOZE_TAB': {
-        const { snoozedUntil, activeSpace } = payload;
+        const { snoozedUntil, spaceId } = payload;
 
         console.log('🚀 ~ snoozedUntil:', snoozedUntil);
 
+        // TODO - try to create dynamic commands for snooze-tab sub command
+        // try:: so that when user types time or day it'll create command matching that
+        // if not:: possible then then create few pre built time commands
+
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
+        console.log('🚀 ~ SNOOZE_TAB ~ handler : tab:', tab);
+
         // add snooze tab to storage
-        await addSnoozedTab({
-          id: generateId(),
+        await addSnoozedTab(spaceId, {
           url: tab.url,
           title: tab.title,
           faviconURL: tab.favIconUrl,
-          snoozeUntil: 2,
+          snoozeUntil: 1,
         });
         // create a alarm trigger
-        await createAlarm(`snoozedTab-${activeSpace.id}`, 120);
+        await createAlarm(`snoozedTab-${spaceId}`, 1);
         // close the tab
         await chrome.tabs.remove(tab.id);
         return true;
@@ -218,7 +243,7 @@ chrome.runtime.onMessage.addListener(
   }),
 );
 
-//* common event handlers
+// helpers for chrome event handlers
 
 const createUnsavedSpacesOnInstall = async () => {
   try {
@@ -267,7 +292,7 @@ const updateTabHandler = async (tabId: number) => {
   // get tab details
   const tab = await chrome.tabs.get(tabId);
 
-  if (tab?.url.startsWith(DiscardTabURLPrefix)) return;
+  if (tab?.url.startsWith(DISCARD_TAB_URL_PREFIX)) return;
 
   // get space by windowId
   const space = await getSpaceByWindow(tab.windowId);
@@ -304,6 +329,8 @@ const removeTabHandler = async (tabId: number, windowId: number) => {
     },
   });
 };
+
+// * chrome event listeners
 
 // on extension installed
 chrome.runtime.onInstalled.addListener(async info => {
@@ -356,20 +383,16 @@ chrome.runtime.onInstalled.addListener(async info => {
 
 // shortcut commands
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  let currentTab = tab;
-
-  console.log('🚀 ~ chrome.commands.onCommand.addListener ~ currentTab:', currentTab);
-
-  if (!currentTab?.id) {
-    const [activeTab] = await chrome.tabs.query({ currentWindow: true, active: true });
-    currentTab = activeTab;
-  }
-
+  // TODO - handle new tab
   if (command === 'cmdPalette') {
-    // TODO - handle new tab
-    let activeTabId = currentTab?.id;
+    let currentTab = tab;
 
-    console.log('🚀 ~ chrome.commands.onCommand.addListener ~ activeTabId:', activeTabId);
+    if (!currentTab?.id) {
+      const [activeTab] = await chrome.tabs.query({ currentWindow: true, active: true });
+      currentTab = activeTab;
+    }
+
+    let activeTabId = currentTab?.id;
 
     if (currentTab?.url.startsWith('chrome://')) {
       // switch tab as content script doesn't work on chrome pages
@@ -413,11 +436,16 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
     const activeSpace = await getSpaceByWindow(currentTab.windowId);
 
-    //  wait for 0.5s if tab was changed
-    if (activeTabId !== currentTab.id) {
-      // TODO - check if tab fully loaded
+    //  check if content script is loaded
+    // TODO - check if tab fully loaded
+    const res = await publishEventsTab(activeTabId, { event: 'CHECK_CONTENT_SCRIPT_LOADED' });
+
+    console.log('🚀 ~ chrome.commands.onCommand.addListener ~ res:', res);
+    console.log('🚀 ~ chrome.commands.onCommand.addListener ~ activeTabId:', activeTabId);
+    if (!res) {
       // wait for 0.2s
-      await wait(500);
+      await chrome.tabs.reload(activeTabId);
+      await wait(250);
     }
 
     retryAtIntervals({
@@ -434,7 +462,7 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   }
 });
 
-// handle chrome alarms triggers
+// handle chrome alars triggers
 chrome.alarms.onAlarm.addListener(async alarm => {
   // handle delete unsaved space
   if (alarm.name.startsWith('deleteSpace-')) {
@@ -444,30 +472,43 @@ chrome.alarms.onAlarm.addListener(async alarm => {
     return;
   } else if (alarm.name.startsWith('snoozedTab-')) {
     //  un-snooze tab
-    // extract snoozed id from name
-    // const spaceId = alarm.name.split('-')[1];
-
-    const windowId = await getCurrentWindowId();
+    // extract space id from name (tab was snoozed from this space)
+    const spaceId = alarm.name.split('-')[1];
 
     // get the snoozed tab info
-    const { url } = await getTabToUnSnooze();
-    // TODO - check if snoozed tab's space is active
+    const { url, title, faviconURL } = await getTabToUnSnooze(spaceId);
 
-    // if yes open snoozed tab in group
+    console.log('🚀 ~ onAlarm getTabToUnSnooze:473 ~ title:', title);
 
-    // if not, add snoozed tab to space and show notification (open tab, open space)
+    // check if snoozed tab's space is active
+    // also check for multi space/window scenario
+    let currentSpace: ISpace = null;
 
-    // create un-snoozed tab
-    const unSnoozedTab = await chrome.tabs.create({ url, windowId, active: false });
-    // create a group for snoozed tab
-    const snoozedGroup = await chrome.tabs.group({ tabIds: unSnoozedTab.id, createProperties: { windowId } });
+    const windows = await chrome.windows.getAll();
 
-    // update group info
-    await chrome.tabGroups.update(snoozedGroup, { title: '⏰ Snoozed', color: 'orange', collapsed: false });
+    for (const window of windows) {
+      const space = await getSpaceByWindow(window.id);
+      if (space?.id === spaceId) {
+        currentSpace = space;
+      }
+    }
 
-    // remove the tab from the snoozed storage
-    await removeSnoozedTab(url);
-    return;
+    if (currentSpace?.id) {
+      // if yes open snoozed tab in group
+
+      // create a group for snoozed tab
+      await newTabGroup(SNOOZED_TAB_GROUP_TITLE, url, currentSpace.windowId);
+
+      // remove the tab from the snoozed storage
+      await removeSnoozedTab(spaceId, url);
+
+      // show notification with show tab button
+      showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed 1 min ago`, title, faviconURL, true);
+      return;
+    } else {
+      // if not, show notification (open tab, open space)
+      showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed 1 min ago`, title, faviconURL, false);
+    }
   }
 
   // handle other alarm types
@@ -482,35 +523,55 @@ chrome.alarms.onAlarm.addListener(async alarm => {
     }
     case 'auto-discard-tabs': {
       await discardTabs(true);
-      logger.info('⏰ 5 mins: Auto discard tabs ');
+      logger.info('⏰ 5 mins: Auto discard tabs');
       break;
     }
   }
 });
 
-// IIFE - checks for alarms, its not guaranteed to persist
-(async () => {
-  const autoSaveToBMAlarm = await getAlarm('auto-save-to-bm');
+// on notification button clicked
+chrome.notifications.onButtonClicked.addListener(async (notificationId, buttonIndex) => {
+  console.log('🚀 ~ chrome.notifications.onButtonClicked.addListener ~ notificationId:', notificationId);
 
-  const autoDiscardTabsAlarm = await getAlarm('auto-discard-tabs');
+  if (notificationId.includes('snoozed-tab-active-space')) {
+    console.log('🚀 ~ chrome.notifications.onButtonClicked.addListener ~ buttonIndex:', buttonIndex);
+    if (buttonIndex === 0) {
+      // open tab
 
-  // create alarms if not found
+      // get the id of the snoozed group
+      const [group] = await chrome.tabGroups.query({ title: SNOOZED_TAB_GROUP_TITLE });
 
-  if (!autoSaveToBMAlarm?.name) {
-    await createAlarm('auto-save-to-bm', 1440, true);
+      if (!group?.id) return;
+      // find the tab
+      const [tab] = await chrome.tabs.query({ groupId: group.id });
+      // go to the active
+      await goToTab(tab.id);
+      // close/remove the group
+      await chrome.tabs.ungroup(tab.id);
+    }
+    //
+  } else if (notificationId.startsWith('snoozed-tab-for-')) {
+    const spaceId = notificationId.split('-')[3];
+    if (buttonIndex === 0) {
+      // open tab
+
+      const tab = await getTabToUnSnooze(spaceId);
+      await chrome.tabs.create({ url: tab.url, active: true });
+    } else if (buttonIndex === 1) {
+      // open space
+      const space = await getSpace(spaceId);
+      const tabs = await getTabsInSpace(spaceId);
+      await openSpace({ space, tabs, shouldOpenInNewWindow: true });
+    }
   }
-
-  if (!autoDiscardTabsAlarm?.name) {
-    await createAlarm('auto-discard-tabs', 5, true);
-  }
-})();
+});
 
 // When the new tab is selected, get the link in the title and load the page
 chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   // get tab info
   const tab = await chrome.tabs.get(tabId);
 
-  if (tab.url.startsWith(DiscardTabURLPrefix)) {
+  if (tab.url.startsWith(DISCARD_TAB_URL_PREFIX)) {
     // update tab with original url
     await chrome.tabs.update(tabId, {
       url: parseURL(tab.url),
@@ -538,7 +599,7 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
 chrome.tabs.onUpdated.addListener(async (tabId, info) => {
   if (info?.status === 'complete') {
     // if this is discard tab, do nothing
-    if (info?.url?.startsWith(DiscardTabURLPrefix)) return;
+    if (info?.url?.startsWith(DISCARD_TAB_URL_PREFIX)) return;
 
     // add/update tab
     await updateTabHandler(tabId);

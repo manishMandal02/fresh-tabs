@@ -1,10 +1,10 @@
-import { StorageKeys } from '@root/src/constants/app';
+import { StorageKey } from '@root/src/constants/app';
 import { ISpace } from '@root/src/pages/types/global.types';
 import { logger } from '@root/src/pages/utils/logger';
 
 type GetStorageParams = {
   type: 'local' | 'sync';
-  key: keyof typeof StorageKeys | `tabs-${string}` | `snoozed-${string}`;
+  key: StorageKey;
 };
 
 // sets chrome storage by key

@@ -20,6 +20,7 @@ const manifest = {
     'history',
     'search',
     'tabGroups',
+    'notifications',
   ],
   commands: {
     cmdE: {

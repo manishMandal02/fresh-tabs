@@ -1,4 +1,4 @@
-import { StorageKeys } from '@root/src/constants/app';
+import { StorageKey } from '@root/src/constants/app';
 import { IAppSettings, IPinnedTab, ISnoozedTab, ISpace, ITab } from '@root/src/pages/types/global.types';
 import { logger } from '@root/src/pages/utils/logger';
 
@@ -6,7 +6,7 @@ type StorageValue = ISpace | ISpace[] | ITab[] | ISnoozedTab[] | IAppSettings | 
 
 type SetStorageParams = {
   type: 'local' | 'sync';
-  key: keyof typeof StorageKeys | `tabs-${string}` | `snoozed-${string}`;
+  key: StorageKey;
   value: StorageValue;
 };
 

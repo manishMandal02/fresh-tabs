@@ -4,7 +4,9 @@ export const CommandPaletteContainerId = 'fresh-tabs-command-palette-container';
 
 export const FRESH_TABS_BOOKMARK_TITLE = '#Fresh Tabs ~ ⚠️ Do not delete this, managed by extension.';
 
-export const DiscardTabURLPrefix = 'data:text/html,';
+export const DISCARD_TAB_URL_PREFIX = 'data:text/html,';
+
+export const SNOOZED_TAB_GROUP_TITLE = '⏰ Snoozed';
 
 export enum ThemeColor {
   Green = '#34d399',
@@ -33,13 +35,7 @@ export enum CommandType {
 
 export type AlarmName = 'auto-save-to-bm' | 'auto-discard-tabs' | `deleteSpace-${string}` | `snoozedTab-${string}`;
 
-export const StorageKeys = {
-  SPACES: 'SPACES',
-  SETTINGS: 'SETTINGS',
-  PinnedTabs: 'PinnedTabs',
-  TABS: (spaceId: string) => `TABS-${spaceId}`,
-  SNOOZED_TABS: (spaceId: string) => `SNOOZED-${spaceId}`,
-};
+export type StorageKey = 'SPACES' | 'SETTINGS' | 'PINNED_TABS' | `TABS-${string}` | `SNOOZED-${string}`;
 
 export const DefaultAppSettings: IAppSettings = {
   includeBookmarksInSearch: false,

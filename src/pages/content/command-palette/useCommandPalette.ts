@@ -209,6 +209,9 @@ export const useCommandPalette = ({ activeSpace, modalRef }: UseCommandPalettePr
         handleCloseCommandPalette();
         break;
       }
+      case CommandType.SnoozeTab: {
+        await publishEvents({ event: 'SNOOZE_TAB', payload: { spaceId: activeSpace.id } });
+      }
     }
 
     setSearchQuery('');

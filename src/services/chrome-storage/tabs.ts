@@ -7,7 +7,7 @@ import { updateActiveTabInSpace } from './spaces';
 // get all tabs in space
 export const getTabsInSpace = async (spaceId: string): Promise<ITab[] | null> => {
   try {
-    const tabs = await getStorage<ITab[]>({ key: `tabs-${spaceId}`, type: 'local' });
+    const tabs = await getStorage<ITab[]>({ key: `TABS-${spaceId}`, type: 'local' });
 
     if (tabs?.length < 1) throw new Error('No tabs found for this space');
 
@@ -25,7 +25,7 @@ export const getTabsInSpace = async (spaceId: string): Promise<ITab[] | null> =>
 // set tabs for space
 export const setTabsForSpace = async (spaceId: string, tabs: ITab[]): Promise<boolean> => {
   try {
-    await setStorage({ type: 'local', key: `tabs-${spaceId}`, value: [...tabs.filter(t => !!t)] });
+    await setStorage({ type: 'local', key: `TABS-${spaceId}`, value: [...tabs.filter(t => !!t)] });
 
     return true;
   } catch (error) {
@@ -177,7 +177,7 @@ export const removeTabFromSpace = async (
 // save pinned tabs
 export const saveGlobalPinnedTabs = async (tabs: IPinnedTab[]): Promise<boolean> => {
   try {
-    await setStorage({ type: 'sync', key: 'PinnedTabs', value: tabs });
+    await setStorage({ type: 'sync', key: 'PINNED_TABS', value: tabs });
     return true;
   } catch (error) {
     logger.error({
@@ -192,7 +192,7 @@ export const saveGlobalPinnedTabs = async (tabs: IPinnedTab[]): Promise<boolean>
 // save pinned tabs
 export const getGlobalPinnedTabs = async (): Promise<IPinnedTab[]> => {
   try {
-    return await getStorage<IPinnedTab[]>({ type: 'sync', key: 'PinnedTabs' });
+    return await getStorage<IPinnedTab[]>({ type: 'sync', key: 'PINNED_TABS' });
   } catch (error) {
     logger.error({
       error,

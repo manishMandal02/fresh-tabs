@@ -1,10 +1,9 @@
-import { StorageKeys } from '@root/src/constants/app';
 import { getStorage, setStorage } from './helpers';
 import { IAppSettings } from '@root/src/pages/types/global.types';
 
 // get settings from chrome sync storage
 export const getAppSettings = async () => {
-  const settings = await getStorage<IAppSettings>({ type: 'sync', key: StorageKeys.SETTINGS });
+  const settings = await getStorage<IAppSettings>({ type: 'sync', key: 'SETTINGS' });
 
   if (!settings) return null;
 
@@ -13,4 +12,4 @@ export const getAppSettings = async () => {
 
 // get settings from chrome sync storage
 export const saveSettings = async (settings: IAppSettings) =>
-  await setStorage({ type: 'sync', key: StorageKeys.SETTINGS, value: settings });
+  await setStorage({ type: 'sync', key: 'SETTINGS', value: settings });
