@@ -8,8 +8,6 @@ export const publishEvents = async <T = boolean>(
   try {
     const res = await chrome.runtime.sendMessage(event);
 
-    console.log('🚀 ~publishEvents ~~ res:', res);
-
     return res;
   } catch (error) {
     // if errored because of the side-panel not opened then do nothing

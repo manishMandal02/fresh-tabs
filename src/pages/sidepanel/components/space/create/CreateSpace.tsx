@@ -116,15 +116,12 @@ const CreateSpace = () => {
   const handleShortcut = useCallback(ev => {
     const keyEv = ev as KeyboardEvent;
 
-    console.log('🚀 ~ handleShortcut ~ keyEv:', keyEv);
-
     if ((keyEv.ctrlKey || keyEv.shiftKey) && keyEv.key.toLowerCase() === 'a') {
       setIsModalOpen(true);
     }
   }, []);
 
   const handleCloseModal = () => {
-    console.log('🚀 ~ CreateSpace.tsx ~ handleCloseModal: ✅');
     setIsModalOpen(false);
     setNewSpaceModal({ show: false, tabs: [] });
   };

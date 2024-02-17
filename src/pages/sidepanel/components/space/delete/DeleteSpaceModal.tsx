@@ -23,16 +23,10 @@ const DeleteSpaceModal = () => {
   // get details of space to delete
   const deleteInit = useCallback(
     async (spaceId: string) => {
-      console.log('🚀 ~ deleteInit ~ spaceId:', spaceId);
-
       // get space from storage
       const spaceToDelete = await getSpace(deleteSpaceModal.spaceId);
 
-      console.log('🚀 ~ deleteInit ~ spaceToDelete:', spaceToDelete);
-
       const currentWindowId = await getCurrentWindowId();
-
-      console.log('🚀 ~ deleteInit ~ currentWindowId:', currentWindowId);
 
       const isSpaceActive = Number(spaceToDelete?.windowId) === currentWindowId;
 

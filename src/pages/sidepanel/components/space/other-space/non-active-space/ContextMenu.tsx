@@ -29,8 +29,6 @@ const CustomContextMenu = ({ children, space }: Props) => {
   const handleOpenSpace = async () => {
     const tabs = await getTabsInSpace(space.id);
 
-    console.log('🚀 ~ handleOpenSpace ~ tabs:', tabs);
-
     await openSpace({ space, tabs, shouldOpenInNewWindow: true });
   };
 

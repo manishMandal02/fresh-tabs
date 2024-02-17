@@ -1,4 +1,4 @@
-import { useEffect, ReactNode, memo, useRef, KeyboardEventHandler , MouseEventHandler } from 'react';
+import { useEffect, ReactNode, memo, useRef, KeyboardEventHandler, MouseEventHandler } from 'react';
 import { MdClose } from 'react-icons/md';
 import { motion } from 'framer-motion';
 
@@ -10,8 +10,6 @@ type Props = {
 };
 
 const SlideModal = ({ children, isOpen, onClose, title }: Props) => {
-  console.log('🚀 ~ SlideModal ~ onClose:', onClose);
-
   const modalRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -32,7 +30,6 @@ const SlideModal = ({ children, isOpen, onClose, title }: Props) => {
   };
 
   const handleKeyDown: KeyboardEventHandler<HTMLDialogElement> = ev => {
-    console.log('🚀 ~ SlideModal ~ handleKeyDown:', ev.key);
     ev.stopPropagation();
     if (ev.key.toLowerCase() === 'escape') {
       handleClose();

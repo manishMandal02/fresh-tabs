@@ -43,7 +43,7 @@ import { retryAtIntervals } from '../utils/retryAtIntervals';
 import { asyncMessageHandler } from '../utils/asyncMessageHandler';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
 import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/alarm';
-import { addSnoozedTab, getSnoozedTab, removeSnoozedTab } from '@root/src/services/chrome-storage/snooze-tabs';
+import { addSnoozedTab, getTabToUnSnooze, removeSnoozedTab } from '@root/src/services/chrome-storage/snooze-tabs';
 
 reloadOnUpdate('pages/background');
 
@@ -193,11 +193,12 @@ chrome.runtime.onMessage.addListener(
         return await discardTabs();
       }
       case 'SNOOZE_TAB': {
-        const { snoozedUntil } = payload;
+        const { snoozedUntil, activeSpace } = payload;
 
         console.log('🚀 ~ snoozedUntil:', snoozedUntil);
 
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
         // add snooze tab to storage
         await addSnoozedTab({
           id: generateId(),
@@ -207,7 +208,9 @@ chrome.runtime.onMessage.addListener(
           snoozeUntil: 2,
         });
         // create a alarm trigger
+        await createAlarm(`snoozedTab-${activeSpace.id}`, 120);
         // close the tab
+        await chrome.tabs.remove(tab.id);
         return true;
       }
     }
@@ -442,12 +445,18 @@ chrome.alarms.onAlarm.addListener(async alarm => {
   } else if (alarm.name.startsWith('snoozedTab-')) {
     //  un-snooze tab
     // extract snoozed id from name
-    const snoozedTabId = alarm.name.split('-')[1];
+    // const spaceId = alarm.name.split('-')[1];
 
     const windowId = await getCurrentWindowId();
 
     // get the snoozed tab info
-    const { url } = await getSnoozedTab(snoozedTabId);
+    const { url } = await getTabToUnSnooze();
+    // TODO - check if snoozed tab's space is active
+
+    // if yes open snoozed tab in group
+
+    // if not, add snoozed tab to space and show notification (open tab, open space)
+
     // create un-snoozed tab
     const unSnoozedTab = await chrome.tabs.create({ url, windowId, active: false });
     // create a group for snoozed tab
@@ -457,7 +466,7 @@ chrome.alarms.onAlarm.addListener(async alarm => {
     await chrome.tabGroups.update(snoozedGroup, { title: '⏰ Snoozed', color: 'orange', collapsed: false });
 
     // remove the tab from the snoozed storage
-    await removeSnoozedTab(snoozedTabId);
+    await removeSnoozedTab(url);
     return;
   }
 

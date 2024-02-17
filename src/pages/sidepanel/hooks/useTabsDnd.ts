@@ -378,7 +378,7 @@ const removeTabsFromActiveSpace = async ({
     tabsToRemove.push(tabToRemove);
   }
   // update tabs
-  const activeSpaceUpdatedTabs = activeSpace.tabs.filter(tab => !tabsToRemove.find(t => t.id !== tab.id));
+  const activeSpaceUpdatedTabs = activeSpace.tabs.filter(tab => tabsToRemove.find(t => t.id !== tab.id));
 
   const newActiveTabIndex = activeSpaceUpdatedTabs.findIndex(t => t.id === activeTab.id);
 
