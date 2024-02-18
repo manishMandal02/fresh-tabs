@@ -2,7 +2,7 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import { ITab } from '@root/src/pages/types/global.types';
-import { getFaviconURL } from '@root/src/pages/utils';
+import { getFaviconURL } from '@root/src/pages/utils/url';
 import { copyToClipboard } from '@root/src/pages/utils/copy-to-clipboard';
 import { createTab, goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { MdClose, MdContentCopy, MdOpenInNew, MdOutlineAdd } from 'react-icons/md';

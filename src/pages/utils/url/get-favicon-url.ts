@@ -1,4 +1,4 @@
-import { parseURL } from '@root/src/pages/utils/parseURL';
+import { parseURL } from '@root/src/pages/utils/url/parseURL';
 const createChromeFaviconURL = (url: URL) => `${chrome.runtime.getURL('/_favicon/')}?pageUrl=${url.origin}/&size=32`;
 
 const googleFaviconURL = (url: URL) => `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=${32}`;

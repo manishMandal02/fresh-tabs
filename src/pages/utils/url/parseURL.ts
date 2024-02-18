@@ -1,6 +1,6 @@
 import { DISCARD_TAB_URL_PREFIX } from '@root/src/constants/app';
 
-import { logger } from './logger';
+import { logger } from '../logger';
 
 // get tab url from html in url for discarded tabs
 export const getUrlFromHTML = (htmlString: string) => {

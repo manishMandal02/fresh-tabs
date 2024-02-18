@@ -46,7 +46,7 @@ export interface ISnoozedTab {
   url: string;
   title: string;
   faviconURL: string;
-  snoozeUntil: number;
+  snoozedUntil: number;
 }
 
 type MessageEventsSidePanel = 'UPDATE_SPACE_ACTIVE_TAB' | 'UPDATE_TABS' | 'REMOVE_SPACE' | 'ADD_SPACE';
@@ -86,7 +86,7 @@ interface IEventPayloadContentScript {
   searchQuery?: string;
   activeSpace?: ISpace;
   shouldOpenInNewTab?: boolean;
-  snoozedUntil?: '30min' | '1hr' | '2hr' | '4hr' | '8hr' | '1day' | '2day' | '3d' | '1week' | '1month';
+  snoozedUntil?: number;
 }
 
 export interface IMessageEventContentScript {

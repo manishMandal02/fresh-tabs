@@ -20,10 +20,11 @@ import {
   updateTab,
   updateTabIndex,
 } from '@root/src/services/chrome-storage/tabs';
-import { getFaviconURL, wait } from '../utils';
+import { getFaviconURL, parseURL } from '../utils/url';
+
 import { logger } from '../utils/logger';
 import { publishEvents, publishEventsTab } from '../utils/publish-events';
-import { generateId } from '../utils/generateId';
+import { generateId, wait } from '../utils';
 import {
   checkParentBMFolder,
   syncSpacesFromBookmarks,
@@ -38,7 +39,6 @@ import {
   SNOOZED_TAB_GROUP_TITLE,
 } from '@root/src/constants/app';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
-import { parseURL } from '../utils/parseURL';
 import { getCurrentTab, goToTab, newTabGroup, openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { retryAtIntervals } from '../utils/retryAtIntervals';
 import { asyncMessageHandler } from '../utils/asyncMessageHandler';
@@ -46,6 +46,7 @@ import { discardTabs } from '@root/src/services/chrome-discard/discard';
 import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/alarm';
 import { addSnoozedTab, getTabToUnSnooze, removeSnoozedTab } from '@root/src/services/chrome-storage/snooze-tabs';
 import { showUnSnoozedNotification } from '@root/src/services/chrome-notification/notification';
+import { naturalLanguageToDate } from '../utils/date-time/naturalLanguageToDate';
 
 reloadOnUpdate('pages/background');
 
@@ -59,11 +60,11 @@ logger.info('🏁 background loaded');
 
 // IIFE - checks for alarms, its not guaranteed to persist
 (async () => {
+  naturalLanguageToDate('Tomorrow at same time');
+
   const autoSaveToBMAlarm = await getAlarm('auto-save-to-bm');
 
   const autoDiscardTabsAlarm = await getAlarm('auto-discard-tabs');
-
-  // TODO - testing
 
   // create alarms if not found
   if (!autoSaveToBMAlarm?.name) {
@@ -215,27 +216,27 @@ chrome.runtime.onMessage.addListener(
       case 'SNOOZE_TAB': {
         const { snoozedUntil, spaceId } = payload;
 
-        console.log('🚀 ~ snoozedUntil:', snoozedUntil);
-
-        // TODO - try to create dynamic commands for snooze-tab sub command
-        // try:: so that when user types time or day it'll create command matching that
-        // if not:: possible then then create few pre built time commands
-
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-        console.log('🚀 ~ SNOOZE_TAB ~ handler : tab:', tab);
+        const [{ url, title, id, favIconUrl: faviconURL }] = await chrome.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
 
         // add snooze tab to storage
         await addSnoozedTab(spaceId, {
-          url: tab.url,
-          title: tab.title,
-          faviconURL: tab.favIconUrl,
-          snoozeUntil: 1,
+          snoozedUntil,
+          url,
+          title,
+          faviconURL,
         });
+
+        const triggerTimeInMinutes = Math.ceil((snoozedUntil - Date.now()) / 1000 / 60);
+
+        console.log('🚀 ~ triggerTimeInMinutes:', triggerTimeInMinutes);
+
         // create a alarm trigger
-        await createAlarm(`snoozedTab-${spaceId}`, 1);
+        await createAlarm(`snoozedTab-${spaceId}`, triggerTimeInMinutes);
         // close the tab
-        await chrome.tabs.remove(tab.id);
+        await chrome.tabs.remove(id);
         return true;
       }
     }

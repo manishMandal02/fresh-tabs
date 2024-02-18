@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback , useMemo } from 'react';
 import { ICommand, ISpace } from '../../types/global.types';
 import { publishEvents } from '../../utils/publish-events';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
@@ -6,7 +6,10 @@ import { CommandPaletteContainerId, CommandType } from '@root/src/constants/app'
 import { useKeyPressed } from '../../sidepanel/hooks/useKeyPressed';
 import { MdNewLabel } from 'react-icons/md';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
-import { getFaviconURL } from '../../utils';
+import { getFaviconURL } from '../../utils/url';
+import { naturalLanguageToDate } from '../../utils/date-time/naturalLanguageToDate';
+import { getCommandIcon } from './CommandPalette';
+import { prettifyDate } from '../../utils/date-time/prettifyDate';
 
 type UseCommandPaletteProps = {
   activeSpace: ISpace;
@@ -32,6 +35,12 @@ export const useCommandPalette = ({ activeSpace, modalRef }: UseCommandPalettePr
 
   // current focused command index
   const [focusedCommandIndex, setFocusedCommandIndex] = useState(1);
+
+  // default suggested time for snooze tab command
+  const defaultSuggestedSnoozeTimeLabels: string[] = useMemo(
+    () => ['After 2 hours', 'Tomorrow at same time', 'Tomorrow at 4pm', 'Tuesday 2pm', 'After 1 week'],
+    [],
+  );
 
   // close command palette
   const handleCloseCommandPalette = useCallback(() => {
@@ -210,7 +219,26 @@ export const useCommandPalette = ({ activeSpace, modalRef }: UseCommandPalettePr
         break;
       }
       case CommandType.SnoozeTab: {
-        await publishEvents({ event: 'SNOOZE_TAB', payload: { spaceId: activeSpace.id } });
+        if (!subCommand && !focusedCommand.metadata) {
+          const snoozeTabSubCommands = defaultSuggestedSnoozeTimeLabels.map<ICommand>((label, idx) => ({
+            index: idx + 1,
+            label: label + ` <span style='opacity: 0.5;'>${prettifyDate(naturalLanguageToDate(label))}</span>`,
+            type: CommandType.SnoozeTab,
+            metadata: naturalLanguageToDate(label),
+            icon: getCommandIcon(CommandType.SnoozeTab).Icon,
+          }));
+
+          setSubCommand(CommandType.SnoozeTab);
+          setSuggestedCommandsForSubCommand(snoozeTabSubCommands);
+          setSuggestedCommands(snoozeTabSubCommands);
+          setSearchQueryPlaceholder('Tomorrow @ 2pm...');
+          setFocusedCommandIndex(1);
+        } else {
+          await publishEvents({
+            event: 'SNOOZE_TAB',
+            payload: { spaceId: activeSpace.id, snoozedUntil: focusedCommand.metadata as number },
+          });
+        }
       }
     }
 
@@ -223,6 +251,7 @@ export const useCommandPalette = ({ activeSpace, modalRef }: UseCommandPalettePr
     handleCloseCommandPalette,
     searchQuery,
     subCommand,
+    defaultSuggestedSnoozeTimeLabels,
   ]);
 
   return {

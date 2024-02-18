@@ -1,4 +1,4 @@
-import { getFaviconURL } from '@root/src/pages/utils';
+import { getFaviconURL } from '@root/src/pages/utils/url';
 import { motion } from 'framer-motion';
 
 type Props = {

@@ -1,4 +1,4 @@
-import { MdSearch, MdOutlineKeyboardReturn, MdMoveDown } from 'react-icons/md';
+import { MdSearch, MdOutlineKeyboardReturn, MdMoveDown, MdOutlineSnooze } from 'react-icons/md';
 import { FaFolder, FaSearch, FaLongArrowAltUp } from 'react-icons/fa';
 
 import { BsFillMoonStarsFill } from 'react-icons/bs';
@@ -7,8 +7,7 @@ import { FaArrowRightFromBracket, FaArrowRight, FaLink } from 'react-icons/fa6';
 import { motion } from 'framer-motion';
 import { useState, useEffect, useRef, MouseEventHandler, ReactEventHandler, useCallback } from 'react';
 
-import { getFaviconURL } from '../../utils';
-import { isValidURL } from '../../utils/isValidURL';
+import { isValidURL } from '../../utils/url/isValidURL';
 import { ICommand, ISpace, ITab } from '../../types/global.types';
 import { useCommandPalette } from './useCommandPalette';
 import { debounce } from '../../utils/debounce';
@@ -18,13 +17,16 @@ import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import Tooltip from '../../sidepanel/components/elements/tooltip';
 import { limitCharLength } from '../../utils/limitCharLength';
 import { CommandType } from '@root/src/constants/app';
+import { getFaviconURL } from '../../utils/url';
+import { naturalLanguageToDate } from '../../utils/date-time/naturalLanguageToDate';
+import { prettifyDate } from '../../utils/date-time/prettifyDate';
 
 const staticCommands: ICommand[] = [
   { index: 1, type: CommandType.SwitchTab, label: 'Switch Tab', icon: FaArrowRight },
   { index: 2, type: CommandType.SwitchSpace, label: 'Switch Space', icon: FaArrowRightFromBracket },
   { index: 3, type: CommandType.NewSpace, label: 'New Space', icon: FaFolder },
   { index: 4, type: CommandType.AddToSpace, label: 'Move Tab', icon: MdMoveDown },
-  { index: 5, type: CommandType.SnoozeTab, label: 'Snooze Tab', icon: MdMoveDown },
+  { index: 5, type: CommandType.SnoozeTab, label: 'Snooze Tab', icon: MdOutlineSnooze },
   { index: 6, type: CommandType.DiscardTabs, label: 'Discard Tabs', icon: BsFillMoonStarsFill },
 ];
 
@@ -32,7 +34,7 @@ const isStaticCommands = (label: string) => {
   return staticCommands.some(cmd => cmd.label === label);
 };
 
-const getCommandIcon = (type: CommandType) => {
+export const getCommandIcon = (type: CommandType) => {
   // if (type === CommandType.RecentSite) {
   //   return { label: 'Open', Icon: MdLink };
   // }
@@ -238,11 +240,28 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
     console.log('🚀 ~ useEffect sub command search ~ searchQuery:', searchQuery);
     if (subCommand && searchQuery && suggestedCommandsForSubCommand.length > 0) {
       // filter the suggested sub commands based on search query, also update the index
-      const filteredSubCommands = suggestedCommandsForSubCommand
-        .filter(c => c.label.toLowerCase().includes(searchQuery.toLowerCase()))
-        .map((cmd, idx) => ({ ...cmd, index: idx + 1 }));
-      setSuggestedCommands(filteredSubCommands);
-      setFocusedCommandIndex(1);
+      if (subCommand === CommandType.SnoozeTab) {
+        const parsedDateFromSearch = naturalLanguageToDate(searchQuery);
+        if (parsedDateFromSearch) {
+          const dynamicTimeCommand: ICommand = {
+            index: 1,
+            label: prettifyDate(parsedDateFromSearch),
+            type: CommandType.SnoozeTab,
+            icon: getCommandIcon(CommandType.SnoozeTab).Icon,
+            metadata: parsedDateFromSearch,
+          };
+          setSuggestedCommands([dynamicTimeCommand]);
+        } else {
+          setSuggestedCommands(suggestedCommandsForSubCommand);
+        }
+        setFocusedCommandIndex(1);
+      } else {
+        const filteredSubCommands = suggestedCommandsForSubCommand
+          .filter(c => c.label.toLowerCase().includes(searchQuery.toLowerCase()))
+          .map((cmd, idx) => ({ ...cmd, index: idx + 1 }));
+        setSuggestedCommands(filteredSubCommands);
+        setFocusedCommandIndex(1);
+      }
     } else if (subCommand && !searchQuery && suggestedCommandsForSubCommand.length > 0) {
       setSuggestedCommands(suggestedCommandsForSubCommand);
       setFocusedCommandIndex(1);
@@ -289,6 +308,8 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
       label = 'Move Tab';
     } else if (cmdType === CommandType.SwitchTab) {
       label = 'Switch Tab';
+    } else if (cmdType === CommandType.SnoozeTab) {
+      label = 'Snooze Tab';
     }
 
     return (
