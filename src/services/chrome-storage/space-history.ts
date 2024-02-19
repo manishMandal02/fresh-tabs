@@ -24,7 +24,7 @@ export const getSpaceHistory = async (spaceId: string, shouldGetFullHistory = fa
 export const setSpaceHistory = async (
   spaceId: string,
   spaceHistoryToday: ISiteVisit[],
-  shouldSetFullHistory = true,
+  shouldSetFullHistory = false,
 ) => {
   const key = shouldSetFullHistory ? StorageKey.SPACE_HISTORY(spaceId) : StorageKey.SPACE_HISTORY_TODAY(spaceId);
 

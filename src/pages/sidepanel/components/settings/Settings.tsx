@@ -79,9 +79,9 @@ const Settings = () => {
       await deleteAlarm(AlarmName.autoSaveBM);
       // create new trigger ( 1d = 1440m)
       if (settingsUpdateData.autoSaveToBookmark === 'daily') {
-        await createAlarm(AlarmName.autoSaveBM, 1440);
+        await createAlarm({ name: AlarmName.autoSaveBM, triggerAfter: 1440 });
       } else if (settingsUpdateData.autoSaveToBookmark == 'weekly') {
-        await createAlarm(AlarmName.autoSaveBM, 1440 * 7);
+        await createAlarm({ name: AlarmName.autoSaveBM, triggerAfter: 1440 * 7 });
       }
     }
 

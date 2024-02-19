@@ -50,6 +50,7 @@ import { createAlarm, deleteAlarm, getAlarm } from '@root/src/services/chrome-al
 import { addSnoozedTab, getTabToUnSnooze, removeSnoozedTab } from '@root/src/services/chrome-storage/snooze-tabs';
 import { showUnSnoozedNotification } from '@root/src/services/chrome-notification/notification';
 import { getSpaceHistory, setSpaceHistory } from '@root/src/services/chrome-storage/space-history';
+import { getTimeAgo } from '../utils/date-time/time-ago';
 
 reloadOnUpdate('pages/background');
 
@@ -99,6 +100,8 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 // TODO - don't switch space in same window if meeting is in place
 
 // TODO - remove the concept of unsaved spaces, make the necessary changes
+
+// TODO - store favicon url in ITab
 // all spaces will be saved by default
 
 //* handle events from content script (command palette)
@@ -106,7 +109,7 @@ chrome.runtime.onMessage.addListener(
   asyncMessageHandler<IMessageEventContentScript, boolean | ICommand[]>(async request => {
     const { event, payload } = request;
 
-    logger.info(`Event from content script: ${event}`);
+    logger.info(`Event received at background service: ${event}`);
 
     switch (event) {
       case 'SWITCH_TAB': {
@@ -235,6 +238,7 @@ chrome.runtime.onMessage.addListener(
           url,
           title,
           faviconUrl,
+          snoozedAt: Date.now(),
         });
 
         const triggerTimeInMinutes = Math.ceil((snoozedUntil - Date.now()) / 1000 / 60);
@@ -243,6 +247,9 @@ chrome.runtime.onMessage.addListener(
         await createAlarm({ name: AlarmName.snoozedTab(spaceId), triggerAfter: triggerTimeInMinutes });
         // close the tab
         await chrome.tabs.remove(id);
+        return true;
+      }
+      default: {
         return true;
       }
     }
@@ -334,6 +341,22 @@ const removeTabHandler = async (tabId: number, windowId: number) => {
       spaceId: space?.id,
     },
   });
+};
+
+const recordSiteVisit = async (windowId: number, tabId: number) => {
+  // get the tab's previous url details
+  const space = await getSpaceByWindow(windowId);
+  const tabsInSpace = await getTabsInSpace(space.id);
+
+  const updatedTab = tabsInSpace.find(t => t.id === tabId);
+
+  if (!updatedTab?.url) return;
+  const { url, title } = updatedTab;
+  const spaceHistoryToday = await getSpaceHistory(space.id);
+  const newSiteVisitRecord: ISiteVisit = { url, title, faviconUrl: getFaviconURL(url), timestamp: Date.now() };
+  await setSpaceHistory(space.id, [...(spaceHistoryToday || []), newSiteVisitRecord]);
+
+  console.log('👍 Recorded site visit');
 };
 
 // * chrome event listeners
@@ -473,7 +496,7 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   }
 });
 
-// handle chrome alars triggers
+// handle chrome alarm triggers
 chrome.alarms.onAlarm.addListener(async alarm => {
   // handle delete unsaved space
   if (alarm.name.startsWith(ALARM_NAME_PREFiX.deleteSpace)) {
@@ -487,9 +510,7 @@ chrome.alarms.onAlarm.addListener(async alarm => {
     const spaceId = alarm.name.split('-')[1];
 
     // get the snoozed tab info
-    const { url, title, faviconUrl } = await getTabToUnSnooze(spaceId);
-
-    console.log('🚀 ~ onAlarm getTabToUnSnooze:473 ~ title:', title);
+    const { url, title, faviconUrl, snoozedAt } = await getTabToUnSnooze(spaceId);
 
     // check if snoozed tab's space is active
     // also check for multi space/window scenario
@@ -513,12 +534,13 @@ chrome.alarms.onAlarm.addListener(async alarm => {
       // remove the tab from the snoozed storage
       await removeSnoozedTab(spaceId, url);
 
+      // TODO - better notification message
       // show notification with show tab button
-      showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed 1 min ago`, title, faviconUrl, true);
+      showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed ${getTimeAgo(snoozedAt)}`, title, faviconUrl, true);
       return;
     } else {
       // if not, show notification (open tab, open space)
-      showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed 1 min ago`, title, faviconUrl, false);
+      showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed ${getTimeAgo(snoozedAt)}`, title, faviconUrl, false);
     }
   }
 
@@ -665,18 +687,7 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo?.url) {
     // record site visit for the previous url
-
-    // get the tab's previous url details
-    const space = await getSpaceByWindow(tab.windowId);
-    const tabsInSpace = await getTabsInSpace(space.id);
-
-    const updatedTab = tabsInSpace.find(t => t.id === tabId);
-    if (updatedTab?.url) {
-      const { url, title } = updatedTab;
-      const spaceHistoryToday = await getSpaceHistory(space.id);
-      const newSiteVisitRecord: ISiteVisit = { url, title, faviconUrl: getFaviconURL(url), timestamp: Date.now() };
-      await setSpaceHistory(space.id, [...spaceHistoryToday, newSiteVisitRecord]);
-    }
+    recordSiteVisit(tab.windowId, tab.id);
   }
 
   if (changeInfo?.status === 'complete') {
@@ -747,8 +758,10 @@ chrome.tabs.onRemoved.addListener(async (tabId, info) => {
   // do nothing if tab removed because window was closed
   if (info.isWindowClosing) return;
 
-  // TODO - track site visit
-  // get tab info from storage and record to space history visit
+  // record site visit for the previous url
+  recordSiteVisit(info.windowId, tabId);
+
+  console.log('🚀 ~ chrome.tabs.onRemoved.addListener:764 ~ next line ⏳ recordSiteVisit:', recordSiteVisit);
 
   await removeTabHandler(tabId, info.windowId);
 });

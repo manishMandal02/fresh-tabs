@@ -54,6 +54,7 @@ export interface ISnoozedTab {
   title: string;
   faviconUrl: string;
   snoozedUntil: number;
+  snoozedAt: number;
 }
 
 type MessageEventsSidePanel = 'UPDATE_SPACE_ACTIVE_TAB' | 'UPDATE_TABS' | 'REMOVE_SPACE' | 'ADD_SPACE';
