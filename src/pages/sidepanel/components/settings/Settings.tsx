@@ -9,7 +9,7 @@ import { SlideModal } from '../elements/modal';
 import Switch from '../elements/switch/Switch';
 import Spinner from '../elements/spinner';
 import { saveSettings } from '@root/src/services/chrome-storage/settings';
-import { createAlarm, deleteAlarm } from '@root/src/services/chrome-alarms/alarm';
+import { createAlarm, deleteAlarm } from '@root/src/services/chrome-alarms/helpers';
 
 const autoSaveToBookmark: RadioOptions[] = [
   { value: 'off', label: 'Off' },

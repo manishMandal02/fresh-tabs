@@ -7,7 +7,7 @@ import { createPortal } from 'react-dom';
 import { useEffect, useCallback, useState } from 'react';
 import { ISpace } from '@root/src/pages/types/global.types';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
-import { deleteAlarm, getAlarm } from '@root/src/services/chrome-alarms/alarm';
+import { deleteAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers';
 import { AlarmName } from '@root/src/constants/app';
 
 const DeleteSpaceModal = () => {

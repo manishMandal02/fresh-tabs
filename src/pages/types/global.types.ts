@@ -49,6 +49,16 @@ export interface ISiteVisit {
   timestamp: number;
 }
 
+// time spent in a space in a day
+export interface IDailySpaceTimeChunks {
+  spaceId: string | null;
+  time: number;
+}
+export interface IDailySpaceTime {
+  date: Date;
+  minutes: number;
+}
+
 export interface ISnoozedTab {
   url: string;
   title: string;

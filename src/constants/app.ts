@@ -41,8 +41,7 @@ export const ALARM_NAME_PREFiX = {
 export const AlarmName = {
   autoSaveBM: 'auto-save-to-bm',
   autoDiscardTabs: 'auto-discard-tabs',
-  //  merge daily space history data to the main data storage
-  mergeSpaceHistory: 'merge-space-history',
+  dailyMidnightTrigger: 'daily-midnight-trigger',
   deleteSpace: (spaceId: string): `${typeof ALARM_NAME_PREFiX.deleteSpace}-${string}` =>
     `${ALARM_NAME_PREFiX.deleteSpace}-${spaceId}`,
   snoozedTab: (spaceId: string): `${typeof ALARM_NAME_PREFiX.snoozedTab}-${string}` =>
@@ -53,9 +52,11 @@ export const StorageKey = {
   SPACES: 'SPACES',
   SETTINGS: 'SETTINGS',
   PINNED_TABS: 'PINNED_TABS',
+  DAILY_SPACE_TIME_CHUNKS: 'DAILY_SPACE_TIME_CHUNKS',
   TABS: (spaceId: string): `TABS-${string}` => `TABS-${spaceId}`,
   SNOOZED: (spaceId: string): `SNOOZED-${string}` => `SNOOZED-${spaceId}`,
-  SPACE_HISTORY: (spaceId: string): `SPACE_HISTORY-${string}` => `SPACE_HISTORY-${spaceId}`,
+  DAILY_SPACE_TIME_ALL: (spaceId: string): `DAILY_SPACE_TIME_ALL-${string}` => `DAILY_SPACE_TIME_ALL-${spaceId}`,
+  SPACE_HISTORY_ALL: (spaceId: string): `SPACE_HISTORY_ALL-${string}` => `SPACE_HISTORY_ALL-${spaceId}`,
   SPACE_HISTORY_TODAY: (spaceId: string): `SPACE_HISTORY_TODAY-${string}` => `SPACE_HISTORY_TODAY-${spaceId}`,
 } as const;
 

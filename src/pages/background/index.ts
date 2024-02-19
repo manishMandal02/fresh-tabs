@@ -1,5 +1,5 @@
 import { getMostVisitedSites, getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
-import { ICommand, IMessageEventContentScript, ISiteVisit, ISpace, ITab } from './../types/global.types';
+import { ICommand, IDailySpaceTimeChunks, IMessageEventContentScript, ISiteVisit, ITab } from './../types/global.types';
 import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
 import {
@@ -8,7 +8,6 @@ import {
   createSampleSpaces,
   createUnsavedSpace,
   deleteSpace,
-  getAllSpaces,
   getSpace,
   getSpaceByWindow,
   updateActiveTabInSpace,
@@ -42,15 +41,17 @@ import {
   ALARM_NAME_PREFiX,
 } from '@root/src/constants/app';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
-import { getCurrentTab, goToTab, newTabGroup, openSpace } from '@root/src/services/chrome-tabs/tabs';
+import { getCurrentTab, goToTab, openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { retryAtIntervals } from '../utils/retryAtIntervals';
 import { asyncMessageHandler } from '../utils/asyncMessageHandler';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
-import { createAlarm, deleteAlarm, getAlarm } from '@root/src/services/chrome-alarms/alarm';
-import { addSnoozedTab, getTabToUnSnooze, removeSnoozedTab } from '@root/src/services/chrome-storage/snooze-tabs';
-import { showUnSnoozedNotification } from '@root/src/services/chrome-notification/notification';
+import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers';
+import { addSnoozedTab, getTabToUnSnooze } from '@root/src/services/chrome-storage/snooze-tabs';
 import { getSpaceHistory, setSpaceHistory } from '@root/src/services/chrome-storage/space-history';
-import { getTimeAgo } from '../utils/date-time/time-ago';
+import { getDailySpaceTime, setDailySpaceTime } from '@root/src/services/chrome-storage/space-analytics';
+import { handleSnoozedTabAlarm } from './handler/alarm/snoozed-tab';
+import { handleMergeSpaceHistoryAlarm } from './handler/alarm/mergeSpaceHistory';
+import { handleMergeDailySpaceTimeChunksAlarm } from './handler/alarm/merrgeDailySpaceTimeChunks';
 
 reloadOnUpdate('pages/background');
 
@@ -68,7 +69,7 @@ logger.info('🏁 background loaded');
 
   const autoDiscardTabsAlarm = await getAlarm(AlarmName.autoDiscardTabs);
 
-  const mergeSpaceHistoryAlarm = await getAlarm(AlarmName.mergeSpaceHistory);
+  const midnightAlarm = await getAlarm(AlarmName.dailyMidnightTrigger);
 
   // create alarms if not found
   if (!autoSaveToBMAlarm?.name) {
@@ -78,9 +79,9 @@ logger.info('🏁 background loaded');
   if (!autoDiscardTabsAlarm?.name) {
     await createAlarm({ name: AlarmName.autoDiscardTabs, triggerAfter: 5, isRecurring: true });
   }
-  if (mergeSpaceHistoryAlarm?.name) {
+  if (midnightAlarm?.name) {
     await createAlarm({
-      name: AlarmName.mergeSpaceHistory,
+      name: AlarmName.dailyMidnightTrigger,
       triggerAfter: 1440,
       isRecurring: true,
       shouldTriggerAtMidnight: true,
@@ -100,11 +101,140 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 // TODO - don't switch space in same window if meeting is in place
 
 // TODO - remove the concept of unsaved spaces, make the necessary changes
-
-// TODO - store favicon url in ITab
 // all spaces will be saved by default
 
-//* handle events from content script (command palette)
+// TODO - store favicon url in ITab
+
+// TODO - track num of times user switch spaces
+
+// helpers for chrome event handlers
+const createUnsavedSpacesOnInstall = async () => {
+  try {
+    const windows = await chrome.windows.getAll();
+
+    if (windows?.length < 1) throw new Error('No open windows found');
+
+    for (const window of windows) {
+      // check if widows associated with any saved spaces from bookmarks to not create a duplicate space
+      if (await getSpaceByWindow(window.id)) continue;
+
+      // get all tabs in the window
+      const tabsInWindow = await chrome.tabs.query({ windowId: window.id });
+
+      // check if the tabs in windows are associated with saved spaces to not create a duplicate space
+      if (await checkNewWindowTabs(window.id, [...tabsInWindow.map(t => t.url)])) continue;
+
+      if (tabsInWindow?.length < 1) throw new Error('No tabs found in window');
+
+      const tabs: ITab[] = tabsInWindow.map(tab => ({
+        id: tab.id,
+        title: tab.title,
+        url: parseURL(tab.url),
+      }));
+
+      // active tab for window
+      const activeIndex = tabsInWindow.find(tab => tab.active).index || 0;
+
+      // create space
+      await createUnsavedSpace(window.id, tabs, activeIndex);
+    }
+
+    // success
+    return true;
+  } catch (error) {
+    logger.error({
+      error: new Error('Failed to create unsaved spaces'),
+      msg: 'Failed to initialize app',
+      fileTrace: 'src/pages/background/index.ts:59 ~ createUnsavedSpacesOnInstall() ~ catch block',
+    });
+    return false;
+  }
+};
+
+const updateTabHandler = async (tabId: number) => {
+  // get tab details
+  const tab = await chrome.tabs.get(tabId);
+
+  if (tab?.url.startsWith(DISCARD_TAB_URL_PREFIX)) return;
+
+  // get space by windowId
+  const space = await getSpaceByWindow(tab.windowId);
+
+  if (!space?.id) return;
+
+  //  create new  or update tab
+  await updateTab(space?.id, { id: tab.id, url: tab.url, title: tab.title }, tab.index);
+
+  // send send to side panel
+  await publishEvents({
+    id: generateId(),
+    event: 'UPDATE_TABS',
+    payload: {
+      spaceId: space.id,
+    },
+  });
+};
+
+const removeTabHandler = async (tabId: number, windowId: number) => {
+  // get space by windowId
+  const space = await getSpaceByWindow(windowId);
+
+  if (!space?.id) return;
+  // remove tab
+  await removeTabFromSpace(space, tabId);
+
+  // send send to side panel
+  await publishEvents({
+    id: generateId(),
+    event: 'UPDATE_TABS',
+    payload: {
+      spaceId: space?.id,
+    },
+  });
+};
+
+// record a site visit if closed
+const recordSiteVisit = async (windowId: number, tabId: number) => {
+  // get the tab's previous url details
+  const space = await getSpaceByWindow(windowId);
+  const tabsInSpace = await getTabsInSpace(space.id);
+
+  const updatedTab = tabsInSpace.find(t => t.id === tabId);
+
+  if (!updatedTab?.url) return;
+  const { url, title } = updatedTab;
+  const spaceHistoryToday = await getSpaceHistory(space.id);
+  const newSiteVisitRecord: ISiteVisit = { url, title, faviconUrl: getFaviconURL(url), timestamp: Date.now() };
+  await setSpaceHistory(space.id, [...(spaceHistoryToday || []), newSiteVisitRecord]);
+
+  logger.info('👍 Recorded site visit.');
+};
+
+// record a daily time spent in spaces in chunks
+const recordDailySpaceTime = async (windowId: number) => {
+  const dailySpaceTimeChunks: IDailySpaceTimeChunks = {
+    spaceId: null,
+    time: Date.now(),
+  };
+
+  if (windowId > 0) {
+    // chrome window/space focused
+    // get space
+    const space = await getSpaceByWindow(windowId);
+    dailySpaceTimeChunks.spaceId = space.id;
+  }
+
+  // focused outside chrome window (space=null)
+
+  const dailySpaceTimeChunksToday = await getDailySpaceTime<IDailySpaceTimeChunks[]>(null);
+
+  await setDailySpaceTime(null, [...(dailySpaceTimeChunksToday || []), dailySpaceTimeChunks]);
+  logger.info('👍 Recorded daily space time.');
+};
+
+// * chrome event listeners
+
+// handle events from content script (command palette)
 chrome.runtime.onMessage.addListener(
   asyncMessageHandler<IMessageEventContentScript, boolean | ICommand[]>(async request => {
     const { event, payload } = request;
@@ -257,110 +387,6 @@ chrome.runtime.onMessage.addListener(
   }),
 );
 
-// helpers for chrome event handlers
-const createUnsavedSpacesOnInstall = async () => {
-  try {
-    const windows = await chrome.windows.getAll();
-
-    if (windows?.length < 1) throw new Error('No open windows found');
-
-    for (const window of windows) {
-      // check if widows associated with any saved spaces from bookmarks to not create a duplicate space
-      if (await getSpaceByWindow(window.id)) continue;
-
-      // get all tabs in the window
-      const tabsInWindow = await chrome.tabs.query({ windowId: window.id });
-
-      // check if the tabs in windows are associated with saved spaces to not create a duplicate space
-      if (await checkNewWindowTabs(window.id, [...tabsInWindow.map(t => t.url)])) continue;
-
-      if (tabsInWindow?.length < 1) throw new Error('No tabs found in window');
-
-      const tabs: ITab[] = tabsInWindow.map(tab => ({
-        id: tab.id,
-        title: tab.title,
-        url: parseURL(tab.url),
-      }));
-
-      // active tab for window
-      const activeIndex = tabsInWindow.find(tab => tab.active).index || 0;
-
-      // create space
-      await createUnsavedSpace(window.id, tabs, activeIndex);
-    }
-
-    // success
-    return true;
-  } catch (error) {
-    logger.error({
-      error: new Error('Failed to create unsaved spaces'),
-      msg: 'Failed to initialize app',
-      fileTrace: 'src/pages/background/index.ts:59 ~ createUnsavedSpacesOnInstall() ~ catch block',
-    });
-    return false;
-  }
-};
-
-const updateTabHandler = async (tabId: number) => {
-  // get tab details
-  const tab = await chrome.tabs.get(tabId);
-
-  if (tab?.url.startsWith(DISCARD_TAB_URL_PREFIX)) return;
-
-  // get space by windowId
-  const space = await getSpaceByWindow(tab.windowId);
-
-  if (!space?.id) return;
-
-  //  create new  or update tab
-  await updateTab(space?.id, { id: tab.id, url: tab.url, title: tab.title }, tab.index);
-
-  // send send to side panel
-  await publishEvents({
-    id: generateId(),
-    event: 'UPDATE_TABS',
-    payload: {
-      spaceId: space.id,
-    },
-  });
-};
-
-const removeTabHandler = async (tabId: number, windowId: number) => {
-  // get space by windowId
-  const space = await getSpaceByWindow(windowId);
-
-  if (!space?.id) return;
-  // remove tab
-  await removeTabFromSpace(space, tabId);
-
-  // send send to side panel
-  await publishEvents({
-    id: generateId(),
-    event: 'UPDATE_TABS',
-    payload: {
-      spaceId: space?.id,
-    },
-  });
-};
-
-const recordSiteVisit = async (windowId: number, tabId: number) => {
-  // get the tab's previous url details
-  const space = await getSpaceByWindow(windowId);
-  const tabsInSpace = await getTabsInSpace(space.id);
-
-  const updatedTab = tabsInSpace.find(t => t.id === tabId);
-
-  if (!updatedTab?.url) return;
-  const { url, title } = updatedTab;
-  const spaceHistoryToday = await getSpaceHistory(space.id);
-  const newSiteVisitRecord: ISiteVisit = { url, title, faviconUrl: getFaviconURL(url), timestamp: Date.now() };
-  await setSpaceHistory(space.id, [...(spaceHistoryToday || []), newSiteVisitRecord]);
-
-  console.log('👍 Recorded site visit');
-};
-
-// * chrome event listeners
-
 // on extension installed
 chrome.runtime.onInstalled.addListener(async info => {
   if (info.reason === 'install') {
@@ -408,7 +434,7 @@ chrome.runtime.onInstalled.addListener(async info => {
 
     // merge space history everyday at midnight
     await createAlarm({
-      name: AlarmName.mergeSpaceHistory,
+      name: AlarmName.dailyMidnightTrigger,
       triggerAfter: 1440,
       isRecurring: true,
       shouldTriggerAtMidnight: true,
@@ -505,50 +531,12 @@ chrome.alarms.onAlarm.addListener(async alarm => {
     await publishEvents({ id: generateId(), event: 'REMOVE_SPACE', payload: { spaceId } });
     return;
   } else if (alarm.name.startsWith(ALARM_NAME_PREFiX.snoozedTab)) {
-    //  un-snooze tab
-    // extract space id from name (tab was snoozed from this space)
-    const spaceId = alarm.name.split('-')[1];
-
-    // get the snoozed tab info
-    const { url, title, faviconUrl, snoozedAt } = await getTabToUnSnooze(spaceId);
-
-    // check if snoozed tab's space is active
-    // also check for multi space/window scenario
-    let currentSpace: ISpace = null;
-
-    const windows = await chrome.windows.getAll();
-
-    for (const window of windows) {
-      const space = await getSpaceByWindow(window.id);
-      if (space?.id === spaceId) {
-        currentSpace = space;
-      }
-    }
-
-    if (currentSpace?.id) {
-      // if yes open snoozed tab in group
-
-      // create a group for snoozed tab
-      await newTabGroup(SNOOZED_TAB_GROUP_TITLE, url, currentSpace.windowId);
-
-      // remove the tab from the snoozed storage
-      await removeSnoozedTab(spaceId, url);
-
-      // TODO - better notification message
-      // show notification with show tab button
-      showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed ${getTimeAgo(snoozedAt)}`, title, faviconUrl, true);
-      return;
-    } else {
-      // if not, show notification (open tab, open space)
-      showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed ${getTimeAgo(snoozedAt)}`, title, faviconUrl, false);
-    }
+    //  handle un-snooze tab
+    await handleSnoozedTabAlarm(alarm.name);
   }
 
   // handle other alarm types
   switch (alarm.name) {
-    case alarm.name: {
-      break;
-    }
     case AlarmName.autoSaveBM: {
       await syncSpacesToBookmark();
       logger.info('⏰ 1day: Synced Spaces to Bookmark');
@@ -556,65 +544,18 @@ chrome.alarms.onAlarm.addListener(async alarm => {
     }
     case AlarmName.autoDiscardTabs: {
       await discardTabs(true);
-      logger.info('⏰ 5 mins: Auto discard tabs');
+      logger.info('⏰ 10 mins: Auto discard tabs');
       break;
     }
-    case AlarmName.mergeSpaceHistory: {
-      const tenMinInMilliSeconds = 10 * 60 * 1000;
+    case AlarmName.dailyMidnightTrigger: {
+      //  handle space analytics data
 
-      const midnightTime = new Date();
-      midnightTime.setHours(0);
-      midnightTime.setMinutes(0);
-      const timeDiff = Math.abs(midnightTime.getTime() - Date.now());
+      await handleMergeSpaceHistoryAlarm();
 
-      // if the time if not around midnight, re-schedule the alarm
-      if (timeDiff >= tenMinInMilliSeconds || timeDiff <= tenMinInMilliSeconds) {
-        // 0. handle space history merge
+      await handleMergeDailySpaceTimeChunksAlarm();
 
-        const spaces = await getAllSpaces();
+      logger.info('⏰ Midnight: merge space history & usage data');
 
-        // 1. find spaces that has recorded site visits today
-
-        const spacesHistoryToMerge: { spaceId: string; history: ISiteVisit[] }[] = [];
-
-        for (const space of spaces) {
-          // today's history for space
-          const spaceHistoryToday = await getSpaceHistory(space.id);
-
-          if (spaceHistoryToday?.length > 0) continue;
-
-          spacesHistoryToMerge.push({ spaceId: space.id, history: spaceHistoryToday });
-        }
-
-        if (spacesHistoryToMerge?.length > 1) return;
-
-        // 2. merge today's history with main history storage for space find above
-
-        for (const { spaceId, history } of spacesHistoryToMerge) {
-          // get space's full history
-          const spaceFullHistory = await getSpaceHistory(spaceId, true);
-
-          // merge history
-          const mergedHistory = [...(spaceFullHistory || []), ...history];
-
-          // save the merged history to storage
-          await setSpaceHistory(spaceId, mergedHistory);
-        }
-
-        logger.info('✅ Space history merged successfully');
-      } else {
-        // this alarm didn't fire around midnight as it should
-        // delete alarm
-        await deleteAlarm(AlarmName.mergeSpaceHistory);
-        // create new alarm trigger
-        await createAlarm({
-          name: AlarmName.mergeSpaceHistory,
-          triggerAfter: 1440,
-          isRecurring: true,
-          shouldTriggerAtMidnight: true,
-        });
-        logger.info('History merge alarm did not trigger around midnight, so re-scheduled it for midnight ');
-      }
       break;
     }
   }
@@ -761,8 +702,6 @@ chrome.tabs.onRemoved.addListener(async (tabId, info) => {
   // record site visit for the previous url
   recordSiteVisit(info.windowId, tabId);
 
-  console.log('🚀 ~ chrome.tabs.onRemoved.addListener:764 ~ next line ⏳ recordSiteVisit:', recordSiteVisit);
-
   await removeTabHandler(tabId, info.windowId);
 });
 
@@ -843,4 +782,10 @@ chrome.windows.onRemoved.addListener(async windowId => {
       },
     });
   }
+});
+
+// on window focus
+chrome.windows.onFocusChanged.addListener(async windowId => {
+  // record daily space time
+  await recordDailySpaceTime(windowId);
 });
