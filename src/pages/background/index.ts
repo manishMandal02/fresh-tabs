@@ -1,5 +1,5 @@
 import { getMostVisitedSites, getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
-import { ICommand, IMessageEventContentScript, ISpace, ITab } from './../types/global.types';
+import { ICommand, IMessageEventContentScript, ISiteVisit, ISpace, ITab } from './../types/global.types';
 import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
 import {
@@ -8,6 +8,7 @@ import {
   createSampleSpaces,
   createUnsavedSpace,
   deleteSpace,
+  getAllSpaces,
   getSpace,
   getSpaceByWindow,
   updateActiveTabInSpace,
@@ -37,16 +38,18 @@ import {
   DefaultAppSettings,
   DefaultPinnedTabs,
   SNOOZED_TAB_GROUP_TITLE,
+  AlarmName,
+  ALARM_NAME_PREFiX,
 } from '@root/src/constants/app';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
 import { getCurrentTab, goToTab, newTabGroup, openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { retryAtIntervals } from '../utils/retryAtIntervals';
 import { asyncMessageHandler } from '../utils/asyncMessageHandler';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
-import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/alarm';
+import { createAlarm, deleteAlarm, getAlarm } from '@root/src/services/chrome-alarms/alarm';
 import { addSnoozedTab, getTabToUnSnooze, removeSnoozedTab } from '@root/src/services/chrome-storage/snooze-tabs';
 import { showUnSnoozedNotification } from '@root/src/services/chrome-notification/notification';
-import { naturalLanguageToDate } from '../utils/date-time/naturalLanguageToDate';
+import { getSpaceHistory, setSpaceHistory } from '@root/src/services/chrome-storage/space-history';
 
 reloadOnUpdate('pages/background');
 
@@ -60,19 +63,27 @@ logger.info('🏁 background loaded');
 
 // IIFE - checks for alarms, its not guaranteed to persist
 (async () => {
-  naturalLanguageToDate('Tomorrow at same time');
+  const autoSaveToBMAlarm = await getAlarm(AlarmName.autoSaveBM);
 
-  const autoSaveToBMAlarm = await getAlarm('auto-save-to-bm');
+  const autoDiscardTabsAlarm = await getAlarm(AlarmName.autoDiscardTabs);
 
-  const autoDiscardTabsAlarm = await getAlarm('auto-discard-tabs');
+  const mergeSpaceHistoryAlarm = await getAlarm(AlarmName.mergeSpaceHistory);
 
   // create alarms if not found
   if (!autoSaveToBMAlarm?.name) {
-    await createAlarm('auto-save-to-bm', 1440, true);
+    await createAlarm({ name: AlarmName.autoSaveBM, triggerAfter: 1440, isRecurring: true });
   }
 
   if (!autoDiscardTabsAlarm?.name) {
-    await createAlarm('auto-discard-tabs', 5, true);
+    await createAlarm({ name: AlarmName.autoDiscardTabs, triggerAfter: 5, isRecurring: true });
+  }
+  if (mergeSpaceHistoryAlarm?.name) {
+    await createAlarm({
+      name: AlarmName.mergeSpaceHistory,
+      triggerAfter: 1440,
+      isRecurring: true,
+      shouldTriggerAtMidnight: true,
+    });
   }
 })();
 
@@ -90,18 +101,16 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 // TODO - remove the concept of unsaved spaces, make the necessary changes
 // all spaces will be saved by default
 
-// handle events from content script (command palette)
+//* handle events from content script (command palette)
 chrome.runtime.onMessage.addListener(
   asyncMessageHandler<IMessageEventContentScript, boolean | ICommand[]>(async request => {
     const { event, payload } = request;
 
-    console.log('🚀 ~ onMessage: event:', event);
+    logger.info(`Event from content script: ${event}`);
 
     switch (event) {
       case 'SWITCH_TAB': {
         const { tabId } = payload;
-
-        console.log('🚀 ~ tabId:', tabId);
 
         await goToTab(tabId);
 
@@ -197,7 +206,6 @@ chrome.runtime.onMessage.addListener(
           });
         }
 
-        console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ matchedCommands:', matchedCommands);
         return matchedCommands;
       }
       case 'WEB_SEARCH': {
@@ -216,7 +224,7 @@ chrome.runtime.onMessage.addListener(
       case 'SNOOZE_TAB': {
         const { snoozedUntil, spaceId } = payload;
 
-        const [{ url, title, id, favIconUrl: faviconURL }] = await chrome.tabs.query({
+        const [{ url, title, id, favIconUrl: faviconUrl }] = await chrome.tabs.query({
           active: true,
           currentWindow: true,
         });
@@ -226,15 +234,13 @@ chrome.runtime.onMessage.addListener(
           snoozedUntil,
           url,
           title,
-          faviconURL,
+          faviconUrl,
         });
 
         const triggerTimeInMinutes = Math.ceil((snoozedUntil - Date.now()) / 1000 / 60);
 
-        console.log('🚀 ~ triggerTimeInMinutes:', triggerTimeInMinutes);
-
         // create a alarm trigger
-        await createAlarm(`snoozedTab-${spaceId}`, triggerTimeInMinutes);
+        await createAlarm({ name: AlarmName.snoozedTab(spaceId), triggerAfter: triggerTimeInMinutes });
         // close the tab
         await chrome.tabs.remove(id);
         return true;
@@ -245,7 +251,6 @@ chrome.runtime.onMessage.addListener(
 );
 
 // helpers for chrome event handlers
-
 const createUnsavedSpacesOnInstall = async () => {
   try {
     const windows = await chrome.windows.getAll();
@@ -374,9 +379,17 @@ chrome.runtime.onInstalled.addListener(async info => {
 
     // set alarm schedules to save space to bookmark,
     // default preference is save daily (1d = 1440m)
-    await createAlarm('auto-save-to-bm', 1440, true);
+    await createAlarm({ name: AlarmName.autoSaveBM, triggerAfter: 1440, isRecurring: true });
     // auto discard  tabs (if non-active for more than 10 minutes)
-    await createAlarm('auto-discard-tabs', 5, true);
+    await createAlarm({ name: AlarmName.autoDiscardTabs, triggerAfter: 5, isRecurring: true });
+
+    // merge space history everyday at midnight
+    await createAlarm({
+      name: AlarmName.mergeSpaceHistory,
+      triggerAfter: 1440,
+      isRecurring: true,
+      shouldTriggerAtMidnight: true,
+    });
 
     logger.info('✅ Successfully initialized app.');
   }
@@ -441,8 +454,6 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
     // TODO - check if tab fully loaded
     const res = await publishEventsTab(activeTabId, { event: 'CHECK_CONTENT_SCRIPT_LOADED' });
 
-    console.log('🚀 ~ chrome.commands.onCommand.addListener ~ res:', res);
-    console.log('🚀 ~ chrome.commands.onCommand.addListener ~ activeTabId:', activeTabId);
     if (!res) {
       // wait for 0.2s
       await chrome.tabs.reload(activeTabId);
@@ -453,7 +464,6 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
       interval: 1000,
       retries: 3,
       callback: async () => {
-        console.log('🚀 ~ retryAtIntervals ~ SHOW_COMMAND_PALETTE:');
         return await publishEventsTab(activeTabId, {
           event: 'SHOW_COMMAND_PALETTE',
           payload: { activeSpace, recentSites, topSites },
@@ -466,18 +476,18 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 // handle chrome alars triggers
 chrome.alarms.onAlarm.addListener(async alarm => {
   // handle delete unsaved space
-  if (alarm.name.startsWith('deleteSpace-')) {
+  if (alarm.name.startsWith(ALARM_NAME_PREFiX.deleteSpace)) {
     const spaceId = alarm.name.split('-')[1];
     await deleteSpace(spaceId);
     await publishEvents({ id: generateId(), event: 'REMOVE_SPACE', payload: { spaceId } });
     return;
-  } else if (alarm.name.startsWith('snoozedTab-')) {
+  } else if (alarm.name.startsWith(ALARM_NAME_PREFiX.snoozedTab)) {
     //  un-snooze tab
     // extract space id from name (tab was snoozed from this space)
     const spaceId = alarm.name.split('-')[1];
 
     // get the snoozed tab info
-    const { url, title, faviconURL } = await getTabToUnSnooze(spaceId);
+    const { url, title, faviconUrl } = await getTabToUnSnooze(spaceId);
 
     console.log('🚀 ~ onAlarm getTabToUnSnooze:473 ~ title:', title);
 
@@ -504,11 +514,11 @@ chrome.alarms.onAlarm.addListener(async alarm => {
       await removeSnoozedTab(spaceId, url);
 
       // show notification with show tab button
-      showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed 1 min ago`, title, faviconURL, true);
+      showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed 1 min ago`, title, faviconUrl, true);
       return;
     } else {
       // if not, show notification (open tab, open space)
-      showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed 1 min ago`, title, faviconURL, false);
+      showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed 1 min ago`, title, faviconUrl, false);
     }
   }
 
@@ -517,14 +527,72 @@ chrome.alarms.onAlarm.addListener(async alarm => {
     case alarm.name: {
       break;
     }
-    case 'auto-save-to-bm': {
+    case AlarmName.autoSaveBM: {
       await syncSpacesToBookmark();
       logger.info('⏰ 1day: Synced Spaces to Bookmark');
       break;
     }
-    case 'auto-discard-tabs': {
+    case AlarmName.autoDiscardTabs: {
       await discardTabs(true);
       logger.info('⏰ 5 mins: Auto discard tabs');
+      break;
+    }
+    case AlarmName.mergeSpaceHistory: {
+      const tenMinInMilliSeconds = 10 * 60 * 1000;
+
+      const midnightTime = new Date();
+      midnightTime.setHours(0);
+      midnightTime.setMinutes(0);
+      const timeDiff = Math.abs(midnightTime.getTime() - Date.now());
+
+      // if the time if not around midnight, re-schedule the alarm
+      if (timeDiff >= tenMinInMilliSeconds || timeDiff <= tenMinInMilliSeconds) {
+        // 0. handle space history merge
+
+        const spaces = await getAllSpaces();
+
+        // 1. find spaces that has recorded site visits today
+
+        const spacesHistoryToMerge: { spaceId: string; history: ISiteVisit[] }[] = [];
+
+        for (const space of spaces) {
+          // today's history for space
+          const spaceHistoryToday = await getSpaceHistory(space.id);
+
+          if (spaceHistoryToday?.length > 0) continue;
+
+          spacesHistoryToMerge.push({ spaceId: space.id, history: spaceHistoryToday });
+        }
+
+        if (spacesHistoryToMerge?.length > 1) return;
+
+        // 2. merge today's history with main history storage for space find above
+
+        for (const { spaceId, history } of spacesHistoryToMerge) {
+          // get space's full history
+          const spaceFullHistory = await getSpaceHistory(spaceId, true);
+
+          // merge history
+          const mergedHistory = [...(spaceFullHistory || []), ...history];
+
+          // save the merged history to storage
+          await setSpaceHistory(spaceId, mergedHistory);
+        }
+
+        logger.info('✅ Space history merged successfully');
+      } else {
+        // this alarm didn't fire around midnight as it should
+        // delete alarm
+        await deleteAlarm(AlarmName.mergeSpaceHistory);
+        // create new alarm trigger
+        await createAlarm({
+          name: AlarmName.mergeSpaceHistory,
+          triggerAfter: 1440,
+          isRecurring: true,
+          shouldTriggerAtMidnight: true,
+        });
+        logger.info('History merge alarm did not trigger around midnight, so re-scheduled it for midnight ');
+      }
       break;
     }
   }
@@ -532,10 +600,7 @@ chrome.alarms.onAlarm.addListener(async alarm => {
 
 // on notification button clicked
 chrome.notifications.onButtonClicked.addListener(async (notificationId, buttonIndex) => {
-  console.log('🚀 ~ chrome.notifications.onButtonClicked.addListener ~ notificationId:', notificationId);
-
   if (notificationId.includes('snoozed-tab-active-space')) {
-    console.log('🚀 ~ chrome.notifications.onButtonClicked.addListener ~ buttonIndex:', buttonIndex);
     if (buttonIndex === 0) {
       // open tab
 
@@ -597,10 +662,26 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
 });
 
 // event listener for when tabs get updated
-chrome.tabs.onUpdated.addListener(async (tabId, info) => {
-  if (info?.status === 'complete') {
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  if (changeInfo?.url) {
+    // record site visit for the previous url
+
+    // get the tab's previous url details
+    const space = await getSpaceByWindow(tab.windowId);
+    const tabsInSpace = await getTabsInSpace(space.id);
+
+    const updatedTab = tabsInSpace.find(t => t.id === tabId);
+    if (updatedTab?.url) {
+      const { url, title } = updatedTab;
+      const spaceHistoryToday = await getSpaceHistory(space.id);
+      const newSiteVisitRecord: ISiteVisit = { url, title, faviconUrl: getFaviconURL(url), timestamp: Date.now() };
+      await setSpaceHistory(space.id, [...spaceHistoryToday, newSiteVisitRecord]);
+    }
+  }
+
+  if (changeInfo?.status === 'complete') {
     // if this is discard tab, do nothing
-    if (info?.url?.startsWith(DISCARD_TAB_URL_PREFIX)) return;
+    if (changeInfo?.url?.startsWith(DISCARD_TAB_URL_PREFIX)) return;
 
     // add/update tab
     await updateTabHandler(tabId);
@@ -666,6 +747,9 @@ chrome.tabs.onRemoved.addListener(async (tabId, info) => {
   // do nothing if tab removed because window was closed
   if (info.isWindowClosing) return;
 
+  // TODO - track site visit
+  // get tab info from storage and record to space history visit
+
   await removeTabHandler(tabId, info.windowId);
 });
 
@@ -688,11 +772,11 @@ chrome.windows.onCreated.addListener(window => {
     // check if the window obj has tabs
     // if not, then query for tabs in this window
     if (window?.tabs?.length > 0) {
-      tabs = window.tabs.map(t => ({ url: t.url, faviconURL: getFaviconURL(t.url), id: t.id, title: t.title }));
+      tabs = window.tabs.map(t => ({ url: t.url, faviconUrl: getFaviconURL(t.url), id: t.id, title: t.title }));
     } else {
       const queriedTabs = await chrome.tabs.query({ windowId: window.id });
       if (queriedTabs?.length < 1) return;
-      tabs = queriedTabs.map(t => ({ url: t.url, faviconURL: getFaviconURL(t.url), id: t.id, title: t.title }));
+      tabs = queriedTabs.map(t => ({ url: t.url, faviconUrl: getFaviconURL(t.url), id: t.id, title: t.title }));
     }
 
     // check if the tabs in this window are of a space (check tab urls)
@@ -730,7 +814,8 @@ chrome.windows.onRemoved.addListener(async windowId => {
     // if user preference is to delete unsaved after a week
     // set an alarm for after a week (1w = 10080m)
     if (deleteUnsavedSpace === 'week') {
-      await createAlarm(`deleteSpace-${space.id}`, 10080);
+      await createAlarm({ name: AlarmName.deleteSpace(space.id), triggerAfter: 10080 });
+
       return;
     }
     // delete space immediately

@@ -177,7 +177,6 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
 
     if (tabs?.length > 0) {
       tabs = tabs.filter(tab => tab.title.toLowerCase().includes(searchQuery.toLowerCase()));
-      console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ tabs:', tabs);
 
       tabs.forEach(tab => {
         matchedCommands.push({

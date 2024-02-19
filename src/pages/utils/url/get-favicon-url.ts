@@ -14,7 +14,7 @@ export const getFaviconURL = (siteURL: string, isSidePanel = true) => {
   const subdomainRegex =
     /(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}\.[a-zA-Z0-9]{2,}\.[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})?/;
 
-  let faviconURL = '';
+  let faviconUrl = '';
 
   if (!isSidePanel) {
     //  TODO - some sub domains like google products don't work,
@@ -26,9 +26,9 @@ export const getFaviconURL = (siteURL: string, isSidePanel = true) => {
 
   // generate favicon link with chrome favicon url if subdomain else use google global favicon url
   if (subdomainRegex.test(url.origin) && url.hostname.split('.')[0] !== 'www') {
-    faviconURL = createChromeFaviconURL(url);
+    faviconUrl = createChromeFaviconURL(url);
   } else {
-    faviconURL = googleFaviconURL(url);
+    faviconUrl = googleFaviconURL(url);
   }
 
   // the above solution seems to be working for now
@@ -36,7 +36,7 @@ export const getFaviconURL = (siteURL: string, isSidePanel = true) => {
   // check if favicon url is correct
   // (async () => {
   //   try {
-  //     const response = await fetch(faviconURL, { method: 'HEAD', mode: 'no-cors' });
+  //     const response = await fetch(faviconUrl, { method: 'HEAD', mode: 'no-cors' });
 
   //     console.log('🚀 ~ response:', response);
 
@@ -44,14 +44,14 @@ export const getFaviconURL = (siteURL: string, isSidePanel = true) => {
   //       // Check if the content type is an image
   //       const contentType = response.headers.get('content-type');
   //       if (contentType?.startsWith('image/')) {
-  //         return faviconURL;
+  //         return faviconUrl;
   //       }
   //     }
   //   } catch (error) {
   //     console.error('Error checking favicon:', error);
-  //     return faviconURL;
+  //     return faviconUrl;
   //   }
-  //   return faviconURL;
+  //   return faviconUrl;
   // })();
-  return faviconURL;
+  return faviconUrl;
 };

@@ -1,4 +1,4 @@
-import { SampleSpaces } from './../../constants/app';
+import { SampleSpaces, StorageKey } from './../../constants/app';
 import { getStorage } from './helpers/get';
 import { ISpace, ISpaceWithoutId, ITab } from '@root/src/pages/types/global.types';
 import { logger } from '@root/src/pages/utils/logger';
@@ -13,12 +13,12 @@ export const createNewSpace = async (space: ISpaceWithoutId, tabs: ITab[]): Prom
     const newSpace = { ...space, id: newSpaceId };
 
     // get all spaces
-    const spaces = await getStorage<ISpace[]>({ type: 'sync', key: 'SPACES' });
+    const spaces = await getStorage<ISpace[]>({ type: 'sync', key: StorageKey.SPACES });
 
     // save new space along with others spaces to storage
     await setStorage({
       type: 'sync',
-      key: 'SPACES',
+      key: StorageKey.SPACES,
       value: spaces?.length ? [...spaces, newSpace] : [newSpace],
     });
 
@@ -59,7 +59,7 @@ export const createUnsavedSpace = async (windowId: number, tabs: ITab[], activeI
     // save new space along with others spaces to storage
     await setStorage({
       type: 'sync',
-      key: 'SPACES',
+      key: StorageKey.SPACES,
       value: spaces?.length > 0 ? [...spaces, newSpace] : [newSpace],
     });
 
@@ -88,7 +88,7 @@ export const createSampleSpaces = async () => {
 // update a space
 export const updateSpace = async (spaceId: string, space: ISpaceWithoutId): Promise<boolean> => {
   try {
-    const spaces = await getStorage<ISpace[]>({ key: 'SPACES', type: 'sync' });
+    const spaces = await getStorage<ISpace[]>({ key: StorageKey.SPACES, type: 'sync' });
 
     let spaceToUpdate = spaces.find(s => s.id === spaceId);
     spaceToUpdate = { ...spaceToUpdate, ...space };
@@ -96,7 +96,7 @@ export const updateSpace = async (spaceId: string, space: ISpaceWithoutId): Prom
     // save new space along with others spaces to storage
     await setStorage({
       type: 'sync',
-      key: 'SPACES',
+      key: StorageKey.SPACES,
       value: [...spaces.filter(s => s.id !== spaceId), spaceToUpdate],
     });
 
@@ -114,7 +114,7 @@ export const updateSpace = async (spaceId: string, space: ISpaceWithoutId): Prom
 // delete a space
 export const deleteSpace = async (spaceId: string) => {
   try {
-    const spaces = await getStorage<ISpace[]>({ key: 'SPACES', type: 'sync' });
+    const spaces = await getStorage<ISpace[]>({ key: StorageKey.SPACES, type: 'sync' });
 
     const spaceToDelete = spaces.find(space => space.id === spaceId);
 
@@ -147,10 +147,10 @@ export const deleteSpace = async (spaceId: string) => {
 };
 
 // get all spaces
-export const getAllSpaces = async () => await getStorage<ISpace[]>({ key: 'SPACES', type: 'sync' });
+export const getAllSpaces = async () => await getStorage<ISpace[]>({ key: StorageKey.SPACES, type: 'sync' });
 
 export const setSpacesToStorage = async (spaces: ISpace[]) => {
-  await setStorage({ type: 'sync', key: 'SPACES', value: spaces });
+  await setStorage({ type: 'sync', key: StorageKey.SPACES, value: spaces });
   return true;
 };
 
@@ -158,7 +158,7 @@ export const setSpacesToStorage = async (spaces: ISpace[]) => {
 export const getSpaceByWindow = async (windowId: number): Promise<ISpace | null> => {
   try {
     // get all spaces from storage
-    const spaces = await getStorage<ISpace[]>({ key: 'SPACES', type: 'sync' });
+    const spaces = await getStorage<ISpace[]>({ key: StorageKey.SPACES, type: 'sync' });
 
     if (spaces.length < 1) throw new Error('No found spaces in storage.');
 
@@ -181,7 +181,7 @@ export const getSpaceByWindow = async (windowId: number): Promise<ISpace | null>
 export const getSpace = async (id: string): Promise<ISpace | null> => {
   try {
     // get all spaces from storage
-    const spaces = await getStorage<ISpace[]>({ key: 'SPACES', type: 'sync' });
+    const spaces = await getStorage<ISpace[]>({ key: StorageKey.SPACES, type: 'sync' });
 
     if (spaces.length < 1) throw new Error('No found spaces in storage.');
 
@@ -200,7 +200,7 @@ export const getSpace = async (id: string): Promise<ISpace | null> => {
 export const updateActiveTabInSpace = async (windowId: number, idx: number): Promise<ISpace | null> => {
   try {
     // get all spaces from storage
-    const spaces = await getStorage<ISpace[]>({ key: 'SPACES', type: 'sync' });
+    const spaces = await getStorage<ISpace[]>({ key: StorageKey.SPACES, type: 'sync' });
 
     if (spaces.length < 1) throw new Error('No found spaces in storage.');
 
@@ -234,7 +234,7 @@ export const updateActiveTabInSpace = async (windowId: number, idx: number): Pro
 export const checkNewWindowTabs = async (windowId: number, urls: string[]): Promise<boolean> => {
   try {
     //get all spaces
-    const spaces = await getStorage<ISpace[]>({ key: 'SPACES', type: 'sync' });
+    const spaces = await getStorage<ISpace[]>({ key: StorageKey.SPACES, type: 'sync' });
 
     if (spaces.length < 1) throw new Error('No spaces found');
 
@@ -264,7 +264,7 @@ export const checkNewWindowTabs = async (windowId: number, urls: string[]): Prom
     // save windowId to space
     await setStorage({
       type: 'sync',
-      key: 'SPACES',
+      key: StorageKey.SPACES,
       value: [...spaces.filter(s => s.id !== matchedSpace.id), { ...matchedSpace, windowId }],
     });
 

@@ -1,6 +1,7 @@
+import { nanoid } from 'nanoid';
 // generate random id
 const generateId = () => {
-  return Math.floor(Math.random() * Date.now()).toString(16);
+  return nanoid(8);
 };
 
 export { generateId };

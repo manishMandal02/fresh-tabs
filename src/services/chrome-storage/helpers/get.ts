@@ -1,10 +1,11 @@
 import { StorageKey } from '@root/src/constants/app';
 import { ISpace } from '@root/src/pages/types/global.types';
+import { UnionTypeFromObjectValues } from '@root/src/pages/types/utility.types';
 import { logger } from '@root/src/pages/utils/logger';
 
 type GetStorageParams = {
   type: 'local' | 'sync';
-  key: StorageKey;
+  key: UnionTypeFromObjectValues<typeof StorageKey>;
 };
 
 // sets chrome storage by key

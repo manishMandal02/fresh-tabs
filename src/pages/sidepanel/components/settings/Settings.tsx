@@ -3,7 +3,7 @@ import RadioGroup, { RadioOptions } from '../elements/radio-group/RadioGroup';
 import { useAtom } from 'jotai';
 import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
 import { IAppSettings } from '@root/src/pages/types/global.types';
-import { DefaultAppSettings } from '@root/src/constants/app';
+import { AlarmName, DefaultAppSettings } from '@root/src/constants/app';
 import { MdOpenInNew, MdOutlineSettings } from 'react-icons/md';
 import { SlideModal } from '../elements/modal';
 import Switch from '../elements/switch/Switch';
@@ -76,12 +76,12 @@ const Settings = () => {
     // check if auto save to bookmark preference has changed
     if (settingsUpdateData.autoSaveToBookmark !== appSettings.autoSaveToBookmark) {
       // clear the previous trigger
-      await deleteAlarm('auto-save-to-bm');
+      await deleteAlarm(AlarmName.autoSaveBM);
       // create new trigger ( 1d = 1440m)
       if (settingsUpdateData.autoSaveToBookmark === 'daily') {
-        await createAlarm('auto-save-to-bm', 1440);
+        await createAlarm(AlarmName.autoSaveBM, 1440);
       } else if (settingsUpdateData.autoSaveToBookmark == 'weekly') {
-        await createAlarm('auto-save-to-bm', 1440 * 7);
+        await createAlarm(AlarmName.autoSaveBM, 1440 * 7);
       }
     }
 

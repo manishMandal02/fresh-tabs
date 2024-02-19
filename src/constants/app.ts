@@ -33,9 +33,33 @@ export enum CommandType {
   SnoozeTab = 'snooze-tab',
 }
 
-export type AlarmName = 'auto-save-to-bm' | 'auto-discard-tabs' | `deleteSpace-${string}` | `snoozedTab-${string}`;
+export const ALARM_NAME_PREFiX = {
+  deleteSpace: 'deleteSpace',
+  snoozedTab: 'snoozedTab',
+};
 
-export type StorageKey = 'SPACES' | 'SETTINGS' | 'PINNED_TABS' | `TABS-${string}` | `SNOOZED-${string}`;
+export const AlarmName = {
+  autoSaveBM: 'auto-save-to-bm',
+  autoDiscardTabs: 'auto-discard-tabs',
+  //  merge daily space history data to the main data storage
+  mergeSpaceHistory: 'merge-space-history',
+  deleteSpace: (spaceId: string): `${typeof ALARM_NAME_PREFiX.deleteSpace}-${string}` =>
+    `${ALARM_NAME_PREFiX.deleteSpace}-${spaceId}`,
+  snoozedTab: (spaceId: string): `${typeof ALARM_NAME_PREFiX.snoozedTab}-${string}` =>
+    `${ALARM_NAME_PREFiX.snoozedTab}-${spaceId}`,
+} as const;
+
+export const StorageKey = {
+  SPACES: 'SPACES',
+  SETTINGS: 'SETTINGS',
+  PINNED_TABS: 'PINNED_TABS',
+  TABS: (spaceId: string): `TABS-${string}` => `TABS-${spaceId}`,
+  SNOOZED: (spaceId: string): `SNOOZED-${string}` => `SNOOZED-${spaceId}`,
+  SPACE_HISTORY: (spaceId: string): `SPACE_HISTORY-${string}` => `SPACE_HISTORY-${spaceId}`,
+  SPACE_HISTORY_TODAY: (spaceId: string): `SPACE_HISTORY_TODAY-${string}` => `SPACE_HISTORY_TODAY-${spaceId}`,
+} as const;
+
+// union type of all storage value (SPACES, TABS-${string}, etc.)
 
 export const DefaultAppSettings: IAppSettings = {
   includeBookmarksInSearch: false,

@@ -8,6 +8,7 @@ import { useEffect, useCallback, useState } from 'react';
 import { ISpace } from '@root/src/pages/types/global.types';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
 import { deleteAlarm, getAlarm } from '@root/src/services/chrome-alarms/alarm';
+import { AlarmName } from '@root/src/constants/app';
 
 const DeleteSpaceModal = () => {
   // delete space modal  global state
@@ -94,12 +95,12 @@ const DeleteSpaceModal = () => {
 
       // if the space was unsaved, check if it had any delete trigger scheduled
 
-      const schedule = await getAlarm(`deleteSpace-${spaceToDeleteId}`);
+      const schedule = await getAlarm(AlarmName.deleteSpace(spaceToDelete.id));
 
       if (schedule?.name) {
         // delete scheduled trigger
         await chrome.alarms.clear(schedule.name);
-        await deleteAlarm(`deleteSpace-${spaceToDeleteId}`);
+        await deleteAlarm(AlarmName.deleteSpace(spaceToDelete.id));
       }
     } else {
       // failed

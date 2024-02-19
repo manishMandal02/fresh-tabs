@@ -1,6 +1,6 @@
 // chrome bookmarks helpers
 
-import { FRESH_TABS_BOOKMARK_TITLE } from '@root/src/constants/app';
+import { FRESH_TABS_BOOKMARK_TITLE, StorageKey } from '@root/src/constants/app';
 import { generateBMTitle, getSpaceInfoFromBMTitle } from './bookmark-title';
 import { ISpace, ITab } from '@root/src/pages/types/global.types';
 import { logger } from '@root/src/pages/utils/logger';
@@ -134,7 +134,7 @@ export const syncSpacesToBookmark = async () => {
       const spaceDetailsStr = generateBMTitle(space);
 
       // get all tabs for this space
-      const tabs = await getStorage<ITab[]>({ type: 'local', key: `TABS-${space.id}` });
+      const tabs = await getStorage<ITab[]>({ type: 'local', key: StorageKey.TABS(space.id) });
 
       // group all tab promises to process at once
       const tabsPromises: Promise<chrome.bookmarks.BookmarkTreeNode>[] = [];

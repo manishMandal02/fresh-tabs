@@ -42,10 +42,17 @@ export interface ITabWithIndex extends ITab {
   index: number;
 }
 
+export interface ISiteVisit {
+  url: string;
+  title: string;
+  faviconUrl: string;
+  timestamp: number;
+}
+
 export interface ISnoozedTab {
   url: string;
   title: string;
-  faviconURL: string;
+  faviconUrl: string;
   snoozedUntil: number;
 }
 

@@ -1,8 +1,18 @@
 import { AlarmName } from '@root/src/constants/app';
+import { UnionTypeFromObjectValues } from '@root/src/pages/types/utility.types';
+import { naturalLanguageToDate } from '@root/src/pages/utils/date-time/naturalLanguageToDate';
 import { logger } from '@root/src/pages/utils/logger';
 
+type AlarmNameType = UnionTypeFromObjectValues<typeof AlarmName>;
+
+const getMinutesToMidnight = () => {
+  const midnight = naturalLanguageToDate('midnight');
+
+  return (midnight - Date.now()) / 1000 / 60;
+};
+
 // get  alarm by name from chrome alarms
-export const getAlarm = async (name: AlarmName) => {
+export const getAlarm = async (name: AlarmNameType) => {
   try {
     const alarm = await chrome.alarms.get(name);
     return alarm;
@@ -15,12 +25,30 @@ export const getAlarm = async (name: AlarmName) => {
     return null;
   }
 };
+
+type CreateAlarmProps = {
+  name: AlarmNameType;
+  triggerAfter: number;
+  isRecurring?: boolean;
+  shouldTriggerAtMidnight?: boolean;
+};
+
 // create an alarm
-export const createAlarm = async (name: AlarmName, triggerAt: number, isRecurring = false) => {
-  let alarmOption: chrome.alarms.AlarmCreateInfo = { delayInMinutes: triggerAt };
+export const createAlarm = async ({
+  name,
+  triggerAfter,
+  isRecurring = false,
+  shouldTriggerAtMidnight = false,
+}: CreateAlarmProps) => {
+  // some recurring alarms like merge space history should trigger at midnight everyday
+  // the delay in minutes set the time for first trigger then period in minutes runs this alarm after every 24hrs
+  const delayInMinutes = !shouldTriggerAtMidnight ? triggerAfter : getMinutesToMidnight();
+
+  const alarmOption: chrome.alarms.AlarmCreateInfo = { delayInMinutes };
   if (isRecurring) {
-    alarmOption = { periodInMinutes: triggerAt };
+    alarmOption.periodInMinutes = triggerAfter;
   }
+
   try {
     await chrome.alarms.create(name, alarmOption);
     return true;
@@ -35,7 +63,7 @@ export const createAlarm = async (name: AlarmName, triggerAt: number, isRecurrin
 };
 
 // delete alarm
-export const deleteAlarm = async (name: AlarmName) => {
+export const deleteAlarm = async (name: AlarmNameType) => {
   try {
     return await chrome.alarms.clear(name);
   } catch (error) {

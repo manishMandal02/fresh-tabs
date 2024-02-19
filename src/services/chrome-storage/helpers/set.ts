@@ -1,12 +1,13 @@
 import { StorageKey } from '@root/src/constants/app';
-import { IAppSettings, IPinnedTab, ISnoozedTab, ISpace, ITab } from '@root/src/pages/types/global.types';
+import { IAppSettings, IPinnedTab, ISiteVisit, ISnoozedTab, ISpace, ITab } from '@root/src/pages/types/global.types';
+import { UnionTypeFromObjectValues } from '@root/src/pages/types/utility.types';
 import { logger } from '@root/src/pages/utils/logger';
 
-type StorageValue = ISpace | ISpace[] | ITab[] | ISnoozedTab[] | IAppSettings | IPinnedTab[] | string;
+type StorageValue = ISpace | ISpace[] | ITab[] | ISnoozedTab[] | ISiteVisit[] | IAppSettings | IPinnedTab[] | string;
 
 type SetStorageParams = {
   type: 'local' | 'sync';
-  key: StorageKey;
+  key: UnionTypeFromObjectValues<typeof StorageKey>;
   value: StorageValue;
 };
 
