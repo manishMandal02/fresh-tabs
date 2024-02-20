@@ -21,11 +21,13 @@ const MoreOptions = ({
   return (
     <DropdownMenuRadix.Root>
       <DropdownMenuRadix.Trigger asChild>
-        <MdMoreVert
-          tabIndex={0}
-          className="text-slate-500/80  hover:opacity-95 transition-all duration-200 -ml-1"
-          size={18}
-        />
+        <span>
+          <MdMoreVert
+            tabIndex={0}
+            className="text-slate-500/80 cursor-pointer hover:opacity-95 transition-all duration-200 -ml-1"
+            size={18}
+          />
+        </span>
       </DropdownMenuRadix.Trigger>
 
       <DropdownMenuRadix.Portal>

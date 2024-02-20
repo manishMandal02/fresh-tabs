@@ -15,6 +15,7 @@ import { logger } from '@root/src/pages/utils/logger';
 import { MdHistory, MdSnooze } from 'react-icons/md';
 import Tooltip from '../../elements/tooltip';
 import { getSnoozedTabs } from '@root/src/services/chrome-storage/snooze-tabs';
+import SnoozedTabs from './SnoozedTabs';
 
 type Props = {
   space: ISpace;
@@ -32,7 +33,11 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
   // local state - show delete modal
   const [selectedTabs, setSelectedTabs] = useAtom(selectedTabsAtom);
 
+  // snoozed tabs
   const [snoozedTabs, setSnoozedTabs] = useState<ISnoozedTab[]>([]);
+
+  // show snoozed tabs
+  const [showSnoozedTabs, setShowSnoozedTabs] = useState(true);
 
   useEffect(() => {
     if (!space?.id) return;
@@ -238,11 +243,12 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
           <Tooltip label="View snoozed tabs">
             <div className="relative">
               <span className="absolute -top-[5px] -right-[5px] px-[3.5px] py-[0.6px] bg-brand-primary/90 rounded-full text-[8px] font-medium text-slate-700">
-                {snoozedTabs.length || 0}
+                {snoozedTabs?.length || 0}
               </span>
               <MdSnooze
                 size={18}
                 className="text-slate-500/70 cursor-pointer hover:opacity-95 transition-all duration-200"
+                onClick={() => setShowSnoozedTabs(true)}
               />
             </div>
           </Tooltip>
@@ -256,106 +262,108 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
             </span>
           </Tooltip>
           {/* more options  */}
-          <span>
-            <MoreOptions
-              shouldOpenInNewWindow={false}
-              isSpaceActive={true}
-              onSyncClick={handleSyncTabs}
-              onEditClick={() => setUpdateSpaceModal({ ...space, tabs })}
-              onDeleteClick={() => setDeleteSpaceModal({ show: true, spaceId: space.id })}
-            />
-          </span>
+          <MoreOptions
+            shouldOpenInNewWindow={false}
+            isSpaceActive={true}
+            onSyncClick={handleSyncTabs}
+            onEditClick={() => setUpdateSpaceModal({ ...space, tabs })}
+            onDeleteClick={() => setDeleteSpaceModal({ show: true, spaceId: space.id })}
+          />
         </div>
       </div>
 
       {/* tabs */}
       <div
         id="active-space-scrollable-container"
-        className="max-h-[90%] overflow-y-auto cc-scrollbar  overflow-x-hidden border-y pb-2 border-brand-darkBgAccent/30"
+        className="relative max-h-[90%]  cc-scrollbar min-h-[12rem] overflow-x-hidden border-y pb-2 border-brand-darkBgAccent/30"
         style={{
-          height: tabs.length * 1.9 + 'rem',
+          height: !showSnoozedTabs ? tabs.length * 1.9 + 'rem' : snoozedTabs?.length || 0 * 2 + 'rem',
         }}>
-        <Droppable droppableId={'active-space'} ignoreContainerClipping type="TAB">
-          {(provided1, { isDraggingOver }) => (
-            <div {...provided1.droppableProps} ref={provided1.innerRef} className="h-full py-1 w-full ">
-              {/* render draggable  */}
-              {tabs.map((tab, idx) => (
-                <Draggable draggableId={'tab-' + tab.id} index={idx} key={tab.id}>
-                  {(provided2, { isDragging }) => (
-                    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-                    <div
-                      ref={provided2.innerRef}
-                      {...provided2.draggableProps}
-                      {...provided2.dragHandleProps}
-                      tabIndex={-1}
-                      className={`relative outline-none mb-[2.5px] draggable-tab-container outline-none
+        {!showSnoozedTabs ? (
+          <Droppable droppableId={'active-space'} ignoreContainerClipping type="TAB">
+            {(provided1, { isDraggingOver }) => (
+              <div {...provided1.droppableProps} ref={provided1.innerRef} className="h-full py-1 w-full ">
+                {/* render draggable  */}
+                {tabs.map((tab, idx) => (
+                  <Draggable draggableId={'tab-' + tab.id} index={idx} key={tab.id}>
+                    {(provided2, { isDragging }) => (
+                      // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+                      <div
+                        ref={provided2.innerRef}
+                        {...provided2.draggableProps}
+                        {...provided2.dragHandleProps}
+                        tabIndex={-1}
+                        className={`relative outline-none mb-[2.5px]  
                       ${isDraggingGlobal && isDragging && !isDraggingOver ? ` !w-[30px] ml-10` : 'w-fit'}
                       `}
-                      style={{
-                        ...provided2.draggableProps.style,
-                        left: isDraggingGlobal && isDragging && !isDraggingOver ? `${mouseXOnDrag - 65}px` : '',
-                      }}
-                      onMouseDown={onTabClickMousePos}>
-                      {isDraggingGlobal && isDragging && !isDraggingOver ? (
-                        <TabDraggedOutsideActiveSpace numSelectedTabs={selectedTabs?.length} tabURL={tab.url} />
-                      ) : (
-                        <div className="relative w-[90vw]" tabIndex={-1}>
-                          <Tab
-                            tabData={tab}
-                            isSpaceActive={true}
-                            onCreateNewTab={() => handleCreateNewTab(idx)}
-                            isModifierKeyPressed={isModifierKeyPressed || isShiftKeyPressed}
-                            isTabActive={space.activeTabIndex === idx}
-                            onTabDelete={() => handleRemoveTab(idx)}
-                            onTabDoubleClick={() => onTabDoubleClickHandler(tab.id, idx)}
-                            isSelected={isTabSelected(tab.id)}
-                            onClick={() => onTabClick({ ...tab, index: idx })}
-                          />
-                          {/* tabs being dragged  */}
+                        style={{
+                          ...provided2.draggableProps.style,
+                          left: isDraggingGlobal && isDragging && !isDraggingOver ? `${mouseXOnDrag - 65}px` : '',
+                        }}
+                        onMouseDown={onTabClickMousePos}>
+                        {isDraggingGlobal && isDragging && !isDraggingOver ? (
+                          <TabDraggedOutsideActiveSpace numSelectedTabs={selectedTabs?.length} tabURL={tab.url} />
+                        ) : (
+                          <div className="relative w-[90vw]" tabIndex={-1}>
+                            <Tab
+                              tabData={tab}
+                              isSpaceActive={true}
+                              onCreateNewTab={() => handleCreateNewTab(idx)}
+                              isModifierKeyPressed={isModifierKeyPressed || isShiftKeyPressed}
+                              isTabActive={space.activeTabIndex === idx}
+                              onTabDelete={() => handleRemoveTab(idx)}
+                              onTabDoubleClick={() => onTabDoubleClickHandler(tab.id, idx)}
+                              isSelected={isTabSelected(tab.id)}
+                              onClick={() => onTabClick({ ...tab, index: idx })}
+                            />
+                            {/* tabs being dragged  */}
 
-                          {/* dragging multiple tabs indicator */}
-                          {isDraggingOver && isDragging && selectedTabs?.length > 0 ? (
-                            <>
-                              {/* number of tabs being dragged */}
-                              {selectedTabs.length > 1 ? (
-                                <span
-                                  className={`w-6 h-6 rounded-lg px-1 py-1 absolute -top-2.5 -left-2.5 text-[11px] z-[200]
+                            {/* dragging multiple tabs indicator */}
+                            {isDraggingOver && isDragging && selectedTabs?.length > 0 ? (
+                              <>
+                                {/* number of tabs being dragged */}
+                                {selectedTabs.length > 1 ? (
+                                  <span
+                                    className={`w-6 h-6 rounded-lg px-1 py-1 absolute -top-2.5 -left-2.5 text-[11px] z-[200]
                             flex items-center justify-center font-semibold bg-brand-darkBgAccent text-slate-400`}>
-                                  +{selectedTabs?.length - 1}
-                                </span>
-                              ) : null}
-                              {/* tabs stacked effect  */}
-                              {['one', 'two', 'three'].map((v, ix) => (
-                                <div
-                                  key={v}
-                                  className="absolute  h-[1.7rem] w-[98%] -z-10 rounded-lg   border border-slate-700/70 bg-brand-darkBgAccent "
-                                  style={{ top: `-${(ix + 0.25) * 2}px`, left: `-${(ix + 0.25) * 2}px` }}></div>
-                              ))}
-                            </>
-                          ) : null}
-                          {/* selected tabs not not dragged */}
-                        </div>
-                      )}
-                      {/* active tab indicator */}
-                      {space.activeTabIndex === idx ? (
-                        <motion.div
-                          {...bounceDivAnimation}
-                          className="absolute h-[1.7rem] w-[98%] top-0 left-0 rounded-lg bg-brand-darkBgAccent/70 z-10"></motion.div>
-                      ) : null}
-                      {/* selected tab indicator */}
-                      {!isDraggingGlobal && isTabSelected(tab.id) ? (
-                        <motion.div
-                          {...bounceDivAnimation}
-                          className="absolute h-[1.7rem] w-[98%] top-0 left-0 rounded-lg border border-slate-700/60 bg-brand-darkBgAccent z-10 "
-                          style={{ borderWidth: isDraggingGlobal && !isDragging ? '3px' : '1px' }}></motion.div>
-                      ) : null}
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-            </div>
-          )}
-        </Droppable>
+                                    +{selectedTabs?.length - 1}
+                                  </span>
+                                ) : null}
+                                {/* tabs stacked effect  */}
+                                {['one', 'two', 'three'].map((v, ix) => (
+                                  <div
+                                    key={v}
+                                    className="absolute  h-[1.7rem] w-[98%] -z-10 rounded-lg   border border-slate-700/70 bg-brand-darkBgAccent "
+                                    style={{ top: `-${(ix + 0.25) * 2}px`, left: `-${(ix + 0.25) * 2}px` }}></div>
+                                ))}
+                              </>
+                            ) : null}
+                            {/* selected tabs not not dragged */}
+                          </div>
+                        )}
+                        {/* active tab indicator */}
+                        {space.activeTabIndex === idx ? (
+                          <motion.div
+                            {...bounceDivAnimation}
+                            className="absolute h-[1.7rem] w-[98%] top-0 left-0 rounded-lg bg-brand-darkBgAccent/70 z-10"></motion.div>
+                        ) : null}
+                        {/* selected tab indicator */}
+                        {!isDraggingGlobal && isTabSelected(tab.id) ? (
+                          <motion.div
+                            {...bounceDivAnimation}
+                            className="absolute h-[1.7rem] w-[98%] top-0 left-0 rounded-lg border border-slate-700/60 bg-brand-darkBgAccent z-10 "
+                            style={{ borderWidth: isDraggingGlobal && !isDragging ? '3px' : '1px' }}></motion.div>
+                        ) : null}
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+              </div>
+            )}
+          </Droppable>
+        ) : (
+          <SnoozedTabs tabs={snoozedTabs} onClose={() => setShowSnoozedTabs(false)} />
+        )}
       </div>
     </div>
   ) : null;
