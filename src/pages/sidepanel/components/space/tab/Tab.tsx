@@ -75,7 +75,7 @@ const Tab = ({
       onDoubleClick={() => onTabDoubleClick(tabData.id)}>
       <div className="flex items-center w-full ">
         <img className=" mr-2 opacity-95  w-4 h-4 z-10 rounded-sm  " src={getFaviconURL(tabData.url)} alt="icon" />
-        <span className="text-xs text-slate-400 max-w-fit min-w-[80%] whitespace-nowrap overflow-hidden text-ellipsis">
+        <span className="text-xs text-slate-400 max-w-fit min-w-[80%] text-start whitespace-nowrap overflow-hidden text-ellipsis">
           {tabData.title.trim()}
         </span>
       </div>

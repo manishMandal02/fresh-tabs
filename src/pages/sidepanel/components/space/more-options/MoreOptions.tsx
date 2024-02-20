@@ -24,7 +24,7 @@ const MoreOptions = ({
         <span>
           <MdMoreVert
             tabIndex={0}
-            className="text-slate-500/80 cursor-pointer hover:opacity-95 transition-all duration-200 -ml-1"
+            className="text-slate-500/80 cursor-pointer hover:opacity-95 transition-all duration-200 -ml-1 mt-[5px]"
             size={18}
           />
         </span>

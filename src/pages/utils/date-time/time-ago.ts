@@ -1,42 +1,37 @@
-const rangeFormats = {
-  seconds: { short: 's', medium: 'sec', long: 'second' },
-  minutes: { short: 'm', medium: 'min', long: 'minute' },
-  hours: { short: 'h', medium: 'hr', long: 'hour' },
-  days: { short: 'd', medium: 'day', long: 'day' },
-  weeks: { short: 'w', medium: 'wk', long: 'week' },
-  months: { short: 'm', medium: 'mon', long: 'month' },
-  years: { short: 'y', medium: 'yr', long: 'year' },
-};
+// get human readable date & time (2 min ago)
+export const getTimeAgo = (
+  time: number,
+  nowDate = Date.now(),
+  rft = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' }),
+) => {
+  const SECOND = 1000;
+  const MINUTE = 60 * SECOND;
+  const HOUR = 60 * MINUTE;
+  const DAY = 24 * HOUR;
+  const WEEK = 7 * DAY;
+  const YEAR = 365 * DAY;
+  const MONTH = YEAR / 12;
+  const intervals = [
+    { ge: YEAR, divisor: YEAR, unit: 'year' },
+    { ge: MONTH, divisor: MONTH, unit: 'month' },
+    { ge: WEEK, divisor: WEEK, unit: 'week' },
+    { ge: DAY, divisor: DAY, unit: 'day' },
+    { ge: HOUR, divisor: HOUR, unit: 'hour' },
+    { ge: MINUTE, divisor: MINUTE, unit: 'minute' },
+    { ge: 30 * SECOND, divisor: SECOND, unit: 'seconds' },
+    { ge: 0, divisor: 1, text: 'just now' },
+  ];
 
-// convert time stamp to time ago string
-export const getTimeAgo = (timestamp: number, format: 'medium' | 'short' | 'long' = 'medium') => {
-  const now = new Date().getTime();
-  const tsDiff = now / 1000 - timestamp;
-  const seconds = Math.floor(tsDiff);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  const weeks = Math.floor(days / 7);
-  const months = Math.floor(days / 30);
-  const years = Math.floor(days / 365);
+  const diff = nowDate - time;
+  const diffAbs = Math.abs(diff);
+  for (const interval of intervals) {
+    if (diffAbs >= interval.ge) {
+      const x = Math.round(Math.abs(diff) / interval.divisor);
+      const isFuture = diff < 0;
 
-  if (seconds <= 0) {
-    return 'now';
+      return interval.unit
+        ? rft.format(isFuture ? x : -x, interval.unit as Intl.RelativeTimeFormatUnit)
+        : interval.text;
+    }
   }
-
-  const times = {
-    years,
-    months,
-    weeks,
-    days,
-    hours,
-    minutes,
-    seconds,
-  };
-  const key = Object.keys(times).find(item => times[item] > 0) || 'seconds';
-  const amount = times[key];
-  const isShort = format === 'short';
-  const plural = amount > 1 && !isShort ? 's' : '';
-  const wording = rangeFormats[key][format];
-  return `${amount}${isShort ? '' : ' '}${wording}${plural} ago`;
 };
