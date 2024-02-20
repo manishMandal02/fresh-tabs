@@ -6,7 +6,7 @@ import { getStorage, setStorage } from './helpers';
 import { IDailySpaceTime, IDailySpaceTimeChunks } from '@root/src/pages/types/global.types';
 
 // get full space history (past 30d)
-export const getDailySpaceTime = async <T = IDailySpaceTime[]>(spaceId: string | null) => {
+export const getDailySpaceTime = async <T = IDailySpaceTime[]>(spaceId: string | null): Promise<T | []> => {
   const key = spaceId ? StorageKey.DAILY_SPACE_TIME_ALL(spaceId) : StorageKey.DAILY_SPACE_TIME_CHUNKS;
   try {
     return await getStorage<T>({ key, type: 'local' });
@@ -21,11 +21,14 @@ export const getDailySpaceTime = async <T = IDailySpaceTime[]>(spaceId: string |
 };
 
 // set space history to storage
-export const setDailySpaceTime = async (spaceId: string | null, spaceHistoryToday: IDailySpaceTimeChunks[]) => {
+export const setDailySpaceTime = async <T extends string | null = string>(
+  spaceId: T,
+  dailySpaceTime: IDailySpaceTime[] | IDailySpaceTimeChunks[],
+) => {
   const key = spaceId ? StorageKey.DAILY_SPACE_TIME_ALL(spaceId) : StorageKey.DAILY_SPACE_TIME_CHUNKS;
 
   try {
-    return await setStorage({ key, type: 'local', value: spaceHistoryToday });
+    return await setStorage({ key, type: 'local', value: dailySpaceTime });
   } catch (error) {
     logger.error({
       error,

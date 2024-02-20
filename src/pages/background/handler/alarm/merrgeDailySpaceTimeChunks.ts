@@ -1,49 +1,62 @@
-import { IDailySpaceTime } from '@root/src/pages/types/global.types';
+import { IDailySpaceTime, IDailySpaceTimeChunks } from '@root/src/pages/types/global.types';
+import { logger } from '@root/src/pages/utils';
 import { getDailySpaceTime, setDailySpaceTime } from '@root/src/services/chrome-storage/space-analytics';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 
 // daily midnight alarm: merge daily time spent in spaces data
 export const handleMergeDailySpaceTimeChunksAlarm = async () => {
-  const dailySpaceTimeChunks = await getDailySpaceTime(null);
+  try {
+    const dailySpaceTimeChunks = await getDailySpaceTime<IDailySpaceTimeChunks[]>(null);
 
-  const spaces = await getAllSpaces();
+    const spaces = await getAllSpaces();
 
-  const now = new Date();
+    const now = new Date();
 
-  // filter chunks by space and calculate minutes spent from chunks
-  let chunksBySpace: { spaceId: string; minutes: number }[] = spaces.map(space => ({
-    spaceId: space.id,
-    minutes: 0,
-  }));
+    // filter chunks by space and calculate minutes spent from chunks
+    let chunksBySpace: { spaceId: string; minutes: number }[] = spaces.map(space => ({
+      spaceId: space.id,
+      minutes: 0,
+    }));
 
-  for (let i = 0; i < dailySpaceTimeChunks.length; i++) {
-    const currSpace = dailySpaceTimeChunks[i].spaceId || '';
+    for (let i = 0; i < dailySpaceTimeChunks.length; i++) {
+      const currentChunk = dailySpaceTimeChunks[i];
 
-    if (!currSpace) continue;
+      if (!currentChunk.spaceId || !currentChunk?.time) continue;
 
-    // calculate time spend
-    // find the time difference  between window focused & unfocused milliseconds
-    //  divide it by 1000 to get seconds and then divide it by 60 to get minutes
-    const minutesSpent = (dailySpaceTimeChunks[i + 1].time - dailySpaceTimeChunks[i].time) / 1000 / 60;
+      // calculate time spend
+      // find the time difference  between window focused & unfocused milliseconds
+      //  divide it by 1000 to get seconds and then divide it by 60 to get minutes
+      const minutesSpent = (dailySpaceTimeChunks[i + 1].time - currentChunk.time) / 1000 / 60;
 
-    chunksBySpace.find(space => space.spaceId === currSpace).minutes += minutesSpent;
+      chunksBySpace.find(space => space.spaceId === currentChunk.spaceId).minutes += minutesSpent;
 
-    i++;
-  }
+      i++;
+    }
 
-  // remove space with no time spent
-  chunksBySpace = chunksBySpace.filter(chunk => chunk.minutes > 0);
+    // remove space with no time spent
+    chunksBySpace = chunksBySpace.filter(chunk => chunk.minutes > 0);
 
-  const setDailySpaceTimePromises = [];
+    const setDailySpaceTimePromises = [];
 
-  for (const space of chunksBySpace) {
-    const { spaceId, minutes } = space;
-    const dailySpaceTime: IDailySpaceTime = {
-      date: now,
-      minutes: Math.round(minutes),
-    };
+    for (const space of chunksBySpace) {
+      const { spaceId, minutes } = space;
+      const dailySpaceTime: IDailySpaceTime = {
+        date: now,
+        minutes: Math.round(minutes),
+      };
 
-    const dailySpaceTimeAll = await getDailySpaceTime(spaceId);
-    setDailySpaceTimePromises.push(setDailySpaceTime(spaceId, [...(dailySpaceTimeAll || []), dailySpaceTime]));
+      console.log('🚀 ~ handleMergeDailySpaceTimeChunksAlarm ~ dailySpaceTime:', dailySpaceTime);
+
+      return;
+
+      const dailySpaceTimeAll = await getDailySpaceTime(spaceId);
+      setDailySpaceTimePromises.push(setDailySpaceTime(spaceId, [...(dailySpaceTimeAll || []), dailySpaceTime]));
+    }
+  } catch (error) {
+    logger.error({
+      error,
+      msg: 'Error in handleMergeDailySpaceTimeChunksAlarm',
+      fileTrace: 'pages/background/handler/alarm/handleMergeDailySpaceTimeChunksAlarm.ts:60 ~ catch block',
+    });
   }
 };
