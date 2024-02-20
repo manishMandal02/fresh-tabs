@@ -1,4 +1,4 @@
-import { ISpace, ISpaceWithTabs, ITab, ITabWithIndex } from '@root/src/pages/types/global.types';
+import { ISnoozedTab, ISpace, ISpaceWithTabs, ITab, ITabWithIndex } from '@root/src/pages/types/global.types';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 import MoreOptions from '../more-options';
 import { deleteSpaceModalAtom, selectedTabsAtom, snackbarAtom, updateSpaceModalAtom } from '@root/src/stores/app';
@@ -12,6 +12,9 @@ import { goToTab } from '@root/src/services/chrome-tabs/tabs';
 import TabDraggedOutsideActiveSpace from './TabDraggedOutsideActiveSpace';
 import { useKeyPressed } from '../../../hooks/useKeyPressed';
 import { logger } from '@root/src/pages/utils/logger';
+import { MdHistory, MdSnooze } from 'react-icons/md';
+import Tooltip from '../../elements/tooltip';
+import { getSnoozedTabs } from '@root/src/services/chrome-storage/snooze-tabs';
 
 type Props = {
   space: ISpace;
@@ -28,6 +31,16 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
 
   // local state - show delete modal
   const [selectedTabs, setSelectedTabs] = useAtom(selectedTabsAtom);
+
+  const [snoozedTabs, setSnoozedTabs] = useState<ISnoozedTab[]>([]);
+
+  useEffect(() => {
+    if (!space?.id) return;
+    (async () => {
+      const snoozedTabsStorage = await getSnoozedTabs(space.id);
+      setSnoozedTabs(snoozedTabsStorage);
+    })();
+  }, [space]);
 
   // delete space modal  global state
   const [, setDeleteSpaceModal] = useAtom(deleteSpaceModalAtom);
@@ -209,24 +222,49 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
 
   return space?.id ? (
     <div className="h-full mt-4 ">
-      <div className="flex items-start h-[6.5%] justify-between px-2">
+      <div className="flex items-center h-[6.5%] justify-between px-2">
         <div className="flex items-center ">
           <div className="text-lg  border-r  pr-5  w-fit select-none" style={{ borderColor: space.theme }}>
             {space.emoji}
           </div>
           <p className="text-base font-light text-slate-400 ml-2.5">{space.title}</p>
+          <p className="text-slate-500/90 text-[12px] px-2 py-px bg-brand-darkBgAccent/40 rounded ml-1.5">
+            {tabs.length}
+          </p>
         </div>
 
-        {/* more options menu */}
-        <div className="flex items-center select-none">
-          <span className="text-slate-500 mr-1 ">{tabs.length}</span>
-          <MoreOptions
-            shouldOpenInNewWindow={false}
-            isSpaceActive={true}
-            onSyncClick={handleSyncTabs}
-            onEditClick={() => setUpdateSpaceModal({ ...space, tabs })}
-            onDeleteClick={() => setDeleteSpaceModal({ show: true, spaceId: space.id })}
-          />
+        <div className="flex  justify-center select-none gap-x-2.5">
+          {/* snoozed tab */}
+          <Tooltip label="View snoozed tabs">
+            <div className="relative">
+              <span className="absolute -top-[5px] -right-[5px] px-[3.5px] py-[0.6px] bg-brand-primary/90 rounded-full text-[8px] font-medium text-slate-700">
+                {snoozedTabs.length || 0}
+              </span>
+              <MdSnooze
+                size={18}
+                className="text-slate-500/70 cursor-pointer hover:opacity-95 transition-all duration-200"
+              />
+            </div>
+          </Tooltip>
+          {/* space history */}
+          <Tooltip label="View space history">
+            <span>
+              <MdHistory
+                size={18}
+                className="text-slate-500/70 cursor-pointer hover:opacity-95 transition-all duration-200  "
+              />
+            </span>
+          </Tooltip>
+          {/* more options  */}
+          <span>
+            <MoreOptions
+              shouldOpenInNewWindow={false}
+              isSpaceActive={true}
+              onSyncClick={handleSyncTabs}
+              onEditClick={() => setUpdateSpaceModal({ ...space, tabs })}
+              onDeleteClick={() => setDeleteSpaceModal({ show: true, spaceId: space.id })}
+            />
+          </span>
         </div>
       </div>
 

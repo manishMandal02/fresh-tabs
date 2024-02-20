@@ -20,11 +20,11 @@ const MoreOptions = ({
 }: Props) => {
   return (
     <DropdownMenuRadix.Root>
-      <DropdownMenuRadix.Trigger className="outline-none">
+      <DropdownMenuRadix.Trigger asChild>
         <MdMoreVert
           tabIndex={0}
-          className="text-slate-500 z-50 text-lg  hover:text-slate-400 transition-all duration-200 "
-          onClick={() => {}}
+          className="text-slate-500/80  hover:opacity-95 transition-all duration-200 -ml-1"
+          size={18}
         />
       </DropdownMenuRadix.Trigger>
 

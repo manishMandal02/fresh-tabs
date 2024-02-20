@@ -11,7 +11,7 @@ const Tooltip = ({ children, label, containerEl, delay = 700 }: Props) => {
     <TooltipRadix.Provider delayDuration={delay}>
       <TooltipRadix.Root>
         <TooltipRadix.Trigger asChild>{children}</TooltipRadix.Trigger>
-        <TooltipRadix.Portal container={containerEl || null}>
+        <TooltipRadix.Portal {...(containerEl ? { container: containerEl } : {})}>
           <TooltipRadix.Content
             className={`
             z-[999999] data-[state=delayed-open]:data-[side=top]:animate-slideDownAndFade data-[state=delayed-open]:data-[side=right]:animate-slideLeftAndFade data-[state=delayed-open]:data-[side=left]:animate-slideRightAndFade data-[state=delayed-open]:data-[side=bottom]:animate-slideUpAndFade 
