@@ -20,7 +20,7 @@ import {
   updateTab,
   updateTabIndex,
 } from '@root/src/services/chrome-storage/tabs';
-import { getFaviconURL, parseURL } from '../utils/url';
+import { getFaviconURL, isChromeUrl, parseUrl } from '../utils/url';
 
 import { logger } from '../utils/logger';
 import { publishEvents, publishEventsTab } from '../utils/publish-events';
@@ -131,7 +131,7 @@ const createUnsavedSpacesOnInstall = async () => {
       const tabs: ITab[] = tabsInWindow.map(tab => ({
         id: tab.id,
         title: tab.title,
-        url: parseURL(tab.url),
+        url: parseUrl(tab.url),
       }));
 
       // active tab for window
@@ -231,7 +231,7 @@ const recordDailySpaceTime = async (windowId: number) => {
   const dailySpaceTimeChunksToday = await getDailySpaceTime<IDailySpaceTimeChunks[]>(null);
 
   await setDailySpaceTime(null, [...(dailySpaceTimeChunksToday || []), dailySpaceTimeChunks]);
-  logger.info('👍 Recorded daily space time.');
+  logger.info('👍 Recorded daily space time chunk.');
 };
 
 // * chrome event listeners
@@ -299,7 +299,7 @@ chrome.runtime.onMessage.addListener(
 
         const { index, ...tab } = await getCurrentTab();
         if (!shouldOpenInNewTab) {
-          await chrome.tabs.update(tab.id, { url: parseURL(url) });
+          await chrome.tabs.update(tab.id, { url: parseUrl(url) });
         } else {
           await chrome.tabs.create({ index: index + 1, url, active: true });
         }
@@ -459,15 +459,16 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
     let activeTabId = currentTab?.id;
 
-    if (currentTab?.url.startsWith('chrome://')) {
+    if (isChromeUrl(currentTab?.url)) {
       // switch tab as content script doesn't work on chrome pages
 
+      //  TODO - use space history
       // get last visited url
       const recentlyVisitedURL = await getRecentlyVisitedSites(1);
 
       const tabs = await chrome.tabs.query({ currentWindow: true });
 
-      if (tabs.length < 2 || tabs.filter(t => t.url.startsWith('chrome://')).length === tabs.length) {
+      if (tabs.length < 2 || tabs.filter(t => isChromeUrl(t.url)).length === tabs.length) {
         // create new tab if one 1 tab exists
         const newTab = await chrome.tabs.create({ url: recentlyVisitedURL[0].url, active: true });
         activeTabId = newTab.id;
@@ -605,7 +606,7 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   if (tab.url.startsWith(DISCARD_TAB_URL_PREFIX)) {
     // update tab with original url
     await chrome.tabs.update(tabId, {
-      url: parseURL(tab.url),
+      url: parseUrl(tab.url),
     });
   }
 

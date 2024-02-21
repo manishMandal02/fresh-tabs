@@ -1,16 +1,17 @@
-import { parseURL } from '@root/src/pages/utils/url/parseURL';
+import { isChromeUrl } from './check-chrome-url';
+import { parseUrl } from './parse-url';
 const createChromeFaviconURL = (url: URL) => `${chrome.runtime.getURL('/_favicon/')}?pageUrl=${url.origin}/&size=32`;
 
 const googleFaviconURL = (url: URL) => `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=${32}`;
 
-export const getFaviconURL = (siteURL: string, isSidePanel = true) => {
+export const getFaviconURL = (siteUrl: string, isSidePanel = true) => {
   //  chrome icon as favicon
 
-  const parsedURL = parseURL(siteURL);
+  const parsedUrl = parseUrl(siteUrl);
 
-  const url = new URL(parsedURL);
+  const url = new URL(parsedUrl);
 
-  if (!siteURL || siteURL.startsWith('chrome://')) return createChromeFaviconURL(url);
+  if (!siteUrl || isChromeUrl(siteUrl)) return createChromeFaviconURL(url);
   const subdomainRegex =
     /(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}\.[a-zA-Z0-9]{2,}\.[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})?/;
 

@@ -7,7 +7,7 @@ import { FaArrowRightFromBracket, FaArrowRight, FaLink } from 'react-icons/fa6';
 import { motion } from 'framer-motion';
 import { useState, useEffect, useRef, MouseEventHandler, ReactEventHandler, useCallback } from 'react';
 
-import { isValidURL } from '../../utils/url/isValidURL';
+import { isValidURL } from '../../utils/url/validate-url';
 import { ICommand, ISpace, ITab } from '../../types/global.types';
 import { useCommandPalette } from './useCommandPalette';
 import { debounce } from '../../utils/debounce';

@@ -9,18 +9,25 @@ const SnoozedTabs = ({ tabs }: Props) => {
   return (
     <div className="flex">
       {tabs?.map(tab => (
-        <div key={tab.snoozedAt} className="max-w-full px-1 bg-brand-darkBgAccent/30 rounded-lg py-1 ">
-          <div className="flex items-center px-1.5 mt-1.5">
-            <img src={tab.faviconUrl} alt="icon" className="w-4 h-4 rounded-md mr-2 opacity-90" />
-            <p className="text-slate-300 min-w-[80%] whitespace-nowrap overflow-hidden text-ellipsis">{tab.title}</p>
+        <div
+          key={tab.snoozedAt}
+          className="max-w-full w-full flex justify-center pl-2  pr-1 bg-brand-darkBgAccent/30 rounded-lg py-1.5 ">
+          <div className="w-[10%] flex items-center">
+            <img src={tab.faviconUrl} alt="icon" className="w-[1.7rem] h-[1.7rem] rounded-md opacity-90" />
           </div>
-          <div className="flex mt-1 px-3">
-            <span className="text-slate-400 bg-brand-darkBg/50 px-2.5 py-1 rounded font-medium ml-auto">
-              <span className="opacity-90">⏰</span> &nbsp;
-              <Tooltip label={new Date(tab.snoozedUntil).toLocaleString()}>
-                <span className="font-semibold">{getTimeAgo(tab.snoozedUntil)}</span>
-              </Tooltip>
-            </span>
+          <div className="flex flex-col justify-center w-[90%] pl-1.5 mt-1">
+            <p className="text-slate-300/90 max-w-[97%] whitespace-nowrap overflow-hidden text-ellipsis">{tab.title}</p>
+            <div className="text-slate-400 flex items-center justify-between">
+              {/* snoozed at time */}
+              <span className="text-[11px] font-medium opacity-60 ml-px ">snoozed {getTimeAgo(tab.snoozedAt)}</span>
+              {/* snoozed until */}
+              <span className=" bg-brand-darkBg/70 w-fit px-2 py-px rounded font-medium mr-2.5 -mb-px">
+                <span className="opacity-90">⏰</span> &nbsp;
+                <Tooltip label={new Date(tab.snoozedUntil).toLocaleString()}>
+                  <span className="font-semibold text-[11px]">{getTimeAgo(tab.snoozedUntil)}</span>
+                </Tooltip>
+              </span>
+            </div>
           </div>
         </div>
       ))}

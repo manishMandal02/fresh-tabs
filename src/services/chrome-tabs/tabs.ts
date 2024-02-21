@@ -3,7 +3,7 @@ import { getSpaceByWindow, updateSpace } from '../chrome-storage/spaces';
 import { getFaviconURL } from '@root/src/pages/utils/url';
 import { getTabsInSpace, setTabsForSpace } from '../chrome-storage/tabs';
 import { DISCARD_TAB_URL_PREFIX, SNOOZED_TAB_GROUP_TITLE } from '@root/src/constants/app';
-import { parseURL } from '@root/src/pages/utils/url/parseURL';
+import { parseUrl } from '@root/src/pages/utils/url/parse-url';
 import { getTabToUnSnooze } from '../chrome-storage/snooze-tabs';
 
 type OpenSpaceProps = {
@@ -31,7 +31,7 @@ export const createDiscardedTabs = async (tabs: ITab[], windowId?: number) => {
       <!DOCTYPE html>
       <html>
       <head>
-      <link rel="icon" href="${getFaviconURL(parseURL(tab.url))}">
+      <link rel="icon" href="${getFaviconURL(parseUrl(tab.url))}">
       <title>${tab.title}</title>
       <link href="//{[${tab.url}]}//">
       </head>
@@ -73,7 +73,7 @@ export const createDiscardedTabs = async (tabs: ITab[], windowId?: number) => {
 
     const tabDiscardedURL = url || pendingUrl;
 
-    const tabURL = parseURL(tabDiscardedURL);
+    const tabURL = parseUrl(tabDiscardedURL);
 
     // get the tab details (as the new tab doesn't have title)
     const matchedTab = tabs.find(tab => tab.url === tabURL);

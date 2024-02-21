@@ -21,7 +21,7 @@ export const getUrlFromHTML = (htmlString: string) => {
 };
 
 // parse discard url
-export const parseURL = (url: string) => {
+export const parseUrl = (url: string) => {
   if (url?.startsWith(DISCARD_TAB_URL_PREFIX)) {
     return getUrlFromHTML(url);
   }
