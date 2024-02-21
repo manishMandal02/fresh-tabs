@@ -51,7 +51,7 @@ import { getSpaceHistory, setSpaceHistory } from '@root/src/services/chrome-stor
 import { getDailySpaceTime, setDailySpaceTime } from '@root/src/services/chrome-storage/space-analytics';
 import { handleSnoozedTabAlarm } from './handler/alarm/snoozed-tab';
 import { handleMergeSpaceHistoryAlarm } from './handler/alarm/mergeSpaceHistory';
-import { handleMergeDailySpaceTimeChunksAlarm } from './handler/alarm/merrgeDailySpaceTimeChunks';
+import { handleMergeDailySpaceTimeChunksAlarm } from './handler/alarm/mergeDailySpaceTimeChunks';
 
 reloadOnUpdate('pages/background');
 
@@ -71,6 +71,8 @@ logger.info('🏁 background loaded');
 
   const midnightAlarm = await getAlarm(AlarmName.dailyMidnightTrigger);
 
+  console.log('🚀 ~ midnightAlarm:', midnightAlarm);
+
   // create alarms if not found
   if (!autoSaveToBMAlarm?.name) {
     await createAlarm({ name: AlarmName.autoSaveBM, triggerAfter: 1440, isRecurring: true });
@@ -79,7 +81,7 @@ logger.info('🏁 background loaded');
   if (!autoDiscardTabsAlarm?.name) {
     await createAlarm({ name: AlarmName.autoDiscardTabs, triggerAfter: 5, isRecurring: true });
   }
-  if (midnightAlarm?.name) {
+  if (!midnightAlarm?.name) {
     await createAlarm({
       name: AlarmName.dailyMidnightTrigger,
       triggerAfter: 1440,

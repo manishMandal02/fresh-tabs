@@ -52,10 +52,12 @@ export interface ISiteVisit {
 // time spent in a space in a day
 export interface IDailySpaceTimeChunks {
   spaceId: string | null;
+  // epoch timestamp
   time: number;
 }
 export interface IDailySpaceTime {
-  date: Date;
+  // UTC date string
+  date: string;
   minutes: number;
 }
 
