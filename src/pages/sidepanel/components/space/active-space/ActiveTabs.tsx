@@ -49,7 +49,7 @@ const ActiveTabs = ({ tabs, isDraggingGlobal }: Props) => {
 
     // shift key was pressed (multi select)
     if (isShiftKeyPressed) {
-      const lastSelectedTabIndex = !isNaN(Number(selectedTabs[selectedTabs.length - 1]?.index))
+      const lastSelectedTabIndex = !Number.isNaN(Number(selectedTabs[selectedTabs.length - 1]?.index))
         ? selectedTabs[selectedTabs.length - 1]?.index
         : activeSpace.activeTabIndex;
 

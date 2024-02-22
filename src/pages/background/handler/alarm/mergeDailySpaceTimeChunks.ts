@@ -18,10 +18,6 @@ export const handleMergeDailySpaceTimeChunksAlarm = async () => {
 
     const today = new Date();
 
-    // TODO - testing
-
-    today.setDate(today.getDate() - 1);
-
     // filter chunks by space and calculate minutes spent from chunks
     let chunksBySpace: { spaceId: string; minutes: number }[] = spaces.map(space => ({
       spaceId: space.id,

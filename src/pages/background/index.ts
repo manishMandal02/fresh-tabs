@@ -203,11 +203,11 @@ const recordSiteVisit = async (windowId: number, tabId: number) => {
 
   const updatedTab = tabsInSpace.find(t => t.id === tabId);
 
-  if (!updatedTab?.url) return;
+  if (!updatedTab?.url || isChromeUrl(updatedTab.url)) return;
   const { url, title } = updatedTab;
   const spaceHistoryToday = await getSpaceHistory(space.id);
   const newSiteVisitRecord: ISiteVisit = { url, title, faviconUrl: getFaviconURL(url), timestamp: Date.now() };
-  await setSpaceHistory(space.id, [...(spaceHistoryToday || []), newSiteVisitRecord]);
+  await setSpaceHistory(space.id, [newSiteVisitRecord, ...(spaceHistoryToday || [])]);
 
   logger.info('👍 Recorded site visit.');
 };
@@ -448,6 +448,8 @@ chrome.runtime.onInstalled.addListener(async info => {
 
 // shortcut commands
 chrome.commands.onCommand.addListener(async (command, tab) => {
+  console.log('🚀 ~ chrome.commands.onCommand.addListener ~ tab:', tab);
+
   // TODO - handle new tab
   if (command === 'cmdPalette') {
     let currentTab = tab;
@@ -502,7 +504,12 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
     const activeSpace = await getSpaceByWindow(currentTab.windowId);
 
-    //  check if content script is loaded
+    // TODO - try using the content script to load command palette
+    // const testScript = await chrome.scripting.executeScript({
+    //   target: { tabId: currentTab.id },
+    //   files: ['./src/pages/content/index.js'],
+    // });
+
     // TODO - check if tab fully loaded
     const res = await publishEventsTab(activeTabId, { event: 'CHECK_CONTENT_SCRIPT_LOADED' });
 
