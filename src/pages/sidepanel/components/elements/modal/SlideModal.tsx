@@ -1,6 +1,7 @@
 import { useEffect, ReactNode, memo, useRef, KeyboardEventHandler, MouseEventHandler } from 'react';
 import { MdClose } from 'react-icons/md';
 import { motion } from 'framer-motion';
+import { useCustomAnimation } from '../../../hooks/useAnimation';
 
 type Props = {
   children?: ReactNode;
@@ -57,20 +58,12 @@ const SlideModal = ({ children, isOpen, onClose, title }: Props) => {
     }
   };
 
-  const bounceDivAnimation = {
-    initial: { scale: 0, opacity: 0 },
-    whileInView: {
-      scale: 1,
-      opacity: 1,
-    },
-    exit: { scale: 0, opacity: 0 },
-    transition: { type: 'spring', stiffness: 900, damping: 40 },
-  };
+  const { bounce } = useCustomAnimation();
 
   return isOpen ? (
     <motion.dialog
       ref={modalRef}
-      {...bounceDivAnimation}
+      {...bounce}
       onKeyDown={handleKeyDown}
       onClick={handleBackdropClick}
       className="w-screen h-min  bg-brand-darkBg px-1 py-1  backdrop:bg-brand-darkBg/25 fixed top-2 rounded-lg shadow shadow-brand-darkBgAccent">

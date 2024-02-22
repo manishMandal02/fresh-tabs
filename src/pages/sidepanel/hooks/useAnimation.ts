@@ -1,4 +1,5 @@
 export const useCustomAnimation = () => {
+  // TODO - try a diff animation like slide down or left or fill. etc.
   // bounce div animation
   const bounce = {
     initial: { scale: 0, opacity: 0 },

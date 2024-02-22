@@ -1,5 +1,6 @@
 import { getFaviconURL } from '@root/src/pages/utils/url';
 import { motion } from 'framer-motion';
+import { useCustomAnimation } from '../../../hooks/useAnimation';
 
 type Props = {
   tabURL: string;
@@ -12,15 +13,7 @@ const TabDraggedOutsideActiveSpace = ({ tabURL, numSelectedTabs }: Props) => {
   const faviconImg = getFaviconURL(tabURL);
 
   // bounce div animation
-  const bounceDivAnimation = {
-    initial: { scale: 0, opacity: 0 },
-    animate: {
-      scale: 1,
-      opacity: 1,
-    },
-    exit: { scale: 0, opacity: 0 },
-    transition: { type: 'spring', stiffness: 900, damping: 40, duration: 0.2 },
-  };
+  const { bounce } = useCustomAnimation();
 
   return (
     <div
@@ -37,7 +30,7 @@ const TabDraggedOutsideActiveSpace = ({ tabURL, numSelectedTabs }: Props) => {
         </span>
       ) : null}
       <motion.div
-        {...bounceDivAnimation}
+        {...bounce}
         className=" rounded-lg flex items-center justify-center bg-brand-darkBgAccent"
         style={{
           height: CARD_SIZE,

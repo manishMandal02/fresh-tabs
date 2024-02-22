@@ -7,6 +7,7 @@ import { copyToClipboard } from '@root/src/pages/utils/copy-to-clipboard';
 import { createTab, goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { MdClose, MdContentCopy, MdOpenInNew, MdOutlineAdd } from 'react-icons/md';
 import { motion } from 'framer-motion';
+import { useCustomAnimation } from '../../../hooks/useAnimation';
 
 type Props = {
   tabData: ITab;
@@ -52,19 +53,11 @@ const Tab = ({
   // handle copy tab url
   const handleCopyURL = async () => await copyToClipboard(tabData.url);
 
-  const bounceDivAnimation = {
-    initial: { scale: 0, opacity: 0 },
-    animate: {
-      scale: 1,
-      opacity: 1,
-    },
-    exit: { scale: 0, opacity: 0 },
-    transition: { type: 'spring', stiffness: 900, damping: 40 },
-  };
+  const { bounce } = useCustomAnimation();
 
   return (
     <motion.div
-      {...bounceDivAnimation}
+      {...bounce}
       tabIndex={0}
       className={` w-full select-none z-[20] px-2 py-[5px] flex relative 
                  items-center justify-between shadow-sm rounded-lg overflow-hidden group h-[1.7rem]`}

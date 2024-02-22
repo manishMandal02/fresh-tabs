@@ -7,6 +7,7 @@ import { useAtom } from 'jotai';
 import Tooltip from '../../elements/tooltip';
 import { newSpaceModalAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
 import { NonActiveSpace } from './non-active-space';
+import { useCustomAnimation } from '../../../hooks/useAnimation';
 
 type Props = {
   isDraggingSpace: boolean;
@@ -51,15 +52,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
   };
 
   // bounce div animation
-  const bounceDivAnimation = {
-    initial: { scale: 0, opacity: 0 },
-    animate: {
-      scale: 1,
-      opacity: 1,
-    },
-    exit: { scale: 0, opacity: 0 },
-    transition: { type: 'spring', stiffness: 900, damping: 40, duration: 0.2 },
-  };
+  const { bounce } = useCustomAnimation();
 
   return (
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
@@ -99,7 +92,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                         {(provided2, { isDraggingOver }) => (
                           <motion.div
                             {...provided2.droppableProps}
-                            {...bounceDivAnimation}
+                            {...bounce}
                             ref={provided2.innerRef}
                             className=" h-[35px] w-[50px] mt-1 mb-1.5 ">
                             <NonActiveSpace space={space} isDraggedOver={isDraggingOver || !!combineTargetFor} />

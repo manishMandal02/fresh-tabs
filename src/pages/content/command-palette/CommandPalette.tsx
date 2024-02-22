@@ -20,6 +20,7 @@ import { CommandType } from '@root/src/constants/app';
 import { getFaviconURL } from '../../utils/url';
 import { naturalLanguageToDate } from '../../utils/date-time/naturalLanguageToDate';
 import { prettifyDate } from '../../utils/date-time/prettifyDate';
+import { useCustomAnimation } from '../../sidepanel/hooks/useAnimation';
 
 const staticCommands: ICommand[] = [
   { index: 1, type: CommandType.SwitchTab, label: 'Switch Tab', icon: FaArrowRight },
@@ -278,16 +279,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
     ev.currentTarget.src = 'https://freshinbox.xyz/favicon.ico';
   };
 
-  // bounce animation
-  const bounceDivAnimation = {
-    initial: { scale: 0, opacity: 0 },
-    whileInView: {
-      scale: 1,
-      opacity: 1,
-    },
-    exit: { scale: 0, opacity: 0 },
-    transition: { type: 'spring', stiffness: 900, damping: 40 },
-  };
+  const { bounce } = useCustomAnimation();
 
   // show sub command indicator instead of search icon in search box
   const SubCommandIndicator = (type?: CommandType) => {
@@ -455,7 +447,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
         onKeyDown={ev => {
           ev.stopPropagation();
         }}
-        {...bounceDivAnimation}
+        {...bounce}
         onClick={handleBackdropClick}
         className=" m-0 flex items-center outline-none flex-col justify-center top-[20%] h-fit max-h-[75vh] w-[520px] left-[33.5%] backdrop:to-brand-darkBg/30 p-px bg-transparent">
         {/* search box */}

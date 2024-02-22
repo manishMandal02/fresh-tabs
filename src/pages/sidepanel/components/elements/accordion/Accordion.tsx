@@ -36,7 +36,7 @@ const RadixAccordionTrigger = forwardRef<HTMLButtonElement, HTMLProps<Element>>(
     <RadixAccordion.Header className="flex">
       {/*@ts-expect-error button type not matching radix  */}
       <RadixAccordion.Trigger
-        className={`group flex h-fit flex-1 cursor-default items-center justify-between bg-brand-darkBgAccent/20 rounded-md px-2 !outline-none`}
+        className={`group flex h-fit flex-1 cursor-default items-center justify-between bg-brand-darkBgAccent/25 rounded-md px-2 !outline-none`}
         {...props}
         ref={forwardedRef}>
         {children}

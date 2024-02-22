@@ -1,6 +1,6 @@
 import { ISiteVisit } from '@root/src/pages/types/global.types';
 import { getSpaceHistory } from '@root/src/services/chrome-storage/space-history';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Tab } from '../tab';
 import { getISODate } from '@root/src/pages/utils/date-time/getISODate';
 import { isChromeUrl } from '@root/src/pages/utils/url';
@@ -28,16 +28,7 @@ const getGroupedSessionRecursively = (startIndex: number, visits: ISiteVisit[]) 
 
   let currentIndex = startIndex;
 
-  console.log('🚀 ~ getGroupedSessionRecursively ~ startIndex: outside', startIndex);
-
-  console.log('🚀 ~ getGroupedSessionRecursively ~ currentIndex outside:', currentIndex);
-
-  console.log('🚀 ~ getGroupedSessionRecursively ~ visits[startIndex].url:', visits[startIndex].url);
-  console.log('🚀 ~ getGroupedSessionRecursively ~ visits[currentIndex + 1].url:', visits[currentIndex + 1].url);
-
   while (getUrlDomain(visits[startIndex].url) === getUrlDomain(visits[currentIndex + 1].url)) {
-    console.log('🔂 In the loop ~ index:', currentIndex);
-
     groupedVisits.push(visits[currentIndex + 1]);
     currentIndex += 1;
   }
@@ -49,6 +40,11 @@ type Props = { spaceId: string };
 
 const SpaceHistory = ({ spaceId }: Props) => {
   const [spaceHistory, setSpaceHistory] = useState<HistoryByDays[]>([]);
+
+  // date heading hint on scroll
+  const [floatingDate, setFloatingDate] = useState('');
+
+  const dateHeadingsRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   // init component
   useEffect(() => {
@@ -105,45 +101,82 @@ const SpaceHistory = ({ spaceId }: Props) => {
     })();
   }, [spaceId]);
 
+  // check if date heading is hidden whiles scrolling
+  const handleContainerScroll = ev => {
+    const scrollTop = ev?.target?.scrollTop || 0;
+
+    let lastDateHeadingHidden = '';
+
+    dateHeadingsRefs.current?.forEach(dateHeading => {
+      const dateHeadingTop = dateHeading.getBoundingClientRect().top;
+
+      if (dateHeadingTop < 170 && scrollTop !== 0) {
+        const date = dateHeading?.getAttribute('data-date-heading');
+        if (!date) return;
+        lastDateHeadingHidden = date;
+      }
+      setFloatingDate(lastDateHeadingHidden);
+    });
+  };
+
+  useEffect(() => {
+    const containerEl = document.getElementById('active-space-scrollable-container');
+    if (!containerEl) return;
+    containerEl.addEventListener('scroll', handleContainerScroll);
+
+    return () => {
+      containerEl.removeEventListener('scroll', handleContainerScroll);
+    };
+  });
+
   return (
-    <div className="py-1">
-      {spaceHistory?.map(({ date, history }) => (
+    <div className="py-1 relative">
+      {/* date info while scrolling */}
+      {floatingDate ? (
+        <div className="sticky  top-10 left-1/2 -translate-x-1/2 flex items-center justify-center  text-[12px] w-fit h-5 bg-brand-darkBg shadow-md shadow-brand-darkBgAccent/50 px-5 py-1 rounded-xl z-[99] text-slate-400/80">
+          {getWeekday(new Date(floatingDate))}{' '}
+          {new Date(floatingDate).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: '2-digit' })}
+        </div>
+      ) : null}
+      {spaceHistory?.map(({ date, history }, index) => (
         <div key={date} className="max-w-[99%]">
           <Accordion
             id={date}
             trigger={
               // history date heading
-              <div className="text-[13px]  w-[98%] flex items-center justify-between rounded-md  text-left mb-[2px]  text-slate-300   py-2 px-2.5">
+              <div
+                ref={el => (dateHeadingsRefs.current[index] = el)}
+                data-date-heading={date}
+                className="text-[13px] sticky top-0  w-[98%] flex items-center justify-between rounded-md  text-left mb-[2px]  text-slate-300   py-2 px-2.5">
                 <p>
-                  {' '}
-                  {getISODate(date) === getISODate(new Date()) ? 'Today •' : ''} {'  '} {getWeekday(new Date(date))}{' '}
+                  {getISODate(date) === getISODate(new Date()) ? 'Today •' : ''} {'  '} {getWeekday(new Date(date))}
                   {'  '}
                   {new Date(date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: '2-digit' })}
                 </p>
               </div>
             }>
             {/* date's history */}
-            <div className="px-px bg-brand-darkBgAccent/5 py-1 rounded-md">
+            <div className="px-px bg-brand-darkBgAccent/5 py-1 rounded-md ">
               {history.map(data => {
                 if ((data as GroupedVisit)?.domain) {
                   const visit = data as GroupedVisit;
                   return (
-                    <div key={visit.domain + visit.visits?.length || 0} className="rounded-md">
+                    <div key={visit.domain + visit.visits?.length || 0} className="rounded-md my-px">
                       {/* group title (domain) */}
                       <Accordion
                         id={visit.domain}
                         defaultCollapsed
                         trigger={
-                          <div className="flex items-center py-[4px] m-0">
+                          <div className="flex items-center py-[5px] m-0 -ml-px">
+                            {/* time */}
+                            <span className="text-slate-600/85 text-[10px] mr-1.5">
+                              {getTime(visit.visits[0].timestamp)}
+                            </span>
+
+                            {/* icon & title */}
                             <img alt="icon" src={visit.faviconUrl} className="w-[14px] h-[14px] mr-2" />
                             <p className="text-slate-400/80">
                               {visit.domain} ({visit.visits.length}) &nbsp;{' '}
-                              <span className="text-slate-600/80 mr-1 text-[11px]">
-                                {getTime(visit.visits[0].timestamp)} to
-                              </span>
-                              <span className="text-slate-600/80 text-[11px]">
-                                {getTime(visit.visits[visit.visits.length - 1].timestamp)}
-                              </span>
                             </p>
                           </div>
                         }>
@@ -167,8 +200,8 @@ const SpaceHistory = ({ spaceId }: Props) => {
                 } else {
                   const visit = data as ISiteVisit;
                   return (
-                    <div key={visit.timestamp} className="flex items-center ml-[0.5px]">
-                      <span className="text-slate-700 text-[10px] mr-[0.5px]">{getTime(visit.timestamp)}</span>
+                    <div key={visit.timestamp} className="flex items-center mb-px">
+                      <span className="text-slate-700 text-[10px] pl-1 mr-[0.5px]">{getTime(visit.timestamp)}</span>
                       <Tab
                         tabData={{ url: visit.url, title: visit.title, id: 0 }}
                         isTabActive={false}

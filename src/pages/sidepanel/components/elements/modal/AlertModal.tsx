@@ -1,5 +1,6 @@
 import { MouseEventHandler, ReactNode } from 'react';
 import { motion } from 'framer-motion';
+import { useCustomAnimation } from '../../../hooks/useAnimation';
 // import { MdClose } from 'react-icons/md';
 
 type Props = {
@@ -17,15 +18,7 @@ const AlertModal = ({ children, isOpen, onClose, title }: Props) => {
   };
 
   // bounce div animation
-  const bounceDivAnimation = {
-    initial: { scale: 0, opacity: 0 },
-    animate: {
-      scale: 1,
-      opacity: 1,
-    },
-    exit: { scale: 0, opacity: 0 },
-    transition: { type: 'spring', stiffness: 900, damping: 40, duration: 0.2 },
-  };
+  const { bounce } = useCustomAnimation();
 
   return (
     <div
@@ -50,7 +43,7 @@ const AlertModal = ({ children, isOpen, onClose, title }: Props) => {
           </button> */}
         </div>
         {isOpen ? (
-          <motion.div {...bounceDivAnimation} className="h-full w-full">
+          <motion.div {...bounce} className="h-full w-full">
             {children}
           </motion.div>
         ) : null}
