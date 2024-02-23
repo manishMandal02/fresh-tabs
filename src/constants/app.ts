@@ -19,6 +19,7 @@ export enum ThemeColor {
   Indigo = '#6366f1',
   Teal = '#5eead4',
   Fuchsia = '#d946ef',
+  Grey = '#94a3b8',
 }
 
 export enum CommandType {

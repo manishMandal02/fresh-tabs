@@ -1,4 +1,4 @@
-import { SampleSpaces, StorageKey } from './../../constants/app';
+import { SampleSpaces, StorageKey, ThemeColor } from './../../constants/app';
 import { getStorage } from './helpers/get';
 import { ISpace, ISpaceWithoutId, ITab } from '@root/src/pages/types/global.types';
 import { logger } from '@root/src/pages/utils/logger';
@@ -51,7 +51,7 @@ export const createUnsavedSpace = async (windowId: number, tabs: ITab[], activeI
       id: newSpaceId,
       title: `Unsaved Space ${numOfUnsavedSpaces + 1}`,
       emoji: '⚠️',
-      theme: '#94a3b8',
+      theme: ThemeColor.Grey,
       isSaved: false,
       activeTabIndex: activeIndex,
     };

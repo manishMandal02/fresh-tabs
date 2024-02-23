@@ -15,15 +15,13 @@ export interface ITab {
   title: string;
 }
 
-export type GrayColor = '#94a3b8';
-
 export interface ISpace {
   id: string;
   isSaved: boolean;
   title: string;
   emoji: string;
   windowId: number;
-  theme: ThemeColor | GrayColor;
+  theme: ThemeColor;
   activeTabIndex: number;
 }
 

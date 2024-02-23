@@ -1,6 +1,6 @@
-export const formatNumTo2Digits = (num: number) => {
+export const formatNumTo2Digits = (num: number, minimumDigits = 2) => {
   return num.toLocaleString('en-US', {
-    minimumIntegerDigits: 2,
+    minimumIntegerDigits: minimumDigits,
     useGrouping: false,
   });
 };

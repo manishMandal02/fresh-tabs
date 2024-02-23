@@ -135,17 +135,19 @@ const SpaceHistory = ({ spaceId }: Props) => {
   const { bounce } = useCustomAnimation();
 
   return (
-    <div className="py-1 relative">
+    <motion.div {...bounce} className="py-1 relative">
       {/* date info while scrolling */}
       {floatingDate ? (
-        <div className="sticky  top-10 left-1/2 -translate-x-1/2 flex items-center justify-center  text-[11px] w-fit h-5 bg-brand-darkBg shadow-md shadow-brand-darkBgAccent/40 border border-brand-darkBgAccent/60 px-3.5 py-[7px] rounded-xl z-[99] text-slate-300/80">
+        <motion.div
+          {...bounce}
+          className="sticky  top-10 mx-auto flex items-center justify-center  text-[11px] w-fit h-5 bg-brand-darkBg shadow-md shadow-brand-darkBgAccent/40 border border-brand-darkBgAccent/60 px-3.5 py-[7px] rounded-xl z-[99] text-slate-300/80">
           {getWeekday(new Date(floatingDate))}{' '}
           {new Date(floatingDate).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: '2-digit' })}
-        </div>
+        </motion.div>
       ) : null}
 
       {spaceHistory?.map(({ date, history }, index) => (
-        <motion.div key={date} className="max-w-[99%]" {...bounce}>
+        <div key={date} className="max-w-[99%]">
           <Accordion
             id={date}
             trigger={
@@ -222,14 +224,14 @@ const SpaceHistory = ({ spaceId }: Props) => {
               })}
             </div>
           </Accordion>
-        </motion.div>
+        </div>
       ))}
 
       {/* no history tabs */}
       {spaceHistory?.length < 1 ? (
         <p className="text-slate-500 text-[14px] font-light mt-6 mx-auto">No history for this space</p>
       ) : null}
-    </div>
+    </motion.div>
   );
 };
 
