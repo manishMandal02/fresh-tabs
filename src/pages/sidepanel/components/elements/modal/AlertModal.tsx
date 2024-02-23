@@ -20,6 +20,8 @@ const AlertModal = ({ children, isOpen, onClose, title }: Props) => {
   // bounce div animation
   const { bounce } = useCustomAnimation();
 
+  // TODO - replace this modal with the new one
+
   return (
     <div
       className="absolute z-100 h-screen w-screen top-0 left-0"

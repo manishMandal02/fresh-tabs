@@ -8,7 +8,7 @@ import { StorageKey } from '@root/src/constants/app';
 // get all tabs in space
 export const getTabsInSpace = async (spaceId: string): Promise<ITab[] | null> => {
   try {
-    const tabs = await getStorage<ITab[]>({ key: StorageKey.TABS(spaceId), type: 'local' });
+    const tabs = await getStorage<ITab[]>({ key: StorageKey.tabs(spaceId), type: 'local' });
 
     if (tabs?.length < 1) throw new Error('No tabs found for this space');
 
@@ -26,7 +26,7 @@ export const getTabsInSpace = async (spaceId: string): Promise<ITab[] | null> =>
 // set tabs for space
 export const setTabsForSpace = async (spaceId: string, tabs: ITab[]): Promise<boolean> => {
   try {
-    await setStorage({ type: 'local', key: StorageKey.TABS(spaceId), value: [...tabs.filter(t => !!t)] });
+    await setStorage({ type: 'local', key: StorageKey.tabs(spaceId), value: [...tabs.filter(t => !!t)] });
 
     return true;
   } catch (error) {

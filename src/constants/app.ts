@@ -53,11 +53,11 @@ export const StorageKey = {
   SETTINGS: 'SETTINGS',
   PINNED_TABS: 'PINNED_TABS',
   DAILY_SPACE_TIME_CHUNKS: 'DAILY_SPACE_TIME_CHUNKS',
-  TABS: (spaceId: string): `TABS-${string}` => `TABS-${spaceId}`,
-  SNOOZED: (spaceId: string): `SNOOZED-${string}` => `SNOOZED-${spaceId}`,
-  DAILY_SPACE_TIME_ALL: (spaceId: string): `DAILY_SPACE_TIME_ALL-${string}` => `DAILY_SPACE_TIME_ALL-${spaceId}`,
-  SPACE_HISTORY_ALL: (spaceId: string): `SPACE_HISTORY_ALL-${string}` => `SPACE_HISTORY_ALL-${spaceId}`,
-  SPACE_HISTORY_TODAY: (spaceId: string): `SPACE_HISTORY_TODAY-${string}` => `SPACE_HISTORY_TODAY-${spaceId}`,
+  tabs: (spaceId: string): `TABS-${string}` => `TABS-${spaceId}`,
+  snoozed: (spaceId: string): `SNOOZED-${string}` => `SNOOZED-${spaceId}`,
+  dailySpaceTimeAll: (spaceId: string): `DAILY_SPACE_TIME_ALL-${string}` => `DAILY_SPACE_TIME_ALL-${spaceId}`,
+  spaceHistoryAll: (spaceId: string): `SPACE_HISTORY_ALL-${string}` => `SPACE_HISTORY_ALL-${spaceId}`,
+  spaceHistoryToday: (spaceId: string): `SPACE_HISTORY_TODAY-${string}` => `SPACE_HISTORY_TODAY-${spaceId}`,
 } as const;
 
 // union type of all storage value (SPACES, TABS-${string}, etc.)

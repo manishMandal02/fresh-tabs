@@ -4,6 +4,7 @@ import { MdSave } from 'react-icons/md';
 import { useState, useEffect, useRef } from 'react';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import { GiNightSleep } from 'react-icons/gi';
+import { BarChartIcon } from '@radix-ui/react-icons';
 
 import Search from './components/search';
 import { FavTabs } from './components/space/tab';
@@ -21,6 +22,7 @@ import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookma
 import OtherSpacesContainer from './components/space/other-space/OtherSpacesContainer';
 import Settings from './components/settings/Settings';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
+import Analytics from './components/space/analytics/Analytics';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -40,6 +42,9 @@ const SidePanel = () => {
 
   //  global pinned tabs
   const [globalPinnedTabs, setGlobalPinnedTabs] = useState<IPinnedTab[]>([]);
+
+  // show analytics modal
+  const [showAnalytics, setShowAnalytics] = useState(true);
 
   // logics hook
   const {
@@ -129,14 +134,17 @@ const SidePanel = () => {
   };
 
   return (
-    <div className="w-screen h-screen  overflow-hidden bg-brand-darkBg">
-      <main className="h-full relative ">
+    <div className="w-screen h-screen overflow-hidden bg-brand-darkBg">
+      <main className="h-full relative">
         {/* app name */}
         <div className="h-[4%] pt-2.5 flex items-center justify-between px-3">
           <span className="invisible">Hide</span>
           <p className=" text-slate-400 text-base font-light tracking-wide  text-center">Fresh Tabs</p>
           {/* opens settings modal */}
           <div className="flex items-center gap-x-2 bg-red-10 mt-px">
+            <Tooltip label="Discard non active tabs">
+              <BarChartIcon className={`text-slate-600 cursor-pointer`} onClick={() => setShowAnalytics(true)} />
+            </Tooltip>
             <Tooltip label="Discard non active tabs">
               <GiNightSleep size={18} className={`text-slate-600 cursor-pointer`} onClick={handleDiscardTabs} />
             </Tooltip>
@@ -218,6 +226,9 @@ const SidePanel = () => {
 
         {/* delete space alert modal */}
         <DeleteSpaceModal />
+
+        {/* analytics */}
+        <Analytics show={showAnalytics} onClose={() => setShowAnalytics(false)} />
 
         {/* snackbar */}
         <Snackbar

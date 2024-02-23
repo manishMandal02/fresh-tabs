@@ -32,7 +32,7 @@ const MoreOptions = ({
 
       <DropdownMenuRadix.Portal>
         <DropdownMenuRadix.Content
-          className={`min-w-28 z-[200] py-1 bg-slate-900 text-slate-400 rounded data-[side=top]:animate-slideDownAndFade 
+          className={`min-w-28 z-[9999] py-1 bg-slate-900 text-slate-400 rounded data-[side=top]:animate-slideDownAndFade 
                     shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]  
                     data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade`}
           sideOffset={5}

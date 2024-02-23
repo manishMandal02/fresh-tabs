@@ -109,6 +109,8 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 
 // TODO - track num of times user switch spaces
 
+// TODO - reset day at 3am at default
+
 // helpers for chrome event handlers
 const createUnsavedSpacesOnInstall = async () => {
   try {
@@ -610,6 +612,8 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   // get tab info
   const tab = await chrome.tabs.get(tabId);
 
+  console.log('🚀 ~ chrome.tabs.onActivated.addListener ~ tab:', tab);
+
   if (tab.url.startsWith(DISCARD_TAB_URL_PREFIX)) {
     // update tab with original url
     await chrome.tabs.update(tabId, {
@@ -617,8 +621,10 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
     });
   }
 
-  // wait for 1s
-  await wait(500);
+  // record site usage
+
+  // wait for 0.2s
+  await wait(250);
 
   // update spaces' active tab
   const updateSpace = await updateActiveTabInSpace(windowId, tab.index);

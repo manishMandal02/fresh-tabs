@@ -7,7 +7,7 @@ import { ISiteVisit } from '@root/src/pages/types/global.types';
 
 // get full space history (past 30d)
 export const getSpaceHistory = async (spaceId: string, shouldGetFullHistory = false) => {
-  const key = shouldGetFullHistory ? StorageKey.SPACE_HISTORY_ALL(spaceId) : StorageKey.SPACE_HISTORY_TODAY(spaceId);
+  const key = shouldGetFullHistory ? StorageKey.spaceHistoryAll(spaceId) : StorageKey.spaceHistoryToday(spaceId);
   try {
     return await getStorage<ISiteVisit[]>({ key, type: 'local' });
   } catch (error) {
@@ -26,7 +26,7 @@ export const setSpaceHistory = async (
   spaceHistoryToday: ISiteVisit[],
   shouldSetFullHistory = false,
 ) => {
-  const key = shouldSetFullHistory ? StorageKey.SPACE_HISTORY_ALL(spaceId) : StorageKey.SPACE_HISTORY_TODAY(spaceId);
+  const key = shouldSetFullHistory ? StorageKey.spaceHistoryAll(spaceId) : StorageKey.spaceHistoryToday(spaceId);
 
   try {
     return await setStorage({ key, type: 'local', value: spaceHistoryToday });

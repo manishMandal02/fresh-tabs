@@ -7,7 +7,7 @@ import { IDailySpaceTime, IDailySpaceTimeChunks } from '@root/src/pages/types/gl
 
 // get full space history (past 30d)
 export const getDailySpaceTime = async <T = IDailySpaceTime[]>(spaceId: string | null): Promise<T> => {
-  const key = spaceId ? StorageKey.DAILY_SPACE_TIME_ALL(spaceId) : StorageKey.DAILY_SPACE_TIME_CHUNKS;
+  const key = spaceId ? StorageKey.dailySpaceTimeAll(spaceId) : StorageKey.DAILY_SPACE_TIME_CHUNKS;
   try {
     return await getStorage<T>({ key, type: 'local' });
   } catch (error) {
@@ -25,7 +25,7 @@ export const setDailySpaceTime = async <T extends string | null = string>(
   spaceId: T,
   dailySpaceTime: IDailySpaceTime[] | IDailySpaceTimeChunks[],
 ) => {
-  const key = spaceId ? StorageKey.DAILY_SPACE_TIME_ALL(spaceId) : StorageKey.DAILY_SPACE_TIME_CHUNKS;
+  const key = spaceId ? StorageKey.dailySpaceTimeAll(spaceId) : StorageKey.DAILY_SPACE_TIME_CHUNKS;
 
   try {
     return await setStorage({ key, type: 'local', value: dailySpaceTime });

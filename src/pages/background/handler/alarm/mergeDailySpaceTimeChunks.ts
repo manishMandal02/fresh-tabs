@@ -18,6 +18,8 @@ export const handleMergeDailySpaceTimeChunksAlarm = async () => {
 
     const today = new Date();
 
+    today.setDate(today.getDate() - 1);
+
     // filter chunks by space and calculate minutes spent from chunks
     let chunksBySpace: { spaceId: string; minutes: number }[] = spaces.map(space => ({
       spaceId: space.id,
@@ -26,8 +28,6 @@ export const handleMergeDailySpaceTimeChunksAlarm = async () => {
 
     for (let i = 0; i < dailySpaceTimeChunks.length; i++) {
       const currentChunk = dailySpaceTimeChunks[i];
-
-      console.log('🚀 ~ handleMergeDailySpaceTimeChunksAlarm ~ currentChunk:', currentChunk);
 
       if (!currentChunk.spaceId || !currentChunk?.time) continue;
 
@@ -40,7 +40,7 @@ export const handleMergeDailySpaceTimeChunksAlarm = async () => {
     }
 
     // remove space with no time spent
-    chunksBySpace = chunksBySpace.filter(chunk => chunk.minutes > 0);
+    chunksBySpace = chunksBySpace.filter(chunk => Math.round(chunk.minutes) > 0);
 
     console.log('🚀 ~ handleMergeDailySpaceTimeChunksAlarm ~ chunksBySpace:', chunksBySpace);
 
@@ -61,10 +61,10 @@ export const handleMergeDailySpaceTimeChunksAlarm = async () => {
       if (dailySpaceTimeAll?.length > 0 && dailySpaceTimeAll.some(time => getISODate(time.date) === getISODate(today)))
         continue;
 
+      console.log('🚀 ~ handleMergeDailySpaceTimeChunksAlarm ~ dailySpaceTimeAll:', dailySpaceTimeAll);
+
       setDailySpaceTimePromises.push(setDailySpaceTime(spaceId, [...(dailySpaceTimeAll || []), dailySpaceTime]));
     }
-
-    console.log('🚀 ~ handleMergeDailySpaceTimeChunksAlarm ~ setDailySpaceTimePromises:', setDailySpaceTimePromises);
 
     setDailySpaceTimePromises.length > 0 && (await Promise.all(setDailySpaceTimePromises));
 

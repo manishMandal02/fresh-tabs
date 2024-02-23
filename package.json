@@ -44,6 +44,7 @@
     "react-dom": "18.2.0",
     "react-icons": "^4.12.0",
     "react-tooltip": "^5.25.1",
+    "victory": "^36.9.1",
     "webextension-polyfill": "0.10.0"
   },
   "devDependencies": {

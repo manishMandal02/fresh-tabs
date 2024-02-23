@@ -7,7 +7,7 @@ import { StorageKey } from '@root/src/constants/app';
 
 export const getSnoozedTabs = async (spaceId: string) => {
   try {
-    return await getStorage<ISnoozedTab[]>({ key: StorageKey.SNOOZED(spaceId), type: 'local' });
+    return await getStorage<ISnoozedTab[]>({ key: StorageKey.snoozed(spaceId), type: 'local' });
   } catch (error) {
     logger.error({
       error,
@@ -20,7 +20,7 @@ export const getSnoozedTabs = async (spaceId: string) => {
 
 const setSnoozedTabs = async (spaceId: string, snoozedTabs: ISnoozedTab[]) => {
   try {
-    return await setStorage({ key: StorageKey.SNOOZED(spaceId), type: 'local', value: snoozedTabs });
+    return await setStorage({ key: StorageKey.snoozed(spaceId), type: 'local', value: snoozedTabs });
   } catch (error) {
     logger.error({
       error,
