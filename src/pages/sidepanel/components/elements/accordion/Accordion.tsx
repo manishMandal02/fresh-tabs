@@ -41,7 +41,7 @@ const RadixAccordionTrigger = forwardRef<HTMLButtonElement, HTMLProps<Element>>(
         ref={forwardedRef}>
         {children}
         <ChevronDownIcon
-          className="text-slate-700 font-bold ease-[cubic-bezier(0.87,_0,_0.13,_1)] transition-transform duration-300 group-data-[state=open]:rotate-180"
+          className="text-slate-600/80 font-bold ease-[cubic-bezier(0.87,_0,_0.13,_1)] transition-transform duration-300 group-data-[state=open]:rotate-180"
           aria-hidden
         />
       </RadixAccordion.Trigger>

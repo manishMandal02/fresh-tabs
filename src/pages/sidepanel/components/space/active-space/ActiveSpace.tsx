@@ -163,7 +163,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
         className="relative max-h-[90%]  cc-scrollbar min-h-fit overflow-x-hidden border-y pb-2 border-brand-darkBgAccent/30">
         <Tabs
           tabs={[`Active  (${tabs?.length || 0})`, `Snoozed (${snoozedTabs?.length || 0})`, 'History']}
-          defaultTab={3}>
+          defaultTab={2}>
           <ActiveTabs tabs={tabs} isDraggingGlobal={isDraggingGlobal} />
           <SnoozedTabs tabs={snoozedTabs} />
           <SpaceHistory spaceId={space.id} />

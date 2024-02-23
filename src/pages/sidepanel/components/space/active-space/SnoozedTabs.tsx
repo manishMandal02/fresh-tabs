@@ -1,17 +1,26 @@
+import { motion } from 'framer-motion';
+
 import { ISnoozedTab } from '@root/src/pages/types/global.types';
 import { getTimeAgo } from '@root/src/pages/utils/date-time/time-ago';
 import Tooltip from '../../elements/tooltip';
+import { useCustomAnimation } from '../../../hooks/useAnimation';
 
 type Props = {
   tabs: ISnoozedTab[];
 };
 const SnoozedTabs = ({ tabs }: Props) => {
+  console.log('🚀 ~ SnoozedTabs ~ tabs:', tabs);
+
+  const { bounce } = useCustomAnimation();
+
+  // TODO - handle delete snoozed
   return (
-    <div className="flex">
+    <div className="pt-1">
       {tabs?.map(tab => (
-        <div
+        <motion.div
+          {...bounce}
           key={tab.snoozedAt}
-          className="max-w-full w-full flex justify-center pl-2  pr-1 bg-brand-darkBgAccent/30 rounded-lg py-1.5 ">
+          className="max-w-full w-full flex justify-center pl-2 mb-1.5 last:mb-0 pr-1 bg-brand-darkBgAccent/30 rounded-lg py-1.5 ">
           <div className="w-[10%] flex items-center">
             <img src={tab.faviconUrl} alt="icon" className="w-[1.7rem] h-[1.7rem] rounded-md opacity-90" />
           </div>
@@ -29,7 +38,7 @@ const SnoozedTabs = ({ tabs }: Props) => {
               </span>
             </div>
           </div>
-        </div>
+        </motion.div>
       ))}
 
       {/* no snoozed tabs */}

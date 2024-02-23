@@ -104,7 +104,7 @@ const ActiveTabs = ({ tabs, isDraggingGlobal }: Props) => {
   return (
     <Droppable droppableId={'active-space'} ignoreContainerClipping type="TAB">
       {(provided1, { isDraggingOver }) => (
-        <div {...provided1.droppableProps} ref={provided1.innerRef} className="h-full w-full ">
+        <motion.div {...provided1.droppableProps} ref={provided1.innerRef} {...bounce} className="h-full w-full ">
           {/* render draggable  */}
           {tabs.map((tab, idx) => (
             <Draggable draggableId={'tab-' + tab.id} index={idx} key={tab.id}>
@@ -135,7 +135,6 @@ const ActiveTabs = ({ tabs, isDraggingGlobal }: Props) => {
                         isTabActive={activeSpace.activeTabIndex === idx}
                         onTabDelete={() => handleRemoveTab(idx)}
                         onTabDoubleClick={() => onTabDoubleClickHandler(tab.id, idx)}
-                        isSelected={isTabSelected(tab.id)}
                         onClick={() => onTabClick({ ...tab, index: idx })}
                       />
                       {/* tabs being dragged  */}
@@ -180,7 +179,7 @@ const ActiveTabs = ({ tabs, isDraggingGlobal }: Props) => {
               )}
             </Draggable>
           ))}
-        </div>
+        </motion.div>
       )}
     </Droppable>
   );

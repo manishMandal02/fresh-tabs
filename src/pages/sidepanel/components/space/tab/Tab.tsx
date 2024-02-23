@@ -7,13 +7,11 @@ import { copyToClipboard } from '@root/src/pages/utils/copy-to-clipboard';
 import { createTab, goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { MdClose, MdContentCopy, MdOpenInNew, MdOutlineAdd } from 'react-icons/md';
 import { motion } from 'framer-motion';
-import { useCustomAnimation } from '../../../hooks/useAnimation';
 
 type Props = {
   tabData: ITab;
   isTabActive: boolean;
   isModifierKeyPressed: boolean;
-  isSelected?: boolean;
   showHoverOption?: boolean;
   isSpaceActive?: boolean;
   showDeleteOption?: boolean;
@@ -28,7 +26,6 @@ const Tab = ({
   onTabDelete,
   isTabActive,
   onCreateNewTab,
-  // isSelected,
   onClick,
   isSpaceActive,
   onTabDoubleClick,
@@ -53,12 +50,8 @@ const Tab = ({
   // handle copy tab url
   const handleCopyURL = async () => await copyToClipboard(tabData.url);
 
-  const { bounce } = useCustomAnimation();
-
   return (
-    <motion.div
-      {...bounce}
-      tabIndex={0}
+    <div
       className={` w-full select-none z-[20] px-2 py-[5px] flex relative 
                  items-center justify-between shadow-sm rounded-lg overflow-hidden group h-[1.7rem]`}
       style={{
@@ -119,7 +112,7 @@ const Tab = ({
           ) : null}
         </motion.span>
       ) : null}
-    </motion.div>
+    </div>
   );
 };
 

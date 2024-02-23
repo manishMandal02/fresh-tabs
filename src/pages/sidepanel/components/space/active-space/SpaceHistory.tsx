@@ -2,12 +2,14 @@ import { ISiteVisit } from '@root/src/pages/types/global.types';
 import { getSpaceHistory } from '@root/src/services/chrome-storage/space-history';
 import { useState, useEffect, useRef } from 'react';
 import { Tab } from '../tab';
+import { motion } from 'framer-motion';
 import { getISODate } from '@root/src/pages/utils/date-time/getISODate';
 import { isChromeUrl } from '@root/src/pages/utils/url';
 import { getWeekday } from '@root/src/pages/utils/date-time/get-weekday';
 import Accordion from '../../elements/accordion/Accordion';
 import { getUrlDomain } from '@root/src/pages/utils/url/get-url-domain';
 import { getTime } from '@root/src/pages/utils/date-time/get-time';
+import { useCustomAnimation } from '../../../hooks/useAnimation';
 
 type GroupedVisit = { visits: ISiteVisit[]; domain?: string; faviconUrl?: string };
 
@@ -19,8 +21,11 @@ type HistoryByDays = {
 // identify same site session to group them
 const isGroupSession = (visit: ISiteVisit, index: number, visits: ISiteVisit[]) => {
   console.log('🚀 ~ isGroupSession ~ index:', index);
-
-  return visits[index + 1]?.url && getUrlDomain(visit.url) === getUrlDomain(visits[index + 1]?.url);
+  return (
+    visits[index + 1]?.url &&
+    visits[index + 1]?.url !== visit.url &&
+    getUrlDomain(visit.url) === getUrlDomain(visits[index + 1]?.url)
+  );
 };
 
 const getGroupedSessionRecursively = (startIndex: number, visits: ISiteVisit[]) => {
@@ -28,7 +33,10 @@ const getGroupedSessionRecursively = (startIndex: number, visits: ISiteVisit[]) 
 
   let currentIndex = startIndex;
 
-  while (getUrlDomain(visits[startIndex].url) === getUrlDomain(visits[currentIndex + 1].url)) {
+  while (
+    getUrlDomain(visits[startIndex].url) === getUrlDomain(visits[currentIndex + 1].url) &&
+    visits[currentIndex + 1]?.url !== visits[startIndex].url
+  ) {
     groupedVisits.push(visits[currentIndex + 1]);
     currentIndex += 1;
   }
@@ -64,8 +72,8 @@ const SpaceHistory = ({ spaceId }: Props) => {
       combinedHistory.forEach((visit, idx) => {
         console.log('🚀 ~ combinedHistory.forEach ~ idx: 1st', idx);
 
-        if (isChromeUrl(visit.url) || skipGroupIndexes.includes(idx)) return;
-        console.log('🚀 ~ combinedHistory.forEach ~ idx: 2nd', idx);
+        if (isChromeUrl(visit.url) || skipGroupIndexes.includes(idx) || visit.url === combinedHistory[idx - 1]?.url)
+          return;
 
         const date = getISODate(new Date(visit.timestamp));
         let day = historyByDays.find(d => d.date === date);
@@ -78,19 +86,14 @@ const SpaceHistory = ({ spaceId }: Props) => {
         if (isGroupSession(visit, idx, combinedHistory)) {
           const groupedVisits = getGroupedSessionRecursively(idx, combinedHistory);
 
-          console.log('🚀 ~ combinedHistory.forEach ~ groupedVisits:', groupedVisits);
-
           // skip the next site visits
           skipGroupIndexes.push(...groupedVisits.map((_g, idx1) => idx1 + idx));
 
-          console.log('🚀 ~ combinedHistory.forEach ~ current🚀 idx:', idx);
-
-          console.log(
-            '🚀 ~ combinedHistory.forEach ~ groupedVisits. skip indexes:',
-            ...groupedVisits.map((_g, idx1) => idx1 + (idx + 1)),
-          );
-
-          day.history.push({ visits: groupedVisits, domain: getUrlDomain(visit.url), faviconUrl: visit.faviconUrl });
+          day.history.push({
+            visits: groupedVisits,
+            domain: getUrlDomain(visit.url),
+            faviconUrl: visit.faviconUrl,
+          });
         } else {
           day.history.push(visit);
         }
@@ -129,17 +132,20 @@ const SpaceHistory = ({ spaceId }: Props) => {
     };
   });
 
+  const { bounce } = useCustomAnimation();
+
   return (
     <div className="py-1 relative">
       {/* date info while scrolling */}
       {floatingDate ? (
-        <div className="sticky  top-10 left-1/2 -translate-x-1/2 flex items-center justify-center  text-[12px] w-fit h-5 bg-brand-darkBg shadow-md shadow-brand-darkBgAccent/50 px-5 py-1 rounded-xl z-[99] text-slate-400/80">
+        <div className="sticky  top-10 left-1/2 -translate-x-1/2 flex items-center justify-center  text-[11px] w-fit h-5 bg-brand-darkBg shadow-md shadow-brand-darkBgAccent/40 border border-brand-darkBgAccent/60 px-5 py-1.5 rounded-xl z-[99] text-slate-300/80">
           {getWeekday(new Date(floatingDate))}{' '}
           {new Date(floatingDate).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: '2-digit' })}
         </div>
       ) : null}
+
       {spaceHistory?.map(({ date, history }, index) => (
-        <div key={date} className="max-w-[99%]">
+        <motion.div key={date} className="max-w-[99%]" {...bounce}>
           <Accordion
             id={date}
             trigger={
@@ -169,8 +175,8 @@ const SpaceHistory = ({ spaceId }: Props) => {
                         trigger={
                           <div className="flex items-center py-[5px] m-0 -ml-px">
                             {/* time */}
-                            <span className="text-slate-600/85 text-[10px] mr-1.5">
-                              {getTime(visit.visits[0].timestamp)}
+                            <span className="text-slate-500/80 text-[10px] mr-1.5">
+                              {getTime(visit.visits[0]?.timestamp)}
                             </span>
 
                             {/* icon & title */}
@@ -201,7 +207,7 @@ const SpaceHistory = ({ spaceId }: Props) => {
                   const visit = data as ISiteVisit;
                   return (
                     <div key={visit.timestamp} className="flex items-center mb-px">
-                      <span className="text-slate-700 text-[10px] pl-1 mr-[0.5px]">{getTime(visit.timestamp)}</span>
+                      <span className="text-slate-500/80 text-[10px] pl-1 mr-[0.5px]">{getTime(visit.timestamp)}</span>
                       <Tab
                         tabData={{ url: visit.url, title: visit.title, id: 0 }}
                         isTabActive={false}
@@ -216,7 +222,7 @@ const SpaceHistory = ({ spaceId }: Props) => {
               })}
             </div>
           </Accordion>
-        </div>
+        </motion.div>
       ))}
 
       {/* no history tabs */}
