@@ -62,7 +62,7 @@ const UpdateSpace = () => {
 
   return updateSpaceModal?.id && typeof updateSpaceData?.title === 'string'
     ? createPortal(
-        <SlideModal title="" isOpen={typeof updateSpaceData?.title === 'string'} onClose={onClose}>
+        <SlideModal title={`Update Space`} isOpen={typeof updateSpaceData?.title === 'string'} onClose={onClose}>
           <div className=" flex flex-col  w-full h-full py-3 px-4">
             <div className="mt-4 flex items-center gap-x-3">
               <TextInput placeholder="Enter space title..." value={updateSpaceData.title} onChange={onTitleChange} />
@@ -76,7 +76,7 @@ const UpdateSpace = () => {
             /> */}
 
             {/* numTabs */}
-            <p className="text-slate-500 font-extralight mt-3 text-[14px] ml-px mb-px ">
+            <p className="text-slate-500 font-extralight mt-4 text-[14px] ml-px mb-px ">
               {tabs.length} {tabs.length > 1 ? 'Tabs' : 'Tab'}
             </p>
 
@@ -94,7 +94,7 @@ const UpdateSpace = () => {
             ) : null}
             {/* update space */}
             <button
-              className={` mt-5 mx-auto w-[70%] py-2 rounded-md text-slate-700 font-semibold
+              className={` mt-6 mx-auto w-[70%] py-2 rounded-md text-slate-700 font-semibold
                   text-[13px] bg-brand-primary/90 hover:opacity-80 transition-all  duration-300`}
               onClick={handleUpdateSpace}>
               {snackbar.isLoading ? <Spinner size="sm" /> : updateBtnLabel}

@@ -107,7 +107,7 @@ export const useKeyPressed = ({
         monitorModifierKeys && parentConTainerEl.removeEventListener('keyup', handleKeyUp);
       }
     };
-  }, [handleKeydown, handleKeyUp, monitorModifierKeys, parentConTainerEl]);
+  }, []);
 
   return {
     isModifierKeyPressed,

@@ -1,23 +1,23 @@
-import { useState, MouseEventHandler } from 'react';
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
+import { useState, MouseEventHandler } from 'react';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 
 import { Tab } from '../tab';
 import { useKeyPressed } from '../../../hooks/useKeyPressed';
+import { goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { useCustomAnimation } from '../../../hooks/useAnimation';
-import { activeSpaceAtom, selectedTabsAtom } from '@root/src/stores/app';
 import { ITab, ITabWithIndex } from '@root/src/pages/types/global.types';
+import { activeSpaceAtom, selectedTabsAtom } from '@root/src/stores/app';
 import TabDraggedOutsideActiveSpace from './TabDraggedOutsideActiveSpace';
 import { removeTabFromSpace } from '@root/src/services/chrome-storage/tabs';
-import { goToTab } from '@root/src/services/chrome-tabs/tabs';
 
 type Props = {
   tabs: ITab[];
   isDraggingGlobal: boolean;
 };
 
-const ActiveTabs = ({ tabs, isDraggingGlobal }: Props) => {
+const ActiveSpaceTabs = ({ tabs, isDraggingGlobal }: Props) => {
   const [selectedTabs, setSelectedTabs] = useAtom(selectedTabsAtom);
 
   const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);
@@ -185,4 +185,4 @@ const ActiveTabs = ({ tabs, isDraggingGlobal }: Props) => {
   );
 };
 
-export default ActiveTabs;
+export default ActiveSpaceTabs;

@@ -140,7 +140,7 @@ const SpaceHistory = ({ spaceId }: Props) => {
       {floatingDate ? (
         <motion.div
           {...bounce}
-          className="sticky  top-10 mx-auto flex items-center justify-center  text-[11px] w-fit h-5 bg-brand-darkBg shadow-md shadow-brand-darkBgAccent/40 border border-brand-darkBgAccent/60 px-3.5 py-[7px] rounded-xl z-[99] text-slate-300/80">
+          className="sticky  top-10 mx-auto flex items-center justify-center  text-[11px] w-fit h-5 bg-brand-darkBg shadow-md shadow-brand-darkBgAccent/40 border border-brand-darkBgAccent/60 px-3.5 py-[8px] rounded-xl z-[99] text-slate-300/80">
           {getWeekday(new Date(floatingDate))}{' '}
           {new Date(floatingDate).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: '2-digit' })}
         </motion.div>

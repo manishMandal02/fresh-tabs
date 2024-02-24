@@ -1,5 +1,7 @@
-import { MouseEventHandler, ReactNode } from 'react';
+import { useEffect, ReactNode, memo, useRef, KeyboardEventHandler, MouseEventHandler } from 'react';
+import { Cross1Icon } from '@radix-ui/react-icons';
 import { motion } from 'framer-motion';
+
 import { useCustomAnimation } from '../../../hooks/useAnimation';
 // import { MdClose } from 'react-icons/md';
 
@@ -8,50 +10,83 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   title: string;
+  showCloseBtn?: boolean;
 };
 
-const AlertModal = ({ children, isOpen, onClose, title }: Props) => {
-  // close modal
-  const handleClose: MouseEventHandler = ev => {
-    ev.stopPropagation();
+const AlertModal = ({ children, isOpen, onClose, title, showCloseBtn = true }: Props) => {
+  // dialog ref
+  const modalRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const modalEl = modalRef.current;
+
+    if (isOpen) {
+      (async () => {
+        modalEl?.showModal();
+      })();
+    } else {
+      modalEl?.close();
+    }
+  }, [isOpen]);
+
+  // handle close
+  const handleClose = async () => {
     onClose();
   };
 
-  // bounce div animation
+  const handleKeyDown: KeyboardEventHandler<HTMLDialogElement> = ev => {
+    ev.stopPropagation();
+    if (ev.key.toLowerCase() === 'escape') {
+      handleClose();
+    }
+  };
+
+  // check if modal's backdrop was clicked
+  const handleBackdropClick: MouseEventHandler<HTMLDialogElement> = ev => {
+    const dialogEl = modalRef.current;
+
+    // check if dialog was clicked or outside
+
+    const rect = dialogEl.getBoundingClientRect();
+
+    const isInDialog =
+      rect.top <= ev.clientY &&
+      ev.clientY <= rect.top + rect.height &&
+      rect.left <= ev.clientX &&
+      ev.clientX <= rect.left + rect.width;
+
+    if (!isInDialog) {
+      // outside click
+      dialogEl.close();
+      handleClose();
+    }
+  };
+
   const { bounce } = useCustomAnimation();
 
-  // TODO - replace this modal with the new one
-
-  return (
-    <div
-      className="absolute z-100 h-screen w-screen top-0 left-0"
-      style={{
-        display: isOpen ? 'flex' : 'none',
-      }}>
-      {/* backdrop */}
-      {/* eslint-disable-next-line */}
-      <div className="z-[125] top-0 left-0 w-screen h-screen absolute bg-brand-darkBg/25" onClick={handleClose}></div>
-      {/* modal card */}
-      <div
-        className={`z-[130] absolute top-[35%] flex flex-col left-1/2 -translate-x-1/2 w-[90%]    mx-auto h-[20%] rounded-md  bg-slate-900 
-                border-t border-slate-700 transition-all duration-300  ease-in-out`}>
-        <div className="border-b border-slate-800 relative  py-2">
-          <p className="text-sm font-light text-slate-200 select-none text-center">{title}</p>
-          {/* close btn */}
-          {/* <button
-            className="absolute top-1.5 select-none right-3 text-slate-500 hover:opacity-90 transition-all duration-200 "
-            onClick={handleClose}>
-            <MdClose size={26} className="" />
-          </button> */}
+  return isOpen ? (
+    <motion.dialog
+      ref={modalRef}
+      {...bounce}
+      onKeyDown={handleKeyDown}
+      onClick={handleBackdropClick}
+      className="w-screen h-min  bg-brand-darkBg px-1 py-1  backdrop:bg-brand-darkBgAccent/10 fixed top-2 rounded-lg shadow shadow-brand-darkBgAccent">
+      <div className="overflow-hidden w-full pt-1 z-[99] rounded-lg">
+        <div className="w-full relative mb-3 shadow-sm shadow-brand-darkBgAccent/40">
+          {title ? <h2 className="text-center text-slate-400/80 text-base font-light ">{title}</h2> : null}
+          {showCloseBtn ? (
+            <Cross1Icon
+              className="absolute  top-px right-2 fill-slate-700/90 cursor-pointer font-thin hover:fill-slate-600/90 transition-all duration-300 ease-in-out"
+              onClick={handleClose}
+            />
+          ) : null}
         </div>
-        {isOpen ? (
-          <motion.div {...bounce} className="h-full w-full">
-            {children}
-          </motion.div>
-        ) : null}
+        {children}
       </div>
-    </div>
+    </motion.dialog>
+  ) : (
+    <></>
   );
 };
 
-export default AlertModal;
+export default memo(AlertModal);

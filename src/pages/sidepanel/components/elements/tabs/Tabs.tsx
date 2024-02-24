@@ -14,7 +14,7 @@ const Tabs = <T extends string[]>({ tabs, children, defaultTab }: Props<T>) => {
   }
   return (
     <TabsRadix.Root defaultValue={defaultTab.toString()}>
-      <TabsRadix.List className="shrink-0 z-[9999] flex bg-brand-darkBg border-b border-brand-darkBgAccent/30 rounded-md py-1 px-px sticky top-0 left-0">
+      <TabsRadix.List className="shrink-0 z-[99] flex bg-brand-darkBg border-b border-brand-darkBgAccent/30 rounded-md py-1 px-px sticky top-0 left-0">
         {/* tabs */}
         {tabs.map((tab, index) => (
           <TabsRadix.Trigger

@@ -1,5 +1,6 @@
 // eslint-disable-next-line import/named
 import { VictoryPie, VictoryLabel } from 'victory';
+
 import { ThemeColor } from '@root/src/constants/app';
 import { formatNumTo2Digits } from '@root/src/pages/utils/formatNumTo2Digits';
 
@@ -21,14 +22,12 @@ const getTotalTime = (data: PieChartData[]) => {
   return toHours(totalMinutes);
 };
 
-const toHours = (time: number) => {
-  return Number(time / 60).toFixed(1);
-};
+const toHours = (time: number) => Number(time / 60).toFixed(1);
 
 const PieChart = ({ data }: Props) => {
   return (
     <>
-      <div className="w-[60%] mt-2 mb-1 rounded-full mx-auto flex flex-col items-center justify-between relative select-none">
+      <div className="w-[60%] h-[50%] mt-2 mb-1 rounded-full mx-auto flex flex-col items-center justify-between relative select-none">
         {/* center label */}
         <span className="absolute top-1/2 left-1/2 ml-1  -translate-y-1/2 -translate-x-1/2 z-[999] text-[24px] text-slate-500/70 font-semibold">
           {getTotalTime(data)}

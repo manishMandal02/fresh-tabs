@@ -15,7 +15,7 @@ const SnoozedTabs = ({ tabs }: Props) => {
 
   // TODO - handle delete snoozed
   return (
-    <div className="pt-1">
+    <div className="pt-1 min-h-6">
       {tabs?.map(tab => (
         <motion.div
           {...bounce}
@@ -43,7 +43,7 @@ const SnoozedTabs = ({ tabs }: Props) => {
 
       {/* no snoozed tabs */}
       {tabs?.length < 1 ? (
-        <p className="text-slate-500 text-[14px] font-light mt-6 mx-auto">No snoozed tabs for this space</p>
+        <p className="text-slate-500 text-[14px] py-8 font-light my-auto mx-auto">No snoozed tabs for this space</p>
       ) : null}
     </div>
   );

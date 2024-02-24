@@ -7,17 +7,15 @@ import { GiNightSleep } from 'react-icons/gi';
 import { BarChartIcon } from '@radix-ui/react-icons';
 
 import Search from './components/search';
-import { FavTabs } from './components/space/tab';
 import Tooltip from './components/elements/tooltip';
 import { useSidePanel } from './hooks/useSidePanel';
 import Spinner from './components/elements/spinner';
 import Snackbar from './components/elements/snackbar';
 import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
-import { IMessageEventSidePanel, IPinnedTab, ITab } from '../types/global.types';
+import { IMessageEventSidePanel, ITab } from '../types/global.types';
 import DeleteSpaceModal from './components/space/delete/DeleteSpaceModal';
 import { ActiveSpace, CreateSpace, UpdateSpace } from './components/space';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
-import { getGlobalPinnedTabs } from '@root/src/services/chrome-storage/tabs';
 import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
 import OtherSpacesContainer from './components/space/other-space/OtherSpacesContainer';
 import Settings from './components/settings/Settings';
@@ -41,10 +39,10 @@ const SidePanel = () => {
   const [isLoadingSpaces, setIsLoadingSpaces] = useState(false);
 
   //  global pinned tabs
-  const [globalPinnedTabs, setGlobalPinnedTabs] = useState<IPinnedTab[]>([]);
+  // const [globalPinnedTabs, setGlobalPinnedTabs] = useState<IPinnedTab[]>([]);
 
   // show analytics modal
-  const [showAnalytics, setShowAnalytics] = useState(true);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   // logics hook
   const {
@@ -74,8 +72,8 @@ const SidePanel = () => {
       const settings = await getAppSettings();
 
       setAppSetting(settings);
-      const pinnedTabs = await getGlobalPinnedTabs();
-      setGlobalPinnedTabs(pinnedTabs);
+      // const pinnedTabs = await getGlobalPinnedTabs();
+      // setGlobalPinnedTabs(pinnedTabs);
       setIsLoadingSpaces(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -155,12 +153,14 @@ const SidePanel = () => {
           </div>
         </div>
         {/* search */}
-        <Search />
+        <div className="">
+          <Search />
+        </div>
         {/* <p className="text-sm font-light text-slate-400 mt-3 mb-1 ml-3 select-none">Spaces</p> */}
         {/* global */}
-        <div className="mt-4">
+        {/* <div className="mt-4">
           <FavTabs tabs={globalPinnedTabs} isGlobal={true} setGlobalPinnedTabs={setGlobalPinnedTabs} />
-        </div>
+        </div> */}
         {/* spaces container */}
         <div className="w-full h-[84%] px-3 py-1 scroll-p-px scroll-m-px relative">
           {/* un saved  */}

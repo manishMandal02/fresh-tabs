@@ -11,7 +11,7 @@ import { logger } from '@root/src/pages/utils/logger';
 import { getSnoozedTabs } from '@root/src/services/chrome-storage/snooze-tabs';
 import SnoozedTabs from './SnoozedTabs';
 import Tabs from '../../elements/tabs/Tabs';
-import ActiveTabs from './ActiveTabs';
+import ActiveSpaceTabs from './ActiveSpaceTabs';
 import SpaceHistory from './SpaceHistory';
 
 type Props = {
@@ -164,7 +164,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
         <Tabs
           tabs={[`Active  (${tabs?.length || 0})`, `Snoozed (${snoozedTabs?.length || 0})`, 'History']}
           defaultTab={1}>
-          <ActiveTabs tabs={tabs} isDraggingGlobal={isDraggingGlobal} />
+          <ActiveSpaceTabs tabs={tabs} isDraggingGlobal={isDraggingGlobal} />
           <SnoozedTabs tabs={snoozedTabs} />
           <SpaceHistory spaceId={space.id} />
         </Tabs>

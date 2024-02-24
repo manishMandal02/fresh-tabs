@@ -16,7 +16,7 @@ import { ThemeColor } from '@root/src/constants/app';
 type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;
 
 const defaultSpaceData: DefaultSpaceFields = {
-  title: 'Side projects',
+  title: '',
   emoji: '🚀',
   theme: ThemeColor.Fuchsia,
 };
@@ -121,7 +121,7 @@ const CreateSpace = () => {
   const handleShortcut = useCallback(ev => {
     const keyEv = ev as KeyboardEvent;
 
-    if ((keyEv.ctrlKey || keyEv.shiftKey) && keyEv.key.toLowerCase() === 'a') {
+    if (keyEv.ctrlKey && keyEv.key.toLowerCase() === 'a') {
       setIsModalOpen(true);
     }
   }, []);
@@ -138,14 +138,7 @@ const CreateSpace = () => {
   }, [handleShortcut]);
 
   return (
-    <SlideModal
-      title=""
-      isOpen={isModalOpen}
-      onClose={() => {
-        console.log('settings modal onClose');
-
-        handleCloseModal();
-      }}>
+    <SlideModal title="Add New Space" isOpen={isModalOpen} onClose={handleCloseModal}>
       <div className=" flex flex-col  w-full h-full py-3 px-4">
         <div className="mt-4 flex items-center gap-x-3">
           <TextInput placeholder="Space Title..." value={newSpaceData.title} onChange={onTitleChange} />

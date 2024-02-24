@@ -13,7 +13,7 @@ const TextInput = ({ value, onChange, placeholder }: Props) => {
   return (
     <input
       type="text"
-      className="rounded bg-brand-darkBgAccent  px-2.5 py-1.5 text-[1rem]  text-slate-200 w-48 outline-slate-700 border-none"
+      className="rounded bg-brand-darkBgAccent   px-2.5 py-1.5 text-[1rem]  text-slate-200 w-48 outline-slate-700 border-none"
       placeholder={placeholder}
       // onKeyDown={ev => {
       //   ev.stopPropagation();

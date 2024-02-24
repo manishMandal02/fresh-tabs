@@ -1,8 +1,9 @@
-import { Cross1Icon } from '@radix-ui/react-icons';
 import PieChart, { PieChartData } from '../../elements/charts/PieChart';
 import { useState, useEffect } from 'react';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import DatePicker from '../../elements/date-picker/DatePicker';
+import { useKeyPressed } from '../../../hooks/useKeyPressed';
+import { SlideModal } from '../../elements/modal';
 
 const filterOptions = ['Today', 'Yesterday', '7 days', '30 days', 'Custom', 'All'];
 
@@ -43,16 +44,16 @@ const Analytics = ({ show, onClose }: Props) => {
     })();
   }, []);
 
-  return show ? (
-    <div className="absolute bottom-0 left-0 w-full h-[86.5%] bg-brand-darkBg rounded-tl-xl rounded-tr-xl z-[9999] border-t border-brand-darkBgAccent/80">
-      {/* header */}
-      <div className="w-full px-3 py-2 flex items-center justify-between border-b border-brand-darkBgAccent/30">
-        <span></span>
-        <p className="text-slate-400/80 text-[14px]">Space Usage Analytics</p>
-        <Cross1Icon className="text-slate-600 font-bold scale-[1.1] cursor-pointer" onClick={onClose} />
-      </div>
+  useKeyPressed({
+    onEscapePressed: () => {
+      onClose();
+    },
+  });
+
+  return (
+    <SlideModal isOpen={show} onClose={onClose} title="Space Usage Analytics">
       {/* main */}
-      <main className="w-full pt-4">
+      <main className="w-full pt-5 h-[65vh]">
         {/* filters */}
         <div className="flex item-center justify-between mb-1.5 px-5">
           {filterOptions.map((filter, idx) => (
@@ -82,13 +83,13 @@ const Analytics = ({ show, onClose }: Props) => {
         </div>
         {/* site usage  */}
         <div
-          className={`bg-brand-darkBgAccent/30 absolute bottom-4 w-[90%] left-1/2 -translate-x-1/2 rounded-xl py-[4rem] 
+          className={`bg-brand-darkBgAccent/30 mt-6 w-[90%] mx-auto rounded-xl h-[5rem]
                       flex items-center justify-center text-slate-500 text-[12px] font-extralight`}>
           More analytics reports coming soon...
         </div>
       </main>
-    </div>
-  ) : null;
+    </SlideModal>
+  );
 };
 
 export default Analytics;

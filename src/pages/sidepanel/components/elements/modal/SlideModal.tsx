@@ -1,84 +1,51 @@
-import { useEffect, ReactNode, memo, useRef, KeyboardEventHandler, MouseEventHandler } from 'react';
-import { MdClose } from 'react-icons/md';
+import { ReactNode, memo } from 'react';
+import { Cross1Icon } from '@radix-ui/react-icons';
 import { motion } from 'framer-motion';
 import { useCustomAnimation } from '../../../hooks/useAnimation';
+import { useKeyPressed } from '../../../hooks/useKeyPressed';
 
 type Props = {
-  children?: ReactNode;
   isOpen: boolean;
   onClose: () => void;
   title: string;
+  children: ReactNode;
 };
 
 const SlideModal = ({ children, isOpen, onClose, title }: Props) => {
-  const modalRef = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const modalEl = modalRef.current;
-
-    if (isOpen) {
-      (async () => {
-        modalEl?.showModal();
-      })();
-    } else {
-      modalEl?.close();
-    }
-  }, [isOpen]);
-
   // handle close
   const handleClose = async () => {
     onClose();
   };
 
-  const handleKeyDown: KeyboardEventHandler<HTMLDialogElement> = ev => {
-    ev.stopPropagation();
-    if (ev.key.toLowerCase() === 'escape') {
+  useKeyPressed({
+    onEscapePressed: () => {
       handleClose();
-    }
-  };
+    },
+  });
 
-  // check if modal's backdrop was clicked
-  const handleBackdropClick: MouseEventHandler<HTMLDialogElement> = ev => {
-    const dialogEl = modalRef.current;
-
-    // check if dialog was clicked or outside
-
-    const rect = dialogEl.getBoundingClientRect();
-
-    const isInDialog =
-      rect.top <= ev.clientY &&
-      ev.clientY <= rect.top + rect.height &&
-      rect.left <= ev.clientX &&
-      ev.clientX <= rect.left + rect.width;
-
-    if (!isInDialog) {
-      // outside click
-      dialogEl.close();
-      handleClose();
-    }
-  };
-
-  const { bounce } = useCustomAnimation();
+  const { slide } = useCustomAnimation();
 
   return isOpen ? (
-    <motion.dialog
-      ref={modalRef}
-      {...bounce}
-      onKeyDown={handleKeyDown}
-      onClick={handleBackdropClick}
-      className="w-screen h-min  bg-brand-darkBg px-1 py-1  backdrop:bg-brand-darkBg/25 fixed top-2 rounded-lg shadow shadow-brand-darkBgAccent">
-      <div className="overflow-hidden w-full pt-1 z-[99] rounded-lg">
-        <div className="w-full relative mb-3">
-          {title ? <h2 className="text-center text-slate-500/80 text-base font-light ">{title}</h2> : null}
-          <MdClose
-            className="absolute top-px right-2 fill-slate-700/90 cursor-pointer font-thin hover:fill-slate-600/90 transition-all duration-300 ease-in-out"
-            size={26}
-            onClick={handleClose}
-          />
+    <motion.div {...slide} className="fixed z-[999] h-screen w-screen top-0 left-0">
+      {/* backdrop */}
+      {/* eslint-disable-next-line */}
+      <div className="z-[9999] w-screen h-screen fixed bg-brand-darkBg/20" onClick={handleClose}></div>
+      {/* modal card */}
+      <div
+        className={`z-[99999] absolute bottom-0 flex flex-col left-0 w-full min-h-[40%] bg-brand-darkBg rounded-tl-3xl rounded-tr-3xl
+                         border-t border-brand-darkBgAccent/30 transition-all duration-300  ease-in-out pb-2`}>
+        <div className="shadow-sm shadow-brand-darkBgAccent/30 relative  py-2 min-h-8">
+          <p className="text-[14px] font-light text-slate-400/80 select-none text-center">{title}</p>
+          {/* close btn */}
+          <button
+            className="absolute top-3 select-none right-4 text-slate-500/80 hover:opacity-90 transition-all duration-200 "
+            onClick={handleClose}>
+            <Cross1Icon className="scale-[1]" />
+          </button>
         </div>
         {children}
       </div>
-    </motion.dialog>
+    </motion.div>
   ) : (
     <></>
   );
