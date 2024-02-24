@@ -109,6 +109,8 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 
 // TODO - track num of times user switch spaces
 
+// TODO - Use UTC date & time stamp for server (save user timezone)
+
 // TODO - reset day at 3am at default
 
 // helpers for chrome event handlers

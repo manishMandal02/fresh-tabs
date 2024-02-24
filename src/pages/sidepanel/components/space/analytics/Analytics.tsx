@@ -2,28 +2,42 @@ import { Cross1Icon } from '@radix-ui/react-icons';
 import PieChart, { PieChartData } from '../../elements/charts/PieChart';
 import { useState, useEffect } from 'react';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
+import DatePicker from '../../elements/date-picker/DatePicker';
 
-const filterOptions = ['Today', 'Yesterday', '7 days', '30 days', 'All'];
+const filterOptions = ['Today', 'Yesterday', '7 days', '30 days', 'Custom', 'All'];
 
 type Props = {
   show: boolean;
   onClose: () => void;
 };
+
+const getRandomNum = () => Math.round(Math.random() * 12 * (Math.random() * 15) * 2);
+
 const Analytics = ({ show, onClose }: Props) => {
   const [selectedFilter, setSelectedFilter] = useState(0);
+
+  const [customDate, setCustomDate] = useState<Date | null>();
 
   const [spaceUsageData, setSpaceUsageData] = useState<PieChartData[]>([]);
 
   useEffect(() => {
+    if (filterOptions[selectedFilter] === 'Custom') {
+      setCustomDate(new Date());
+    }
+  }, [selectedFilter]);
+
+  useEffect(() => {
     (async () => {
       const spaces = await getAllSpaces();
+
+      // TODO - get usage data
 
       setSpaceUsageData([
         ...spaces.map(s => ({
           color: s.theme,
           icon: s.emoji,
           label: s.title,
-          value: Math.round(Math.random() * 12 * (Math.random() * 15) * 2),
+          value: getRandomNum(),
         })),
       ]);
     })();
@@ -35,24 +49,43 @@ const Analytics = ({ show, onClose }: Props) => {
       <div className="w-full px-3 py-2 flex items-center justify-between border-b border-brand-darkBgAccent/30">
         <span></span>
         <p className="text-slate-400/80 text-[14px]">Space Usage Analytics</p>
-        <Cross1Icon className="text-slate-600 font-bold scale-[1.1]" onClick={onClose} />
+        <Cross1Icon className="text-slate-600 font-bold scale-[1.1] cursor-pointer" onClick={onClose} />
       </div>
       {/* main */}
-      <main className="w-full pt-2">
+      <main className="w-full pt-4">
         {/* filters */}
-        <div className="flex item-center justify-around mb-1.5 mx-4">
+        <div className="flex item-center justify-between mb-1.5 px-5">
           {filterOptions.map((filter, idx) => (
             <button
               key={filter}
-              className={`px-3.5 py-[2.5px] text-[12px] text-nowrap text-slate-400 rounded-xl transition-all duration-200 ${
-                selectedFilter === idx ? 'bg-brand-darkBgAccent/60' : ''
+              className={` py-[2.5px] px-1 text-[11px] text-nowrap text-slate-400 rounded-xl transition-all duration-200 ${
+                selectedFilter === idx ? 'bg-brand-darkBgAccent/60 px-3.5' : ''
               }`}
               onClick={() => setSelectedFilter(idx)}>
               {filter}
             </button>
           ))}
         </div>
-        <PieChart data={spaceUsageData.toSorted((a, b) => (a.value < b.value ? 1 : -1))} />
+        {/* custom date selector */}
+        {customDate ? (
+          <div className="absolute right-3 top-[14%] z-[999]">
+            <DatePicker
+              value={customDate}
+              onChange={date => {
+                setCustomDate(date || new Date());
+              }}
+            />
+          </div>
+        ) : null}
+        <div className="mt-4">
+          <PieChart data={spaceUsageData.toSorted((a, b) => (a.value < b.value ? 1 : -1))} />
+        </div>
+        {/* site usage  */}
+        <div
+          className={`bg-brand-darkBgAccent/30 absolute bottom-4 w-[90%] left-1/2 -translate-x-1/2 rounded-xl py-[4rem] 
+                      flex items-center justify-center text-slate-500 text-[12px] font-extralight`}>
+          More analytics reports coming soon...
+        </div>
       </main>
     </div>
   ) : null;
