@@ -6,11 +6,11 @@ import MoreOptions from '../more-options';
 import { deleteSpaceModalAtom, selectedTabsAtom, snackbarAtom, updateSpaceModalAtom } from '@root/src/stores/app';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
-import { useKeyPressed } from '../../../hooks/useKeyPressed';
+import { useKeyPressed } from '../../../../hooks/useKeyPressed';
 import { logger } from '@root/src/pages/utils/logger';
 import { getSnoozedTabs } from '@root/src/services/chrome-storage/snooze-tabs';
 import SnoozedTabs from './SnoozedTabs';
-import Tabs from '../../elements/tabs/Tabs';
+import Tabs from '../../../elements/tabs/Tabs';
 import ActiveSpaceTabs from './ActiveSpaceTabs';
 import SpaceHistory from './SpaceHistory';
 
@@ -163,7 +163,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
         className="relative max-h-[90%]  cc-scrollbar min-h-fit overflow-x-hidden border-y pb-2 border-brand-darkBgAccent/30">
         <Tabs
           tabs={[`Active  (${tabs?.length || 0})`, `Snoozed (${snoozedTabs?.length || 0})`, 'History']}
-          defaultTab={1}>
+          defaultTab={2}>
           <ActiveSpaceTabs tabs={tabs} isDraggingGlobal={isDraggingGlobal} />
           <SnoozedTabs tabs={snoozedTabs} />
           <SpaceHistory spaceId={space.id} />

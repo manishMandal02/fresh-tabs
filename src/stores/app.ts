@@ -26,6 +26,9 @@ export const appSettingsAtom = atom<IAppSettings>({ ...DefaultAppSettings });
 //  snackbar
 export const snackbarAtom = atom<SnackbarAtom>({ msg: '', show: false, isLoading: false, isSuccess: false });
 
+// settings modal
+export const showSettingsModalAtom = atom<boolean>(false);
+
 // create new space modal
 export const newSpaceModalAtom = atom<{ show: boolean; tabs: ITab[] }>({ show: false, tabs: [] });
 

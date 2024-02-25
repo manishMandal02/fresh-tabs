@@ -4,9 +4,9 @@ import { useState, MouseEventHandler } from 'react';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 
 import { Tab } from '../tab';
-import { useKeyPressed } from '../../../hooks/useKeyPressed';
+import { useKeyPressed } from '../../../../hooks/useKeyPressed';
 import { goToTab } from '@root/src/services/chrome-tabs/tabs';
-import { useCustomAnimation } from '../../../hooks/useAnimation';
+import { useCustomAnimation } from '../../../../hooks/useAnimation';
 import { ITab, ITabWithIndex } from '@root/src/pages/types/global.types';
 import { activeSpaceAtom, selectedTabsAtom } from '@root/src/stores/app';
 import TabDraggedOutsideActiveSpace from './TabDraggedOutsideActiveSpace';

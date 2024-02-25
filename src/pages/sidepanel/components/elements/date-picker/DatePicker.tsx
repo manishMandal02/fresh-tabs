@@ -16,7 +16,6 @@ const DatePicker = ({ value, onChange }: Props) => {
     <Popover
       open={showDatePicker}
       onChange={open => setShowDatePicker(open)}
-      noContainer
       content={
         <div className="bg-brand-darkBg">
           <DayPicker
@@ -41,7 +40,7 @@ const DatePicker = ({ value, onChange }: Props) => {
         <button
           onClick={() => setShowDatePicker(prev => !prev)}
           tabIndex={-1}
-          className="text-slate-300/90 bg-transparent z-[9999] text-[10px] w-fit px-1 py-1.5 outline-none ">
+          className="text-slate-300/90 bg-transparent z-[9999] text-[10px] w-fit px-1 py-1 outline-none ">
           {value.toLocaleDateString()}
         </button>
       </div>

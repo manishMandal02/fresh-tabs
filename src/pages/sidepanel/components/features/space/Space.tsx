@@ -2,7 +2,7 @@ import { useAtom } from 'jotai';
 import { MdArrowForwardIos, MdOutlineOpenInBrowser } from 'react-icons/md';
 import { ISpace, ISpaceWithTabs, ITab } from '@root/src/pages/types/global.types';
 import Tab from './tab/Tab';
-import Tooltip from '../elements/tooltip';
+import Tooltip from '../../elements/tooltip';
 import { openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { removeTabFromSpace } from '@root/src/services/chrome-storage/tabs';
 import { appSettingsAtom, snackbarAtom, nonActiveSpacesAtom } from '@root/src/stores/app';

@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { SlideModal } from '../../elements/modal';
+import { SlideModal } from '../../../elements/modal';
 import { ISpaceWithoutId, ITab } from '@root/src/pages/types/global.types';
-import ColorPicker from '../../elements/color-picker';
-import EmojiPicker from '../../elements/emoji-picker';
-import Spinner from '../../elements/spinner';
+import ColorPicker from '../../../elements/color-picker';
+import EmojiPicker from '../../../elements/emoji-picker';
+import Spinner from '../../../elements/spinner';
 import { useUpdateSpace } from './useUpdateSpace';
 import { useAtom } from 'jotai';
 import { updateSpaceModalAtom } from '@root/src/stores/app';
 import { createPortal } from 'react-dom';
-import TextInput from '../../elements/TextInput/TextInput';
+import TextInput from '../../../elements/TextInput/TextInput';
 import { Tab } from '../tab';
 
 const UpdateSpace = () => {

@@ -1,16 +1,16 @@
 import { ISpace, ITab } from '@root/src/pages/types/global.types';
-import ColorPicker from '../../elements/color-picker';
-import EmojiPicker from '../../elements/emoji-picker';
-import { SlideModal } from '../../elements/modal';
+import ColorPicker from '../../../elements/color-picker';
+import EmojiPicker from '../../../elements/emoji-picker';
+import { SlideModal } from '../../../elements/modal';
 import { useState, useEffect, useCallback } from 'react';
 import { Tab } from '..';
 import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
 import { useAtom } from 'jotai';
 import { snackbarAtom, nonActiveSpacesAtom, newSpaceModalAtom } from '@root/src/stores/app';
 import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
-import Spinner from '../../elements/spinner';
+import Spinner from '../../../elements/spinner';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
-import TextInput from '../../elements/TextInput/TextInput';
+import TextInput from '../../../elements/TextInput/TextInput';
 import { ThemeColor } from '@root/src/constants/app';
 
 type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;

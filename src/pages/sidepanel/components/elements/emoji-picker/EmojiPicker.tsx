@@ -17,6 +17,7 @@ const EmojiPicker = ({ emoji, onChange }: Props) => {
   return (
     <div>
       <Popover
+        modalContainer
         open={isOpen}
         onChange={setIsOpen}
         content={

@@ -4,10 +4,10 @@ import { Droppable, Draggable } from 'react-beautiful-dnd';
 import { motion } from 'framer-motion';
 import { useAtom } from 'jotai';
 
-import Tooltip from '../../elements/tooltip';
+import Tooltip from '../../../elements/tooltip';
 import { newSpaceModalAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
 import { NonActiveSpace } from './non-active-space';
-import { useCustomAnimation } from '../../../hooks/useAnimation';
+import { useCustomAnimation } from '../../../../hooks/useAnimation';
 
 type Props = {
   isDraggingSpace: boolean;

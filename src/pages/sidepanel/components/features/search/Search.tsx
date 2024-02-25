@@ -4,7 +4,7 @@ import { ITab } from '@root/src/pages/types/global.types';
 import { appSettingsAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
 import { useAtom } from 'jotai';
 import { Tab } from '../space';
-import Switch from '../elements/switch/Switch';
+import Switch from '../../elements/switch/Switch';
 import { wait } from '@root/src/pages/utils';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 

@@ -6,11 +6,11 @@ type Props = {
   content: ReactNode;
   open?: boolean;
   onChange: (open: boolean) => void;
-  noContainer?: boolean;
+  modalContainer?: boolean;
 };
 
-const Popover = ({ children, content, open, onChange, noContainer = false }: Props) => {
-  const portalAnchor = !noContainer ? document.querySelector('dialog') : document.body;
+const Popover = ({ children, content, open, onChange, modalContainer = false }: Props) => {
+  const portalAnchor = modalContainer ? document.querySelector('dialog') : document.body;
 
   return (
     <>

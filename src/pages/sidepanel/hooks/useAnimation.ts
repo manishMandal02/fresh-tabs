@@ -1,5 +1,4 @@
 export const useCustomAnimation = () => {
-  // TODO - try a diff animation like slide down or left or fill. etc.
   // bounce div animation
   const bounce = {
     initial: { scale: 0, opacity: 0 },
@@ -18,8 +17,18 @@ export const useCustomAnimation = () => {
       y: 0,
     },
     exit: { opacity: 0, y: 100 },
+    transition: { type: 'spring', stiffness: 800, damping: 40, duration: 0.2 },
+  };
+
+  // TODO: not used currently (re-check)
+  const fade = {
+    initial: { opacity: 0 },
+    whileInView: {
+      opacity: 1,
+    },
+    exit: { opacity: 0 },
     transition: { type: 'spring', stiffness: 900, damping: 40, duration: 0.2 },
   };
 
-  return { bounce, slide };
+  return { bounce, slide, fade };
 };

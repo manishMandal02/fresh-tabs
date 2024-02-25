@@ -1,33 +1,27 @@
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
-import { MdSave } from 'react-icons/md';
 import { useState, useEffect, useRef } from 'react';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
-import { GiNightSleep } from 'react-icons/gi';
-import { BarChartIcon } from '@radix-ui/react-icons';
 
-import Search from './components/search';
-import Tooltip from './components/elements/tooltip';
+import Header from './components/features/header';
+import Search from './components/features/search';
 import { useSidePanel } from './hooks/useSidePanel';
 import Spinner from './components/elements/spinner';
 import Snackbar from './components/elements/snackbar';
 import { appSettingsAtom, snackbarAtom } from '@root/src/stores/app';
 import { IMessageEventSidePanel, ITab } from '../types/global.types';
-import DeleteSpaceModal from './components/space/delete/DeleteSpaceModal';
-import { ActiveSpace, CreateSpace, UpdateSpace } from './components/space';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
-import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
-import OtherSpacesContainer from './components/space/other-space/OtherSpacesContainer';
-import Settings from './components/settings/Settings';
-import { discardTabs } from '@root/src/services/chrome-discard/discard';
-import Analytics from './components/space/analytics/Analytics';
+import DeleteSpaceModal from './components/features/space/delete/DeleteSpaceModal';
+import { ActiveSpace, CreateSpace, UpdateSpace } from './components/features/space';
+import OtherSpacesContainer from './components/features/space/other-space/OtherSpacesContainer';
+import Settings from './components/features/settings/Settings';
 
 // event ids of processed events
 const processedEvents: string[] = [];
 
 const SidePanel = () => {
   // global state - snackbar
-  const [snackbar, setSnackbar] = useAtom(snackbarAtom);
+  const [snackbar] = useAtom(snackbarAtom);
 
   // global state - app settings
   const [, setAppSetting] = useAtom(appSettingsAtom);
@@ -40,9 +34,6 @@ const SidePanel = () => {
 
   //  global pinned tabs
   // const [globalPinnedTabs, setGlobalPinnedTabs] = useState<IPinnedTab[]>([]);
-
-  // show analytics modal
-  const [showAnalytics, setShowAnalytics] = useState(false);
 
   // logics hook
   const {
@@ -108,23 +99,6 @@ const SidePanel = () => {
     response(true);
   });
 
-  // sync/save spaces to bookmarks
-  const handleSaveSpacesToBM = async () => {
-    setSnackbar({ show: true, isLoading: true, msg: 'Saving spaces to bookmarks' });
-
-    await syncSpacesToBookmark();
-
-    setSnackbar({ show: true, isLoading: false, isSuccess: true, msg: 'Saved spaces to bookmarks' });
-  };
-
-  // discard tabs
-  const handleDiscardTabs = async () => {
-    setSnackbar({ show: true, isLoading: true, msg: 'Discarding tabs' });
-
-    await discardTabs();
-    setSnackbar({ show: true, isLoading: false, isSuccess: true, msg: 'Discarded non active tabs' });
-  };
-
   // animation for other spaces drop zone
   const animationVariants = {
     visible: { scale: 1, opacity: 1 },
@@ -134,24 +108,9 @@ const SidePanel = () => {
   return (
     <div className="w-screen h-screen overflow-hidden bg-brand-darkBg">
       <main className="h-full relative">
-        {/* app name */}
-        <div className="h-[4%] pt-2.5 flex items-center justify-between px-3">
-          <span className="invisible">Hide</span>
-          <p className=" text-slate-400 text-base font-light tracking-wide  text-center">Fresh Tabs</p>
-          {/* opens settings modal */}
-          <div className="flex items-center gap-x-2 bg-red-10 mt-px">
-            <Tooltip label="Discard non active tabs">
-              <BarChartIcon className={`text-slate-600 cursor-pointer`} onClick={() => setShowAnalytics(true)} />
-            </Tooltip>
-            <Tooltip label="Discard non active tabs">
-              <GiNightSleep size={18} className={`text-slate-600 cursor-pointer`} onClick={handleDiscardTabs} />
-            </Tooltip>
-            <Tooltip label="Save spaces to bookmarks">
-              <MdSave size={18} className={`text-slate-600 cursor-pointer `} onClick={handleSaveSpacesToBM} />
-            </Tooltip>
-            <Settings />
-          </div>
-        </div>
+        {/* header */}
+        <Header />
+
         {/* search */}
         <div className="">
           <Search />
@@ -227,8 +186,7 @@ const SidePanel = () => {
         {/* delete space alert modal */}
         <DeleteSpaceModal />
 
-        {/* analytics */}
-        <Analytics show={showAnalytics} onClose={() => setShowAnalytics(false)} />
+        <Settings />
 
         {/* snackbar */}
         <Snackbar

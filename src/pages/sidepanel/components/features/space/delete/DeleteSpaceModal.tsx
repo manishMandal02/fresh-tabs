@@ -2,8 +2,8 @@ import { useAtom } from 'jotai';
 import { createPortal } from 'react-dom';
 import { useEffect, useCallback, useState } from 'react';
 
-import Spinner from '../../elements/spinner';
-import { AlertModal } from '../../elements/modal';
+import Spinner from '../../../elements/spinner';
+import { AlertModal } from '../../../elements/modal';
 import { AlarmName } from '@root/src/constants/app';
 import { ISpace } from '@root/src/pages/types/global.types';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
@@ -122,12 +122,12 @@ const DeleteSpaceModal = () => {
 
             <div className=" mt-2 ml-auto w-fit">
               <button
-                className="bg-brand-darkBgAccent/80 text-slate-200 mr-2 w-20 py-1.5 rounded-md hover:opacity-90 transition-all duration-200 outline-none "
+                className="bg-brand-darkBgAccent/80 text-slate-200 mr-2 w-20 py-1.5 rounded-md hover:opacity-90 transition-all duration-200  "
                 onClick={() => onClose()}>
                 Cancel
               </button>
               <button
-                className="bg-red-600 text-slate-200 w-20 py-1.5 rounded-md hover:opacity-90 transition-all duration-200 outline-none"
+                className="bg-red-600 text-slate-200 w-20 py-1.5 rounded-md hover:opacity-90 transition-all duration-200 "
                 onClick={handleDeleteSpace}>
                 {snackbar.isLoading ? <Spinner size="sm" /> : 'Delete'}
               </button>

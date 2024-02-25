@@ -1,9 +1,9 @@
 import { getFaviconURL } from '@root/src/pages/utils/url';
-import Tooltip from '../../elements/tooltip';
+import Tooltip from '../../../elements/tooltip';
 import { MdAdd } from 'react-icons/md';
 import { IPinnedTab } from '@root/src/pages/types/global.types';
 import { KeyboardEventHandler, useState } from 'react';
-import Popover from '../../elements/popover';
+import Popover from '../../../elements/popover';
 import { saveGlobalPinnedTabs } from '@root/src/services/chrome-storage/tabs';
 
 type Props = {

@@ -6,10 +6,10 @@ import { motion } from 'framer-motion';
 import { getISODate } from '@root/src/pages/utils/date-time/getISODate';
 import { isChromeUrl } from '@root/src/pages/utils/url';
 import { getWeekday } from '@root/src/pages/utils/date-time/get-weekday';
-import Accordion from '../../elements/accordion/Accordion';
+import Accordion from '../../../elements/accordion/Accordion';
 import { getUrlDomain } from '@root/src/pages/utils/url/get-url-domain';
 import { getTime } from '@root/src/pages/utils/date-time/get-time';
-import { useCustomAnimation } from '../../../hooks/useAnimation';
+import { useCustomAnimation } from '../../../../hooks/useAnimation';
 
 type GroupedVisit = { visits: ISiteVisit[]; domain?: string; faviconUrl?: string };
 

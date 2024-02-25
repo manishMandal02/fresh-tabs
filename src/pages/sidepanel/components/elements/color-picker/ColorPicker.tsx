@@ -19,6 +19,7 @@ const ColorPicker = ({ color, onChange }: Props) => {
 
   return (
     <Popover
+      modalContainer
       open={isOpen}
       onChange={setIsOpen}
       content={

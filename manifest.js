@@ -29,6 +29,7 @@ const manifest = {
         mac: 'Command+E',
       },
       description: 'Set above ☝️',
+      global: true,
     },
     // TODO - new tab shortcut
     // newTab: {
@@ -44,6 +45,7 @@ const manifest = {
         mac: 'Command+Period',
       },
       description: 'Command Palette',
+      global: true,
     },
   },
   side_panel: {

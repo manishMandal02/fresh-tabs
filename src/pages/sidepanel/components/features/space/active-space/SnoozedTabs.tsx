@@ -2,8 +2,8 @@ import { motion } from 'framer-motion';
 
 import { ISnoozedTab } from '@root/src/pages/types/global.types';
 import { getTimeAgo } from '@root/src/pages/utils/date-time/time-ago';
-import Tooltip from '../../elements/tooltip';
-import { useCustomAnimation } from '../../../hooks/useAnimation';
+import Tooltip from '../../../elements/tooltip';
+import { useCustomAnimation } from '../../../../hooks/useAnimation';
 
 type Props = {
   tabs: ISnoozedTab[];

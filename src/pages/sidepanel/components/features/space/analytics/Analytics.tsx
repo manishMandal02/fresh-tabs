@@ -1,9 +1,9 @@
-import PieChart, { PieChartData } from '../../elements/charts/PieChart';
+import PieChart, { PieChartData } from '../../../elements/charts/PieChart';
 import { useState, useEffect } from 'react';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
-import DatePicker from '../../elements/date-picker/DatePicker';
-import { useKeyPressed } from '../../../hooks/useKeyPressed';
-import { SlideModal } from '../../elements/modal';
+import DatePicker from '../../../elements/date-picker/DatePicker';
+import { useKeyPressed } from '../../../../hooks/useKeyPressed';
+import { SlideModal } from '../../../elements/modal';
 
 const filterOptions = ['Today', 'Yesterday', '7 days', '30 days', 'Custom', 'All'];
 
@@ -24,6 +24,8 @@ const Analytics = ({ show, onClose }: Props) => {
   useEffect(() => {
     if (filterOptions[selectedFilter] === 'Custom') {
       setCustomDate(new Date());
+    } else {
+      setCustomDate(null);
     }
   }, [selectedFilter]);
 
@@ -69,7 +71,7 @@ const Analytics = ({ show, onClose }: Props) => {
         </div>
         {/* custom date selector */}
         {customDate ? (
-          <div className="absolute right-3 top-[14%] z-[999]">
+          <div className="absolute right-3 top-[17%] z-[999]">
             <DatePicker
               value={customDate}
               onChange={date => {
