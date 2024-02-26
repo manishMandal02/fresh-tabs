@@ -7,6 +7,17 @@ import CommandPalette from '.';
 
 refreshOnUpdate('pages/content');
 
+// close command palette
+const handleClose = () => {
+  const commandPaletteContainerEl = document.getElementById(CommandPaletteContainerId);
+
+  if (!commandPaletteContainerEl) return;
+
+  commandPaletteContainerEl.replaceChildren();
+  commandPaletteContainerEl.remove();
+  document.body.style.overflow = 'auto';
+};
+
 type AppendContainerProps = {
   recentSites: ITab[];
   topSites: ITab[];
@@ -46,7 +57,7 @@ const appendCommandPaletteContainer = ({ recentSites, topSites, activeSpace }: A
   shadowRoot.appendChild(styleElement);
 
   createRoot(rootIntoShadow).render(
-    <CommandPalette recentSites={recentSites} topSites={topSites} activeSpace={activeSpace} />,
+    <CommandPalette recentSites={recentSites} topSites={topSites} activeSpace={activeSpace} onClose={handleClose} />,
   );
 };
 

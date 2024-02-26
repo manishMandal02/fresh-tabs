@@ -1,8 +1,8 @@
-import { useState, useCallback , useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { ICommand, ISpace } from '../../types/global.types';
 import { publishEvents } from '../../utils/publish-events';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
-import { CommandPaletteContainerId, CommandType } from '@root/src/constants/app';
+import { CommandType } from '@root/src/constants/app';
 import { useKeyPressed } from '../../sidepanel/hooks/useKeyPressed';
 import { MdNewLabel } from 'react-icons/md';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
@@ -14,9 +14,10 @@ import { prettifyDate } from '../../utils/date-time/prettifyDate';
 type UseCommandPaletteProps = {
   activeSpace: ISpace;
   modalRef: React.RefObject<HTMLDialogElement>;
+  onClose: () => void;
 };
 
-export const useCommandPalette = ({ activeSpace, modalRef }: UseCommandPaletteProps) => {
+export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommandPaletteProps) => {
   // local state
   // search/commands suggestions
   const [suggestedCommands, setSuggestedCommands] = useState<ICommand[]>([]);
@@ -46,12 +47,8 @@ export const useCommandPalette = ({ activeSpace, modalRef }: UseCommandPalettePr
   const handleCloseCommandPalette = useCallback(() => {
     modalRef.current?.close();
     // remove parent container
-    const commandPaletteContainerEl = document.getElementById(CommandPaletteContainerId);
-
-    commandPaletteContainerEl.replaceChildren();
-    commandPaletteContainerEl?.remove();
-    document.body.style.overflow = 'auto';
-  }, [modalRef]);
+    onClose();
+  }, [modalRef, onClose]);
 
   // handle key press
   const { isModifierKeyPressed } = useKeyPressed({

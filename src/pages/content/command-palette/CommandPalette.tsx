@@ -1,27 +1,26 @@
+import { useState, useEffect, useRef, MouseEventHandler, ReactEventHandler, useCallback } from 'react';
 import { MdSearch, MdOutlineKeyboardReturn, MdMoveDown, MdOutlineSnooze } from 'react-icons/md';
 import { FaFolder, FaSearch, FaLongArrowAltUp } from 'react-icons/fa';
-
 import { BsFillMoonStarsFill } from 'react-icons/bs';
 import { FaArrowRightFromBracket, FaArrowRight, FaLink } from 'react-icons/fa6';
-
 import { motion } from 'framer-motion';
-import { useState, useEffect, useRef, MouseEventHandler, ReactEventHandler, useCallback } from 'react';
 
-import { isValidURL } from '../../utils/url/validate-url';
-import { ICommand, ISpace, ITab } from '../../types/global.types';
-import { useCommandPalette } from './useCommandPalette';
 import { debounce } from '../../utils/debounce';
-import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
-import { publishEvents } from '../../utils/publish-events';
-import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
-import Tooltip from '../../sidepanel/components/elements/tooltip';
-import { limitCharLength } from '../../utils/limitCharLength';
-import { CommandType } from '@root/src/constants/app';
 import { getFaviconURL } from '../../utils/url';
-import { naturalLanguageToDate } from '../../utils/date-time/naturalLanguageToDate';
+import { CommandType } from '@root/src/constants/app';
+import { useCommandPalette } from './useCommandPalette';
+import { isValidURL } from '../../utils/url/validate-url';
+import { publishEvents } from '../../utils/publish-events';
+import { limitCharLength } from '../../utils/limitCharLength';
+import Tooltip from '../../sidepanel/components/elements/tooltip';
 import { prettifyDate } from '../../utils/date-time/prettifyDate';
+import { ICommand, ISpace, ITab } from '../../types/global.types';
 import { useCustomAnimation } from '../../sidepanel/hooks/useAnimation';
+import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
+import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
+import { naturalLanguageToDate } from '../../utils/date-time/naturalLanguageToDate';
 
+// default static commands
 const staticCommands: ICommand[] = [
   { index: 1, type: CommandType.SwitchTab, label: 'Switch Tab', icon: FaArrowRight },
   { index: 2, type: CommandType.SwitchSpace, label: 'Switch Space', icon: FaArrowRightFromBracket },
@@ -62,9 +61,10 @@ type Props = {
   activeSpace: ISpace;
   recentSites: ITab[];
   topSites: ITab[];
+  onClose?: () => void;
 };
 
-const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
+const CommandPalette = ({ activeSpace, recentSites, topSites, onClose }: Props) => {
   // loading search result
   const [isLoadingResults, setIsLoadingResults] = useState(false);
 
@@ -88,7 +88,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
     searchQuery,
     setSearchQuery,
     setSearchQueryPlaceholder,
-  } = useCommandPalette({ activeSpace, modalRef });
+  } = useCommandPalette({ activeSpace, modalRef, onClose });
 
   // check if the focused command is visible
   useEffect(() => {
@@ -99,7 +99,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
 
     const focusedEl = suggestionContainerRef.current?.querySelector(`#fresh-tabs-command-${focusedCommandIndex}`);
 
-    focusedEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    focusedEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [focusedCommandIndex, suggestedCommands]);
 
   // set default suggested commands
@@ -112,7 +112,7 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
       metadata: site.url,
     }));
 
-    setSuggestedCommands([...staticCommands, ...recentSitesCommands]);
+    setSuggestedCommands([...staticCommands, ...(recentSitesCommands || [])]);
   }, [recentSites, setSuggestedCommands]);
 
   // initialize component
@@ -449,7 +449,10 @@ const CommandPalette = ({ activeSpace, recentSites, topSites }: Props) => {
         }}
         {...bounce}
         onClick={handleBackdropClick}
-        className=" m-0 flex items-center outline-none flex-col justify-center top-[20%] h-fit max-h-[75vh] w-[520px] left-[33.5%] backdrop:to-brand-darkBg/30 p-px bg-transparent">
+        // working on bigger screen
+        // className=" m-0 flex items-center outline-none flex-col justify-center top-[20%] h-fit max-h-[75vh] w-[520px] max-w-[60%] left-[33.5%] backdrop:to-brand-darkBg/30 p-px bg-transparent">
+        // smaller screen
+        className=" m-0 flex items-center outline-none flex-col justify-center top-[22%] h-fit max-h-[75vh] w-[80%] max-w-[90%] mx-auto left-auto backdrop:to-brand-darkBg/30 p-px bg-transparent">
         {/* search box */}
         <div
           className={`w-full h-[50px] min-h-[50px]: bg-brand-darkBg rounded-xl  border-collapse overflow-hidden

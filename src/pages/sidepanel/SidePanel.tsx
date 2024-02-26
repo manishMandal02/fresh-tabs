@@ -15,6 +15,7 @@ import DeleteSpaceModal from './components/features/space/delete/DeleteSpaceModa
 import { ActiveSpace, CreateSpace, UpdateSpace } from './components/features/space';
 import OtherSpacesContainer from './components/features/space/other-space/OtherSpacesContainer';
 import Settings from './components/features/settings/Settings';
+import { omitObjProps } from '../utils';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -109,7 +110,7 @@ const SidePanel = () => {
     <div className="w-screen h-screen overflow-hidden bg-brand-darkBg">
       <main className="h-full relative">
         {/* header */}
-        <Header />
+        <Header activeSpace={activeSpace && omitObjProps(activeSpace, 'tabs')} />
 
         {/* search */}
         <div className="">

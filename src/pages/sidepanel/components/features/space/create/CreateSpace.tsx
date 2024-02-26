@@ -1,17 +1,18 @@
-import { ISpace, ITab } from '@root/src/pages/types/global.types';
+import { useState, useEffect, useCallback } from 'react';
+import { useAtom } from 'jotai';
+
+import { Tab } from '..';
+import Spinner from '../../../elements/spinner';
+import { SlideModal } from '../../../elements/modal';
+import { ThemeColor } from '@root/src/constants/app';
 import ColorPicker from '../../../elements/color-picker';
 import EmojiPicker from '../../../elements/emoji-picker';
-import { SlideModal } from '../../../elements/modal';
-import { useState, useEffect, useCallback } from 'react';
-import { Tab } from '..';
-import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
-import { useAtom } from 'jotai';
-import { snackbarAtom, nonActiveSpacesAtom, newSpaceModalAtom } from '@root/src/stores/app';
-import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
-import Spinner from '../../../elements/spinner';
-import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import TextInput from '../../../elements/TextInput/TextInput';
-import { ThemeColor } from '@root/src/constants/app';
+import { ISpace, ITab } from '@root/src/pages/types/global.types';
+import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
+import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
+import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
+import { snackbarAtom, nonActiveSpacesAtom, newSpaceModalAtom } from '@root/src/stores/app';
 
 type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;
 
@@ -138,7 +139,7 @@ const CreateSpace = () => {
   }, [handleShortcut]);
 
   return (
-    <SlideModal title="Add New Space" isOpen={isModalOpen} onClose={handleCloseModal}>
+    <SlideModal title="Add New Space" isOpen={newSpaceModal.show} onClose={handleCloseModal}>
       <div className=" flex flex-col  w-full h-full py-3 px-4">
         <div className="mt-4 flex items-center gap-x-3">
           <TextInput placeholder="Space Title..." value={newSpaceData.title} onChange={onTitleChange} />

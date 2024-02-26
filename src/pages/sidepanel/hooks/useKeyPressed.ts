@@ -14,7 +14,7 @@ type useKeyPressedProps = {
 
 export const useKeyPressed = ({
   monitorModifierKeys = true,
-  parentConTainerEl,
+  parentConTainerEl = null,
   onDeletePressed,
   onEscapePressed,
   onEnterPressed,
@@ -22,9 +22,20 @@ export const useKeyPressed = ({
   onArrowUpPressed,
   onArrowDownPressed,
 }: useKeyPressedProps) => {
-  // local state - ctrl/cmd key press status
+  // container el
+  // const [hasParentEl, setHasParentEl] = useState(false);
+
+  // useEffect(() => {
+  //   if (parentConTainerEl) {
+  //     setHasParentEl(true);
+  //   } else {
+  //     setHasParentEl(false);
+  //   }
+  // }, [parentConTainerEl]);
+
+  //  ctrl/cmd key press status
   const [isModifierKeyPressed, setIsModifierKeyPressed] = useState(false);
-  // local state - left shift key press status
+  // left shift key press status
   const [isShiftKeyPressed, setIsShiftKeyPressed] = useState(false);
 
   // device details
@@ -34,6 +45,8 @@ export const useKeyPressed = ({
   const handleKeydown = useCallback(
     ev => {
       const keyEv = ev as KeyboardEvent;
+
+      console.log('🚀 ~ keyEv.code: pressed ✅', keyEv.code);
 
       if (onEnterPressed && keyEv.code === 'Enter') {
         onEnterPressed();
@@ -88,24 +101,25 @@ export const useKeyPressed = ({
     setIsShiftKeyPressed(false);
   }, []);
 
-  // keeping track of cmd/ctrl key press for UI action
+  // key press event listeners
   useEffect(() => {
-    if (!parentConTainerEl) {
-      document.body.addEventListener('keydown', handleKeydown);
-      monitorModifierKeys && document.body.addEventListener('keyup', handleKeyUp);
-    } else {
-      parentConTainerEl.addEventListener('keydown', handleKeydown);
-      monitorModifierKeys && parentConTainerEl.addEventListener('keyup', handleKeyUp);
-    }
+    if (!parentConTainerEl) return;
+    parentConTainerEl.addEventListener('keydown', handleKeydown);
+    monitorModifierKeys && parentConTainerEl.addEventListener('keyup', handleKeyUp);
+    return () => {
+      parentConTainerEl.removeEventListener('keydown', handleKeydown);
+      monitorModifierKeys && parentConTainerEl.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [parentConTainerEl, handleKeyUp, handleKeydown, monitorModifierKeys]);
+
+  useEffect(() => {
+    if (parentConTainerEl) return;
+    document.body.addEventListener('keydown', handleKeydown);
+    monitorModifierKeys && document.body.addEventListener('keyup', handleKeyUp);
 
     return () => {
-      if (!parentConTainerEl) {
-        document.body.removeEventListener('keydown', handleKeydown);
-        monitorModifierKeys && document.body.removeEventListener('keyup', handleKeyUp);
-      } else {
-        parentConTainerEl.removeEventListener('keydown', handleKeydown);
-        monitorModifierKeys && parentConTainerEl.removeEventListener('keyup', handleKeyUp);
-      }
+      document.body.removeEventListener('keydown', handleKeydown);
+      monitorModifierKeys && document.body.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
 

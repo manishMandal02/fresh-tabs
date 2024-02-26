@@ -72,6 +72,7 @@ const AlertModal = ({ children, isOpen, onClose, title, showCloseBtn = true }: P
       onClick={handleBackdropClick}
       className="w-screen h-min  bg-brand-darkBg px-1 py-1  backdrop:bg-brand-darkBgAccent/10 fixed top-2 rounded-lg shadow shadow-brand-darkBgAccent">
       <div className="overflow-hidden w-full pt-1 z-[99] rounded-lg">
+        {/* header */}
         <div className="w-full relative mb-3 shadow-sm shadow-brand-darkBgAccent/40">
           {title ? <h2 className="text-center text-slate-400/80 text-base font-light ">{title}</h2> : null}
           {showCloseBtn ? (
