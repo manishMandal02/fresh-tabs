@@ -1,19 +1,17 @@
 import { SetStateAction, useAtom } from 'jotai';
 import { Dispatch, useState, useCallback, useEffect } from 'react';
 
-import { ISnoozedTab, ISpace, ISpaceWithTabs, ITab } from '@root/src/pages/types/global.types';
-import MoreOptions from '../more-options';
-import { deleteSpaceModalAtom, selectedTabsAtom, snackbarAtom, updateSpaceModalAtom } from '@root/src/stores/app';
-import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
-import { updateSpace } from '@root/src/services/chrome-storage/spaces';
-import { useKeyPressed } from '../../../../hooks/useKeyPressed';
-import { logger } from '@root/src/pages/utils/logger';
-import { getSnoozedTabs } from '@root/src/services/chrome-storage/snooze-tabs';
 import SnoozedTabs from './SnoozedTabs';
+import SpaceHistory from './SpaceHistory';
+import MoreOptions from '../more-options';
 import Tabs from '../../../elements/tabs/Tabs';
 import ActiveSpaceTabs from './ActiveSpaceTabs';
-import SpaceHistory from './SpaceHistory';
-import { BellIcon } from '@radix-ui/react-icons';
+import { logger } from '@root/src/pages/utils/logger';
+import { useKeyPressed } from '../../../../hooks/useKeyPressed';
+import { updateSpace } from '@root/src/services/chrome-storage/spaces';
+import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
+import { ISpace, ISpaceWithTabs, ITab } from '@root/src/pages/types/global.types';
+import { deleteSpaceModalAtom, selectedTabsAtom, snackbarAtom, updateSpaceModalAtom } from '@root/src/stores/app';
 
 type Props = {
   space: ISpace;
@@ -31,16 +29,9 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
   // local state - show delete modal
   const [selectedTabs, setSelectedTabs] = useAtom(selectedTabsAtom);
 
-  // snoozed tabs
-  const [snoozedTabs, setSnoozedTabs] = useState<ISnoozedTab[]>([]);
-
-  useEffect(() => {
-    if (!space?.id) return;
-    (async () => {
-      const snoozedTabsStorage = await getSnoozedTabs(space.id);
-      setSnoozedTabs(snoozedTabsStorage);
-    })();
-  }, [space]);
+  // show history & snoozed tabs for space
+  const [showSpaceHistory, setShowSpaceHistory] = useState(false);
+  const [showSnoozedTabs, setShowSnoozedTabs] = useState(false);
 
   // delete space modal  global state
   const [, setDeleteSpaceModal] = useAtom(deleteSpaceModalAtom);
@@ -135,7 +126,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
 
   return space?.id ? (
     <div className="h-full mt-4 ">
-      <div className="flex items-center h-[6.5%] justify-between px-2">
+      <div className="flex items-center h-[6.5%] justify-between px-1.5">
         <div className="flex items-center ">
           <div className="text-lg  border-r  pr-3  w-fit select-none" style={{ borderColor: space.theme }}>
             {space.emoji}
@@ -146,13 +137,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
           </p> */}
         </div>
 
-        <div className="flex  justify-center select-none gap-x-2">
-          <button
-            tabIndex={0}
-            onClick={() => {}}
-            className={`text-slate-500/80 hover:bg-brand-darkBgAccent/20 rounded-full px-2 py-2 transition-all duration-200 outline-none focus:bg-brand-darkBgAccent/70 `}>
-            <BellIcon className="scale-[1]" />
-          </button>
+        <div className="flex  items-center  select-none ">
           {/* more options  */}
           <MoreOptions
             shouldOpenInNewWindow={false}
@@ -160,6 +145,8 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
             onSyncClick={handleSyncTabs}
             onEditClick={() => setUpdateSpaceModal({ ...space, tabs })}
             onDeleteClick={() => setDeleteSpaceModal({ show: true, spaceId: space.id })}
+            onHistoryClick={() => setShowSpaceHistory(true)}
+            onSnoozedTabsClick={() => setShowSnoozedTabs(true)}
           />
         </div>
       </div>
@@ -168,14 +155,16 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
       <div
         id="active-space-scrollable-container"
         className="relative max-h-[90%]  cc-scrollbar min-h-fit overflow-x-hidden border-y pb-2 border-brand-darkBgAccent/30">
-        <Tabs
-          tabs={[`Active  (${tabs?.length || 0})`, `Snoozed (${snoozedTabs?.length || 0})`, 'History']}
-          defaultTab={2}>
+        <Tabs tabs={[`Active  (${tabs?.length || 0})`, 'Notes']} defaultTab={1}>
           <ActiveSpaceTabs tabs={tabs} isDraggingGlobal={isDraggingGlobal} />
-          <SnoozedTabs tabs={snoozedTabs} />
-          <SpaceHistory spaceId={space.id} />
+          <div className="text-center text-slate-500 py-12">Notes</div>
         </Tabs>
       </div>
+
+      {/* space history modal */}
+      <SpaceHistory show={showSpaceHistory} spaceId={space.id} onClose={() => setShowSpaceHistory(false)} />
+      {/* snoozed tabs modal */}
+      <SnoozedTabs show={showSnoozedTabs} spaceId={space.id} onClose={() => setShowSnoozedTabs(false)} />
     </div>
   ) : null;
 };

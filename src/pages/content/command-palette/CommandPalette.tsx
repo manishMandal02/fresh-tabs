@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, MouseEventHandler, ReactEventHandler, useCallback } from 'react';
-import { MdOutlineKeyboardReturn, MdMoveDown, MdOutlineSnooze } from 'react-icons/md';
+import { MdOutlineKeyboardReturn, MdMoveDown } from 'react-icons/md';
 import { FaFolder, FaSearch } from 'react-icons/fa';
 import { BsFillMoonStarsFill } from 'react-icons/bs';
 import { FaArrowRightFromBracket, FaArrowRight, FaLink } from 'react-icons/fa6';
-import { ArrowUpIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
+import { ArrowUpIcon, MagnifyingGlassIcon, LapTimerIcon } from '@radix-ui/react-icons';
 import { motion } from 'framer-motion';
 
 import { debounce } from '../../utils/debounce';
@@ -25,7 +25,7 @@ const staticCommands: ICommand[] = [
   { index: 2, type: CommandType.SwitchSpace, label: 'Switch Space', icon: FaArrowRightFromBracket },
   { index: 3, type: CommandType.NewSpace, label: 'New Space', icon: FaFolder },
   { index: 4, type: CommandType.AddToSpace, label: 'Move Tab', icon: MdMoveDown },
-  { index: 5, type: CommandType.SnoozeTab, label: 'Snooze Tab', icon: MdOutlineSnooze },
+  { index: 5, type: CommandType.SnoozeTab, label: 'Snooze Tab', icon: LapTimerIcon },
   { index: 6, type: CommandType.DiscardTabs, label: 'Discard Tabs', icon: BsFillMoonStarsFill },
 ];
 

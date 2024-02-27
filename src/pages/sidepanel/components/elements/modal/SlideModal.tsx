@@ -32,13 +32,14 @@ const SlideModal = ({ children, isOpen, onClose, title }: Props) => {
       <div className="z-[9999] w-screen h-screen fixed bg-brand-darkBg/20" onClick={handleClose}></div>
       {/* modal card */}
       <div
-        className={`z-[99999] absolute bottom-0 flex flex-col left-0 w-full min-h-[40%] bg-brand-darkBg rounded-tl-3xl rounded-tr-3xl
+        className={`z-[99999] absolute bottom-0 flex flex-col left-0 w-full min-h-[40%] max-h-[80%] bg-brand-darkBg rounded-tl-3xl rounded-tr-3xl
                          border-t border-brand-darkBgAccent/30 transition-all duration-300  ease-in-out pb-2`}>
-        <div className="shadow-sm shadow-brand-darkBgAccent/30 relative  py-2 min-h-8">
-          <p className="text-[14px] font-light text-slate-400/80 select-none text-center">{title}</p>
+        <div className="shadow-sm shadow-brand-darkBgAccent/30 relative  py-1.5 px-2.5 min-h-8 flex items-center justify-between">
+          <span className="invisible"></span>
+          <p className="text-[13.5px] font-light text-slate-400/80 select-none text-center">{title}</p>
           {/* close btn */}
           <button
-            className="absolute top-3 select-none right-4 text-slate-500/80 hover:opacity-90 transition-all duration-200 "
+            className=" select-none text-slate-500/80 hover:opacity-90 transition-all duration-200 "
             onClick={handleClose}>
             <Cross1Icon className="scale-[1]" />
           </button>

@@ -10,6 +10,7 @@ import Accordion from '../../../elements/accordion/Accordion';
 import { getUrlDomain } from '@root/src/pages/utils/url/get-url-domain';
 import { getTime } from '@root/src/pages/utils/date-time/get-time';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';
+import { SlideModal } from '../../../elements/modal';
 
 type GroupedVisit = { visits: ISiteVisit[]; domain?: string; faviconUrl?: string };
 
@@ -44,18 +45,23 @@ const getGroupedSessionRecursively = (startIndex: number, visits: ISiteVisit[]) 
   return [visits[startIndex], ...groupedVisits];
 };
 
-type Props = { spaceId: string };
+type Props = { spaceId: string; show: boolean; onClose: () => void };
 
-const SpaceHistory = ({ spaceId }: Props) => {
+const SpaceHistory = ({ spaceId, show, onClose }: Props) => {
   const [spaceHistory, setSpaceHistory] = useState<HistoryByDays[]>([]);
 
   // date heading hint on scroll
   const [floatingDate, setFloatingDate] = useState('');
 
+  console.log('🚀 ~ SpaceHistory ~ floatingDate:', floatingDate);
+
   const dateHeadingsRefs = useRef<Array<HTMLDivElement | null>>([]);
+
+  // TODO - FIX - the grouping of sites visits some sites are grouped in groups of 2-4 multiple in rows, they should all be grouped together
 
   // init component
   useEffect(() => {
+    if (!spaceId || !show) return;
     (async () => {
       const fullHistory = await getSpaceHistory(spaceId, true);
       const todayHistory = await getSpaceHistory(spaceId);
@@ -102,7 +108,7 @@ const SpaceHistory = ({ spaceId }: Props) => {
       console.log('🚀 ~ historyByDays:', historyByDays);
       setSpaceHistory(historyByDays);
     })();
-  }, [spaceId]);
+  }, [spaceId, show]);
 
   // check if date heading is hidden whiles scrolling
   const handleContainerScroll = ev => {
@@ -123,7 +129,7 @@ const SpaceHistory = ({ spaceId }: Props) => {
   };
 
   useEffect(() => {
-    const containerEl = document.getElementById('active-space-scrollable-container');
+    const containerEl = document.getElementById('space-history-container');
     if (!containerEl) return;
     containerEl.addEventListener('scroll', handleContainerScroll);
 
@@ -135,103 +141,109 @@ const SpaceHistory = ({ spaceId }: Props) => {
   const { bounce } = useCustomAnimation();
 
   return (
-    <motion.div {...bounce} className="py-1 relative">
-      {/* date info while scrolling */}
-      {floatingDate ? (
-        <motion.div
-          {...bounce}
-          className="sticky  top-10 mx-auto flex items-center justify-center  text-[11px] w-fit h-5 bg-brand-darkBg shadow-md shadow-brand-darkBgAccent/40 border border-brand-darkBgAccent/60 px-3.5 py-[8px] rounded-xl z-[99] text-slate-300/80">
-          {getWeekday(new Date(floatingDate))}{' '}
-          {new Date(floatingDate).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: '2-digit' })}
-        </motion.div>
-      ) : null}
+    <SlideModal isOpen={show} onClose={onClose} title={`History`}>
+      <div
+        id="space-history-container"
+        className="max-h-[95%]  cc-scrollbar min-h-fit overflow-x-hidden border-y pb-2 border-brand-darkBgAccent/30">
+        {/* date info while scrolling */}
+        {floatingDate ? (
+          <motion.div
+            {...bounce}
+            className="z-[99] sticky top-2 mx-auto flex items-center justify-center  text-[11px] w-fit h-5 bg-brand-darkBg shadow-md shadow-brand-darkBgAccent/30 border border-brand-darkBgAccent/50 px-[15px] py-[10px] rounded-xl text-slate-300/80">
+            {getWeekday(new Date(floatingDate))}{' '}
+            {new Date(floatingDate).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: '2-digit' })}
+          </motion.div>
+        ) : null}
 
-      {spaceHistory?.map(({ date, history }, index) => (
-        <div key={date} className="max-w-[99%]">
-          <Accordion
-            id={date}
-            trigger={
-              // history date heading
-              <div
-                ref={el => (dateHeadingsRefs.current[index] = el)}
-                data-date-heading={date}
-                className="text-[13px] sticky top-0  w-[98%] flex items-center justify-between rounded-md  text-left mb-[2px]  text-slate-300   py-2 px-2.5">
-                <p>
-                  {getISODate(date) === getISODate(new Date()) ? 'Today •' : ''} {'  '} {getWeekday(new Date(date))}
-                  {'  '}
-                  {new Date(date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: '2-digit' })}
-                </p>
-              </div>
-            }>
-            {/* date's history */}
-            <div className="px-px bg-brand-darkBgAccent/5 py-1 rounded-md ">
-              {history.map(data => {
-                if ((data as GroupedVisit)?.domain) {
-                  const visit = data as GroupedVisit;
-                  return (
-                    <div key={visit.domain + visit.visits?.length || 0} className="rounded-md my-px">
-                      {/* group title (domain) */}
-                      <Accordion
-                        id={visit.domain}
-                        defaultCollapsed
-                        trigger={
-                          <div className="flex items-center py-[5px] m-0 -ml-px">
-                            {/* time */}
-                            <span className="text-slate-500/80 text-[10px] mr-1.5">
-                              {getTime(visit.visits[0]?.timestamp)}
-                            </span>
+        {spaceHistory?.map(({ date, history }, index) => (
+          <div key={date} className="max-w-[99%]">
+            <Accordion
+              id={date}
+              trigger={
+                // history date heading
+                <div
+                  ref={el => (dateHeadingsRefs.current[index] = el)}
+                  data-date-heading={date}
+                  className="text-[13px] sticky top-0  w-[98%] flex items-center justify-between rounded-md  text-left mb-[2px]  text-slate-300   py-2 px-2.5">
+                  <p>
+                    {getISODate(date) === getISODate(new Date()) ? 'Today •' : ''} {'  '} {getWeekday(new Date(date))}
+                    {'  '}
+                    {new Date(date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: '2-digit' })}
+                  </p>
+                </div>
+              }>
+              {/* date's history */}
+              <div className="px-px bg-brand-darkBgAccent/5 py-1 rounded-md ">
+                {history.map(data => {
+                  if ((data as GroupedVisit)?.domain) {
+                    const visit = data as GroupedVisit;
+                    return (
+                      <div key={visit.domain + visit.visits?.length || 0} className="rounded-md my-px">
+                        {/* group title (domain) */}
+                        <Accordion
+                          id={visit.domain}
+                          defaultCollapsed
+                          trigger={
+                            <div className="flex items-center py-[5px] m-0 -ml-px">
+                              {/* time */}
+                              <span className="text-slate-500/80 text-[10px] mr-1.5">
+                                {getTime(visit.visits[0]?.timestamp)}
+                              </span>
 
-                            {/* icon & title */}
-                            <img alt="icon" src={visit.faviconUrl} className="w-[14px] h-[14px] mr-2" />
-                            <p className="text-slate-400/80">
-                              {visit.domain} ({visit.visits.length}) &nbsp;{' '}
-                            </p>
-                          </div>
-                        }>
-                        <div className="bg-brand-darkBgAccent/20">
-                          {visit.visits.map(v => (
-                            <div key={v.timestamp}>
-                              <Tab
-                                tabData={{ url: v.url, title: v.title, id: 0 }}
-                                isTabActive={false}
-                                isSpaceActive={false}
-                                isModifierKeyPressed={false}
-                                showHoverOption={true}
-                                showDeleteOption={false}
-                              />
+                              {/* icon & title */}
+                              <img alt="icon" src={visit.faviconUrl} className="w-[14px] h-[14px] mr-2" />
+                              <p className="text-slate-400/80">
+                                {visit.domain} ({visit.visits.length}) &nbsp;{' '}
+                              </p>
                             </div>
-                          ))}
-                        </div>
-                      </Accordion>
-                    </div>
-                  );
-                } else {
-                  const visit = data as ISiteVisit;
-                  return (
-                    <div key={visit.timestamp} className="flex items-center mb-px">
-                      <span className="text-slate-500/80 text-[10px] pl-1 mr-[0.5px]">{getTime(visit.timestamp)}</span>
-                      <Tab
-                        tabData={{ url: visit.url, title: visit.title, id: 0 }}
-                        isTabActive={false}
-                        isSpaceActive={false}
-                        isModifierKeyPressed={false}
-                        showHoverOption={true}
-                        showDeleteOption={false}
-                      />
-                    </div>
-                  );
-                }
-              })}
-            </div>
-          </Accordion>
-        </div>
-      ))}
+                          }>
+                          <div className="bg-brand-darkBgAccent/20">
+                            {visit.visits.map(v => (
+                              <div key={v.timestamp}>
+                                <Tab
+                                  tabData={{ url: v.url, title: v.title, id: 0 }}
+                                  isTabActive={false}
+                                  isSpaceActive={false}
+                                  isModifierKeyPressed={false}
+                                  showHoverOption={true}
+                                  showDeleteOption={false}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </Accordion>
+                      </div>
+                    );
+                  } else {
+                    const visit = data as ISiteVisit;
+                    return (
+                      <div key={visit.timestamp} className="flex items-center mb-px">
+                        <span className="text-slate-500/80 text-[10px] pl-1 mr-[0.5px]">
+                          {getTime(visit.timestamp)}
+                        </span>
+                        <Tab
+                          tabData={{ url: visit.url, title: visit.title, id: 0 }}
+                          isTabActive={false}
+                          isSpaceActive={false}
+                          isModifierKeyPressed={false}
+                          showHoverOption={true}
+                          showDeleteOption={false}
+                        />
+                      </div>
+                    );
+                  }
+                })}
+              </div>
+            </Accordion>
+          </div>
+        ))}
 
-      {/* no history tabs */}
-      {spaceHistory?.length < 1 ? (
-        <p className="text-slate-500 text-[14px] font-light mt-6 mx-auto">No history for this space</p>
-      ) : null}
-    </motion.div>
+        {/* no history tabs */}
+        {spaceHistory?.length < 1 ? (
+          <p className="text-slate-500 text-[14px] font-light mt-6 mx-auto">No history for this space</p>
+        ) : null}
+      </div>
+    </SlideModal>
   );
 };
 

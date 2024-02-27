@@ -104,7 +104,7 @@ const Header = ({ activeSpace }: Props) => {
           <button
             tabIndex={0}
             onClick={() => setShowCommandPalette(true)}
-            className={`text-slate-500/90 hover:bg-brand-darkBgAccent/20 rounded-full px-2 py-2 transition-all duration-200 outline-none focus:bg-brand-darkBgAccent/70  ${
+            className={`text-slate-500/90 hover:bg-brand-darkBgAccent/20 rounded-full px-2 py-2 transition-all duration-200 outline-none focus:bg-brand-darkBgAccent/60  ${
               showCommandPalette ? 'bg-brand-darkBgAccent/30' : ''
             }`}>
             <MagnifyingGlassIcon className="scale-[1.1]" />
@@ -125,7 +125,7 @@ const Header = ({ activeSpace }: Props) => {
             <button
               tabIndex={0}
               onClick={() => setShowNotifications(true)}
-              className={`text-slate-500/90 hover:bg-brand-darkBgAccent/20 rounded-full px-2 py-2 transition-all duration-200 outline-none focus:bg-brand-darkBgAccent/70  ${
+              className={`text-slate-500/90 hover:bg-brand-darkBgAccent/20 rounded-full px-2 py-2 transition-all duration-200 outline-none focus:bg-brand-darkBgAccent/60  ${
                 showNotifications ? 'bg-brand-darkBgAccent/30' : ''
               }`}>
               <BellIcon className="scale-[1.1]" />
@@ -168,7 +168,7 @@ const Header = ({ activeSpace }: Props) => {
             <button
               tabIndex={0}
               onClick={() => setShowMenu(true)}
-              className={`text-slate-500/90 hover:bg-brand-darkBgAccent/20 rounded-full px-2 py-2 transition-all duration-200 outline-none focus:bg-brand-darkBgAccent/70  ${
+              className={`text-slate-500/90 hover:bg-brand-darkBgAccent/20 rounded-full px-2 py-2 transition-all duration-200 outline-none focus:bg-brand-darkBgAccent/60  ${
                 showMenu ? 'bg-brand-darkBgAccent/30' : ''
               }`}>
               <HamburgerMenuIcon className="scale-[1.1]" />

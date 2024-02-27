@@ -102,6 +102,7 @@ export const useKeyPressed = ({
   }, []);
 
   // key press event listeners
+  // for side panels
   useEffect(() => {
     if (parentConTainerEl) {
       parentConTainerEl.addEventListener('keydown', handleKeydown);
@@ -114,19 +115,18 @@ export const useKeyPressed = ({
     };
   }, [parentConTainerEl, handleKeyUp, handleKeydown, monitorModifierKeys]);
 
+  // content script (command palette)
   useEffect(() => {
-    if (parentConTainerEl) {
-      parentConTainerEl.addEventListener('keydown', handleKeydown);
-      monitorModifierKeys && parentConTainerEl.addEventListener('keyup', handleKeyUp);
-    } else {
-      document.body.addEventListener('keydown', handleKeydown);
-      monitorModifierKeys && document.body.addEventListener('keyup', handleKeyUp);
-    }
+    if (parentConTainerEl) return;
+
+    document.body.addEventListener('keydown', handleKeydown);
+    monitorModifierKeys && document.body.addEventListener('keyup', handleKeyUp);
 
     return () => {
       document.body.removeEventListener('keydown', handleKeydown);
       monitorModifierKeys && document.body.removeEventListener('keyup', handleKeyUp);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {

@@ -1,11 +1,13 @@
+import { IconProps } from '@radix-ui/react-icons/dist/types';
 import { CommandType, ThemeColor } from '@root/src/constants/app';
+import { ForwardRefExoticComponent } from 'react';
 import type { IconType } from 'react-icons';
 
 export interface ICommand {
   index: number;
   type: CommandType;
   label: string;
-  icon?: string | IconType;
+  icon?: string | IconType | ForwardRefExoticComponent<IconProps & React.RefAttributes<SVGSVGElement>>;
   metadata?: string | number;
 }
 
