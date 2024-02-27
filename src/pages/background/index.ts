@@ -1,4 +1,4 @@
-import { getMostVisitedSites, getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
+import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
 import { ICommand, IDailySpaceTimeChunks, IMessageEventContentScript, ISiteVisit, ITab } from './../types/global.types';
 import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
@@ -465,7 +465,7 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
     let activeTabId = currentTab?.id;
 
-    if (isChromeUrl(currentTab?.url)) {
+    if (currentTab?.url && isChromeUrl(currentTab?.url)) {
       // switch tab as content script doesn't work on chrome pages
 
       //  TODO - use space history
@@ -504,8 +504,6 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
     const recentSites = await getRecentlyVisitedSites();
 
-    const topSites = await getMostVisitedSites();
-
     const activeSpace = await getSpaceByWindow(currentTab.windowId);
 
     // TODO - try using the content script to load command palette
@@ -529,7 +527,7 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
       callback: async () => {
         return await publishEventsTab(activeTabId, {
           event: 'SHOW_COMMAND_PALETTE',
-          payload: { activeSpace, recentSites, topSites },
+          payload: { activeSpace, recentSites },
         });
       },
     });

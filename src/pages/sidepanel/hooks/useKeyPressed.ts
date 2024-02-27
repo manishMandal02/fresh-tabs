@@ -103,19 +103,25 @@ export const useKeyPressed = ({
 
   // key press event listeners
   useEffect(() => {
-    if (!parentConTainerEl) return;
-    parentConTainerEl.addEventListener('keydown', handleKeydown);
-    monitorModifierKeys && parentConTainerEl.addEventListener('keyup', handleKeyUp);
+    if (parentConTainerEl) {
+      parentConTainerEl.addEventListener('keydown', handleKeydown);
+      monitorModifierKeys && parentConTainerEl.addEventListener('keyup', handleKeyUp);
+    }
+
     return () => {
-      parentConTainerEl.removeEventListener('keydown', handleKeydown);
-      monitorModifierKeys && parentConTainerEl.removeEventListener('keyup', handleKeyUp);
+      parentConTainerEl?.removeEventListener('keydown', handleKeydown);
+      monitorModifierKeys && parentConTainerEl?.removeEventListener('keyup', handleKeyUp);
     };
   }, [parentConTainerEl, handleKeyUp, handleKeydown, monitorModifierKeys]);
 
   useEffect(() => {
-    if (parentConTainerEl) return;
-    document.body.addEventListener('keydown', handleKeydown);
-    monitorModifierKeys && document.body.addEventListener('keyup', handleKeyUp);
+    if (parentConTainerEl) {
+      parentConTainerEl.addEventListener('keydown', handleKeydown);
+      monitorModifierKeys && parentConTainerEl.addEventListener('keyup', handleKeyUp);
+    } else {
+      document.body.addEventListener('keydown', handleKeydown);
+      monitorModifierKeys && document.body.addEventListener('keyup', handleKeyUp);
+    }
 
     return () => {
       document.body.removeEventListener('keydown', handleKeydown);

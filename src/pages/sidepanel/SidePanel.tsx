@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 
 import Header from './components/features/header';
-import Search from './components/features/search';
 import { useSidePanel } from './hooks/useSidePanel';
 import Spinner from './components/elements/spinner';
 import Snackbar from './components/elements/snackbar';
@@ -112,24 +111,21 @@ const SidePanel = () => {
         {/* header */}
         <Header activeSpace={activeSpace && omitObjProps(activeSpace, 'tabs')} />
 
-        {/* search */}
-        <div className="">
-          <Search />
-        </div>
         {/* <p className="text-sm font-light text-slate-400 mt-3 mb-1 ml-3 select-none">Spaces</p> */}
         {/* global */}
         {/* <div className="mt-4">
           <FavTabs tabs={globalPinnedTabs} isGlobal={true} setGlobalPinnedTabs={setGlobalPinnedTabs} />
         </div> */}
+
         {/* spaces container */}
-        <div className="w-full h-[84%] px-3 py-1 scroll-p-px scroll-m-px relative">
+        <div className="w-full h-[93%] px-2 py-1 scroll-p-px scroll-m-px relative ">
           {/* un saved  */}
           {isLoadingSpaces ? (
             <Spinner size="md" />
           ) : (
             <DragDropContext onDragEnd={onTabsDragEnd} onBeforeDragStart={onTabsDragStart}>
               {/* Current space */}
-              <div className="h-[82%] relative mb-5">
+              <div className="h-[90%] relative">
                 <ActiveSpace
                   space={activeSpace}
                   tabs={activeSpaceTabs}
@@ -171,7 +167,7 @@ const SidePanel = () => {
                 </Droppable>
               </div>
               {/* other spaces */}
-              <div className="h-[18%]">
+              <div className="h-[10%]">
                 <OtherSpacesContainer isDraggingTabs={isDraggingTabs} isDraggingSpace={isDraggingSpace} />
               </div>
             </DragDropContext>

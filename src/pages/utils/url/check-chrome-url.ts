@@ -1,3 +1,3 @@
 export const isChromeUrl = (url: string) => {
-  return url.startsWith('chrome://');
+  return url?.startsWith('chrome://');
 };

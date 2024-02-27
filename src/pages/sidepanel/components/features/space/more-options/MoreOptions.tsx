@@ -1,5 +1,15 @@
-import * as DropdownMenuRadix from '@radix-ui/react-dropdown-menu';
-import { MdMoreVert, MdEdit, MdSync, MdDelete, MdOutlineOpenInBrowser, MdOpenInNew } from 'react-icons/md';
+import {
+  DotsVerticalIcon,
+  Pencil1Icon,
+  TrashIcon,
+  OpenInNewWindowIcon,
+  EnterIcon,
+  UpdateIcon,
+  MoonIcon,
+  CounterClockwiseClockIcon,
+} from '@radix-ui/react-icons';
+import Popover from '../../../elements/popover';
+import { useState } from 'react';
 
 type Props = {
   isSpaceActive: boolean;
@@ -18,65 +28,72 @@ const MoreOptions = ({
   onOpenSpace,
   onDeleteClick,
 }: Props) => {
+  const [showMenu, setShowMenu] = useState(false);
   return (
-    <DropdownMenuRadix.Root>
-      <DropdownMenuRadix.Trigger asChild>
-        <span>
-          <MdMoreVert
-            tabIndex={0}
-            className="text-slate-500/80 cursor-pointer hover:opacity-95 transition-all duration-200 -ml-1 mt-[5px]"
-            size={18}
-          />
-        </span>
-      </DropdownMenuRadix.Trigger>
-
-      <DropdownMenuRadix.Portal>
-        <DropdownMenuRadix.Content
-          className={`min-w-28 z-[9999] py-1 bg-slate-900 text-slate-400 rounded data-[side=top]:animate-slideDownAndFade 
-                    shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]  
-                    data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade`}
-          sideOffset={5}
-          onClick={ev => {
-            ev.stopPropagation();
-          }}>
-          {!isSpaceActive ? (
-            <DropdownMenuRadix.Item
-              className={`group text-xs px-1.5 py-2 pr-4 hover:bg-slate-800 cursor-pointer 
-                    transition-all duration-200 leading-none flex items-center  relative select-none outline-none`}
-              onClick={onOpenSpace}>
+    <Popover
+      open={showMenu}
+      onChange={open => setShowMenu(open)}
+      content={
+        <>
+          {/*  eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+          <div
+            onClick={() => setShowMenu(false)}
+            className={`flex flex-col text-[10px] text-slate-300/90 font-extralight whitespace-nowrap w-[8.5rem] bg-brand-darkBg/95  
+                     border border-brand-darkBgAccent/40 shadow-sm rounded shadow-brand-darkBgAccent/50`}>
+            {!isSpaceActive ? (
               <>
                 {!shouldOpenInNewWindow ? (
-                  <>
-                    <MdOpenInNew className="mr-1 opacity-70 text-xs" /> Open in new window
-                  </>
+                  <button
+                    className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/15 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
+                    onClick={onOpenSpace}>
+                    <OpenInNewWindowIcon className={`text-slate-500/90 mr-[5px] scale-[0.8]`} /> Open in new window
+                  </button>
                 ) : (
-                  <>
-                    <MdOutlineOpenInBrowser className="mr-1 opacity-70 text-xs" /> Open Space
-                  </>
+                  <button
+                    className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/15 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
+                    onClick={onOpenSpace}>
+                    <EnterIcon className="text-slate-500/90 mr-[5px] scale-[0.8]" /> Open Space
+                  </button>
                 )}
               </>
-            </DropdownMenuRadix.Item>
-          ) : null}
-          <DropdownMenuRadix.Item
-            className="group text-xs px-1.5 py-2 hover:bg-slate-800 cursor-pointer transition-all duration-200 leading-none flex items-center  relative select-none outline-none "
-            onClick={onEditClick}>
-            <MdEdit className="mr-1 opacity-70 text-xs" /> Edit
-          </DropdownMenuRadix.Item>
-          {isSpaceActive ? (
-            <DropdownMenuRadix.Item
-              className="group text-xs px-1.5 py-2 hover:bg-slate-800 cursor-pointer transition-all duration-200 leading-none flex items-center  relative select-none outline-none "
+            ) : null}
+            <button
+              className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/15 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
               onClick={onSyncClick}>
-              <MdSync className="mr-1 opacity-70 text-xs" /> Sync Tabs
-            </DropdownMenuRadix.Item>
-          ) : null}
-          <DropdownMenuRadix.Item
-            className="group text-xs px-1.5 py-2 hover:bg-slate-800 cursor-pointer transition-all duration-200 leading-none flex items-center  relative select-none outline-none "
-            onClick={onDeleteClick}>
-            <MdDelete className="mr-1 opacity-70 text-xs" /> Delete
-          </DropdownMenuRadix.Item>
-        </DropdownMenuRadix.Content>
-      </DropdownMenuRadix.Portal>
-    </DropdownMenuRadix.Root>
+              <CounterClockwiseClockIcon className="text-slate-500/90 mr-[5px] scale-[0.8]" /> Space history
+            </button>
+            <button
+              className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/15 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
+              onClick={onSyncClick}>
+              <MoonIcon className="text-slate-500/90 mr-[5px] scale-[0.8]" /> Snoozed tabs (0)
+            </button>
+            <button
+              className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/15 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
+              onClick={onSyncClick}>
+              <UpdateIcon className="text-slate-500/90 mr-[5px] scale-[0.8]" /> Sync tabs
+            </button>
+            <button
+              className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/15 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
+              onClick={onEditClick}>
+              <Pencil1Icon className="text-slate-500/90 mr-[5px] scale-[0.8]" /> Update Space
+            </button>
+            <button
+              className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/15 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
+              onClick={onDeleteClick}>
+              <TrashIcon className="text-slate-500/90 mr-[5px] scale-[0.85]" /> Delete space
+            </button>
+          </div>
+        </>
+      }>
+      <button
+        tabIndex={0}
+        onClick={() => setShowMenu(true)}
+        className={`text-slate-500/90 hover:bg-brand-darkBgAccent/20 rounded-full px-2 py-2 transition-all duration-200 focus:outline-brand-darkBgAccent  ${
+          showMenu ? 'bg-brand-darkBgAccent/30' : ''
+        }`}>
+        <DotsVerticalIcon className="scale-[1.1]" />
+      </button>
+    </Popover>
   );
 };
 

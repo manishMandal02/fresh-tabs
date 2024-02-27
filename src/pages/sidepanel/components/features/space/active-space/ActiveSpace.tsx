@@ -13,6 +13,7 @@ import SnoozedTabs from './SnoozedTabs';
 import Tabs from '../../../elements/tabs/Tabs';
 import ActiveSpaceTabs from './ActiveSpaceTabs';
 import SpaceHistory from './SpaceHistory';
+import { BellIcon } from '@radix-ui/react-icons';
 
 type Props = {
   space: ISpace;
@@ -136,7 +137,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
     <div className="h-full mt-4 ">
       <div className="flex items-center h-[6.5%] justify-between px-2">
         <div className="flex items-center ">
-          <div className="text-lg  border-r  pr-5  w-fit select-none" style={{ borderColor: space.theme }}>
+          <div className="text-lg  border-r  pr-3  w-fit select-none" style={{ borderColor: space.theme }}>
             {space.emoji}
           </div>
           <p className="text-base font-light text-slate-400 ml-2.5">{space.title}</p>
@@ -145,7 +146,13 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
           </p> */}
         </div>
 
-        <div className="flex  justify-center select-none gap-x-2.5">
+        <div className="flex  justify-center select-none gap-x-2">
+          <button
+            tabIndex={0}
+            onClick={() => {}}
+            className={`text-slate-500/80 hover:bg-brand-darkBgAccent/20 rounded-full px-2 py-2 transition-all duration-200 outline-none focus:bg-brand-darkBgAccent/70 `}>
+            <BellIcon className="scale-[1]" />
+          </button>
           {/* more options  */}
           <MoreOptions
             shouldOpenInNewWindow={false}

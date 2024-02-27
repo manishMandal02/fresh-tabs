@@ -96,7 +96,6 @@ type MessageEventsContentScript =
 
 interface IEventPayloadContentScript {
   recentSites?: ITab[];
-  topSites?: ITab[];
   url?: string;
   spaceId?: string;
   tabId?: number;

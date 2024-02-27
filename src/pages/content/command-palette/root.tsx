@@ -20,11 +20,10 @@ const handleClose = () => {
 
 type AppendContainerProps = {
   recentSites: ITab[];
-  topSites: ITab[];
   activeSpace: ISpace;
 };
 
-const appendCommandPaletteContainer = ({ recentSites, topSites, activeSpace }: AppendContainerProps) => {
+const appendCommandPaletteContainer = ({ recentSites, activeSpace }: AppendContainerProps) => {
   if (document.getElementById(CommandPaletteContainerId)) return;
 
   const commandPaletteContainer = document.createElement('div');
@@ -57,7 +56,7 @@ const appendCommandPaletteContainer = ({ recentSites, topSites, activeSpace }: A
   shadowRoot.appendChild(styleElement);
 
   createRoot(rootIntoShadow).render(
-    <CommandPalette recentSites={recentSites} topSites={topSites} activeSpace={activeSpace} onClose={handleClose} />,
+    <CommandPalette recentSites={recentSites} activeSpace={activeSpace} onClose={handleClose} />,
   );
 };
 
@@ -66,11 +65,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
   const event = msg as IMessageEventContentScript;
 
-  const { recentSites, topSites, activeSpace } = event.payload;
+  const { recentSites, activeSpace } = event.payload;
 
   if (msg.event === 'SHOW_COMMAND_PALETTE') {
     appendCommandPaletteContainer({
-      topSites,
       recentSites,
       activeSpace,
     });
