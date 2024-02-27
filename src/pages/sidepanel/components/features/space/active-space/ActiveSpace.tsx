@@ -155,7 +155,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace, isDraggingGlobal }: Props) =
       <div
         id="active-space-scrollable-container"
         className="relative max-h-[90%]  cc-scrollbar min-h-fit overflow-x-hidden border-y pb-2 border-brand-darkBgAccent/30">
-        <Tabs tabs={[`Active  (${tabs?.length || 0})`, 'Notes']} defaultTab={1}>
+        <Tabs tabs={[`Tabs`, 'Notes']} defaultTab={1}>
           <ActiveSpaceTabs tabs={tabs} isDraggingGlobal={isDraggingGlobal} />
           <div className="text-center text-slate-500 py-12">Notes</div>
         </Tabs>

@@ -42,7 +42,7 @@ const MoreOptions = ({
           {/*  eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <div
             onClick={() => setShowMenu(false)}
-            className={`flex flex-col text-[10px] text-slate-300/90 font-extralight whitespace-nowrap w-[8.5rem] bg-brand-darkBg/95  
+            className={`flex flex-col text-[10.5px] text-slate-300/80 font-light whitespace-nowrap w-[8.5rem] bg-brand-darkBg/95  
                      border border-brand-darkBgAccent/40 shadow-sm rounded shadow-brand-darkBgAccent/50`}>
             {!isSpaceActive ? (
               <>

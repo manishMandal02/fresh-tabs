@@ -10,6 +10,7 @@ import EmojiPicker from '../../../elements/emoji-picker';
 import TextInput from '../../../elements/TextInput/TextInput';
 import { ISpace, ITab } from '@root/src/pages/types/global.types';
 import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
+import ErrorMessage from '../../../elements/alert-message/ErrorMessage';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
 import { snackbarAtom, nonActiveSpacesAtom, newSpaceModalAtom } from '@root/src/stores/app';
@@ -25,7 +26,7 @@ const defaultSpaceData: DefaultSpaceFields = {
 const CreateSpace = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentTabs, setCurrentTabs] = useState<ITab[]>([]);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('Enter all the fields');
 
   // spaces atom (global state)
   const [, setSpaces] = useAtom(nonActiveSpacesAtom);
@@ -74,6 +75,8 @@ const CreateSpace = () => {
 
   useEffect(() => {
     setIsModalOpen(newSpaceModal.show);
+    setNewSpaceData(defaultSpaceData);
+    setErrorMsg('');
     if (newSpaceModal.tabs?.length > 0) {
       setCurrentTabs(newSpaceModal.tabs);
     }
@@ -119,13 +122,17 @@ const CreateSpace = () => {
     }
   };
 
-  const handleShortcut = useCallback(ev => {
-    const keyEv = ev as KeyboardEvent;
+  const handleShortcut = useCallback(
+    ev => {
+      const keyEv = ev as KeyboardEvent;
 
-    if (keyEv.ctrlKey && keyEv.key.toLowerCase() === 'a') {
-      setIsModalOpen(true);
-    }
-  }, []);
+      if (keyEv.ctrlKey && keyEv.code === 'KeyA') {
+        console.log('🚀 ~ handleShortcut ~ keyEv:~~  keyEv.ctrlKey', keyEv.ctrlKey);
+        setNewSpaceModal({ show: true, tabs: [] });
+      }
+    },
+    [setNewSpaceModal],
+  );
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -140,7 +147,7 @@ const CreateSpace = () => {
 
   return (
     <SlideModal title="Add New Space" isOpen={newSpaceModal.show} onClose={handleCloseModal}>
-      <div className=" flex flex-col  w-full h-full py-3 px-4">
+      <div className=" flex flex-col  w-full h-full py-2.5 px-4">
         <div className="mt-4 flex items-center gap-x-3">
           <TextInput placeholder="Space Title..." value={newSpaceData.title} onChange={onTitleChange} />
 
@@ -155,16 +162,14 @@ const CreateSpace = () => {
             <Tab key={tab.id} isModifierKeyPressed={false} isTabActive={false} tabData={tab} showHoverOption={false} />
           ))}
         </div>
+
         {/* error msg */}
-        {errorMsg ? (
-          <span className="test-base mx-auto mt-6 text-slate-700 font-medium bg-red-400 px-3 py-1 w-fit text-center rounded-sm">
-            {errorMsg}
-          </span>
-        ) : null}
+        <ErrorMessage msg={errorMsg} />
+
         {/* add space */}
         <button
-          className={` mt-6 mx-auto w-[70%] py-2 
-                      rounded-md text-slate-700 font-semibold text-[13px] bg-brand-primary/90 hover:opacity-80 transition-all  duration-300`}
+          className={` mt-5 mx-auto w-[65%] py-2.5 rounded-md text-brand-darkBg/70 font-semibold text-[13px]
+                      bg-brand-primary/90 hover:opacity-95 transition-all duration-200 border-none outline-none focus-within:outline-slate-600`}
           onClick={handleAddSpace}>
           {snackbar.isLoading ? <Spinner size="sm" /> : 'Add Space'}
         </button>

@@ -60,5 +60,6 @@ export const useUpdateSpace = ({ updateSpaceData, spaceId, onClose }: UseUpdateS
     handleUpdateSpace,
     errorMsg,
     snackbar,
+    setErrorMsg,
   };
 };

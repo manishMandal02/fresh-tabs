@@ -10,16 +10,11 @@ type Props = {
 const EmojiPicker = ({ emoji, onChange }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleOpenEmojiPicker = () => {
-    setIsOpen(true);
-  };
-
   return (
     <div>
       <Popover
-        modalContainer
         open={isOpen}
-        onChange={setIsOpen}
+        onChange={open => setIsOpen(open)}
         content={
           // eslint-disable-next-line jsx-a11y/no-static-element-interactions
           <div className="relative" onKeyDown={ev => ev.stopPropagation()} onClick={ev => ev.stopPropagation()}>
@@ -38,8 +33,9 @@ const EmojiPicker = ({ emoji, onChange }: Props) => {
           </div>
         }>
         <button
-          className="border select-none border-slate-600 rounded w-10 h-10 flex items-center justify-center text-xl"
-          onClick={handleOpenEmojiPicker}>
+          onClick={() => setIsOpen(true)}
+          className={` select-none  bg-brand-darkBgAccent/50 rounded-md w-[45px] h-[40px] flex items-center justify-center hover:bg-brand-darkBgAccent/70
+                        transition-all duration-200 text-[20px] focus-within:bg-brand-darkBgAccent/90 focus-within:outline-brand-darkBgAccent`}>
           <div className="">{emoji}</div>
         </button>
       </Popover>

@@ -19,7 +19,7 @@ const Tabs = <T extends string[]>({ tabs, children, defaultTab }: Props<T>) => {
         {tabs.map((tab, index) => (
           <TabsRadix.Trigger
             key={generateId()}
-            className={` py-[6.5px]  flex-1 flex items-center justify-center text-[12px] font-normal leading-none text-slate-400/80 transition-all duration-200 
+            className={` py-[6.5px]  flex-1 flex items-center justify-center text-[12px] font-normal leading-none text-slate-400/90 transition-all duration-200 
              select-none  data-[state=active]:text-slate-300/80 data-[state=active]:bg-brand-darkBgAccent/50 rounded-md outline-none cursor-pointer`}
             value={(index + 1).toString()}>
             <h1>{tab as string}</h1>
