@@ -2,7 +2,7 @@ export const useCustomAnimation = () => {
   // bounce div animation
   const bounce = {
     initial: { scale: 0, opacity: 0 },
-    animate: {
+    whileInView: {
       scale: 1,
       opacity: 1,
     },

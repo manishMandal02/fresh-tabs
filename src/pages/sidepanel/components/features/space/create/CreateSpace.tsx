@@ -158,9 +158,7 @@ const CreateSpace = () => {
         {/* tabs */}
         <div className="mt-6">
           <p className="text-slate-500 font text-sm mb-1.5">Tabs</p>
-          {currentTabs?.map(tab => (
-            <Tab key={tab.id} isModifierKeyPressed={false} isTabActive={false} tabData={tab} showHoverOption={false} />
-          ))}
+          {currentTabs?.map(tab => <Tab key={tab.id} isTabActive={false} tabData={tab} showHoverOption={false} />)}
         </div>
 
         {/* error msg */}

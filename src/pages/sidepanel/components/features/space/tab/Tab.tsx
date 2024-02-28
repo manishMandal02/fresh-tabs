@@ -1,41 +1,36 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
+import { memo } from 'react';
+
+import { Cross1Icon, CopyIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
 import { ITab } from '@root/src/pages/types/global.types';
 import { getFaviconURL } from '@root/src/pages/utils/url';
 import { copyToClipboard } from '@root/src/pages/utils/copy-to-clipboard';
 import { createTab, goToTab } from '@root/src/services/chrome-tabs/tabs';
-import { MdClose, MdContentCopy, MdOpenInNew, MdOutlineAdd } from 'react-icons/md';
-import { motion } from 'framer-motion';
+import { TAB_HEIGHT } from '../active-space/ActiveSpaceTabs';
 
 type Props = {
   tabData: ITab;
-  isTabActive: boolean;
-  isModifierKeyPressed: boolean;
   showHoverOption?: boolean;
   isSpaceActive?: boolean;
   showDeleteOption?: boolean;
   onClick?: () => void;
   onTabDelete?: () => Promise<void>;
-  onCreateNewTab?: () => void;
   onTabDoubleClick?: (id: number) => void;
 };
 
 const Tab = ({
   tabData,
   onTabDelete,
-  isTabActive,
-  onCreateNewTab,
+
   onClick,
   isSpaceActive,
   onTabDoubleClick,
-  isModifierKeyPressed,
   showDeleteOption = true,
   showHoverOption = true,
 }: Props) => {
   console.log('🚀 ~ Tab ~ 🔁 rendered');
-
-  // local state
 
   // handle open tab
   const handleOpen = async () => {
@@ -53,69 +48,45 @@ const Tab = ({
   const handleCopyURL = async () => await copyToClipboard(tabData.url);
 
   return (
-    <div
-      className={` w-full select-none z-[20] px-2 py-[5px] flex items-center justify-between 
-                   relative shadow-sm rounded-lg overflow-hidden group h-[1.7rem]`}
-      style={{
-        cursor: isModifierKeyPressed ? 'pointer' : '',
-      }}
+    <button
+      className={`w-[99%] max-w-[99%] select-none z-[20] px-[10px] py-[12px] flex items-center justify-between outline-none
+                   relative shadow-sm rounded-lg overflow-hidden group hover:bg-brand-darkBgAccent/50 transition-all duration-200`}
       onClick={onClick}
+      style={{
+        height: TAB_HEIGHT + 'px',
+      }}
       onDoubleClick={() => onTabDoubleClick(tabData.id)}>
-      <div className="flex items-center w-full ">
-        <img className=" mr-2 opacity-95  w-4 h-4 z-10 rounded-sm  " src={getFaviconURL(tabData.url)} alt="icon" />
-        <span className="text-xs text-slate-400 max-w-fit min-w-[80%] text-start whitespace-nowrap overflow-hidden text-ellipsis">
+      <div className="flex items-center w-full">
+        <img className="mr-[6px] opacity-95  size-[18px] z-10 rounded-sm" src={getFaviconURL(tabData.url)} alt="icon" />
+        <span className="text-[13px] text-slate-300/80 min-w-[80%] max-w-[95%] text-start whitespace-nowrap overflow-hidden text-ellipsis">
           {tabData.title.trim()}
         </span>
       </div>
       {showHoverOption ? (
-        <motion.span
-          initial={{ x: 20, opacity: 0 }}
-          whileInView={{ x: 0, opacity: 1, animationDuration: '0.4s', transition: { delay: 0.1 } }}
-          exit={{ x: 20, opacity: 0 }}
-          className="absolute hidden group-hover:flex right-2 bottom-px items-center gap-x-3 bg-brand-darkBgAccent px-2 py-1.5 rounded">
-          {/* go to tab */}
-
-          {isSpaceActive && !isTabActive ? (
-            <>
-              {/* <MdMyLocation
-                className={` text-slate-500 text-xs cursor-pointer py-[1.5px] px-[1.5px] scale-[1.65] transition-all duration-200 hover:bg-brand-darkBg/50`}
-                onClick={handleOpen}
-              /> */}
-              {/* <span className="h-px w-px bg-slate-200" /> */}
-            </>
-          ) : null}
+        <span
+          className="absolute opacity-0 hidden group-hover:flex group-hover:opacity-100 transition-all duration-300 right-[8px] items-center gap-x-3 shadow-md shadow-slate-800"
+          onClick={ev => ev.stopPropagation()}>
           {/* open tab  */}
           {!isSpaceActive ? (
-            <MdOpenInNew
-              className={` text-slate-500 text-xs cursor-pointer py-[1.5px] px-[1.5px] scale-[1.65] transition-all duration-200 hover:bg-brand-darkBg/50`}
+            <ExternalLinkIcon
+              className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
               onClick={handleOpen}
             />
           ) : null}
-
-          {isSpaceActive ? (
-            <>
-              <MdOutlineAdd
-                className={` text-slate-500 text-xs cursor-pointer py-[1.5px] px-[1.5px] scale-[1.65] transition-all duration-200 hover:bg-brand-darkBg/50`}
-                onClick={onCreateNewTab}
-              />
-              {/* <span className="h-px w-px bg-slate-200" /> */}
-            </>
-          ) : null}
-
-          <MdContentCopy
-            className={` text-slate-500 text-xs cursor-pointer py-[1.5px] px-[1.5px] scale-[1.65] transition-all duration-200 hover:bg-brand-darkBg/50`}
+          <CopyIcon
+            className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
             onClick={handleCopyURL}
           />
           {showDeleteOption ? (
-            <MdClose
-              className={` text-slate-500 text-xs cursor-pointer py-[1.5px] px-[1.5px] scale-[1.65] transition-all duration-200 hover:bg-brand-darkBg/50`}
+            <Cross1Icon
+              className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
               onClick={onTabDelete}
             />
           ) : null}
-        </motion.span>
+        </span>
       ) : null}
-    </div>
+    </button>
   );
 };
 
-export default Tab;
+export default memo(Tab);

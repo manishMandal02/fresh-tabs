@@ -65,7 +65,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
 
   return space?.id ? (
     <div className="h-full mt-4 ">
-      <div className="flex items-center h-[6.5%] justify-between px-1.5">
+      <div className="flex items-center h-[6.5%] justify-between px-1">
         <div className="flex items-center ">
           <div className="text-lg  border-r  pr-3  w-fit select-none" style={{ borderColor: space.theme }}>
             {space.emoji}

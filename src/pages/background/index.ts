@@ -1,7 +1,32 @@
-import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
-import { ICommand, IDailySpaceTimeChunks, IMessageEventContentScript, ISiteVisit, ITab } from './../types/global.types';
-import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
 import 'webextension-polyfill';
+import reloadOnUpdate from 'virtual:reload-on-update-in-background-script';
+reloadOnUpdate('pages/background');
+
+/**
+ * Extension reloading is necessary because the browser automatically caches the css.
+ * If you do not use the css of the content script, please delete it.
+ */
+reloadOnUpdate('pages/content/style.scss');
+// ***
+
+import { logger } from '../utils/logger';
+import { generateId, wait } from '../utils';
+import { retryAtIntervals } from '../utils/retryAtIntervals';
+import { asyncMessageHandler } from '../utils/asyncMessageHandler';
+import { handleSnoozedTabAlarm } from './handler/alarm/snoozed-tab';
+import { getFaviconURL, isChromeUrl, parseUrl } from '../utils/url';
+import { discardTabs } from '@root/src/services/chrome-discard/discard';
+import { publishEvents, publishEventsTab } from '../utils/publish-events';
+import { handleMergeSpaceHistoryAlarm } from './handler/alarm/mergeSpaceHistory';
+import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers';
+import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
+import { getCurrentTab, goToTab, openSpace } from '@root/src/services/chrome-tabs/tabs';
+import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
+import { addSnoozedTab, getTabToUnSnooze } from '@root/src/services/chrome-storage/snooze-tabs';
+import { handleMergeDailySpaceTimeChunksAlarm } from './handler/alarm/mergeDailySpaceTimeChunks';
+import { getSpaceHistory, setSpaceHistory } from '@root/src/services/chrome-storage/space-history';
+import { getDailySpaceTime, setDailySpaceTime } from '@root/src/services/chrome-storage/space-analytics';
+import { ICommand, IDailySpaceTimeChunks, IMessageEventContentScript, ISiteVisit, ITab } from './../types/global.types';
 import {
   checkNewWindowTabs,
   createNewSpace,
@@ -20,11 +45,6 @@ import {
   updateTab,
   updateTabIndex,
 } from '@root/src/services/chrome-storage/tabs';
-import { getFaviconURL, isChromeUrl, parseUrl } from '../utils/url';
-
-import { logger } from '../utils/logger';
-import { publishEvents, publishEventsTab } from '../utils/publish-events';
-import { generateId, wait } from '../utils';
 import {
   checkParentBMFolder,
   syncSpacesFromBookmarks,
@@ -40,26 +60,6 @@ import {
   AlarmName,
   ALARM_NAME_PREFiX,
 } from '@root/src/constants/app';
-import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
-import { getCurrentTab, goToTab, openSpace } from '@root/src/services/chrome-tabs/tabs';
-import { retryAtIntervals } from '../utils/retryAtIntervals';
-import { asyncMessageHandler } from '../utils/asyncMessageHandler';
-import { discardTabs } from '@root/src/services/chrome-discard/discard';
-import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers';
-import { addSnoozedTab, getTabToUnSnooze } from '@root/src/services/chrome-storage/snooze-tabs';
-import { getSpaceHistory, setSpaceHistory } from '@root/src/services/chrome-storage/space-history';
-import { getDailySpaceTime, setDailySpaceTime } from '@root/src/services/chrome-storage/space-analytics';
-import { handleSnoozedTabAlarm } from './handler/alarm/snoozed-tab';
-import { handleMergeSpaceHistoryAlarm } from './handler/alarm/mergeSpaceHistory';
-import { handleMergeDailySpaceTimeChunksAlarm } from './handler/alarm/mergeDailySpaceTimeChunks';
-
-reloadOnUpdate('pages/background');
-
-/**
- * Extension reloading is necessary because the browser automatically caches the css.
- * If you do not use the css of the content script, please delete it.
- */
-reloadOnUpdate('pages/content/style.scss');
 
 logger.info('🏁 background loaded');
 
@@ -802,4 +802,34 @@ chrome.windows.onRemoved.addListener(async windowId => {
 chrome.windows.onFocusChanged.addListener(async windowId => {
   // record daily space time
   await recordDailySpaceTime(windowId);
+});
+
+// on tabs content changed
+chrome.webNavigation.onTabReplaced.addListener(async ({ replacedTabId, tabId }) => {
+  const windows = await chrome.windows.getAll();
+
+  for (const window of windows) {
+    const space = await getSpaceByWindow(window.id);
+    const tabsInSpace = await getTabsInSpace(space.id);
+    // find changed tab
+    const changedTab = tabsInSpace.find(t => t.id === replacedTabId);
+
+    console.log('🚀 ~ chrome.webNavigation.onTabReplaced.addListener ~ changedTab:', changedTab);
+
+    if (!changedTab) continue;
+
+    // update tabs storage
+    await setTabsForSpace(space.id, [...tabsInSpace.map(t => (t.id === replacedTabId ? { ...t, id: tabId } : t))]);
+
+    // send event to side panel for ui update
+    await publishEvents({
+      id: generateId(),
+      event: 'UPDATE_TABS',
+      payload: {
+        spaceId: space.id,
+      },
+    });
+
+    break;
+  }
 });

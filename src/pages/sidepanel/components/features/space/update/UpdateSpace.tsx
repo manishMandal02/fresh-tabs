@@ -98,7 +98,7 @@ const UpdateSpace = () => {
 
           <div className="w-full h-fit max-h-[16rem] border-y border-brand-darkBgAccent/20 bg-red-30 overflow-x-hidden overflow-y-auto cc-scrollbar">
             {tabs.map(tab => (
-              <Tab key={tab.id} tabData={tab} isModifierKeyPressed={false} isTabActive={false} />
+              <Tab key={tab.id} tabData={tab} isTabActive={false} />
             ))}
           </div>
 

@@ -206,7 +206,6 @@ const SpaceHistory = ({ spaceId, show, onClose }: Props) => {
                                   tabData={{ url: v.url, title: v.title, id: 0 }}
                                   isTabActive={false}
                                   isSpaceActive={false}
-                                  isModifierKeyPressed={false}
                                   showHoverOption={true}
                                   showDeleteOption={false}
                                 />
@@ -227,7 +226,6 @@ const SpaceHistory = ({ spaceId, show, onClose }: Props) => {
                           tabData={{ url: visit.url, title: visit.title, id: 0 }}
                           isTabActive={false}
                           isSpaceActive={false}
-                          isModifierKeyPressed={false}
                           showHoverOption={true}
                           showDeleteOption={false}
                         />
