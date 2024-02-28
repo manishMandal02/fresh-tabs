@@ -33,6 +33,8 @@ const Tab = ({
   showDeleteOption = true,
   showHoverOption = true,
 }: Props) => {
+  console.log('🚀 ~ Tab ~ 🔁 rendered');
+
   // local state
 
   // handle open tab
@@ -52,8 +54,8 @@ const Tab = ({
 
   return (
     <div
-      className={` w-full select-none z-[20] px-2 py-[5px] flex relative 
-                 items-center justify-between shadow-sm rounded-lg overflow-hidden group h-[1.7rem]`}
+      className={` w-full select-none z-[20] px-2 py-[5px] flex items-center justify-between 
+                   relative shadow-sm rounded-lg overflow-hidden group h-[1.7rem]`}
       style={{
         cursor: isModifierKeyPressed ? 'pointer' : '',
       }}

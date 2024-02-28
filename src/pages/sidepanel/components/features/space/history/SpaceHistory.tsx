@@ -1,16 +1,17 @@
-import { ISiteVisit } from '@root/src/pages/types/global.types';
-import { getSpaceHistory } from '@root/src/services/chrome-storage/space-history';
-import { useState, useEffect, useRef } from 'react';
-import { Tab } from '../tab';
 import { motion } from 'framer-motion';
-import { getISODate } from '@root/src/pages/utils/date-time/getISODate';
+import { useState, useEffect, useRef, memo } from 'react';
+
+import { Tab } from '../tab';
+import { SlideModal } from '../../../elements/modal';
 import { isChromeUrl } from '@root/src/pages/utils/url';
-import { getWeekday } from '@root/src/pages/utils/date-time/get-weekday';
 import Accordion from '../../../elements/accordion/Accordion';
-import { getUrlDomain } from '@root/src/pages/utils/url/get-url-domain';
+import { ISiteVisit } from '@root/src/pages/types/global.types';
 import { getTime } from '@root/src/pages/utils/date-time/get-time';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';
-import { SlideModal } from '../../../elements/modal';
+import { getISODate } from '@root/src/pages/utils/date-time/getISODate';
+import { getUrlDomain } from '@root/src/pages/utils/url/get-url-domain';
+import { getWeekday } from '@root/src/pages/utils/date-time/get-weekday';
+import { getSpaceHistory } from '@root/src/services/chrome-storage/space-history';
 
 type GroupedVisit = { visits: ISiteVisit[]; domain?: string; faviconUrl?: string };
 
@@ -45,15 +46,16 @@ const getGroupedSessionRecursively = (startIndex: number, visits: ISiteVisit[]) 
   return [visits[startIndex], ...groupedVisits];
 };
 
+// * component
 type Props = { spaceId: string; show: boolean; onClose: () => void };
 
 const SpaceHistory = ({ spaceId, show, onClose }: Props) => {
+  console.log('🚀 ~ SpaceHistory ~ 🔁 rendered');
+
   const [spaceHistory, setSpaceHistory] = useState<HistoryByDays[]>([]);
 
   // date heading hint on scroll
   const [floatingDate, setFloatingDate] = useState('');
-
-  console.log('🚀 ~ SpaceHistory ~ floatingDate:', floatingDate);
 
   const dateHeadingsRefs = useRef<Array<HTMLDivElement | null>>([]);
 
@@ -141,7 +143,7 @@ const SpaceHistory = ({ spaceId, show, onClose }: Props) => {
   const { bounce } = useCustomAnimation();
 
   return (
-    <SlideModal isOpen={show} onClose={onClose} title={`History`}>
+    <SlideModal isOpen={show} onClose={onClose} title={'History'}>
       <div
         id="space-history-container"
         className="max-h-[95%]  cc-scrollbar min-h-fit overflow-x-hidden border-y pb-2 border-brand-darkBgAccent/30">
@@ -247,4 +249,4 @@ const SpaceHistory = ({ spaceId, show, onClose }: Props) => {
   );
 };
 
-export default SpaceHistory;
+export default memo(SpaceHistory);

@@ -71,8 +71,6 @@ logger.info('🏁 background loaded');
 
   const midnightAlarm = await getAlarm(AlarmName.dailyMidnightTrigger);
 
-  console.log('🚀 ~ midnightAlarm:', midnightAlarm);
-
   // create alarms if not found
   if (!autoSaveToBMAlarm?.name) {
     await createAlarm({ name: AlarmName.autoSaveBM, triggerAfter: 1440, isRecurring: true });

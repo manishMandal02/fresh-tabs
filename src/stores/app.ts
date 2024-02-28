@@ -26,6 +26,12 @@ export const appSettingsAtom = atom<IAppSettings>({ ...DefaultAppSettings });
 //  snackbar
 export const snackbarAtom = atom<SnackbarAtom>({ msg: '', show: false, isLoading: false, isSuccess: false });
 
+// global dragging state
+export const dragStateAtom = atom<{ isDragging: boolean; type: 'space' | 'tabs' }>({
+  isDragging: false,
+  type: null,
+});
+
 // settings modal
 export const showSettingsModalAtom = atom<boolean>(false);
 

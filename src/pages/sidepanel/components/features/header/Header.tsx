@@ -10,24 +10,24 @@ import {
   BellIcon,
 } from '@radix-ui/react-icons';
 import { useAtom } from 'jotai';
-import { useState } from 'react';
+import { useState, memo } from 'react';
 
 import Popover from '../../elements/popover';
 import Analytics from '../space/analytics/Analytics';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
 import { showSettingsModalAtom, snackbarAtom } from '@root/src/stores/app';
 import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
-import CommandPalette from '@root/src/pages/content/command-palette';
-import { ISpace } from '@root/src/pages/types/global.types';
 
 // testing
 const manishProfilePicUrl = 'https://avatars.githubusercontent.com/u/76472450?v=4';
 
 type Props = {
-  activeSpace: ISpace;
+  handleShowCommandPalette: () => void;
 };
 
-const Header = ({ activeSpace }: Props) => {
+const Header = ({ handleShowCommandPalette }: Props) => {
+  console.log('🚀 ~ Header ~ 🔁 rendered');
+
   // globals state
   const [, setSnackbar] = useAtom(snackbarAtom);
   const [, setShowSettingsModal] = useAtom(showSettingsModalAtom);
@@ -39,8 +39,6 @@ const Header = ({ activeSpace }: Props) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   // show user menu
   const [showNotifications, setShowNotifications] = useState(false);
-  // show command palette
-  const [showCommandPalette, setShowCommandPalette] = useState(false);
 
   // show analytics modal
   const [showAnalytics, setShowAnalytics] = useState(false);
@@ -103,10 +101,8 @@ const Header = ({ activeSpace }: Props) => {
         <div className="gap-x-2">
           <button
             tabIndex={0}
-            onClick={() => setShowCommandPalette(true)}
-            className={`text-slate-500/90 hover:bg-brand-darkBgAccent/20 rounded-full px-2 py-2 transition-all duration-200 outline-none focus:bg-brand-darkBgAccent/60  ${
-              showCommandPalette ? 'bg-brand-darkBgAccent/30' : ''
-            }`}>
+            onClick={handleShowCommandPalette}
+            className={`text-slate-500/90 hover:bg-brand-darkBgAccent/20 rounded-full px-2 py-2 transition-all duration-200 outline-none focus:bg-brand-darkBgAccent/60`}>
             <MagnifyingGlassIcon className="scale-[1.1]" />
           </button>
           {/* Notification */}
@@ -179,19 +175,8 @@ const Header = ({ activeSpace }: Props) => {
 
       {/* modal */}
       <Analytics show={showAnalytics} onClose={() => setShowAnalytics(false)} />
-      {/* command palette */}
-      {showCommandPalette ? (
-        <div className="z-[99999]">
-          <CommandPalette
-            isSidePanel
-            activeSpace={activeSpace}
-            recentSites={[]}
-            onClose={() => setShowCommandPalette(false)}
-          />
-        </div>
-      ) : null}
     </>
   );
 };
 
-export default Header;
+export default memo(Header);

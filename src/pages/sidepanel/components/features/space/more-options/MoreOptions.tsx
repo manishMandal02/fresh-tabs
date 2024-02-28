@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   DotsVerticalIcon,
   Pencil1Icon,
@@ -8,8 +9,8 @@ import {
   CounterClockwiseClockIcon,
   LapTimerIcon,
 } from '@radix-ui/react-icons';
+
 import Popover from '../../../elements/popover';
-import { useState } from 'react';
 
 type Props = {
   isSpaceActive: boolean;
@@ -32,6 +33,7 @@ const MoreOptions = ({
   onHistoryClick,
   onSnoozedTabsClick,
 }: Props) => {
+  console.log('🚀 ~ MoreOptions ~ 🔁 rendered');
   const [showMenu, setShowMenu] = useState(false);
   return (
     <Popover

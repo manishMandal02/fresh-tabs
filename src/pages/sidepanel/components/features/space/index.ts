@@ -1,4 +1,3 @@
-export { default as Space } from './Space';
 export { default as Tab } from './tab/Tab';
 
 export { default as CreateSpace } from './create/CreateSpace';

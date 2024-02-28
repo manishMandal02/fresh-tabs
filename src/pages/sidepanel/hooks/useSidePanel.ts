@@ -1,10 +1,10 @@
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { useAtom } from 'jotai';
-import { activeSpaceAtom, nonActiveSpacesAtom, selectedTabsAtom } from '@root/src/stores/app';
+import { activeSpaceAtom, dragStateAtom, nonActiveSpacesAtom, selectedTabsAtom } from '@root/src/stores/app';
 import { getAllSpaces, getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
 import { IMessageEventSidePanel, ISpaceWithTabs, ITab } from '../../types/global.types';
-import { MutableRefObject, useCallback, Dispatch, useState, SetStateAction } from 'react';
+import { MutableRefObject, useCallback, Dispatch, SetStateAction } from 'react';
 import { logger } from '../../utils/logger';
 import type { OnDragEndResponder, OnBeforeDragStartResponder } from 'react-beautiful-dnd';
 import { useTabsDnd } from './useTabsDnd';
@@ -15,14 +15,11 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
 
   // active space atom (global state)
   const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);
+  // dragging state
+  const [, setDragging] = useAtom(dragStateAtom);
 
   // selected tabs (global state)
   const [selectedTabs] = useAtom(selectedTabsAtom);
-
-  // local state
-  const [isDraggingTabs, setIsDraggingTabs] = useState(false);
-  // local state
-  const [isDraggingSpace, setIsDraggingSpace] = useState(false);
 
   // get all spaces from storage
   const getAllSpacesStorage = async () => {
@@ -48,9 +45,9 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
     start => {
       // set dragging only if tab is dragged (tab id is a number)
       if (start.type === 'TAB') {
-        setIsDraggingTabs(true);
+        setDragging({ isDragging: true, type: 'tabs' });
       } else {
-        setIsDraggingSpace(true);
+        setDragging({ isDragging: true, type: 'space' });
       }
       if (selectedTabs?.length < 1) return;
 
@@ -62,15 +59,14 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
       setActiveSpaceTabs([...updatedTabs]);
     },
 
-    [selectedTabs, setActiveSpaceTabs, activeSpace?.tabs],
+    [selectedTabs, setActiveSpaceTabs, setDragging, activeSpace?.tabs],
   );
 
   // handle tabs drag end
   const onTabsDragEnd: OnDragEndResponder = useCallback(
     result => {
       // reset dragging state
-      setIsDraggingTabs(false);
-      setIsDraggingSpace(false);
+      setDragging({ isDragging: false, type: null });
 
       if (!result.destination && !result?.combine?.draggableId) {
         return;
@@ -96,7 +92,7 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
         });
       })();
     },
-    [dropHandler, getDroppedLocation],
+    [dropHandler, getDroppedLocation, setDragging],
   );
 
   // handle background events
@@ -158,7 +154,5 @@ export const useSidePanel = (setActiveSpaceTabs: Dispatch<SetStateAction<ITab[]>
     onTabsDragStart,
     activeSpace,
     setActiveSpace,
-    isDraggingTabs,
-    isDraggingSpace,
   };
 };

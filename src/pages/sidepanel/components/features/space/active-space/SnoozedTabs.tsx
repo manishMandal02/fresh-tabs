@@ -15,9 +15,9 @@ type Props = {
 };
 
 const SnoozedTabs = ({ spaceId, show, onClose }: Props) => {
-  const [snoozedTabs, setSnoozedTabs] = useState<ISnoozedTab[]>([]);
+  console.log('🚀 ~ SnoozedTabs ~ 🔁 rendered');
 
-  console.log('🚀 ~ SnoozedTabs ~ snoozedTabs:', snoozedTabs);
+  const [snoozedTabs, setSnoozedTabs] = useState<ISnoozedTab[]>([]);
 
   useEffect(() => {
     if (!show || !spaceId) return;

@@ -22,17 +22,6 @@ export const useKeyPressed = ({
   onArrowUpPressed,
   onArrowDownPressed,
 }: useKeyPressedProps) => {
-  // container el
-  // const [hasParentEl, setHasParentEl] = useState(false);
-
-  // useEffect(() => {
-  //   if (parentConTainerEl) {
-  //     setHasParentEl(true);
-  //   } else {
-  //     setHasParentEl(false);
-  //   }
-  // }, [parentConTainerEl]);
-
   //  ctrl/cmd key press status
   const [isModifierKeyPressed, setIsModifierKeyPressed] = useState(false);
   // left shift key press status
