@@ -1,14 +1,26 @@
-export const debounce = (mainFunction: () => Promise<void>, delay = 300) => {
-  let timer;
-
-  // Return an anonymous function that takes in any number of arguments
-  return function () {
-    // Clear the previous timer to prevent the execution of 'mainFunction'
+export function debounce<T extends (...args: unknown[]) => void>(func: T, delay: number) {
+  let timer: ReturnType<typeof setTimeout>;
+  return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
     clearTimeout(timer);
-
-    // Set a new timer that will execute 'mainFunction' after the specified delay
     timer = setTimeout(() => {
-      mainFunction();
+      func.apply(this, args);
     }, delay);
   };
-};
+}
+
+// Debounce function with event accumulation
+export function debounceWithEvents<T extends (...args: unknown[]) => unknown>(
+  func: T,
+  delay: number,
+): (...args: Parameters<T>) => void {
+  let timer: ReturnType<typeof setTimeout>;
+  let events: Parameters<T>[] = [];
+  return function (...args: Parameters<T>) {
+    clearTimeout(timer);
+    events.push(args);
+    timer = setTimeout(() => {
+      func(events);
+      events = [];
+    }, delay);
+  };
+}

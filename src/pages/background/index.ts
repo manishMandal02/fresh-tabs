@@ -10,7 +10,7 @@ reloadOnUpdate('pages/content/style.scss');
 // ***
 
 import { logger } from '../utils/logger';
-import { generateId, wait } from '../utils';
+import { debounceWithEvents, generateId, wait } from '../utils';
 import { retryAtIntervals } from '../utils/retryAtIntervals';
 import { asyncMessageHandler } from '../utils/asyncMessageHandler';
 import { handleSnoozedTabAlarm } from './handler/alarm/snoozed-tab';
@@ -804,22 +804,31 @@ chrome.windows.onFocusChanged.addListener(async windowId => {
   await recordDailySpaceTime(windowId);
 });
 
-// on tabs content changed
-chrome.webNavigation.onTabReplaced.addListener(async ({ replacedTabId, tabId }) => {
+const handleTabsReplaced = async events => {
+  const eventsToProcess: { replacedTabId: number; tabId: number }[] = events.map(e => e[0]);
+
   const windows = await chrome.windows.getAll();
 
   for (const window of windows) {
     const space = await getSpaceByWindow(window.id);
     const tabsInSpace = await getTabsInSpace(space.id);
     // find changed tab
-    const changedTab = tabsInSpace.find(t => t.id === replacedTabId);
+    const hasTabChanged = tabsInSpace.some(t => eventsToProcess.some(e => e.replacedTabId === t.id));
 
-    console.log('🚀 ~ chrome.webNavigation.onTabReplaced.addListener ~ changedTab:', changedTab);
+    if (!hasTabChanged) continue;
 
-    if (!changedTab) continue;
+    const updatedTabs = [
+      ...tabsInSpace.map(t => {
+        const event = eventsToProcess.find(e => e.replacedTabId === t.id);
+
+        if (!event?.tabId) return t;
+
+        return { ...t, id: event.tabId };
+      }),
+    ];
 
     // update tabs storage
-    await setTabsForSpace(space.id, [...tabsInSpace.map(t => (t.id === replacedTabId ? { ...t, id: tabId } : t))]);
+    await setTabsForSpace(space.id, updatedTabs);
 
     // send event to side panel for ui update
     await publishEvents({
@@ -832,4 +841,11 @@ chrome.webNavigation.onTabReplaced.addListener(async ({ replacedTabId, tabId }) 
 
     break;
   }
+};
+
+const debounceTabReplacedListener = debounceWithEvents(handleTabsReplaced, 500);
+
+// on tabs content changed
+chrome.webNavigation.onTabReplaced.addListener(({ replacedTabId, tabId }) => {
+  debounceTabReplacedListener({ replacedTabId, tabId });
 });

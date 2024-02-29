@@ -254,7 +254,7 @@ const ActiveSpaceTabs = ({ space, tabs }: Props) => {
                   {!areTabsBeingDragged && isTabSelected(tab.id) ? (
                     <motion.div
                       {...bounce}
-                      className="absolute  w-[99%] top-0 left-0 rounded-lg border border-slate-700/90 bg-brand-darkBgAccent/80 z-10 "
+                      className="absolute  w-[99%] top-0 left-0 rounded-lg border border-slate-600/80 bg-brand-darkBgAccent/80 z-10 "
                       style={{
                         height: TAB_HEIGHT + 'px',
 
