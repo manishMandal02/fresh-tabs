@@ -9,7 +9,7 @@ import Spinner from './components/elements/spinner';
 import Snackbar from './components/elements/snackbar';
 import CommandPalette from '../content/command-palette';
 import Settings from './components/features/settings/Settings';
-import { IMessageEventSidePanel, ITab } from '../types/global.types';
+import { IMessageEventSidePanel } from '../types/global.types';
 import { appSettingsAtom, dragStateAtom, snackbarAtom } from '@root/src/stores/app';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 import DeleteSpaceModal from './components/features/space/delete/DeleteSpaceModal';
@@ -29,9 +29,6 @@ const SidePanel = () => {
   // global state - app settings
   const [, setAppSetting] = useAtom(appSettingsAtom);
 
-  // local state - clone of active space tabs (to manipulate multi drag behavior)
-  const [activeSpaceTabs, setActiveSpaceTabs] = useState<ITab[]>(null);
-
   //  loading spaces state
   const [isLoadingSpaces, setIsLoadingSpaces] = useState(false);
 
@@ -50,7 +47,8 @@ const SidePanel = () => {
     handleEvents,
     onTabsDragEnd,
     onTabsDragStart,
-  } = useSidePanel(setActiveSpaceTabs);
+    setActiveSpaceTabs,
+  } = useSidePanel();
 
   const activeSpaceRef = useRef(activeSpace);
 
@@ -59,8 +57,10 @@ const SidePanel = () => {
       setIsLoadingSpaces(true);
 
       const { activeSpaceWithTabs, otherSpaces } = await getAllSpacesStorage();
+      const { tabs } = activeSpaceWithTabs;
 
       setActiveSpace({ ...activeSpaceWithTabs });
+      setActiveSpaceTabs(tabs);
 
       setNonActiveSpaces(otherSpaces);
       // set app settings
@@ -76,7 +76,6 @@ const SidePanel = () => {
 
   useEffect(() => {
     activeSpaceRef.current = activeSpace;
-    setActiveSpaceTabs(activeSpace?.tabs);
   }, [activeSpace]);
 
   // listen to  events from  background
@@ -134,7 +133,7 @@ const SidePanel = () => {
             <DragDropContext onDragEnd={onTabsDragEnd} onBeforeDragStart={onTabsDragStart}>
               {/* Current space */}
               <div className="h-[90%] relative">
-                <ActiveSpace space={activeSpace} tabs={activeSpaceTabs} setActiveSpace={setActiveSpace} />
+                <ActiveSpace space={activeSpace} setActiveSpace={setActiveSpace} />
 
                 {/* dropzone for other space to open tabs in active space */}
 

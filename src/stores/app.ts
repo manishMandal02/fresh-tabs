@@ -17,6 +17,9 @@ export const nonActiveSpacesAtom = atom<ISpace[]>([]);
 // active space
 export const activeSpaceAtom = atom<ISpaceWithTabs>(null as ISpaceWithTabs);
 
+// active space
+export const activeSpaceTabsAtom = atom<ITab[]>([]);
+
 // selected tabs for dragging
 export const selectedTabsAtom = atom<ITabWithIndex[]>([]);
 

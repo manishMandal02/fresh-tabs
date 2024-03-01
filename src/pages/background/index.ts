@@ -105,6 +105,8 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 
 // TODO - store favicon url in ITab
 
+// TODO -
+
 // TODO - track num of times user switch spaces
 
 // TODO - Use UTC date & time stamp for server (save user timezone)
@@ -804,6 +806,7 @@ chrome.windows.onFocusChanged.addListener(async windowId => {
   await recordDailySpaceTime(windowId);
 });
 
+// handle tabs changed
 const handleTabsReplaced = async events => {
   const eventsToProcess: { replacedTabId: number; tabId: number }[] = events.map(e => e[0]);
 

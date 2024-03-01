@@ -47,7 +47,7 @@ const Tab = ({
   const handleCopyURL = async () => await copyToClipboard(tabData.url);
 
   return (
-    <button
+    <div
       className={`w-[99%] max-w-[99%] select-none z-[20] px-[10px] py-[12px] flex items-center justify-between outline-none
                    relative shadow-sm rounded-lg overflow-hidden group hover:bg-brand-darkBgAccent/50 transition-all duration-200`}
       onClick={onClick}
@@ -56,7 +56,11 @@ const Tab = ({
       }}
       onDoubleClick={() => onTabDoubleClick(tabData.id)}>
       <div className="flex items-center w-full">
-        <img className="mr-[6px] opacity-95  size-[18px] z-10 rounded-sm" src={getFaviconURL(tabData.url)} alt="icon" />
+        <img
+          className="mr-[8px] opacity-95  size-[17px] max-w-[17px] z-10 rounded-sm object-contain object-center"
+          src={getFaviconURL(tabData.url)}
+          alt="icon"
+        />
         <span className="text-[13px] text-slate-300/80 min-w-[80%] max-w-[95%] text-start whitespace-nowrap overflow-hidden text-ellipsis">
           {tabData.title.trim()}
         </span>
@@ -84,7 +88,7 @@ const Tab = ({
           ) : null}
         </span>
       ) : null}
-    </button>
+    </div>
   );
 };
 

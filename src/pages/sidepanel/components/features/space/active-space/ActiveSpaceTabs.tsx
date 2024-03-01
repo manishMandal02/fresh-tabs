@@ -9,21 +9,23 @@ import { goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { useKeyPressed } from '../../../../hooks/useKeyPressed';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';
 import TabDraggedOutsideActiveSpace from './TabDraggedOutsideActiveSpace';
-import { ISpace, ITab, ITabWithIndex } from '@root/src/pages/types/global.types';
-import { activeSpaceAtom, dragStateAtom, selectedTabsAtom } from '@root/src/stores/app';
+import { ISpace, ITabWithIndex } from '@root/src/pages/types/global.types';
+import { activeSpaceAtom, activeSpaceTabsAtom, dragStateAtom, selectedTabsAtom } from '@root/src/stores/app';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 
 type Props = {
   space: ISpace;
-  tabs: ITab[];
 };
 
-export const TAB_HEIGHT = '32';
+export const TAB_HEIGHT = 32;
 
-const ActiveSpaceTabs = ({ space, tabs }: Props) => {
+const ActiveSpaceTabs = ({ space }: Props) => {
   console.log('🚀 ~ ActiveSpaceTabs ~ 🔁 rendered');
 
   // global state
+  // tabs in active space atom (global state)
+  const [tabs] = useAtom(activeSpaceTabsAtom);
+
   // selected tabs
   const [selectedTabs, setSelectedTabs] = useAtom(selectedTabsAtom);
   // active space
@@ -101,54 +103,64 @@ const ActiveSpaceTabs = ({ space, tabs }: Props) => {
     },
   });
 
-  const isTabSelected = (id: number) => !!selectedTabs.find(t => t.id === id);
+  const isTabSelected = useCallback((id: number) => !!selectedTabs.find(t => t.id === id), [selectedTabs]);
 
-  const onTabClick = async (tab: ITabWithIndex) => {
-    console.log('🚀 ~ onTabClick ~ isModifierKeyPressed:', isModifierKeyPressed);
-    console.log('🚀 ~ onTabClick ~ tab:', tab);
-
-    // clt/cmd is pressed
-    if (isModifierKeyPressed) {
-      await handleGoToTab(tab.id, tab.index);
-      return;
-    }
-
-    // shift key was pressed (multi select)
-    if (isShiftKeyPressed) {
-      const lastSelectedTabIndex = !Number.isNaN(Number(selectedTabs[selectedTabs.length - 1]?.index))
-        ? selectedTabs[selectedTabs.length - 1]?.index
-        : activeSpace.activeTabIndex;
-
-      const tabIsBeforeLastSelectedTab = tab.index < lastSelectedTabIndex;
-
-      const tabsInRange: ITabWithIndex[] = tabs
-        .map((t, idx) => ({ ...t, index: idx }))
-        .filter((_t, idx) => {
-          //
-          if (tabIsBeforeLastSelectedTab) {
-            return idx <= lastSelectedTabIndex && idx >= tab.index;
-          }
-          return idx >= lastSelectedTabIndex && idx <= tab.index;
-        });
-
-      if (isTabSelected(tab.id)) {
-        // unselect tabs
-        setSelectedTabs(prev => [...prev.filter(t1 => !tabsInRange.find(t2 => t2.id === t1.id))]);
-      } else {
-        // select tabs
-        setSelectedTabs(prev => [...prev, ...tabsInRange]);
+  const onTabClick = useCallback(
+    async (tab: ITabWithIndex) => {
+      // TODO - fix - sometimes the modifier key pressed is not updated (the main hook itself doesn't record change)
+      // clt/cmd is pressed
+      if (isModifierKeyPressed) {
+        await handleGoToTab(tab.id, tab.index);
+        return;
       }
-      return;
-    }
 
-    // select tab
-    if (!isTabSelected(tab.id)) {
-      setSelectedTabs(prev => [...prev, tab]);
-    } else {
-      // un-select tab (already selected)
-      setSelectedTabs(prev => [...prev.filter(t => t.id !== tab.id)]);
-    }
-  };
+      // shift key was pressed (multi select)
+      if (isShiftKeyPressed) {
+        const lastSelectedTabIndex = !Number.isNaN(Number(selectedTabs[selectedTabs.length - 1]?.index))
+          ? selectedTabs[selectedTabs.length - 1]?.index
+          : activeSpace.activeTabIndex;
+
+        const tabIsBeforeLastSelectedTab = tab.index < lastSelectedTabIndex;
+
+        const tabsInRange: ITabWithIndex[] = tabs
+          .map((t, idx) => ({ ...t, index: idx }))
+          .filter((_t, idx) => {
+            //
+            if (tabIsBeforeLastSelectedTab) {
+              return idx <= lastSelectedTabIndex && idx >= tab.index;
+            }
+            return idx >= lastSelectedTabIndex && idx <= tab.index;
+          });
+
+        if (isTabSelected(tab.id)) {
+          // unselect tabs
+          setSelectedTabs(prev => [...prev.filter(t1 => !tabsInRange.find(t2 => t2.id === t1.id))]);
+        } else {
+          // select tabs
+          setSelectedTabs(prev => [...prev, ...tabsInRange]);
+        }
+        return;
+      }
+
+      // select tab
+      if (!isTabSelected(tab.id)) {
+        setSelectedTabs(prev => [...prev, tab]);
+      } else {
+        // un-select tab (already selected)
+        setSelectedTabs(prev => [...prev.filter(t => t.id !== tab.id)]);
+      }
+    },
+    [
+      activeSpace.activeTabIndex,
+      isModifierKeyPressed,
+      isShiftKeyPressed,
+      handleGoToTab,
+      isTabSelected,
+      selectedTabs,
+      setSelectedTabs,
+      tabs,
+    ],
+  );
 
   const onTabDoubleClickHandler = async (id: number, index: number) => {
     // do nothing if ctl/cmd is pressed
@@ -178,7 +190,13 @@ const ActiveSpaceTabs = ({ space, tabs }: Props) => {
   return (
     <Droppable droppableId={'active-space'} ignoreContainerClipping type="TAB">
       {(provided1, { isDraggingOver }) => (
-        <motion.div {...provided1.droppableProps} ref={provided1.innerRef} className="h-full w-full px-px">
+        <motion.div
+          {...provided1.droppableProps}
+          ref={provided1.innerRef}
+          className="h-full w-full px-px"
+          style={{
+            minHeight: tabs.length * TAB_HEIGHT + 'px',
+          }}>
           {/* render draggable  */}
           {tabs?.map((tab, idx) => (
             <Draggable draggableId={'tab-' + tab.id} index={idx} key={tab.id}>
@@ -194,7 +212,7 @@ const ActiveSpaceTabs = ({ space, tabs }: Props) => {
                       `}
                   style={{
                     ...provided2.draggableProps.style,
-                    left: areTabsBeingDragged && isDragging && !isDraggingOver ? `${mouseXOnDrag - 65}px` : '',
+                    left: areTabsBeingDragged && isDragging && !isDraggingOver ? `${mouseXOnDrag - 60}px` : '',
                   }}
                   onMouseDown={onTabClickMousePos}>
                   {areTabsBeingDragged && isDragging && !isDraggingOver ? (
@@ -202,7 +220,7 @@ const ActiveSpaceTabs = ({ space, tabs }: Props) => {
                     <TabDraggedOutsideActiveSpace numSelectedTabs={selectedTabs?.length} tabURL={tab.url} />
                   ) : (
                     <div
-                      className={`relative w-[96vw] min-w-[96vw] bg-transparent`}
+                      className={`relative w-[96vw] min-w-[96vw] bg-transparent `}
                       tabIndex={-1}
                       style={{
                         cursor: isModifierKeyPressed ? 'pointer' : 'default',
@@ -248,13 +266,13 @@ const ActiveSpaceTabs = ({ space, tabs }: Props) => {
                       style={{
                         height: TAB_HEIGHT + 'px',
                       }}
-                      className="absolute  w-[99%] top-0 left-0 rounded-lg border border-brand-darkBgAccent/40 bg-brand-darkBgAccent/60 z-10"></motion.div>
+                      className="absolute  w-[99%] top-0 left-0 rounded-lg border  border-slate-700/80 bg-brand-darkBgAccent/60 z-10"></motion.div>
                   ) : null}
                   {/* selected tab indicator */}
                   {!areTabsBeingDragged && isTabSelected(tab.id) ? (
                     <motion.div
                       {...bounce}
-                      className="absolute  w-[99%] top-0 left-0 rounded-lg border border-slate-600/80 bg-brand-darkBgAccent/80 z-10 "
+                      className="absolute w-[99%] top-0 left-0 rounded-lg border border-brand-darkBgAccent/40 bg-brand-darkBgAccent/80 z-10"
                       style={{
                         height: TAB_HEIGHT + 'px',
 
@@ -265,6 +283,7 @@ const ActiveSpaceTabs = ({ space, tabs }: Props) => {
               )}
             </Draggable>
           ))}
+          {provided1.placeholder}
         </motion.div>
       )}
     </Droppable>

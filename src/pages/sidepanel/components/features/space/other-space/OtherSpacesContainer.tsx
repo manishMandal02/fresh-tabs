@@ -94,8 +94,14 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                             {...provided2.droppableProps}
                             {...bounce}
                             ref={provided2.innerRef}
-                            className=" h-[35px] w-[50px] mt-1 mb-1.5 ">
+                            className="  mt-1 mb-1.5 "
+                            style={{
+                              height: '40px',
+                              width: '50px',
+                              backgroundColor: isDraggingOver ? 'red' : '',
+                            }}>
                             <NonActiveSpace space={space} isDraggedOver={isDraggingOver || !!combineTargetFor} />
+                            {provided2.placeholder}
                           </motion.div>
                         )}
                       </Droppable>

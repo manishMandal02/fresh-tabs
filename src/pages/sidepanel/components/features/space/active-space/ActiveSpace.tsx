@@ -9,22 +9,22 @@ import ActiveSpaceTabs from './ActiveSpaceTabs';
 import { useKeyPressed } from '../../../../hooks/useKeyPressed';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
-import { ISpace, ISpaceWithTabs, ITab } from '@root/src/pages/types/global.types';
-import { deleteSpaceModalAtom, snackbarAtom, updateSpaceModalAtom } from '@root/src/stores/app';
+import { ISpace, ISpaceWithTabs } from '@root/src/pages/types/global.types';
+import { activeSpaceTabsAtom, deleteSpaceModalAtom, snackbarAtom, updateSpaceModalAtom } from '@root/src/stores/app';
 
 type Props = {
   space: ISpace;
-  tabs: ITab[];
   setActiveSpace: Dispatch<SetStateAction<ISpaceWithTabs>>;
 };
 
-const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
-  console.log('🚀 ~ ActiveSpace ~ 🔁 rendered');
-
+const ActiveSpace = ({ space, setActiveSpace }: Props) => {
   // snackbar atom
   const [, setSnackbar] = useAtom(snackbarAtom);
   // snackbar atom
   const [, setUpdateSpaceModal] = useAtom(updateSpaceModalAtom);
+
+  // tabs in active space atom (global state)
+  const [activeSpaceTabs] = useAtom(activeSpaceTabsAtom);
 
   // show history & snoozed tabs for space
   const [showSpaceHistory, setShowSpaceHistory] = useState(false);
@@ -82,7 +82,7 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
             shouldOpenInNewWindow={false}
             isSpaceActive={true}
             onSyncClick={handleSyncTabs}
-            onEditClick={() => setUpdateSpaceModal({ ...space, tabs })}
+            onEditClick={() => setUpdateSpaceModal({ ...space, tabs: activeSpaceTabs })}
             onDeleteClick={() => setDeleteSpaceModal({ show: true, spaceId: space.id })}
             onHistoryClick={() => setShowSpaceHistory(true)}
             onSnoozedTabsClick={() => setShowSnoozedTabs(true)}
@@ -93,9 +93,9 @@ const ActiveSpace = ({ space, tabs, setActiveSpace }: Props) => {
       {/* tabs */}
       <div
         id="active-space-scrollable-container"
-        className="relative max-h-[90%]  cc-scrollbar min-h-fit overflow-x-hidden border-y pb-2 border-brand-darkBgAccent/30">
+        className="relative max-h-[90%]  cc-scrollbar min-h-fit overflow-x-hidden border-b pb-2 border-brand-darkBgAccent/50">
         <Tabs tabs={[`Tabs`, 'Notes']} defaultTab={1}>
-          <ActiveSpaceTabs space={space} tabs={tabs} />
+          <ActiveSpaceTabs space={space} />
           <div className="text-center text-slate-500 py-12">Notes</div>
         </Tabs>
       </div>

@@ -24,8 +24,8 @@ const TabDraggedOutsideActiveSpace = ({ tabURL, numSelectedTabs }: Props) => {
       }}>
       {numSelectedTabs > 1 ? (
         <span
-          className={`w-fit rounded-md px-[5px] py-[4px] absolute -top-2 -left-2 text-[9px] z-[200]
-                        flex items-center justify-center font-bold bg-gradient-to-bl from-brand-darkBgAccent/70 to-brand-darkBg/70 text-slate-400`}>
+          className={`h-[30px] w-[40px] rounded-md absolute -top-2 -left-2 text-[9px] z-[200] flex items-center justify-center
+                        font-bold bg-gradient-to-bl from-brand-darkBgAccent/70 to-brand-darkBg/70 text-slate-400`}>
           +{numSelectedTabs - 1}
         </span>
       ) : null}

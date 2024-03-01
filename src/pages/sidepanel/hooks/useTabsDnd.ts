@@ -101,7 +101,7 @@ export const useTabsDnd = () => {
     return droppedLocation;
   };
 
-  //** drop handlers based on drop locations
+  //** handlers based on drop locations
   // dropped in active space
   const activeSpaceDropHandler = async ({
     destinationIndex,
@@ -109,12 +109,16 @@ export const useTabsDnd = () => {
   }: Pick<DropHandlerProps, 'sourceIndex' | 'destinationIndex'>) => {
     const activeTab = activeSpace?.tabs[activeSpace.activeTabIndex];
 
+    console.log('🚀 ~ useTabsDnd ~ activeTab:', activeTab);
+
     let reOrderedTabs = [...activeSpace.tabs];
 
     if (selectedTabs?.length > 0) {
       // multi tab drop
       // remove selected tabs for active space
       reOrderedTabs = reOrderedTabs.filter(aT => !selectedTabs.find(sT => sT.id === aT.id));
+
+      console.log('🚀 ~ useTabsDnd ~ reOrderedTabs:', reOrderedTabs);
 
       // check if the tabs are moved up or down from it's previous pos
       const didTabsMoveDownward = sourceIndex < destinationIndex;
@@ -302,6 +306,7 @@ export const useTabsDnd = () => {
     setDeleteSpaceModal({ show: true, spaceId });
   };
 
+  // main/root drop handler
   const dropHandler = async ({
     droppedLocation,
     combineDraggableId,
