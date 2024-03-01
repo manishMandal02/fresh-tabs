@@ -1,12 +1,6 @@
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { useAtom } from 'jotai';
-import {
-  activeSpaceAtom,
-  activeSpaceTabsAtom,
-  dragStateAtom,
-  nonActiveSpacesAtom,
-  selectedTabsAtom,
-} from '@root/src/stores/app';
+import { activeSpaceAtom, dragStateAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
 import { getAllSpaces, getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
 import { IMessageEventSidePanel, ISpaceWithTabs } from '../../types/global.types';
@@ -22,14 +16,8 @@ export const useSidePanel = () => {
   // active space atom (global state)
   const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);
 
-  // tabs in active space atom (global state)
-  const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
-
   // dragging state
   const [, setDragging] = useAtom(dragStateAtom);
-
-  // selected tabs (global state)
-  const [selectedTabs] = useAtom(selectedTabsAtom);
 
   // get all spaces from storage
   const getAllSpacesStorage = async () => {
@@ -53,26 +41,15 @@ export const useSidePanel = () => {
   // handle tab drag start
   const onTabsDragStart: OnBeforeDragStartResponder = useCallback(
     start => {
-      // set dragging only if tab is dragged (tab id is a number)
+      // set global dragging state
       if (start.type === 'TAB') {
         setDragging({ isDragging: true, type: 'tabs' });
-      } else {
-        setDragging({ isDragging: true, type: 'space' });
+        return;
       }
-      if (selectedTabs?.length < 1) return;
 
-      // remove tabs temporarily on drag starts, except the tab being dragged
-      console.log('🚀 ~ useSidePanel ~ activeSpace:', activeSpace.tabs);
-
-      console.log('🚀 ~ useSidePanel ~ selectedTabs:', selectedTabs);
-
-      const updatedTabs = activeSpace?.tabs.filter(
-        aT => !selectedTabs.find(sT => sT.id === aT.id && sT.id.toString() !== start.draggableId),
-      );
-
-      setActiveSpaceTabs([...updatedTabs]);
+      setDragging({ isDragging: true, type: 'space' });
     },
-    [selectedTabs, setActiveSpaceTabs, setDragging, activeSpace?.tabs],
+    [setDragging],
   );
 
   // handle tabs drag end
@@ -81,21 +58,14 @@ export const useSidePanel = () => {
       // reset dragging state
       setDragging({ isDragging: false, type: null });
 
-      console.log('🚀 ~ useSidePanel ~ result:', result);
-
       if (!result.destination && !result?.combine?.draggableId) {
         return;
       }
-
-      // TODO - test the full DnD flow
-      // check the flag conditions to run the drop handler, and when to not execute
 
       const droppableId = result.destination?.droppableId || result.combine?.droppableId;
 
       // determine drop location
       const droppedLocation = getDroppedLocation(droppableId);
-
-      console.log('🚀 ~ useSidePanel ~ droppedLocation:', droppedLocation);
 
       // main drop handler
       (async () => {
@@ -171,7 +141,5 @@ export const useSidePanel = () => {
     onTabsDragStart,
     activeSpace,
     setActiveSpace,
-    activeSpaceTabs,
-    setActiveSpaceTabs,
   };
 };

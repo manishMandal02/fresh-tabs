@@ -12,6 +12,8 @@ import { getISODate } from '@root/src/pages/utils/date-time/getISODate';
 import { getUrlDomain } from '@root/src/pages/utils/url/get-url-domain';
 import { getWeekday } from '@root/src/pages/utils/date-time/get-weekday';
 import { getSpaceHistory } from '@root/src/services/chrome-storage/space-history';
+import { useAtom } from 'jotai';
+import { activeSpaceIdAtom } from '@root/src/stores/app';
 
 type GroupedVisit = { visits: ISiteVisit[]; domain?: string; faviconUrl?: string };
 
@@ -47,10 +49,14 @@ const getGroupedSessionRecursively = (startIndex: number, visits: ISiteVisit[]) 
 };
 
 // * component
-type Props = { spaceId: string; show: boolean; onClose: () => void };
+type Props = { show: boolean; onClose: () => void };
 
-const SpaceHistory = ({ spaceId, show, onClose }: Props) => {
+const SpaceHistory = ({ show, onClose }: Props) => {
   console.log('🚀 ~ SpaceHistory ~ 🔁 rendered');
+
+  // global state
+  // active space id
+  const [spaceId] = useAtom(activeSpaceIdAtom);
 
   const [spaceHistory, setSpaceHistory] = useState<HistoryByDays[]>([]);
 
@@ -204,7 +210,6 @@ const SpaceHistory = ({ spaceId, show, onClose }: Props) => {
                               <div key={v.timestamp}>
                                 <Tab
                                   tabData={{ url: v.url, title: v.title, id: 0 }}
-                                  isTabActive={false}
                                   isSpaceActive={false}
                                   showHoverOption={true}
                                   showDeleteOption={false}
@@ -224,7 +229,6 @@ const SpaceHistory = ({ spaceId, show, onClose }: Props) => {
                         </span>
                         <Tab
                           tabData={{ url: visit.url, title: visit.title, id: 0 }}
-                          isTabActive={false}
                           isSpaceActive={false}
                           showHoverOption={true}
                           showDeleteOption={false}

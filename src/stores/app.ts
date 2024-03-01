@@ -14,11 +14,12 @@ type SnackbarAtom = {
 // non active spaces
 export const nonActiveSpacesAtom = atom<ISpace[]>([]);
 
+// TODO - derive this atom from the space id atom top-down approach
 // active space
 export const activeSpaceAtom = atom<ISpaceWithTabs>(null as ISpaceWithTabs);
 
-// active space
-export const activeSpaceTabsAtom = atom<ITab[]>([]);
+// active space id
+export const activeSpaceIdAtom = atom(get => get(activeSpaceAtom).id);
 
 // selected tabs for dragging
 export const selectedTabsAtom = atom<ITabWithIndex[]>([]);

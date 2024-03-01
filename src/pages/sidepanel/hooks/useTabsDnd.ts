@@ -15,7 +15,7 @@ import { createDiscardedTabs } from '@root/src/services/chrome-tabs/tabs';
 import { scrollActiveSpaceBottom } from '../../utils/scrollActiveSpaceBottom';
 import { wait } from '../../utils';
 
-// dropped reasons to handle
+//* dropped reasons to handle
 // --draggable -single/multi tab--
 //       same space
 //       other space
@@ -73,8 +73,6 @@ export const useTabsDnd = () => {
   // delete-space
 
   const getDroppedLocation = (droppableId: string) => {
-    console.log('🚀 ~ getDroppedLocation ~ droppableId:', droppableId);
-
     let droppedLocation: DropLocations;
     // determine the drop location
     if (droppableId.startsWith('space-')) {
@@ -109,8 +107,6 @@ export const useTabsDnd = () => {
   }: Pick<DropHandlerProps, 'sourceIndex' | 'destinationIndex'>) => {
     const activeTab = activeSpace?.tabs[activeSpace.activeTabIndex];
 
-    console.log('🚀 ~ useTabsDnd ~ activeTab:', activeTab);
-
     let reOrderedTabs = [...activeSpace.tabs];
 
     if (selectedTabs?.length > 0) {
@@ -118,10 +114,10 @@ export const useTabsDnd = () => {
       // remove selected tabs for active space
       reOrderedTabs = reOrderedTabs.filter(aT => !selectedTabs.find(sT => sT.id === aT.id));
 
-      console.log('🚀 ~ useTabsDnd ~ reOrderedTabs:', reOrderedTabs);
-
       // check if the tabs are moved up or down from it's previous pos
       const didTabsMoveDownward = sourceIndex < destinationIndex;
+
+      console.log('🚀 ~ useTabsDnd ~ didTabsMoveDownward:', didTabsMoveDownward);
 
       // calculate dropped index
       const droppedIndex = didTabsMoveDownward ? 1 + destinationIndex - selectedTabs.length : destinationIndex;
@@ -315,8 +311,6 @@ export const useTabsDnd = () => {
     droppableId,
     sourceIndex,
   }: DropHandlerProps) => {
-    console.log('🚀 ~ useTabsDnd ~ droppedLocation: dropHandler:294', droppedLocation);
-
     switch (droppedLocation) {
       case 'ACTIVE_SPACE': {
         await activeSpaceDropHandler({ destinationIndex, sourceIndex });

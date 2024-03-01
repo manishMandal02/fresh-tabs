@@ -137,6 +137,7 @@ const CreateSpace = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setNewSpaceModal({ show: false, tabs: [] });
+    // add the
   };
 
   useEffect(() => {
@@ -158,7 +159,7 @@ const CreateSpace = () => {
         {/* tabs */}
         <div className="mt-6">
           <p className="text-slate-500 font text-sm mb-1.5">Tabs</p>
-          {currentTabs?.map(tab => <Tab key={tab.id} isTabActive={false} tabData={tab} showHoverOption={false} />)}
+          {currentTabs?.map(tab => <Tab key={tab.id} tabData={tab} showHoverOption={false} />)}
         </div>
 
         {/* error msg */}

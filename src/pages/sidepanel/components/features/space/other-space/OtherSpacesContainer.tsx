@@ -1,4 +1,4 @@
-import { MdAdd, MdDelete } from 'react-icons/md';
+import { PlusIcon, TrashIcon } from '@radix-ui/react-icons';
 import { useState, useCallback, useEffect } from 'react';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 import { motion } from 'framer-motion';
@@ -13,6 +13,8 @@ type Props = {
   isDraggingSpace: boolean;
   isDraggingTabs: boolean;
 };
+
+const SPACE_CONTAINER_SIZE = { width: 40, height: 35 };
 
 const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
   // non active spaces  (global state)
@@ -56,7 +58,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
 
   return (
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-    <div className="relative w-full h-[full] flex items-start justify-center overflow-hidden mx-auto gap-x-1 px-1">
+    <div className="relative size-full flex items-center justify-center overflow-hidden mx-auto gap-x-1">
       <Droppable
         droppableId="other-spaces"
         direction="horizontal"
@@ -67,8 +69,8 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
           <div
             {...provided1.droppableProps}
             ref={provided1.innerRef}
-            className={`max-w-[83.5%] w-fit pb-2 pt-1 px-2  flex gap-x-2 overflow-y-hidden  overflow-x-auto scroll-smooth 
-                        rounded-md cc-scrollbar shadow-inner shadow-brand-darkBgAccent/10`}>
+            className={`w-fit pb-2.5 pt-1 px-1.5 flex gap-x-2 overflow-y-hidden overflow-x-auto rounded-md
+                        cc-scrollbar shadow-inner shadow-brand-darkBgAccent/10 scroll-smooth `}>
             {spaces.map((space, idx) => {
               return (
                 <Draggable key={space.id} draggableId={space.id} index={idx} isDragDisabled={isDraggingTabs}>
@@ -94,13 +96,13 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                             {...provided2.droppableProps}
                             {...bounce}
                             ref={provided2.innerRef}
-                            className="  mt-1 mb-1.5 "
+                            className="mt-1 mb-1.5"
                             style={{
-                              height: '40px',
-                              width: '50px',
-                              backgroundColor: isDraggingOver ? 'red' : '',
+                              ...SPACE_CONTAINER_SIZE,
                             }}>
-                            <NonActiveSpace space={space} isDraggedOver={isDraggingOver || !!combineTargetFor} />
+                            <Tooltip label={isDraggingTabs || isDraggingSpace ? space.title : ''}>
+                              <NonActiveSpace space={space} isDraggedOver={isDraggingOver || !!combineTargetFor} />
+                            </Tooltip>
                             {provided2.placeholder}
                           </motion.div>
                         )}
@@ -110,11 +112,16 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                 </Draggable>
               );
             })}
+            {provided1.placeholder}
           </div>
         )}
       </Droppable>
 
-      <div className="relative w-[16%]  py-1.5 bg-red-30 h-full mt-1">
+      <div
+        className="relative -mt-[9px] -ml-[2px]"
+        style={{
+          ...SPACE_CONTAINER_SIZE,
+        }}>
         {/* delete space drop box */}
         <Droppable droppableId="delete-space" direction="horizontal" type="SPACE" isDropDisabled={isDraggingTabs}>
           {(provided, { isDraggingOver }) => (
@@ -123,16 +130,16 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
               ref={provided.innerRef}
               animate={isDraggingSpace ? 'visible' : 'hidden'}
               variants={animationVariants}
-              transition={{ type: 'spring', stiffness: 1000, damping: 40, duration: 0.2 }}
-              className="rounded-lg absolute top-2 -right-px w-[45px] h-[40px] flex bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/90 items-center justify-center "
+              transition={{ type: 'spring', stiffness: 1000, damping: 40, duration: 0.1 }}
+              className={`size-full bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/90 absolute top-px -right-px 
+                         cursor-pointer flex items-center outline-brand-darkBgAccent border-none justify-center  rounded-lg`}
               style={{
-                // display: 'flex',
                 visibility: isDraggingSpace ? 'visible' : 'hidden',
                 zIndex: isDraggingSpace ? 200 : 1,
                 backgroundColor: isDraggingOver ? '#ec2427fb' : '',
-                border: isDraggingOver ? ' 1.5px solid #fe7ea08b' : '',
+                border: isDraggingOver ? ' 1.2px solid #f980a08a' : '',
               }}>
-              <MdDelete className="text-rose-400" size={20} />
+              <TrashIcon className="text-rose-400 scale-1.5" />
             </motion.div>
           )}
         </Droppable>
@@ -145,21 +152,21 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
               ref={provided.innerRef}
               animate={!isDraggingSpace ? 'visible' : 'hidden'}
               variants={animationVariants}
-              transition={{ type: 'spring', stiffness: 1000, damping: 40, duration: 0.2 }}
+              transition={{ type: 'spring', stiffness: 1000, damping: 40, duration: 0.1 }}
               style={{
                 visibility: !isDraggingSpace ? 'visible' : 'hidden',
                 zIndex: !isDraggingSpace ? 200 : 1,
               }}>
               <Tooltip label="Add new space" delay={1500}>
                 <button
-                  className={`bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/90 w-[45px] h-[40px] 
-                            absolute top-px -right-px cursor-pointer flex items-center outline-brand-darkBgAccent border-none justify-center  rounded-lg`}
+                  className={`size-full bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/90 absolute top-px -right-px 
+                         cursor-pointer flex items-center outline-brand-darkBgAccent border-none justify-center rounded-lg`}
                   style={{
                     border: isDraggingOver ? '1px dashed #6b6a6a' : '',
                     backgroundColor: isDraggingOver ? ' #21262e' : '',
                   }}
                   onClick={() => setNewSpaceModal({ show: true, tabs: [] })}>
-                  <MdAdd className="text-2xl font-extralight  text-slate-600" />
+                  <PlusIcon className=" text-slate-600 scale-1.5" />
                 </button>
               </Tooltip>
             </motion.div>

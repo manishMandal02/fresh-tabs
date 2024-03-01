@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef, MouseEventHandler, ReactEventHandler, useCallback } from 'react';
-import { MdOutlineKeyboardReturn, MdMoveDown } from 'react-icons/md';
+import { motion } from 'framer-motion';
 import { FaFolder, FaSearch } from 'react-icons/fa';
 import { BsFillMoonStarsFill } from 'react-icons/bs';
+import { MdOutlineKeyboardReturn, MdMoveDown } from 'react-icons/md';
 import { FaArrowRightFromBracket, FaArrowRight, FaLink } from 'react-icons/fa6';
 import { ArrowUpIcon, MagnifyingGlassIcon, LapTimerIcon } from '@radix-ui/react-icons';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef, MouseEventHandler, ReactEventHandler, useCallback } from 'react';
 
 import { debounce } from '../../utils/debounce';
 import { getFaviconURL } from '../../utils/url';

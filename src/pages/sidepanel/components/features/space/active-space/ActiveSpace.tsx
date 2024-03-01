@@ -9,11 +9,11 @@ import ActiveSpaceTabs from './ActiveSpaceTabs';
 import { useKeyPressed } from '../../../../hooks/useKeyPressed';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
-import { ISpace, ISpaceWithTabs } from '@root/src/pages/types/global.types';
-import { activeSpaceTabsAtom, deleteSpaceModalAtom, snackbarAtom, updateSpaceModalAtom } from '@root/src/stores/app';
+import { ISpaceWithTabs } from '@root/src/pages/types/global.types';
+import { deleteSpaceModalAtom, snackbarAtom, updateSpaceModalAtom } from '@root/src/stores/app';
 
 type Props = {
-  space: ISpace;
+  space: ISpaceWithTabs;
   setActiveSpace: Dispatch<SetStateAction<ISpaceWithTabs>>;
 };
 
@@ -22,9 +22,6 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
   const [, setSnackbar] = useAtom(snackbarAtom);
   // snackbar atom
   const [, setUpdateSpaceModal] = useAtom(updateSpaceModalAtom);
-
-  // tabs in active space atom (global state)
-  const [activeSpaceTabs] = useAtom(activeSpaceTabsAtom);
 
   // show history & snoozed tabs for space
   const [showSpaceHistory, setShowSpaceHistory] = useState(false);
@@ -82,7 +79,7 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
             shouldOpenInNewWindow={false}
             isSpaceActive={true}
             onSyncClick={handleSyncTabs}
-            onEditClick={() => setUpdateSpaceModal({ ...space, tabs: activeSpaceTabs })}
+            onEditClick={() => setUpdateSpaceModal({ ...space, tabs: space.tabs })}
             onDeleteClick={() => setDeleteSpaceModal({ show: true, spaceId: space.id })}
             onHistoryClick={() => setShowSpaceHistory(true)}
             onSnoozedTabsClick={() => setShowSnoozedTabs(true)}
@@ -93,7 +90,7 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
       {/* tabs */}
       <div
         id="active-space-scrollable-container"
-        className="relative max-h-[90%]  cc-scrollbar min-h-fit overflow-x-hidden border-b pb-2 border-brand-darkBgAccent/50">
+        className="relative max-h-[90%]  cc-scrollbar min-h-fit overflow-x-hidden border-b border-brand-darkBgAccent/50">
         <Tabs tabs={[`Tabs`, 'Notes']} defaultTab={1}>
           <ActiveSpaceTabs space={space} />
           <div className="text-center text-slate-500 py-12">Notes</div>
@@ -101,9 +98,9 @@ const ActiveSpace = ({ space, setActiveSpace }: Props) => {
       </div>
 
       {/* space history modal */}
-      <SpaceHistory show={showSpaceHistory} spaceId={space.id} onClose={() => setShowSpaceHistory(false)} />
+      <SpaceHistory show={showSpaceHistory} onClose={() => setShowSpaceHistory(false)} />
       {/* snoozed tabs modal */}
-      <SnoozedTabs show={showSnoozedTabs} spaceId={space.id} onClose={() => setShowSnoozedTabs(false)} />
+      <SnoozedTabs show={showSnoozedTabs} onClose={() => setShowSnoozedTabs(false)} />
     </div>
   ) : null;
 };

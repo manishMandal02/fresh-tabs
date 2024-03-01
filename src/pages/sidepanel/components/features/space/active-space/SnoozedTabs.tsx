@@ -7,15 +7,20 @@ import { useCustomAnimation } from '../../../../hooks/useAnimation';
 import { getTimeAgo } from '@root/src/pages/utils/date-time/time-ago';
 import { getSnoozedTabs } from '@root/src/services/chrome-storage/snooze-tabs';
 import { SlideModal } from '../../../elements/modal';
+import { useAtom } from 'jotai';
+import { activeSpaceIdAtom } from '@root/src/stores/app';
 
 type Props = {
-  spaceId: string;
   show: boolean;
   onClose: () => void;
 };
 
-const SnoozedTabs = ({ spaceId, show, onClose }: Props) => {
+const SnoozedTabs = ({ show, onClose }: Props) => {
   console.log('🚀 ~ SnoozedTabs ~ 🔁 rendered');
+
+  // global state
+  // active space id
+  const [spaceId] = useAtom(activeSpaceIdAtom);
 
   const [snoozedTabs, setSnoozedTabs] = useState<ISnoozedTab[]>([]);
 

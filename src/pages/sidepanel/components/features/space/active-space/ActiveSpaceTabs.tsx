@@ -9,23 +9,21 @@ import { goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { useKeyPressed } from '../../../../hooks/useKeyPressed';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';
 import TabDraggedOutsideActiveSpace from './TabDraggedOutsideActiveSpace';
-import { ISpace, ITabWithIndex } from '@root/src/pages/types/global.types';
-import { activeSpaceAtom, activeSpaceTabsAtom, dragStateAtom, selectedTabsAtom } from '@root/src/stores/app';
+import { ISpaceWithTabs, ITabWithIndex } from '@root/src/pages/types/global.types';
+import { activeSpaceAtom, dragStateAtom, selectedTabsAtom } from '@root/src/stores/app';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
+import DraggingOverNudge from './DraggingOverNudge';
 
 type Props = {
-  space: ISpace;
+  space: ISpaceWithTabs;
 };
 
 export const TAB_HEIGHT = 32;
 
-const ActiveSpaceTabs = ({ space }: Props) => {
+const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
   console.log('🚀 ~ ActiveSpaceTabs ~ 🔁 rendered');
 
   // global state
-  // tabs in active space atom (global state)
-  const [tabs] = useAtom(activeSpaceTabsAtom);
-
   // selected tabs
   const [selectedTabs, setSelectedTabs] = useAtom(selectedTabsAtom);
   // active space
@@ -168,15 +166,14 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     await handleGoToTab(id, index);
   };
 
-  const handleCreateNewTab = async (index: number) => {
-    const { id } = await chrome.tabs.create({ url: 'chrome://newtab', active: true, index: ++index });
-    setActiveSpace(prev => ({
-      ...prev,
-      tabs: [...tabs.toSpliced(index, 0, { id, title: 'New Tab', url: 'chrome://newtab' })],
-      activeTabIndex: index,
-    }));
-  };
-  console.log('🚀 ~ handleCreateNewTab ~ handleCreateNewTab:', handleCreateNewTab);
+  // const handleCreateNewTab = async (index: number) => {
+  //   const { id } = await chrome.tabs.create({ url: 'chrome://newtab', active: true, index: ++index });
+  //   setActiveSpace(prev => ({
+  //     ...prev,
+  //     tabs: [...tabs.toSpliced(index, 0, { id, title: 'New Tab', url: 'chrome://newtab' })],
+  //     activeTabIndex: index,
+  //   }));
+  // };
 
   // handle remove a single tab
   const handleRemoveTab = async (index: number) => {
@@ -200,7 +197,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
           {/* render draggable  */}
           {tabs?.map((tab, idx) => (
             <Draggable draggableId={'tab-' + tab.id} index={idx} key={tab.id}>
-              {(provided2, { isDragging }) => (
+              {(provided2, { isDragging, draggingOver }) => (
                 // eslint-disable-next-line jsx-a11y/no-static-element-interactions
                 <div
                   ref={provided2.innerRef}
@@ -217,7 +214,10 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                   onMouseDown={onTabClickMousePos}>
                   {areTabsBeingDragged && isDragging && !isDraggingOver ? (
                     // {/* tabs being dragged  */}
-                    <TabDraggedOutsideActiveSpace numSelectedTabs={selectedTabs?.length} tabURL={tab.url} />
+                    <div className="relative m-w-fit">
+                      {draggingOver ? <DraggingOverNudge droppableId={draggingOver} /> : null}
+                      <TabDraggedOutsideActiveSpace numSelectedTabs={selectedTabs?.length} tabURL={tab.url} />
+                    </div>
                   ) : (
                     <div
                       className={`relative w-[96vw] min-w-[96vw] bg-transparent `}
@@ -269,15 +269,21 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                       className="absolute  w-[99%] top-0 left-0 rounded-lg border  border-slate-700/80 bg-brand-darkBgAccent/60 z-10"></motion.div>
                   ) : null}
                   {/* selected tab indicator */}
-                  {!areTabsBeingDragged && isTabSelected(tab.id) ? (
+                  {isTabSelected(tab.id) ? (
                     <motion.div
                       {...bounce}
-                      className="absolute w-[99%] top-0 left-0 rounded-lg border border-brand-darkBgAccent/40 bg-brand-darkBgAccent/80 z-10"
+                      className={`absolute w-[99%] top-0 left-0 rounded-lg border border-brand-darkBgAccent/40 bg-brand-darkBgAccent/80 z-10`}
                       style={{
                         height: TAB_HEIGHT + 'px',
-
                         borderWidth: areTabsBeingDragged && !isDragging ? '3px' : '1px',
                       }}></motion.div>
+                  ) : null}
+                  {areTabsBeingDragged && isTabSelected(tab.id) && !isDragging ? (
+                    <div
+                      style={{
+                        height: TAB_HEIGHT + 'px',
+                      }}
+                      className={`absolute w-[99%] top-0 left-0 rounded-lg border border-brand-darkBgAccent/40 bg-brand-darkBgAccent/40 z-[99]`}></div>
                   ) : null}
                 </div>
               )}

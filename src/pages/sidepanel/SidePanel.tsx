@@ -15,6 +15,7 @@ import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 import DeleteSpaceModal from './components/features/space/delete/DeleteSpaceModal';
 import { ActiveSpace, CreateSpace, UpdateSpace } from './components/features/space';
 import OtherSpacesContainer from './components/features/space/other-space/OtherSpacesContainer';
+import { TAB_HEIGHT } from './components/features/space/active-space/ActiveSpaceTabs';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -47,7 +48,6 @@ const SidePanel = () => {
     handleEvents,
     onTabsDragEnd,
     onTabsDragStart,
-    setActiveSpaceTabs,
   } = useSidePanel();
 
   const activeSpaceRef = useRef(activeSpace);
@@ -57,10 +57,8 @@ const SidePanel = () => {
       setIsLoadingSpaces(true);
 
       const { activeSpaceWithTabs, otherSpaces } = await getAllSpacesStorage();
-      const { tabs } = activeSpaceWithTabs;
 
       setActiveSpace({ ...activeSpaceWithTabs });
-      setActiveSpaceTabs(tabs);
 
       setNonActiveSpaces(otherSpaces);
       // set app settings
@@ -136,15 +134,14 @@ const SidePanel = () => {
                 <ActiveSpace space={activeSpace} setActiveSpace={setActiveSpace} />
 
                 {/* dropzone for other space to open tabs in active space */}
-
                 <Droppable droppableId="open-non-active-space-tabs" type="SPACE">
                   {(provided2, { isDraggingOver }) => (
                     <div
                       ref={provided2.innerRef}
-                      className="max-h-[90%] w-full absolute top-0 mt-8 left-0 rounded-lg transition-all duration-300 ease-in-out"
+                      className="max-h-[90%] w-full absolute top-[70px] left-0 rounded-lg transition-all duration-300 ease-in-out"
                       style={{
                         border: isDraggingOver ? '2px solid #05957f' : '#082545',
-                        height: `${activeSpace?.tabs?.length * 1.9}rem`,
+                        height: `${activeSpace?.tabs?.length * (TAB_HEIGHT * 1.15)}px`,
                         visibility: isDraggingGlobal && draggingType === 'space' ? 'visible' : 'hidden',
                         zIndex: isDraggingGlobal && draggingType === 'space' ? 200 : 1,
                       }}>
@@ -156,12 +153,12 @@ const SidePanel = () => {
                           visibility: isDraggingGlobal && draggingType === 'space' ? 'visible' : 'hidden',
                           zIndex: isDraggingGlobal && draggingType === 'space' ? 200 : 1,
                         }}
-                        className="h-full w-full bg-gradient-to-tr from-brand-darkBgAccent/40
-                              z-[100] to-slate-800/40 flex items-center justify-center rounded-lg">
+                        className="h-full w-full bg-gradient-to-tr from-brand-darkBgAccent/30
+                              z-[100] to-slate-800/30 flex items-center justify-center rounded-lg">
                         <p
-                          className="text-slate-200 text-xs font-light  bg-gradient-to-bl from-brand-darkBgAccent
-                              z-[100] to-slate-900 px-4 py-2 rounded-md ">
-                          {isDraggingOver ? 'Open tabs in this space' : "Drop space to open it's tabs"}
+                          className="text-slate-300 text-[13px] font-light  bg-gradient-to-bl from-brand-darkBgAccent
+                          to-brand-darkBg px-4  z-[100]  py-2.5 rounded-md ">
+                          {isDraggingOver ? 'Open tabs in this space' : 'Drop to open space tabs here'}
                         </p>
                       </motion.div>
                     </div>
