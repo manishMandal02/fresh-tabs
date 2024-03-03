@@ -214,7 +214,7 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
                   onMouseDown={onTabClickMousePos}>
                   {areTabsBeingDragged && isDragging && !isDraggingOver ? (
                     // {/* tabs being dragged  */}
-                    <div className="relative m-w-fit">
+                    <div className="relative w-fit">
                       {draggingOver ? <DraggingOverNudge droppableId={draggingOver} /> : null}
                       <TabDraggedOutsideActiveSpace numSelectedTabs={selectedTabs?.length} tabURL={tab.url} />
                     </div>

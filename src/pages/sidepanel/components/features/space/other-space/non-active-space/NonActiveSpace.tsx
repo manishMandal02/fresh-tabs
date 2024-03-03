@@ -10,17 +10,21 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
   return (
     <CustomContextMenu space={space}>
       <div
-        className={`text-slate-300 select-none rounded-lg  flex items-center  justify-center
-                      py-1.5 px-3  bg-gradient-to-bl from-brand-darkBgAccent/95 to-brand-darkBg/95 `}
+        className={`size-full text-slate-300 select-none rounded-lg flex items-center justify-center border border-transparent bg-gradient-to-bl
+                      ${
+                        isDraggedOver
+                          ? 'from-brand-darkBgAccent/85 to-brand-darkBg/85'
+                          : 'from-brand-darkBgAccent/95 to-brand-darkBg/95'
+                      }
+                    `}
         style={{
           ...(isDraggedOver
             ? {
-                borderColor: '1px dashed' + space.theme,
-                backgroundColor: space.theme,
+                border: '1px solid' + space.theme,
               }
-            : {
-                backgroundColor: space.theme,
-              }),
+            : {}),
+
+          backgroundColor: space.theme,
         }}>
         <span className="text-[16px] opacity-90">{space.emoji}</span>
       </div>

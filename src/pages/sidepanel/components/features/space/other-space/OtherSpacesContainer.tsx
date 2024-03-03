@@ -8,6 +8,7 @@ import Tooltip from '../../../elements/tooltip';
 import { newSpaceModalAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
 import { NonActiveSpace } from './non-active-space';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';
+import DraggingOverNudge from '../active-space/DraggingOverNudge';
 
 type Props = {
   isDraggingSpace: boolean;
@@ -58,67 +59,75 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
 
   return (
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-    <div className="relative size-full flex items-center justify-center overflow-hidden mx-auto gap-x-1">
-      <Droppable
-        droppableId="other-spaces"
-        direction="horizontal"
-        isDropDisabled={isDraggingTabs}
-        type="SPACE"
-        isCombineEnabled={isModifierKeyPressed}>
-        {(provided1, { isDraggingOver: isDraggingOverOtherSpaces }) => (
-          <div
-            {...provided1.droppableProps}
-            ref={provided1.innerRef}
-            className={`w-fit pb-2.5 pt-1 px-1.5 flex gap-x-2 overflow-y-hidden overflow-x-auto rounded-md
-                        cc-scrollbar shadow-inner shadow-brand-darkBgAccent/10 scroll-smooth `}>
-            {spaces.map((space, idx) => {
-              return (
-                <Draggable key={space.id} draggableId={space.id} index={idx} isDragDisabled={isDraggingTabs}>
-                  {(provided3, { combineTargetFor, combineWith }) => (
-                    <div
-                      ref={provided3.innerRef}
-                      {...provided3.draggableProps}
-                      {...provided3.dragHandleProps}
-                      className="z-10 "
-                      tabIndex={-1}
-                      style={{
-                        ...provided3.draggableProps.style,
-                        opacity: !combineWith || (!isDraggingOverOtherSpaces && isDraggingSpace) ? '1' : '0.75',
-                      }}>
-                      <Droppable
-                        key={space.id}
-                        droppableId={'space-' + space.id}
-                        direction="horizontal"
-                        type="TAB"
-                        isDropDisabled={isDraggingSpace}>
-                        {(provided2, { isDraggingOver }) => (
-                          <motion.div
-                            {...provided2.droppableProps}
-                            {...bounce}
-                            ref={provided2.innerRef}
-                            className="mt-1 mb-1.5"
-                            style={{
-                              ...SPACE_CONTAINER_SIZE,
-                            }}>
-                            <Tooltip label={isDraggingTabs || isDraggingSpace ? space.title : ''}>
-                              <NonActiveSpace space={space} isDraggedOver={isDraggingOver || !!combineTargetFor} />
-                            </Tooltip>
-                            {provided2.placeholder}
-                          </motion.div>
-                        )}
-                      </Droppable>
-                    </div>
-                  )}
-                </Draggable>
-              );
-            })}
-            {provided1.placeholder}
-          </div>
-        )}
-      </Droppable>
-
+    <div className="relative size-full flex items-center justify-center overflow-hidden">
+      {/* non active spaces container drop box */}
       <div
-        className="relative -mt-[9px] -ml-[2px]"
+        style={{
+          width: spaces.length * (SPACE_CONTAINER_SIZE.width + 9) + 'px',
+        }}
+        className="px-1.5 py-[6px] flex overflow-y-hidden overflow-x-auto rounded-md
+                   cc-scrollbar shadow-inner shadow-brand-darkBgAccent/10 scroll-smooth">
+        <Droppable
+          droppableId="other-spaces"
+          direction="horizontal"
+          isDropDisabled={isDraggingTabs}
+          type="SPACE"
+          isCombineEnabled={isModifierKeyPressed}>
+          {(provided1, { isDraggingOver: isDraggingOverOtherSpaces }) => (
+            <motion.div {...provided1.droppableProps} ref={provided1.innerRef} {...bounce} className="size-full flex">
+              {spaces.map((space, idx) => {
+                {
+                  /* non active space */
+                }
+                return (
+                  <Draggable key={space.id} draggableId={space.id} index={idx} isDragDisabled={isDraggingTabs}>
+                    {(provided3, { combineTargetFor, combineWith, draggingOver }) => (
+                      <div
+                        ref={provided3.innerRef}
+                        {...provided3.draggableProps}
+                        {...provided3.dragHandleProps}
+                        className="z-10  !cursor-default mr-2 last:mr-0 "
+                        tabIndex={-1}
+                        style={{
+                          ...provided3.draggableProps.style,
+                          opacity: !combineWith || (!isDraggingOverOtherSpaces && isDraggingSpace) ? '1' : '0.75',
+                        }}>
+                        {draggingOver || combineWith ? (
+                          <DraggingOverNudge droppableId={draggingOver} mergeSpaceWith={combineWith} />
+                        ) : null}
+                        {/* tabs drop zone to add tab to a non active space */}
+                        <Droppable
+                          key={space.id}
+                          droppableId={'space-' + space.id}
+                          direction="horizontal"
+                          type="TAB"
+                          isDropDisabled={isDraggingSpace}>
+                          {(provided2, { isDraggingOver }) => (
+                            <Tooltip label={!isDraggingTabs && !isDraggingSpace ? space.title : ''}>
+                              <div
+                                {...provided2.droppableProps}
+                                ref={provided2.innerRef}
+                                style={{
+                                  ...SPACE_CONTAINER_SIZE,
+                                }}>
+                                <NonActiveSpace space={space} isDraggedOver={isDraggingOver || !!combineTargetFor} />
+                                {provided2.placeholder}
+                              </div>
+                            </Tooltip>
+                          )}
+                        </Droppable>
+                      </div>
+                    )}
+                  </Draggable>
+                );
+              })}
+              {provided1.placeholder}
+            </motion.div>
+          )}
+        </Droppable>
+      </div>
+      <div
+        className="relative ml-1"
         style={{
           ...SPACE_CONTAINER_SIZE,
         }}>
@@ -157,13 +166,13 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                 visibility: !isDraggingSpace ? 'visible' : 'hidden',
                 zIndex: !isDraggingSpace ? 200 : 1,
               }}>
-              <Tooltip label="Add new space" delay={1500}>
+              <Tooltip label={isDraggingSpace || isDraggingTabs ? '' : 'Add new space'} delay={1500}>
                 <button
-                  className={`size-full bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/90 absolute top-px -right-px 
-                         cursor-pointer flex items-center outline-brand-darkBgAccent border-none justify-center rounded-lg`}
+                  className={`size-full bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/90 absolute 
+                                 flex items-center outline-brand-darkBgAccent justify-center rounded-lg`}
                   style={{
-                    border: isDraggingOver ? '1px dashed #6b6a6a' : '',
-                    backgroundColor: isDraggingOver ? ' #21262e' : '',
+                    border: isDraggingOver ? '1px solid #29dc8071' : '',
+                    backgroundColor: isDraggingOver ? ' #3ae88e6b' : '',
                   }}
                   onClick={() => setNewSpaceModal({ show: true, tabs: [] })}>
                   <PlusIcon className=" text-slate-600 scale-1.5" />

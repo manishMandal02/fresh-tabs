@@ -138,7 +138,7 @@ const SidePanel = () => {
                   {(provided2, { isDraggingOver }) => (
                     <div
                       ref={provided2.innerRef}
-                      className="max-h-[90%] w-full absolute top-[70px] left-0 rounded-lg transition-all duration-300 ease-in-out"
+                      className="max-h-[92%] w-full absolute top-[70px] left-0 rounded-lg transition-all duration-300 ease-in-out"
                       style={{
                         border: isDraggingOver ? '2px solid #05957f' : '#082545',
                         height: `${activeSpace?.tabs?.length * (TAB_HEIGHT * 1.15)}px`,
@@ -166,7 +166,7 @@ const SidePanel = () => {
                 </Droppable>
               </div>
               {/* other spaces */}
-              <div className="h-[10%]">
+              <div className="h-[8%]">
                 <OtherSpacesContainer
                   isDraggingTabs={isDraggingGlobal && draggingType === 'tabs'}
                   isDraggingSpace={isDraggingGlobal && draggingType === 'space'}
