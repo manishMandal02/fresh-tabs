@@ -17,7 +17,6 @@ const TabDraggedOutsideActiveSpace = ({ tabURL, numSelectedTabs }: Props) => {
 
   return (
     <div
-      className=""
       style={{
         // transform: `translateX(${mouseXOnDrag - CARD_SIZE + 10}px)`,
         width: CARD_SIZE + 5,

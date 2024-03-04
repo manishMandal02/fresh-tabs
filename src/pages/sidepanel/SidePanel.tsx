@@ -153,11 +153,11 @@ const SidePanel = () => {
                           visibility: isDraggingGlobal && draggingType === 'space' ? 'visible' : 'hidden',
                           zIndex: isDraggingGlobal && draggingType === 'space' ? 200 : 1,
                         }}
-                        className="h-full w-full bg-gradient-to-tr from-brand-darkBgAccent/30
+                        className="h-full w-full bg-gradient-to-tr from-brand-darkBgAccent/20
                               z-[100] to-slate-800/30 flex items-center justify-center rounded-lg">
                         <p
-                          className="text-slate-300 text-[13px] font-light  bg-gradient-to-bl from-brand-darkBgAccent
-                          to-brand-darkBg px-4  z-[100]  py-2.5 rounded-md ">
+                          className="text-slate-300 text-[13px] font-light  bg-gradient-to-bl shadow shadow-brand-darkBgAccent/80 from-brand-darkBgAccent/90
+                          to-brand-darkBg/90 px-4  z-[100]  py-2.5 rounded-md ">
                           {isDraggingOver ? 'Open tabs in this space' : 'Drop to open space tabs here'}
                         </p>
                       </motion.div>

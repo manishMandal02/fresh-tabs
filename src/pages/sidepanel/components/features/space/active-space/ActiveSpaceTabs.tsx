@@ -214,13 +214,13 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
                   onMouseDown={onTabClickMousePos}>
                   {areTabsBeingDragged && isDragging && !isDraggingOver ? (
                     // {/* tabs being dragged  */}
-                    <div className="relative w-fit">
+                    <div className="relative h-fit">
                       {draggingOver ? <DraggingOverNudge droppableId={draggingOver} /> : null}
                       <TabDraggedOutsideActiveSpace numSelectedTabs={selectedTabs?.length} tabURL={tab.url} />
                     </div>
                   ) : (
                     <div
-                      className={`relative w-[96vw] min-w-[96vw] bg-transparent `}
+                      className={`relative w-[96vw] min-w-[96vw] bg-transparent`}
                       tabIndex={-1}
                       style={{
                         cursor: isModifierKeyPressed ? 'pointer' : 'default',

@@ -43,14 +43,15 @@ const DraggingOverNudge = ({ droppableId, mergeSpaceWith }: Props) => {
 
   const { bounce } = useCustomAnimation();
   return draggingOverLocation() ? (
-    <motion.span {...bounce}>
-      <div
-        className={`absolute  w-[9.5rem] -top-[100%] left-1/2 -translate-x-1/2 mx-auto px-3 py-2 text-[10px] font-light leading-4 text-center 
-                  text-slate-300 bg-gradient-to-bl from-brand-darkBgAccent/95 to-brand-darkBg/95 rounded-lg`}>
+    <motion.div
+      {...bounce}
+      className={`absolute min-w-fit w-[10rem] -top-[120%] -left-[3.75rem] py-2 px-3 shadow shadow-brand-darkBgAccent/80 
+                   text-center bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/95 rounded-lg `}>
+      <p className="min-w-[80%] max-w-[98%] mx-auto whitespace-nowrap overflow-hidden text-ellipsis text-slate-200/90">
         {draggingOverLocation()}
-        <TriangleDownIcon className="absolute w-3 h-3 -bottom-[7px] left-1/2 text-slate-800 scale-[1.2]" />
-      </div>
-    </motion.span>
+      </p>
+      <TriangleDownIcon className="absolute -bottom-[10px] left-1/2  -translate-x-1/2 text-brand-darkBgAccent/90 scale-[1.2]" />
+    </motion.div>
   ) : (
     <></>
   );

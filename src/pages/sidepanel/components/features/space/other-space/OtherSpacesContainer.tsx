@@ -64,8 +64,9 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
       <div
         style={{
           width: spaces.length * (SPACE_CONTAINER_SIZE.width + 9) + 'px',
+          overflowX: 'auto',
         }}
-        className="px-1.5 py-[6px] flex overflow-y-hidden overflow-x-auto rounded-md
+        className="px-1.5 py-[6px] flex overflow-y-hidden rounded-md
                    cc-scrollbar shadow-inner shadow-brand-darkBgAccent/10 scroll-smooth">
         <Droppable
           droppableId="other-spaces"
@@ -103,17 +104,17 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                           type="TAB"
                           isDropDisabled={isDraggingSpace}>
                           {(provided2, { isDraggingOver }) => (
-                            <Tooltip label={!isDraggingTabs && !isDraggingSpace ? space.title : ''}>
-                              <div
-                                {...provided2.droppableProps}
-                                ref={provided2.innerRef}
-                                style={{
-                                  ...SPACE_CONTAINER_SIZE,
-                                }}>
-                                <NonActiveSpace space={space} isDraggedOver={isDraggingOver || !!combineTargetFor} />
-                                {provided2.placeholder}
-                              </div>
-                            </Tooltip>
+                            // <Tooltip label={!isDraggingTabs && !isDraggingSpace ? space.title : ''}>
+                            <div
+                              {...provided2.droppableProps}
+                              ref={provided2.innerRef}
+                              style={{
+                                ...SPACE_CONTAINER_SIZE,
+                              }}>
+                              <NonActiveSpace space={space} isDraggedOver={isDraggingOver || !!combineTargetFor} />
+                              {provided2.placeholder}
+                            </div>
+                            // </Tooltip>
                           )}
                         </Droppable>
                       </div>
@@ -175,7 +176,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                     backgroundColor: isDraggingOver ? ' #3ae88e6b' : '',
                   }}
                   onClick={() => setNewSpaceModal({ show: true, tabs: [] })}>
-                  <PlusIcon className=" text-slate-600 scale-1.5" />
+                  <PlusIcon className=" text-slate-500/90 scale-[1.2]" />
                 </button>
               </Tooltip>
             </motion.div>

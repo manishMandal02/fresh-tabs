@@ -1,5 +1,7 @@
-import * as PopoverRadix from '@radix-ui/react-popover';
 import { ReactNode } from 'react';
+import { motion } from 'framer-motion';
+import * as PopoverRadix from '@radix-ui/react-popover';
+import { useCustomAnimation } from '../../../hooks/useAnimation';
 
 type Props = {
   children: ReactNode;
@@ -12,6 +14,8 @@ type Props = {
 const Popover = ({ children, content, open, onChange, modalContainer = false }: Props) => {
   const portalAnchor = modalContainer ? document.querySelector('dialog') : document.body;
 
+  const { fade } = useCustomAnimation();
+
   return (
     <>
       <PopoverRadix.Root open={open} onOpenChange={onChange}>
@@ -20,7 +24,7 @@ const Popover = ({ children, content, open, onChange, modalContainer = false }: 
         </PopoverRadix.Trigger>
         <PopoverRadix.Portal container={portalAnchor}>
           <PopoverRadix.Content className="z-[99999]" sideOffset={5}>
-            {content}
+            <motion.div {...fade}>{content}</motion.div>
           </PopoverRadix.Content>
         </PopoverRadix.Portal>
       </PopoverRadix.Root>

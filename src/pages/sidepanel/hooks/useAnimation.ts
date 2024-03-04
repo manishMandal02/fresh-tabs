@@ -20,14 +20,13 @@ export const useCustomAnimation = () => {
     transition: { type: 'spring', stiffness: 800, damping: 40, duration: 0.2 },
   };
 
-  // TODO: not used currently (re-check)
   const fade = {
     initial: { opacity: 0 },
     whileInView: {
       opacity: 1,
     },
     exit: { opacity: 0 },
-    transition: { type: 'spring', stiffness: 900, damping: 40, duration: 0.2 },
+    transition: { type: 'tween', duration: 0.2 },
   };
 
   return { bounce, slide, fade };

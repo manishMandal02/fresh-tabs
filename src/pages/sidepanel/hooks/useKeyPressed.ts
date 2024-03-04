@@ -22,6 +22,7 @@ export const useKeyPressed = ({
   onArrowUpPressed,
   onArrowDownPressed,
 }: useKeyPressedProps) => {
+  // TODO - keep track if the event listener is added already or not
   //  ctrl/cmd key press status
   const [isModifierKeyPressed, setIsModifierKeyPressed] = useState(false);
   // left shift key press status
@@ -107,7 +108,6 @@ export const useKeyPressed = ({
   // content script (command palette)
   useEffect(() => {
     if (parentConTainerEl) return;
-
     document.body.addEventListener('keydown', handleKeydown);
     monitorModifierKeys && document.body.addEventListener('keyup', handleKeyUp);
 
