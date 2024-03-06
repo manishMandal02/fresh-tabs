@@ -1,8 +1,9 @@
-import { PlusIcon, TrashIcon } from '@radix-ui/react-icons';
+import { TrashIcon } from '@radix-ui/react-icons';
 import { useState, useCallback, useEffect } from 'react';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 import { motion } from 'framer-motion';
 import { useAtom } from 'jotai';
+``;
 
 import Tooltip from '../../../elements/tooltip';
 import { newSpaceModalAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
@@ -15,11 +16,17 @@ type Props = {
   isDraggingTabs: boolean;
 };
 
-const SPACE_CONTAINER_SIZE = { width: 40, height: 35 };
+// const SPACE_CONTAINER_SIZE = { width: 40, height: 35 };
+
+// TODO - calculate dynamic size for spaces based on num of spaces
 
 const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
   // non active spaces  (global state)
   const [spaces] = useAtom(nonActiveSpacesAtom);
+
+  const spaceContainerWidth = Math.min(40, Math.round(spaces.length * 3.5));
+
+  console.log('🚀 ~ OtherSpacesContainer ~ spaceContainerWidth:', spaceContainerWidth);
 
   // add new space modal
   const [isModifierKeyPressed, setIsModifierKeyPressed] = useState(false);
@@ -58,16 +65,13 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
   const { bounce } = useCustomAnimation();
 
   return (
+    // main container
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-    <div className="relative size-full flex items-center justify-center overflow-hidden">
-      {/* non active spaces container drop box */}
+    <div className="relative size-full flex items-center justify-center overflow-hidden px-1">
+      {/* non active spaces container */}
       <div
-        style={{
-          width: spaces.length * (SPACE_CONTAINER_SIZE.width + 9) + 'px',
-          overflowX: 'auto',
-        }}
-        className="px-1.5 py-[6px] flex overflow-y-hidden rounded-md
-                   cc-scrollbar shadow-inner shadow-brand-darkBgAccent/10 scroll-smooth">
+        className="px-1.5 py-[6px] flex overflow-hidden rounded-md  w-fit max-w-[92%]
+                    shadow-inner shadow-brand-darkBgAccent/10">
         <Droppable
           droppableId="other-spaces"
           direction="horizontal"
@@ -75,11 +79,13 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
           type="SPACE"
           isCombineEnabled={isModifierKeyPressed}>
           {(provided1, { isDraggingOver: isDraggingOverOtherSpaces }) => (
-            <motion.div {...provided1.droppableProps} ref={provided1.innerRef} {...bounce} className="size-full flex">
+            <motion.div
+              {...provided1.droppableProps}
+              ref={provided1.innerRef}
+              {...bounce}
+              className="size-full flex justify-center gap-x-[.35rem] ">
+              {/* non active spaces */}
               {spaces.map((space, idx) => {
-                {
-                  /* non active space */
-                }
                 return (
                   <Draggable key={space.id} draggableId={space.id} index={idx} isDragDisabled={isDraggingTabs}>
                     {(provided3, { combineTargetFor, combineWith, draggingOver }) => (
@@ -87,7 +93,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                         ref={provided3.innerRef}
                         {...provided3.draggableProps}
                         {...provided3.dragHandleProps}
-                        className="z-10  !cursor-default mr-2 last:mr-0 "
+                        className="z-10  !cursor-default last:mr-0  size-full"
                         tabIndex={-1}
                         style={{
                           ...provided3.draggableProps.style,
@@ -109,7 +115,8 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                               {...provided2.droppableProps}
                               ref={provided2.innerRef}
                               style={{
-                                ...SPACE_CONTAINER_SIZE,
+                                width: spaceContainerWidth,
+                                height: spaceContainerWidth + spaceContainerWidth / 10,
                               }}>
                               <NonActiveSpace space={space} isDraggedOver={isDraggingOver || !!combineTargetFor} />
                               {provided2.placeholder}
@@ -127,10 +134,12 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
           )}
         </Droppable>
       </div>
+      {/* add/delete container  */}
       <div
-        className="relative ml-1"
+        className="relative !w-[8%] scale-[.75]"
         style={{
-          ...SPACE_CONTAINER_SIZE,
+          width: spaceContainerWidth,
+          height: spaceContainerWidth + spaceContainerWidth / 8,
         }}>
         {/* delete space drop box */}
         <Droppable droppableId="delete-space" direction="horizontal" type="SPACE" isDropDisabled={isDraggingTabs}>
@@ -163,20 +172,21 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
               animate={!isDraggingSpace ? 'visible' : 'hidden'}
               variants={animationVariants}
               transition={{ type: 'spring', stiffness: 1000, damping: 40, duration: 0.1 }}
+              className=""
               style={{
                 visibility: !isDraggingSpace ? 'visible' : 'hidden',
                 zIndex: !isDraggingSpace ? 200 : 1,
               }}>
               <Tooltip label={isDraggingSpace || isDraggingTabs ? '' : 'Add new space'} delay={1500}>
                 <button
-                  className={`size-full bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/90 absolute 
-                                 flex items-center outline-brand-darkBgAccent justify-center rounded-lg`}
+                  className={`size-full bg-gradient-to-bl from-brand-darkBgAccent/90 to-brand-darkBg/90 absolute text-[calc(100%+1.5vw)] shadow-md shadow-brand-darkBgAccent/80
+                              rounded-[7px] outline-none flex items-center justify-center focus-within:outline-slate-700 text-slate-500 font-light `}
                   style={{
                     border: isDraggingOver ? '1px solid #29dc8071' : '',
                     backgroundColor: isDraggingOver ? ' #3ae88e6b' : '',
                   }}
                   onClick={() => setNewSpaceModal({ show: true, tabs: [] })}>
-                  <PlusIcon className=" text-slate-500/90 scale-[1.2]" />
+                  +
                 </button>
               </Tooltip>
             </motion.div>

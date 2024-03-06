@@ -37,7 +37,6 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
 
     await openSpace({ space, tabs, shouldOpenInNewWindow });
   };
-
   const { isModifierKeyPressed } = useKeyPressed({ monitorModifierKeys: true });
 
   console.log('🚀 ~ NonActiveSpace ~ isModifierKeyPressed:', isModifierKeyPressed);
@@ -64,7 +63,7 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
 
               <button
                 className="text-slate-300 cursor-default select-none group flex items-center pl-2 pr-[12px] py-[7px] transition-all duration-200 border-none outline-none hover:bg-brand-darkBgAccent/50 "
-                onClick={() => handleOpenSpace(true)}>
+                onClick={() => handleOpenSpace()}>
                 <ExitIcon className={`text-slate-500/90 mr-[5px] scale-[0.8]`} /> Switch Space
               </button>
 
@@ -104,12 +103,12 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
                 setShowContextMenu(true);
                 ev.preventDefault();
               }}
-              className={`size-full text-slate-300  rounded-lg flex items-center justify-center border border-transparent 
+              className={`!size-full text-slate-300 px-1 rounded-[6px] flex items-center justify-center border border-transparent 
                           select-none outline-none focus-within:outline-slate-700 bg-gradient-to-bl 
                       ${
                         isDraggedOver
                           ? 'from-brand-darkBgAccent/85 to-brand-darkBg/85'
-                          : 'from-brand-darkBgAccent/95 to-brand-darkBg/80'
+                          : 'from-brand-darkBgAccent/95 to-brand-darkBg/90'
                       }
                     `}
               style={{
@@ -121,7 +120,7 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
                 backgroundColor: space.theme,
                 cursor: !isModifierKeyPressed ? 'default' : 'pointer',
               }}>
-              <span className="text-[16px] opacity-90">{space.emoji}</span>
+              <span className="opacity-90 text-[calc(80%+0.5vw)]">{space.emoji}</span>
             </div>
           </Tooltip>
         </div>

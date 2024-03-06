@@ -112,7 +112,7 @@ const SidePanel = () => {
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-brand-darkBg">
-      <main className="h-full relative">
+      <main className="h-full  relative">
         {/* header */}
         <Header handleShowCommandPalette={handleShowCommandPalette} />
 
@@ -123,14 +123,14 @@ const SidePanel = () => {
         </div> */}
 
         {/* spaces container */}
-        <div className="w-full h-[93%] px-2 py-1 scroll-p-px scroll-m-px relative ">
+        <div className="w-full h-[94%] px-2 scroll-p-px scroll-m-px relative ">
           {/* un saved  */}
           {isLoadingSpaces ? (
             <Spinner size="md" />
           ) : (
             <DragDropContext onDragEnd={onTabsDragEnd} onBeforeDragStart={onTabsDragStart}>
               {/* Current space */}
-              <div className="h-[90%] relative">
+              <div className="h-[92%] relative">
                 <ActiveSpace space={activeSpace} setActiveSpace={setActiveSpace} />
 
                 {/* dropzone for other space to open tabs in active space */}
@@ -138,7 +138,7 @@ const SidePanel = () => {
                   {(provided2, { isDraggingOver }) => (
                     <div
                       ref={provided2.innerRef}
-                      className="max-h-[92%] w-full absolute top-[70px] left-0 rounded-lg transition-all duration-300 ease-in-out"
+                      className="flex-grow w-full absolute top-[70px] left-0 rounded-lg transition-all duration-300 ease-in-out"
                       style={{
                         border: isDraggingOver ? '2px solid #05957f' : '#082545',
                         height: `${activeSpace?.tabs?.length * (TAB_HEIGHT * 1.15)}px`,
@@ -156,8 +156,8 @@ const SidePanel = () => {
                         className="h-full w-full bg-gradient-to-tr from-brand-darkBgAccent/20
                               z-[100] to-slate-800/30 flex items-center justify-center rounded-lg">
                         <p
-                          className="text-slate-300 text-[13px] font-light  bg-gradient-to-bl shadow shadow-brand-darkBgAccent/80 from-brand-darkBgAccent/90
-                          to-brand-darkBg/90 px-4  z-[100]  py-2.5 rounded-md ">
+                          className="text-slate-300 text-[13px] font-light bg-gradient-to-bl shadow shadow-brand-darkBgAccent/80 from-brand-darkBgAccent/90
+                          to-brand-darkBg/90 px-4 z-[100] py-2.5 rounded-md">
                           {isDraggingOver ? 'Open tabs in this space' : 'Drop to open space tabs here'}
                         </p>
                       </motion.div>
@@ -166,7 +166,7 @@ const SidePanel = () => {
                 </Droppable>
               </div>
               {/* other spaces */}
-              <div className="h-[8%]">
+              <div className="h-fit">
                 <OtherSpacesContainer
                   isDraggingTabs={isDraggingGlobal && draggingType === 'tabs'}
                   isDraggingSpace={isDraggingGlobal && draggingType === 'space'}
@@ -174,10 +174,9 @@ const SidePanel = () => {
               </div>
             </DragDropContext>
           )}
-
-          {/* add new space */}
-          <CreateSpace />
         </div>
+        {/* add new space */}
+        <CreateSpace />
 
         {/* Edit/view space modal */}
         <UpdateSpace />
