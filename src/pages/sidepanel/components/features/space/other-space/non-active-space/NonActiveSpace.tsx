@@ -103,7 +103,7 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
                 setShowContextMenu(true);
                 ev.preventDefault();
               }}
-              className={`!size-full text-slate-300 px-1 rounded-[6px] flex items-center justify-center border border-transparent 
+              className={`!size-full text-slate-300 px-[5px] py-px rounded-[6px] flex items-center justify-center border border-transparent 
                           select-none outline-none focus-within:outline-slate-700 bg-gradient-to-bl 
                       ${
                         isDraggedOver
@@ -120,7 +120,7 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
                 backgroundColor: space.theme,
                 cursor: !isModifierKeyPressed ? 'default' : 'pointer',
               }}>
-              <span className="opacity-90 text-[calc(80%+0.5vw)]">{space.emoji}</span>
+              <span className="opacity-90 text-[3vw]">{space.emoji}</span>
             </div>
           </Tooltip>
         </div>
