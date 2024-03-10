@@ -85,7 +85,7 @@ const Menu = () => {
           onClick={() => setShowMenu(true)}
           className={`size-full text-slate-500 hover:bg-brand-darkBgAccent/20 rounded-full transition-all duration-200 outline-none
                       flex items-center justify-center ${showMenu ? 'bg-brand-darkBgAccent/30' : ''}`}>
-          <HamburgerMenuIcon className="scale-[1.1]" />
+          <HamburgerMenuIcon className="scale-[1.2]" />
         </button>
       </Popover>
       {/* modal */}

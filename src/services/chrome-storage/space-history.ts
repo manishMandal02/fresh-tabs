@@ -1,8 +1,6 @@
-// site/url visit history for space
-
-import { StorageKey } from '@root/src/constants/app';
 import { logger } from '@root/src/pages/utils';
 import { getStorage, setStorage } from './helpers';
+import { StorageKey } from '@root/src/constants/app';
 import { ISiteVisit } from '@root/src/pages/types/global.types';
 
 // get full space history (past 30d)

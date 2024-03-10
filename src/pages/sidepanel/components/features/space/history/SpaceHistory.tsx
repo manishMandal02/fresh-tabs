@@ -1,19 +1,19 @@
+import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { useState, useEffect, useRef, memo } from 'react';
 
 import { Tab } from '../tab';
 import { SlideModal } from '../../../elements/modal';
 import { isChromeUrl } from '@root/src/pages/utils/url';
+import { activeSpaceIdAtom } from '@root/src/stores/app';
 import Accordion from '../../../elements/accordion/Accordion';
 import { ISiteVisit } from '@root/src/pages/types/global.types';
 import { getTime } from '@root/src/pages/utils/date-time/get-time';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';
-import { getISODate } from '@root/src/pages/utils/date-time/getISODate';
 import { getUrlDomain } from '@root/src/pages/utils/url/get-url-domain';
+import { getISODate } from '@root/src/pages/utils/date-time/getISODate';
 import { getWeekday } from '@root/src/pages/utils/date-time/get-weekday';
 import { getSpaceHistory } from '@root/src/services/chrome-storage/space-history';
-import { useAtom } from 'jotai';
-import { activeSpaceIdAtom } from '@root/src/stores/app';
 
 type GroupedVisit = { visits: ISiteVisit[]; domain?: string; faviconUrl?: string };
 
@@ -24,7 +24,6 @@ type HistoryByDays = {
 
 // identify same site session to group them
 const isGroupSession = (visit: ISiteVisit, index: number, visits: ISiteVisit[]) => {
-  console.log('🚀 ~ isGroupSession ~ index:', index);
   return (
     visits[index + 1]?.url &&
     visits[index + 1]?.url !== visit.url &&
@@ -52,8 +51,6 @@ const getGroupedSessionRecursively = (startIndex: number, visits: ISiteVisit[]) 
 type Props = { show: boolean; onClose: () => void };
 
 const SpaceHistory = ({ show, onClose }: Props) => {
-  console.log('🚀 ~ SpaceHistory ~ 🔁 rendered');
-
   // global state
   // active space id
   const [spaceId] = useAtom(activeSpaceIdAtom);
@@ -84,11 +81,15 @@ const SpaceHistory = ({ show, onClose }: Props) => {
 
       // filter by days
       combinedHistory.forEach((visit, idx) => {
-        console.log('🚀 ~ combinedHistory.forEach ~ idx: 1st', idx);
-
-        if (isChromeUrl(visit.url) || skipGroupIndexes.includes(idx) || visit.url === combinedHistory[idx - 1]?.url)
+        if (
+          !visit.url ||
+          isChromeUrl(visit.url) ||
+          skipGroupIndexes.includes(idx) ||
+          visit.url === combinedHistory[idx - 1]?.url
+        )
           return;
 
+        // add history to date if date exists
         const date = getISODate(new Date(visit.timestamp));
         let day = historyByDays.find(d => d.date === date);
 
@@ -96,6 +97,8 @@ const SpaceHistory = ({ show, onClose }: Props) => {
           historyByDays.push({ date, history: [] });
           day = historyByDays.find(d => d.date === date);
         }
+
+        if (!visit.url) return;
 
         if (isGroupSession(visit, idx, combinedHistory)) {
           const groupedVisits = getGroupedSessionRecursively(idx, combinedHistory);
@@ -113,7 +116,6 @@ const SpaceHistory = ({ show, onClose }: Props) => {
         }
       });
 
-      console.log('🚀 ~ historyByDays:', historyByDays);
       setSpaceHistory(historyByDays);
     })();
   }, [spaceId, show]);
@@ -157,7 +159,8 @@ const SpaceHistory = ({ show, onClose }: Props) => {
         {floatingDate ? (
           <motion.div
             {...bounce}
-            className="z-[99] sticky top-2 mx-auto flex items-center justify-center  text-[11px] w-fit h-5 bg-brand-darkBg shadow-md shadow-brand-darkBgAccent/30 border border-brand-darkBgAccent/50 px-[15px] py-[10px] rounded-xl text-slate-300/80">
+            className={`z-[99] sticky top-2 mx-auto flex items-center justify-center  text-[11px] w-fit h-5  shadow-md shadow-brand-darkBgAccent/30 
+                      bg-brand-darkBg border border-brand-darkBgAccent/50 px-[15px] py-[10px] rounded-xl text-slate-300/80`}>
             {getWeekday(new Date(floatingDate))}{' '}
             {new Date(floatingDate).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: '2-digit' })}
           </motion.div>
@@ -209,7 +212,7 @@ const SpaceHistory = ({ show, onClose }: Props) => {
                             {visit.visits.map(v => (
                               <div key={v.timestamp}>
                                 <Tab
-                                  tabData={{ url: v.url, title: v.title, id: 0 }}
+                                  tabData={{ url: v.url, title: v.title, faviconUrl: v.faviconUrl, id: 0 }}
                                   isSpaceActive={false}
                                   showHoverOption={true}
                                   showDeleteOption={false}
@@ -221,14 +224,12 @@ const SpaceHistory = ({ show, onClose }: Props) => {
                       </div>
                     );
                   } else {
-                    const visit = data as ISiteVisit;
+                    const { url, title, faviconUrl, timestamp } = data as ISiteVisit;
                     return (
-                      <div key={visit.timestamp} className="flex items-center mb-px">
-                        <span className="text-slate-500/80 text-[10px] pl-1 mr-[0.5px]">
-                          {getTime(visit.timestamp)}
-                        </span>
+                      <div key={timestamp} className="flex items-center mb-px">
+                        <span className="text-slate-500/80 text-[10px] pl-1 mr-[0.5px]">{getTime(timestamp)}</span>
                         <Tab
-                          tabData={{ url: visit.url, title: visit.title, id: 0 }}
+                          tabData={{ url, title, faviconUrl, id: 0 }}
                           isSpaceActive={false}
                           showHoverOption={true}
                           showDeleteOption={false}

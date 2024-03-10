@@ -9,7 +9,7 @@ export const getFaviconURL = (siteUrl: string, isSidePanel = true) => {
 
   const parsedUrl = parseUrl(siteUrl);
 
-  const url = new URL(parsedUrl);
+  const url = new URL(parsedUrl) || new URL(siteUrl);
 
   if (!siteUrl || isChromeUrl(siteUrl)) return createChromeFaviconURL(url);
   const subdomainRegex =

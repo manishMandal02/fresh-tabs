@@ -24,19 +24,19 @@ const Footer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
 
   return (
     <>
-      <footer className="relative w-full h-[5%] flex items-end justify-center">
+      <footer className="relative w-full h-[5%] flex items-end justify-center pb-1 px-px">
         {/* menu */}
         <div className="size-[25px] bg-purple-20 flex items-center justify-center rounded-lg ml-1 ">
           <Menu />
         </div>
         {/* other spaces */}
-        <div className="flex  items-center justify-center flex-grow max-w-[88%] overflow-hidden mb-1">
+        <div className="flex  items-center justify-center flex-grow max-w-[88%] overflow-hidden">
           <OtherSpacesContainer isDraggingSpace={isDraggingSpace} isDraggingTabs={isDraggingTabs} />
         </div>
 
         {/* add/delete space container */}
         {/* delete space drop box */}
-        <div className="relative size-[25px] bg-orange-20 right-[4px] bottom">
+        <div className="relative size-[25px] bg-orange-20 right-[4px] bottom-px">
           <Droppable droppableId="delete-space" direction="horizontal" type="SPACE" isDropDisabled={isDraggingTabs}>
             {(provided, { isDraggingOver: isDraggingOverDelete }) => (
               <motion.div
@@ -81,7 +81,7 @@ const Footer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                       backgroundColor: isDraggingOverNewSpace ? ' #3ae88e6b' : '',
                     }}
                     onClick={() => setNewSpaceModal({ show: true, tabs: [] })}>
-                    <PlusIcon className="text-slate-500 scale-[1.1]" />
+                    <PlusIcon className="text-slate-500 scale-[1.25]" />
                   </button>
                 </Tooltip>
               </motion.div>

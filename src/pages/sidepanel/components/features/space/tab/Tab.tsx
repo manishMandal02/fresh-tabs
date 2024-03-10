@@ -11,7 +11,7 @@ import { createTab, goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { copyToClipboard } from '@root/src/pages/utils/copy-to-clipboard';
 
 type Props = {
-  tabData: ITab;
+  tabData: ITab & { faviconUrl?: string };
   showHoverOption?: boolean;
   isSpaceActive?: boolean;
   showDeleteOption?: boolean;
@@ -59,11 +59,11 @@ const Tab = ({
       <div className="flex items-center w-full">
         <img
           className="mr-[8px] opacity-95  size-[17px] max-w-[17px] z-10 rounded-sm object-contain object-center"
-          src={getFaviconURL(tabData.url)}
+          src={tabData.faviconUrl || getFaviconURL(tabData.url)}
           alt="icon"
         />
         <span className="text-[13px] text-slate-300/80 min-w-[80%] max-w-[95%] text-start whitespace-nowrap overflow-hidden text-ellipsis">
-          {tabData.title.trim()}
+          {tabData.title?.trim() || 'No title'}
         </span>
       </div>
       {showHoverOption ? (

@@ -852,3 +852,6 @@ const debounceTabReplacedListener = debounceWithEvents(handleTabsReplaced, 500);
 chrome.webNavigation.onTabReplaced.addListener(({ replacedTabId, tabId }) => {
   debounceTabReplacedListener({ replacedTabId, tabId });
 });
+
+//
+chrome.runtime;
