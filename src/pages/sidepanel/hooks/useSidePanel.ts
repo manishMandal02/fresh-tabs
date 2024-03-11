@@ -33,7 +33,7 @@ export const useSidePanel = () => {
 
     const activeSpaceWithTabs = { ...currentSpace, tabs: tabsFroCurrentSpace };
 
-    return { activeSpaceWithTabs, otherSpaces: [...allSpaces.filter(s => s.id !== currentSpace?.id)] };
+    return { activeSpaceWithTabs, otherSpaces: allSpaces };
   };
 
   const { dropHandler, getDroppedLocation } = useTabsDnd();

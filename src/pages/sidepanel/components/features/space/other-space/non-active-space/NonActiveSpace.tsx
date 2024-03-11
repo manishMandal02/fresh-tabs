@@ -7,7 +7,7 @@ import Tooltip from '../../../../elements/tooltip';
 import { ISpace } from '@root/src/pages/types/global.types';
 import { openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
-import { deleteSpaceModalAtom, updateSpaceModalAtom } from '@root/src/stores/app';
+import { activeSpaceAtom, deleteSpaceModalAtom, updateSpaceModalAtom } from '@root/src/stores/app';
 import { useKeyPressed } from '@root/src/pages/sidepanel/hooks/useKeyPressed';
 
 type Props = {
@@ -19,6 +19,7 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
   // global state/atom
   const [, setUpdateModal] = useAtom(updateSpaceModalAtom);
   const [, setDeleteModal] = useAtom(deleteSpaceModalAtom);
+  const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);
 
   // local state
   const [showContextMenu, setShowContextMenu] = useState(false);
@@ -36,6 +37,10 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
     const tabs = await getTabsInSpace(space.id);
 
     await openSpace({ space, tabs, shouldOpenInNewWindow });
+    if (!shouldOpenInNewWindow) {
+      const tabsInSpace = await getTabsInSpace(space.id);
+      setActiveSpace({ ...space, tabs: tabsInSpace });
+    }
   };
   const { isModifierKeyPressed } = useKeyPressed({ monitorModifierKeys: true });
 
@@ -94,17 +99,22 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
             <div
               // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
               tabIndex={0}
-              onClick={async () => {
+              onClick={async ev => {
+                if (ev.type === 'contextmenu') return;
                 if (isModifierKeyPressed) {
-                  await handleOpenSpace();
+                  await handleOpenSpace(true);
+                  return;
                 }
+                await handleOpenSpace();
+                ev.stopPropagation();
+                ev.preventDefault();
               }}
               onContextMenu={ev => {
                 setShowContextMenu(true);
                 ev.preventDefault();
               }}
-              className={`!size-full text-slate-300 px-[5px] py-px rounded-[6px] flex items-center justify-center border border-transparent 
-                          select-none outline-none focus-within:outline-slate-700 bg-gradient-to-bl 
+              className={`!size-full text-slate-300 px-[5px] py-px  rounded-[6px] flex items-center justify-center border-[0.5px] border-transparent 
+                          select-none outline-none focus-within:outline-slate-700 bg-gradient-to-bl  border-opacity-70
                       ${
                         isDraggedOver
                           ? 'from-brand-darkBgAccent/85 to-brand-darkBg/85'
@@ -119,6 +129,7 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
                   : {}),
                 backgroundColor: space.theme,
                 cursor: !isModifierKeyPressed ? 'default' : 'pointer',
+                borderColor: activeSpace.id === space.id ? space.theme : '',
               }}>
               <span className="opacity-90 text-[3vw]">{space.emoji}</span>
             </div>

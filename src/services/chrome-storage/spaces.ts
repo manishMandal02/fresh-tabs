@@ -90,14 +90,17 @@ export const updateSpace = async (spaceId: string, space: ISpaceWithoutId): Prom
   try {
     const spaces = await getStorage<ISpace[]>({ key: StorageKey.SPACES, type: 'sync' });
 
+    const spaceToUpdateIndex = spaces.findIndex(s => s.id === spaceId);
     let spaceToUpdate = spaces.find(s => s.id === spaceId);
     spaceToUpdate = { ...spaceToUpdate, ...space };
+
+    spaces.splice(spaceToUpdateIndex, 1, spaceToUpdate);
 
     // save new space along with others spaces to storage
     await setStorage({
       type: 'sync',
       key: StorageKey.SPACES,
-      value: [...spaces.filter(s => s.id !== spaceId), spaceToUpdate],
+      value: spaces,
     });
 
     return true;

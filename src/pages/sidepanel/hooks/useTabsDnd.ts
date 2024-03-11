@@ -270,10 +270,7 @@ export const useTabsDnd = () => {
 
       reOrderedSpaces.splice(destinationIndex, 0, spaceToMove);
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { tabs, ...activeSpaceWithoutTabs } = activeSpace;
-
-      await setSpacesToStorage([activeSpaceWithoutTabs, ...reOrderedSpaces]);
+      await setSpacesToStorage([...reOrderedSpaces]);
 
       setNonActiveSpaces([...reOrderedSpaces]);
     }
