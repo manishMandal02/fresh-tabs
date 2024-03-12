@@ -41,10 +41,12 @@ export const addSnoozedTab = async (spaceId: string, snoozedTab: ISnoozedTab) =>
 // get a tab that has to be un-snoozed (passed the trigger time)
 export const getTabToUnSnooze = async (spaceId: string) => {
   const snoozedTabs = await getSnoozedTabs(spaceId);
+
+  if (snoozedTabs?.length < 1) return null;
   const now = new Date();
   // set the time 2 mins after to get better results
   now.setMinutes(now.getMinutes() + 2);
-  const snoozedTab = snoozedTabs.find(tab => tab.snoozedUntil < now.getTime());
+  const snoozedTab = snoozedTabs?.find(tab => tab.snoozedUntil < now.getTime());
   if (snoozedTab) return snoozedTab;
   return null;
 };

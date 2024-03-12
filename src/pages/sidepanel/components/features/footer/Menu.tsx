@@ -12,6 +12,8 @@ import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookma
 const manishProfilePicUrl = 'https://avatars.githubusercontent.com/u/76472450?v=4';
 
 const Menu = () => {
+  console.log('Footer Menu ~ 🔁 rendered');
+
   // globals state
   const [, setSnackbar] = useAtom(snackbarAtom);
   const [, setShowSettingsModal] = useAtom(showSettingsModalAtom);
@@ -83,8 +85,9 @@ const Menu = () => {
         <button
           tabIndex={0}
           onClick={() => setShowMenu(true)}
-          className={`size-full text-slate-500 hover:bg-brand-darkBgAccent/20 rounded-full transition-all duration-200 outline-none
-                      flex items-center justify-center ${showMenu ? 'bg-brand-darkBgAccent/30' : ''}`}>
+          className={`size-full text-slate-500 hover:bg-brand-darkBgAccent/20 rounded-full transition-all duration-200 
+                      flex items-center justify-center focus:bg-brand-darkBgAccent/60 focus-within:outline-slate-800 
+                      ${showMenu ? 'bg-brand-darkBgAccent/30' : ''}`}>
           <HamburgerMenuIcon className="scale-[1.2]" />
         </button>
       </Popover>

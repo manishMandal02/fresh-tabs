@@ -1,13 +1,14 @@
-import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { useAtom } from 'jotai';
-import { activeSpaceAtom, dragStateAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
-import { getAllSpaces, getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
+import { MutableRefObject, useCallback } from 'react';
+
+import { useTabsDnd } from './useTabsDnd';
+import { logger } from '../../utils/logger';
+import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
 import { IMessageEventSidePanel, ISpaceWithTabs } from '../../types/global.types';
-import { MutableRefObject, useCallback } from 'react';
-import { logger } from '../../utils/logger';
+import { getAllSpaces, getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
 import type { OnDragEndResponder, OnBeforeDragStartResponder } from 'react-beautiful-dnd';
-import { useTabsDnd } from './useTabsDnd';
+import { activeSpaceAtom, dragStateAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
 
 export const useSidePanel = () => {
   // non active spaces  (global state)
@@ -105,7 +106,7 @@ export const useSidePanel = () => {
             // check if the active tab has changed from side panel, if yes do nothing
             const [activeTab] = await chrome.tabs.query({ active: true, windowId: activeSpaceRef.current.windowId });
 
-            if (activeTab?.index === activeSpaceRef.current.activeTabIndex) break;
+            if (!activeTab?.id || activeTab?.index === activeSpaceRef.current.activeTabIndex) break;
 
             setActiveSpace({ ...activeSpaceRef.current, activeTabIndex: activeTab?.index });
           } catch (err) {

@@ -29,7 +29,6 @@ export const publishEventsTab = async (tabId: number, event: IMessageEventConten
   } catch (error) {
     if ((error as Error).message.includes('Receiving end does not exist')) {
       // TODO - reload tab if non chrome url
-      console.log('🚀 ~ publishEventsTab ~ Receiving end does not exist: Reload tab');
       // await chrome.tabs.reload(tabId);
     } else {
       logger.error({

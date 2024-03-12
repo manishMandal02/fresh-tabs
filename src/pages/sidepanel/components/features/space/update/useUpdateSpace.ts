@@ -42,10 +42,10 @@ export const useUpdateSpace = ({ updateSpaceData, spaceId, onClose }: UseUpdateS
       if (spaceId === activeSpace.id) {
         // update active space
         setActiveSpace(prev => ({ ...prev, ...updateSpaceData }));
-      } else {
-        // update spaces list ui with same order
-        setSpaces(prev => prev.map(s => (s.id === spaceId ? { ...updateSpaceData, id: spaceId } : s)));
       }
+
+      // update spaces list ui with same order
+      setSpaces(prev => prev.map(s => (s.id === spaceId ? { ...updateSpaceData, id: spaceId } : s)));
 
       // close modal
       onClose();

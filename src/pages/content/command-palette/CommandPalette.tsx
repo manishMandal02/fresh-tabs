@@ -91,7 +91,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
 
   // check if the focused command is visible
   useEffect(() => {
-    console.log('🚀 ~ CommandPalette ~ suggestedCommands:', suggestedCommands);
     const numOfVisibleCommands = SUGGESTED_COMMANDS_MAX_HEIGHT / COMMAND_HEIGHT;
 
     if (focusedCommandIndex < numOfVisibleCommands && suggestionContainerRef.current?.scrollTop < 1) return;
@@ -116,7 +115,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
 
   // initialize component
   useEffect(() => {
-    console.log('🚀 ~ CommandPalette ~ useEffect: 🎉🎉');
     modalRef.current?.showModal();
     inputRef.current?.focus();
 
@@ -183,7 +181,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
           index: idx + matchedCommands.length + 1,
         });
       });
-      console.log('🚀 ~ handleGlobalSearch ~ resMatchedCommands:', resMatchedCommands);
       setSuggestedCommands(prev => [...prev, ...resMatchedCommands]);
     }
 
@@ -194,7 +191,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
 
   // on global search
   useEffect(() => {
-    console.log('🚀 ~ useEffect global search ~ searchQuery:', searchQuery);
     if (searchQuery.trim() && !subCommand) {
       setIsLoadingResults(true);
       // debounce search
@@ -216,7 +212,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
 
   // on search for sub command
   useEffect(() => {
-    console.log('🚀 ~ useEffect sub command search ~ searchQuery:', searchQuery);
     if (subCommand && searchQuery && suggestedCommandsForSubCommand.length > 0) {
       // filter the suggested sub commands based on search query, also update the index
       if (subCommand === CommandType.SnoozeTab) {
@@ -283,12 +278,9 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
   // show sub command indicator instead of search icon in search box
   const SubCommandIndicator = (type?: CommandType) => {
     // get command icon
-
     let label = 'Switch Space';
 
     const cmdType = type || subCommand;
-
-    console.log('🚀 ~ SubCommandIndicator ~ cmdType:', cmdType);
 
     const { Icon } = getCommandIcon(cmdType);
 

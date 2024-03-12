@@ -24,6 +24,8 @@ const defaultSpaceData: DefaultSpaceFields = {
 };
 
 const CreateSpace = () => {
+  console.log('🚀 ~ CreateSpace ~ 🔁 rendered');
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentTabs, setCurrentTabs] = useState<ITab[]>([]);
   const [errorMsg, setErrorMsg] = useState('Enter all the fields');
@@ -127,7 +129,6 @@ const CreateSpace = () => {
       const keyEv = ev as KeyboardEvent;
 
       if (keyEv.ctrlKey && keyEv.code === 'KeyA') {
-        console.log('🚀 ~ handleShortcut ~ keyEv:~~  keyEv.ctrlKey', keyEv.ctrlKey);
         setNewSpaceModal({ show: true, tabs: [] });
       }
     },

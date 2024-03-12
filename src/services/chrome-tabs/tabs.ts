@@ -177,8 +177,6 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
     //  create new window
     const window = await chrome.windows.create({ focused: true });
 
-    console.log('🚀 ~ openSpace ~ window:', window);
-
     if (window) {
       windowId = window.id;
       defaultWindowTabId = window.tabs[0].id;

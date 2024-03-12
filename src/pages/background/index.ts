@@ -629,13 +629,15 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   // update spaces' active tab
   const updateSpace = await updateActiveTabInSpace(windowId, tab.index);
 
+  console.log('🚀 ~ chrome.tabs.onActivated.addListener ~ updateSpace:', updateSpace);
+
   // send send to side panel
   await publishEvents({
     id: generateId(),
     event: 'UPDATE_SPACE_ACTIVE_TAB',
     payload: {
       spaceId: updateSpace?.id,
-      newActiveIndex: updateSpace?.activeTabIndex,
+      newActiveIndex: tab.index,
     },
   });
 });

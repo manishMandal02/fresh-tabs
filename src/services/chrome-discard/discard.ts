@@ -10,14 +10,10 @@ export const discardTabs = async (autoDiscard = false) => {
       //@ts-expect-error - lastAccesses is a newly added feature (the types are not updated)
       tabs = tabs.filter(tab => tab?.lastAccessed);
 
-      console.log('🚀 ~ discardTabs ~ tabs with lastAccessed available:', tabs);
-
       if (tabs.length > 0) {
         const TENMinutes = 600000;
         //@ts-expect-error - new feature (the types are not updated)
         tabs = tabs.filter(tab => tab?.lastAccessed <= Date.now() - TENMinutes);
-
-        console.log('🚀 ~ discardTabs ~ tabs accessed over 10mins ago. ⏳', tabs);
       }
     }
 

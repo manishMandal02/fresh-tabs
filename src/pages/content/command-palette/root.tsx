@@ -28,8 +28,6 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace }: AppendConta
 
   const commandPaletteContainer = document.createElement('div');
 
-  console.log('🚀 ~ appendCommandPaletteContainer ~ commandPaletteContainer:', commandPaletteContainer);
-
   commandPaletteContainer.id = CommandPaletteContainerId;
 
   commandPaletteContainer.style.height = '100vh';
@@ -61,8 +59,6 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace }: AppendConta
 };
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ msg:', msg);
-
   const event = msg as IMessageEventContentScript;
 
   const { recentSites, activeSpace } = event.payload;

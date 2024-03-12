@@ -111,7 +111,6 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
           setSearchQueryPlaceholder('Select tab');
           setFocusedCommandIndex(1);
         } else {
-          console.log('🚀 ~ handleSelectCommand ~ focusedCommand.metadata:', focusedCommand.metadata);
           await publishEvents({ event: 'SWITCH_TAB', payload: { tabId: focusedCommand.metadata as number } });
 
           handleCloseCommandPalette();

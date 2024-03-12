@@ -21,6 +21,8 @@ type Props = {
 };
 
 const ActiveSpace = ({ space, setActiveSpace, onSearchClick }: Props) => {
+  console.log('ActiveSpace ~ 🔁 rendered');
+
   // snackbar atom
   const [, setSnackbar] = useAtom(snackbarAtom);
   // snackbar atom
@@ -69,7 +71,9 @@ const ActiveSpace = ({ space, setActiveSpace, onSearchClick }: Props) => {
     <div className="h-full mt-4 ">
       <div className="flex items-center h-[6.5%] justify-between px-1">
         <div className="flex items-center ">
-          <div className="text-lg  border-r  pr-3  w-fit select-none" style={{ borderColor: space.theme }}>
+          <div
+            className="text-lg  border-r border-opacity-70 pr-3 w-fit select-none "
+            style={{ borderColor: space.theme }}>
             {space.emoji}
           </div>
           <p className="text-base font-light text-slate-400 ml-2.5">{space.title}</p>

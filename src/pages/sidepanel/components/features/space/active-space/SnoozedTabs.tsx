@@ -16,8 +16,6 @@ type Props = {
 };
 
 const SnoozedTabs = ({ show, onClose }: Props) => {
-  console.log('🚀 ~ SnoozedTabs ~ 🔁 rendered');
-
   // global state
   // active space id
   const [spaceId] = useAtom(activeSpaceIdAtom);

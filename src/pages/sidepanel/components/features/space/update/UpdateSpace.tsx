@@ -14,6 +14,8 @@ import ErrorMessage from '../../../elements/alert-message/ErrorMessage';
 import { ISpaceWithoutId, ITab } from '@root/src/pages/types/global.types';
 
 const UpdateSpace = () => {
+  console.log('UpdateSpace ~ 🔁 rendered');
+
   const [showModal, setShowModal] = useState(false);
   // update space modal global state/atom
   const [updateSpaceModal, setUpdateSpaceModal] = useAtom(updateSpaceModalAtom);

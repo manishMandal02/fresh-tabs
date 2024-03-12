@@ -11,8 +11,6 @@ type Props = {
 };
 
 const DraggingOverNudge = ({ droppableId, mergeSpaceWith }: Props) => {
-  console.log('🚀 ~ DraggingOverNudge ~ droppableId:', droppableId);
-
   const [nonActiveSpaces] = useAtom(nonActiveSpacesAtom);
 
   // know over which droppable the draggable is dragging over

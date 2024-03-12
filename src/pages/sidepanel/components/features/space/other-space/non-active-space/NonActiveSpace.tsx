@@ -7,7 +7,7 @@ import Tooltip from '../../../../elements/tooltip';
 import { ISpace } from '@root/src/pages/types/global.types';
 import { openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
-import { activeSpaceAtom, deleteSpaceModalAtom, updateSpaceModalAtom } from '@root/src/stores/app';
+import { activeSpaceAtom, deleteSpaceModalAtom, nonActiveSpacesAtom, updateSpaceModalAtom } from '@root/src/stores/app';
 import { useKeyPressed } from '@root/src/pages/sidepanel/hooks/useKeyPressed';
 
 type Props = {
@@ -16,9 +16,12 @@ type Props = {
 };
 
 const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
+  console.log('🚀 ~ NonActiveSpace ~ 🔁 rendered');
+
   // global state/atom
   const [, setUpdateModal] = useAtom(updateSpaceModalAtom);
   const [, setDeleteModal] = useAtom(deleteSpaceModalAtom);
+  const [, setNonActiveSpace] = useAtom(nonActiveSpacesAtom);
   const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);
 
   // local state
@@ -34,17 +37,25 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
   };
 
   const handleOpenSpace = async (shouldOpenInNewWindow = false) => {
+    if (!shouldOpenInNewWindow && activeSpace.id === space.id) return;
     const tabs = await getTabsInSpace(space.id);
 
     await openSpace({ space, tabs, shouldOpenInNewWindow });
+
     if (!shouldOpenInNewWindow) {
+      // update ui state
+      // remove current window id from the previous space
+      setNonActiveSpace(spaces => [
+        ...spaces.map(space => (space.id !== activeSpace.id ? space : { ...space, windowId: 0 })),
+      ]);
+
+      // update new active space
       const tabsInSpace = await getTabsInSpace(space.id);
       setActiveSpace({ ...space, tabs: tabsInSpace });
     }
   };
-  const { isModifierKeyPressed } = useKeyPressed({ monitorModifierKeys: true });
 
-  console.log('🚀 ~ NonActiveSpace ~ isModifierKeyPressed:', isModifierKeyPressed);
+  const { isModifierKeyPressed } = useKeyPressed({ monitorModifierKeys: true });
 
   return (
     <>
@@ -94,22 +105,25 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
           </>
         }>
         <div className="!size-full">
-          <Tooltip label={!isDraggedOver ? `${isModifierKeyPressed ? 'Open' : ''} ${space.title}` : ''}>
+          <Tooltip label={!isDraggedOver ? `${isModifierKeyPressed ? 'Open' : ''} ${space.title}` : ''} delay={1500}>
             {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
             <div
               // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
               tabIndex={0}
               onClick={async ev => {
-                if (ev.type === 'contextmenu') return;
+                if (ev.type !== 'click') return;
+                ev.preventDefault();
+                ev.stopPropagation();
+
                 if (isModifierKeyPressed) {
                   await handleOpenSpace(true);
                   return;
                 }
                 await handleOpenSpace();
-                ev.stopPropagation();
-                ev.preventDefault();
               }}
               onContextMenu={ev => {
+                if (ev.type !== 'contextmenu') return;
+
                 setShowContextMenu(true);
                 ev.preventDefault();
               }}

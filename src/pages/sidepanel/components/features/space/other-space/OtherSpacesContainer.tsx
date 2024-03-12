@@ -17,11 +17,6 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
   // non active spaces  (global state)
   const [spaces] = useAtom(nonActiveSpacesAtom);
 
-  const spaceContainerWidth = Math.min(40, Math.round(spaces.length * 3.5));
-
-  console.log('🚀 ~ OtherSpacesContainer ~ spaceContainerWidth:', spaceContainerWidth);
-
-  // add new space modal
   const [isModifierKeyPressed, setIsModifierKeyPressed] = useState(false);
 
   const handleKeyDown = useCallback(ev => {
@@ -66,7 +61,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
             {...bounce}
             className="w-fit flex justify-center items-center gap-x-[.4rem]"
             style={{
-              width: 80 / spaces.length + '%',
+              width: 100 / spaces.length + '%',
             }}>
             {/* non active spaces */}
             {spaces.map((space, idx) => {

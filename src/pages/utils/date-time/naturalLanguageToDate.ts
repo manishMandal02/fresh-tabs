@@ -7,7 +7,5 @@ export const naturalLanguageToDate = (dateString: string) => {
     forwardDate: true,
   });
 
-  console.log('🚀 ~ naturalLanguageToDate ~ parsedData:', parsedData);
-
   return parsedData?.getTime() || null;
 };
