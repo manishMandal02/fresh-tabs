@@ -3,10 +3,12 @@ import { motion } from 'framer-motion';
 import { Droppable } from 'react-beautiful-dnd';
 
 import Menu from './Menu';
-import { showNewSpaceModalAtom } from '@root/src/stores/app';
+import { showAddNewNoteModalAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
 import { PlusIcon, TrashIcon } from '@radix-ui/react-icons';
 import OtherSpacesContainer from '../space/other-space/OtherSpacesContainer';
 import Tooltip from '../../elements/tooltip';
+import { useState } from 'react';
+import Popover from '../../elements/popover';
 
 type Props = {
   isDraggingSpace: boolean;
@@ -16,6 +18,11 @@ type Props = {
 const Footer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
   // global state
   const [, setNewSpaceModal] = useAtom(showNewSpaceModalAtom);
+  const [, setNewNoteModal] = useAtom(showAddNewNoteModalAtom);
+
+  // local state
+  // show add option on add click
+  const [showAddOption, setShowAddOptions] = useState(false);
 
   const animationVariants = {
     visible: { scale: 1, opacity: 1 },
@@ -26,7 +33,7 @@ const Footer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
     <>
       <footer className="relative w-full h-[5%] flex items-end justify-center pb-1 px-px">
         {/* menu */}
-        <div className="size-[25px] bg-purple-20 flex items-center justify-center rounded-lg ml-1 ">
+        <div className="size-[25px] bg-purple-20 flex items-center justify-center rounded-lg ml-1">
           <Menu />
         </div>
         {/* other spaces */}
@@ -67,22 +74,44 @@ const Footer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                 animate={!isDraggingSpace ? 'visible' : 'hidden'}
                 variants={animationVariants}
                 transition={{ type: 'spring', stiffness: 1000, damping: 40, duration: 0.1 }}
-                className="size-full"
+                className="size-full relative"
                 style={{
                   visibility: !isDraggingSpace ? 'visible' : 'hidden',
                   zIndex: !isDraggingSpace ? 200 : 1,
                 }}>
+                {/* click option: add note & add space  */}
                 <Tooltip label={isDraggingSpace || isDraggingTabs ? '' : 'Add new space'} delay={1500}>
-                  <button
-                    className={`!size-full absolute rounded-full outline-none flex items-center justify-center
-                                transition-all duration-200 hover:bg-brand-darkBgAccent/20 focus:bg-brand-darkBgAccent/60 focus-within:outline-slate-700/90`}
-                    style={{
-                      border: isDraggingOverNewSpace ? '1px solid #29dc8071' : '',
-                      backgroundColor: isDraggingOverNewSpace ? ' #3ae88e6b' : '',
-                    }}
-                    onClick={() => setNewSpaceModal({ show: true, tabs: [] })}>
-                    <PlusIcon className="text-slate-500 scale-[1.25]" />
-                  </button>
+                  <Popover
+                    open={showAddOption}
+                    onChange={open => setShowAddOptions(open)}
+                    content={
+                      // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+                      <div
+                        className="bg-brand-darkBg/5 px-2 py-1 rounded-md w-fit flex flex-col"
+                        onClick={() => setShowAddOptions(false)}>
+                        <button
+                          className="text-slate-400/80 font-medium text-[10px] bg-brand-darkBgAccent/70 px-4 py-1.5 rounded-md mb-1.5"
+                          onClick={() => setNewSpaceModal({ show: true, tabs: [] })}>
+                          Add Space
+                        </button>
+                        <button
+                          className="text-slate-400/80 font-medium text-[10px] bg-brand-darkBgAccent/70 px-4 py-1.5 rounded-md"
+                          onClick={() => setNewNoteModal({ show: true })}>
+                          Add Note
+                        </button>
+                      </div>
+                    }>
+                    <button
+                      className={`!size-full absolute rounded-full outline-none flex items-center justify-center
+                    transition-all duration-200 hover:bg-brand-darkBgAccent/20 focus:bg-brand-darkBgAccent/60 focus-within:outline-slate-700/90`}
+                      style={{
+                        border: isDraggingOverNewSpace ? '1px solid #29dc8071' : '',
+                        backgroundColor: isDraggingOverNewSpace ? ' #3ae88e6b' : '',
+                      }}
+                      onClick={() => setShowAddOptions(true)}>
+                      <PlusIcon className="text-slate-500 scale-[1.25]" />
+                    </button>
+                  </Popover>
                 </Tooltip>
               </motion.div>
             )}

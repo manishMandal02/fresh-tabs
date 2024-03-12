@@ -46,6 +46,9 @@ export const showNotificationModalAtom = atom(false);
 // user account modal
 export const showUserAccountModalAtom = atom(false);
 
+// add new note modal
+export const showAddNewNoteModalAtom = atom<{ show: boolean; note?: string }>({ show: false });
+
 // create new space modal
 export const showNewSpaceModalAtom = atom<{ show: boolean; tabs: ITab[] }>({ show: false, tabs: [] });
 

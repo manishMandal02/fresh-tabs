@@ -9,6 +9,12 @@ const testUser = {
   profilePic: 'https://avatars.githubusercontent.com/u/76472450?v=4',
 };
 
+const SUBSCRIPTION_PLAN = {
+  lifeTime: 'LifeTime',
+  monthly: 'Monthly',
+  yearly: 'Yearly',
+} as const;
+
 const UserAccount = () => {
   console.log('UserAccount ~ 🔁 rendered');
 
@@ -19,7 +25,7 @@ const UserAccount = () => {
   };
 
   return (
-    <SlideModal title="Account" isOpen={!showModal} onClose={handleClose}>
+    <SlideModal title="Account" isOpen={showModal} onClose={handleClose}>
       <div className="h-[45vh] w-full">
         {/* user info */}
         <div className="w-fit mx-auto mt-4 flex flex-col items-center">
@@ -33,7 +39,20 @@ const UserAccount = () => {
         </div>
 
         <div className="w-fit mx-auto mt-6 flex flex-col items-center">
-          <button className="text-slate-800 text-[12px] font-medium bg-brand-primary rounded px-8 py-1.5 mt-2">
+          <div className="bg-brand-darkBgAccent/40 px-3 pt-2.5 pb-3.5 rounded-md min-w-60 text-slate-400/80">
+            <p className="text-slate-400 text-[13px] font-medium text-left ml-px">Your Subscription Plan</p>
+            <div className="flex items-center justify-between mt-3">
+              <p className="font-light text-slate-400/80">Subscription</p>
+              <span className="w-fit">{SUBSCRIPTION_PLAN.lifeTime}</span>
+            </div>
+            <div className="flex items-center justify-between mt-2">
+              <p className=" font-light text-slate-400/80">Price</p>
+              <span className="w-fit">49 USD</span>
+            </div>
+          </div>
+          <button
+            className="text-slate-800 text-[12px] font-medium bg-brand-primary rounded px-8 py-2 mt-4 disabled:cursor-not-allowed disabled:text-slate-500 disabled:bg-brand-darkBgAccent"
+            disabled>
             Manage Plan
           </button>
         </div>

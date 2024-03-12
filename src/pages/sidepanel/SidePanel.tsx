@@ -17,6 +17,7 @@ import { ActiveSpace, CreateSpace, UpdateSpace } from './components/features/spa
 import { appSettingsAtom, dragStateAtom, snackbarAtom } from '@root/src/stores/app';
 import { TAB_HEIGHT } from './components/features/space/active-space/ActiveSpaceTabs';
 import UserAccount from './components/features/user/UserAccount';
+import AddNewNote from './components/features/notes/NewNote';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -176,6 +177,9 @@ const SidePanel = () => {
       </div>
       {/* add new space */}
       <CreateSpace />
+
+      {/* add new note */}
+      <AddNewNote />
 
       {/* Edit/view space modal */}
       <UpdateSpace />
