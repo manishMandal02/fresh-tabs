@@ -5,7 +5,7 @@ import { HamburgerMenuIcon, BarChartIcon, MoonIcon, BookmarkIcon, GearIcon } fro
 import Popover from '../../elements/popover';
 import Analytics from '../space/analytics/Analytics';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
-import { showSettingsModalAtom, snackbarAtom } from '@root/src/stores/app';
+import { showSettingsModalAtom, showUserAccountModalAtom, snackbarAtom } from '@root/src/stores/app';
 import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
 
 // testing
@@ -17,6 +17,7 @@ const Menu = () => {
   // globals state
   const [, setSnackbar] = useAtom(snackbarAtom);
   const [, setShowSettingsModal] = useAtom(showSettingsModalAtom);
+  const [, setShowUserAccountModal] = useAtom(showUserAccountModalAtom);
 
   // local state
   // show menu
@@ -55,7 +56,7 @@ const Menu = () => {
                              border border-brand-darkBgAccent/40 shadow-sm rounded shadow-brand-darkBgAccent/30`}>
               <button
                 className="flex items-center pl-2.5 py-2.5 border-b border-brand-darkBgAccent hover:bg-brand-darkBgAccent/15 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
-                onClick={() => {}}>
+                onClick={() => setShowUserAccountModal(true)}>
                 <img src={manishProfilePicUrl} alt="user" className={`mr-[6px] size-[18px] rounded-full opacity-90`} />
                 Account
               </button>

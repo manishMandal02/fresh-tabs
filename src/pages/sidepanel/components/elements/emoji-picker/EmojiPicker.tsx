@@ -37,7 +37,7 @@ const EmojiPicker = ({ emoji, onChange, size = 'md' }: Props) => {
           tabIndex={-1}
           onClick={() => setIsOpen(true)}
           className={`select-none rounded-md !h-full !w-full  flex items-center justify-center 
-                        transition-all duration-200 ${size === 'md' ? 'text-[18px]' : 'text-[16px]'}  `}>
+                        transition-all duration-200 ${size === 'md' ? 'text-[18px]' : 'text-[15px]'}  `}>
           <div className="">{emoji}</div>
         </button>
       </Popover>

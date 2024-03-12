@@ -4,7 +4,7 @@ import { useRef, Dispatch, useCallback, useState, useEffect } from 'react';
 import EmojiPicker from '../../../elements/emoji-picker';
 import { nonActiveSpacesAtom } from '@root/src/stores/app';
 import { ISpace, ISpaceWithTabs } from '@root/src/pages/types/global.types';
-import { updateSpace } from '@root/src/services/chrome-storage/spaces';
+import { getSpace, updateSpace } from '@root/src/services/chrome-storage/spaces';
 
 type Props = {
   space: ISpace;
@@ -50,18 +50,19 @@ const SpaceTitle = ({ space, setActiveSpace }: Props) => {
     };
   }, [handleSpaceTitleUpdate, spaceTitle, isTitleEditable]);
 
-  const handleEmojiUpdate = (emoji: string) => {
+  const handleEmojiUpdate = async (emoji: string) => {
     if (emoji === space.emoji) return;
     setActiveSpace(prev => ({ ...prev, emoji }));
     setSpaces(spaces => [...spaces.map(s => (s.id === space.id ? { ...s, emoji } : s))]);
-    updateSpace(space.id, { ...space, emoji });
+    const activeSpace = await getSpace(space.id);
+    updateSpace(space.id, { ...activeSpace, emoji });
   };
 
   return (
     <div>
-      <div className="flex items-center ">
+      <div className="flex items-center">
         <div
-          className="size-fit rounded-lg border-[0.75px] py-px px-2 select-none bg-gradient-to-tr from-brand-darkBg/90 to-brand-darkBgAccent/90 cursor-pointer"
+          className="size-fit rounded-[6.5px] border-[0.75px] py-[2px] px-[9px] select-none bg-gradient-to-tr from-brand-darkBg/90 to-brand-darkBgAccent/90 cursor-pointer"
           style={{ borderColor: space.theme }}>
           <EmojiPicker emoji={space.emoji} onChange={handleEmojiUpdate} size="sm" />
         </div>
@@ -87,7 +88,8 @@ const SpaceTitle = ({ space, setActiveSpace }: Props) => {
               // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
               onChange={ev => setSpaceTitle(ev.currentTarget.value)}
-              className="bg-brand-darkBgAccent/50 text-slate-400 font-light text-[16px] !ml-1  py-px pl-[3px] pr-1  border border-brand-darkBgAccent/60 rounded w-[85%] outline-none"
+              className={`bg-brand-darkBgAccent/50 text-slate-400 font-light text-[16px] !ml-1  py-px pl-[3px] pr-1  
+                          border border-brand-darkBgAccent/60 rounded w-[85%] outline-none`}
             />
           )}
         </div>

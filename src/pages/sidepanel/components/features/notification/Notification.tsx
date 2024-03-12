@@ -1,4 +1,5 @@
 import { useAtom } from 'jotai';
+
 import { SlideModal } from '../../elements/modal';
 import { showNotificationModalAtom } from '@root/src/stores/app';
 

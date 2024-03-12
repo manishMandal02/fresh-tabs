@@ -16,6 +16,7 @@ import DeleteSpaceModal from './components/features/space/delete/DeleteSpaceModa
 import { ActiveSpace, CreateSpace, UpdateSpace } from './components/features/space';
 import { appSettingsAtom, dragStateAtom, snackbarAtom } from '@root/src/stores/app';
 import { TAB_HEIGHT } from './components/features/space/active-space/ActiveSpaceTabs';
+import UserAccount from './components/features/user/UserAccount';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -182,10 +183,14 @@ const SidePanel = () => {
       {/* delete space alert modal */}
       <DeleteSpaceModal />
 
+      {/* settings modal */}
       <Settings />
 
       {/* notification modal */}
       <Notification />
+
+      {/* user account modal */}
+      <UserAccount />
 
       {/* snackbar */}
       <Snackbar show={snackbar.show} msg={snackbar.msg} isSuccess={snackbar.isSuccess} isLoading={snackbar.isLoading} />
