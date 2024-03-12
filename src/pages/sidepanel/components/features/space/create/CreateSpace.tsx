@@ -13,7 +13,7 @@ import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
 import ErrorMessage from '../../../elements/alert-message/ErrorMessage';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
-import { snackbarAtom, nonActiveSpacesAtom, newSpaceModalAtom } from '@root/src/stores/app';
+import { snackbarAtom, nonActiveSpacesAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
 
 type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;
 
@@ -34,7 +34,7 @@ const CreateSpace = () => {
   const [, setSpaces] = useAtom(nonActiveSpacesAtom);
 
   // spaces atom (global state)
-  const [newSpaceModal, setNewSpaceModal] = useAtom(newSpaceModalAtom);
+  const [newSpaceModal, setNewSpaceModal] = useAtom(showNewSpaceModalAtom);
 
   // new space data
   const [newSpaceData, setNewSpaceData] = useState<DefaultSpaceFields>(defaultSpaceData);
@@ -152,8 +152,9 @@ const CreateSpace = () => {
       <div className=" flex flex-col  w-full h-full py-2.5 px-4">
         <div className="mt-4 flex items-center gap-x-3">
           <TextInput placeholder="Space Title..." value={newSpaceData.title} onChange={onTitleChange} />
-
-          <EmojiPicker emoji={newSpaceData.emoji} onChange={onEmojiChange} />
+          <div className="w-[45px] h-[40px] bg-brand-darkBgAccent/50 hover:bg-brand-darkBgAccent/70 focus-within:bg-brand-darkBgAccent/90 focus-within:outline-brand-darkBgAccent">
+            <EmojiPicker emoji={newSpaceData.emoji} onChange={onEmojiChange} />
+          </div>
           <ColorPicker color={newSpaceData.theme} onChange={onThemeChange} />
         </div>
 
@@ -168,7 +169,7 @@ const CreateSpace = () => {
 
         {/* add space */}
         <button
-          className={` mt-5 mx-auto w-[65%] py-2.5 rounded-md text-brand-darkBg/70 font-semibold text-[13px]
+          className={`mt-5 mx-auto w-[65%] py-2.5 rounded-md text-brand-darkBg/70 font-semibold text-[13px]
                       bg-brand-primary/90 hover:opacity-95 transition-all duration-200 border-none outline-none focus-within:outline-slate-600`}
           onClick={handleAddSpace}>
           {snackbar.isLoading ? <Spinner size="sm" /> : 'Add Space'}

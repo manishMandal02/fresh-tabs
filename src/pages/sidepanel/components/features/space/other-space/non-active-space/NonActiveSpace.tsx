@@ -7,7 +7,12 @@ import Tooltip from '../../../../elements/tooltip';
 import { ISpace } from '@root/src/pages/types/global.types';
 import { openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
-import { activeSpaceAtom, deleteSpaceModalAtom, nonActiveSpacesAtom, updateSpaceModalAtom } from '@root/src/stores/app';
+import {
+  activeSpaceAtom,
+  deleteSpaceModalAtom,
+  nonActiveSpacesAtom,
+  showUpdateSpaceModalAtom,
+} from '@root/src/stores/app';
 import { useKeyPressed } from '@root/src/pages/sidepanel/hooks/useKeyPressed';
 
 type Props = {
@@ -19,7 +24,7 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
   console.log('🚀 ~ NonActiveSpace ~ 🔁 rendered');
 
   // global state/atom
-  const [, setUpdateModal] = useAtom(updateSpaceModalAtom);
+  const [, setUpdateModal] = useAtom(showUpdateSpaceModalAtom);
   const [, setDeleteModal] = useAtom(deleteSpaceModalAtom);
   const [, setNonActiveSpace] = useAtom(nonActiveSpacesAtom);
   const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);
@@ -127,7 +132,7 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
                 setShowContextMenu(true);
                 ev.preventDefault();
               }}
-              className={`!size-full text-slate-300 px-[5px] py-px  rounded-[6px] flex items-center justify-center border-[0.5px] border-transparent 
+              className={`!size-full text-slate-300 px-[5px] py-[1.5px]  rounded-[6px] flex items-center justify-center border-[0.5px] border-transparent 
                           select-none outline-none focus-within:outline-slate-700 bg-gradient-to-bl  border-opacity-70
                       ${
                         isDraggedOver

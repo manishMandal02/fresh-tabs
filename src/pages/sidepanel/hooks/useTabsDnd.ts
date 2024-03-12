@@ -3,7 +3,7 @@ import { ISpaceWithTabs, ITab } from '../../types/global.types';
 import {
   activeSpaceAtom,
   deleteSpaceModalAtom,
-  newSpaceModalAtom,
+  showNewSpaceModalAtom,
   nonActiveSpacesAtom,
   selectedTabsAtom,
   snackbarAtom,
@@ -54,7 +54,7 @@ export const useTabsDnd = () => {
   const [, setSnackbar] = useAtom(snackbarAtom);
 
   // new space modal global state
-  const [, setNewSpaceModal] = useAtom(newSpaceModalAtom);
+  const [, setNewSpaceModal] = useAtom(showNewSpaceModalAtom);
 
   // active space atom (global state)
   const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);

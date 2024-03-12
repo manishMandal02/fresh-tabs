@@ -36,14 +36,19 @@ export const dragStateAtom = atom<{ isDragging: boolean; type: 'space' | 'tabs' 
   type: null,
 });
 
-// settings modal
-export const showSettingsModalAtom = atom<boolean>(false);
+// modal atoms
+
+// notification
+export const showNotificationModalAtom = atom(false);
 
 // create new space modal
-export const newSpaceModalAtom = atom<{ show: boolean; tabs: ITab[] }>({ show: false, tabs: [] });
+export const showNewSpaceModalAtom = atom<{ show: boolean; tabs: ITab[] }>({ show: false, tabs: [] });
 
 // edit space modal
-export const updateSpaceModalAtom = atom<ISpaceWithTabs>(null as ISpaceWithTabs);
+export const showUpdateSpaceModalAtom = atom<ISpaceWithTabs>(null as ISpaceWithTabs);
+
+// settings modal
+export const showSettingsModalAtom = atom<boolean>(false);
 
 // delete space modal
 export const deleteSpaceModalAtom = atom<{ show: boolean; spaceId: string }>({ show: false, spaceId: '' });

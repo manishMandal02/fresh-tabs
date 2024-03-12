@@ -106,7 +106,9 @@ export const useSidePanel = () => {
             // check if the active tab has changed from side panel, if yes do nothing
             const [activeTab] = await chrome.tabs.query({ active: true, windowId: activeSpaceRef.current.windowId });
 
-            if (!activeTab?.id || activeTab?.index === activeSpaceRef.current.activeTabIndex) break;
+            if (!activeTab?.id) throw new Error('no active tabs in this window.');
+
+            if (activeTab?.index === activeSpaceRef.current.activeTabIndex) break;
 
             setActiveSpace({ ...activeSpaceRef.current, activeTabIndex: activeTab?.index });
           } catch (err) {

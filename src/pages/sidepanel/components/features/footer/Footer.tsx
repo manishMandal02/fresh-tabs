@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Droppable } from 'react-beautiful-dnd';
 
 import Menu from './Menu';
-import { newSpaceModalAtom } from '@root/src/stores/app';
+import { showNewSpaceModalAtom } from '@root/src/stores/app';
 import { PlusIcon, TrashIcon } from '@radix-ui/react-icons';
 import OtherSpacesContainer from '../space/other-space/OtherSpacesContainer';
 import Tooltip from '../../elements/tooltip';
@@ -15,7 +15,7 @@ type Props = {
 
 const Footer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
   // global state
-  const [, setNewSpaceModal] = useAtom(newSpaceModalAtom);
+  const [, setNewSpaceModal] = useAtom(showNewSpaceModalAtom);
 
   const animationVariants = {
     visible: { scale: 1, opacity: 1 },

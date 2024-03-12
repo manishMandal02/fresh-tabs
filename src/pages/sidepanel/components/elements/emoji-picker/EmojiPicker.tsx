@@ -5,9 +5,10 @@ import Popover from '../popover';
 type Props = {
   onChange: (emoji: string) => void;
   emoji: string;
+  size?: 'sm' | 'md';
 };
 
-const EmojiPicker = ({ emoji, onChange }: Props) => {
+const EmojiPicker = ({ emoji, onChange, size = 'md' }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -33,9 +34,10 @@ const EmojiPicker = ({ emoji, onChange }: Props) => {
           </div>
         }>
         <button
+          tabIndex={-1}
           onClick={() => setIsOpen(true)}
-          className={` select-none  bg-brand-darkBgAccent/50 rounded-md w-[45px] h-[40px] flex items-center justify-center hover:bg-brand-darkBgAccent/70
-                        transition-all duration-200 text-[20px] focus-within:bg-brand-darkBgAccent/90 focus-within:outline-brand-darkBgAccent`}>
+          className={`select-none rounded-md !h-full !w-full  flex items-center justify-center 
+                        transition-all duration-200 ${size === 'md' ? 'text-[18px]' : 'text-[16px]'}  `}>
           <div className="">{emoji}</div>
         </button>
       </Popover>

@@ -10,6 +10,7 @@ import Snackbar from './components/elements/snackbar';
 import CommandPalette from '../content/command-palette';
 import Settings from './components/features/settings/Settings';
 import { IMessageEventSidePanel } from '../types/global.types';
+import Notification from './components/features/notification/Notification';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 import DeleteSpaceModal from './components/features/space/delete/DeleteSpaceModal';
 import { ActiveSpace, CreateSpace, UpdateSpace } from './components/features/space';
@@ -182,6 +183,9 @@ const SidePanel = () => {
       <DeleteSpaceModal />
 
       <Settings />
+
+      {/* notification modal */}
+      <Notification />
 
       {/* snackbar */}
       <Snackbar show={snackbar.show} msg={snackbar.msg} isSuccess={snackbar.isSuccess} isLoading={snackbar.isLoading} />

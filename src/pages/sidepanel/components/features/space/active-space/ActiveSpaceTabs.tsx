@@ -21,7 +21,7 @@ type Props = {
 export const TAB_HEIGHT = 32;
 
 const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
-  console.log('ActiveSpaceTabs ~ 🔁 rendered');
+  console.log(' ActiveSpaceTabs ~ 🔁 rendered');
 
   // global state
   // selected tabs

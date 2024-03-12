@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   DotsVerticalIcon,
-  Pencil1Icon,
   TrashIcon,
   OpenInNewWindowIcon,
   EnterIcon,
@@ -18,14 +17,12 @@ type Props = {
   onOpenSpace?: () => void;
   onHistoryClick?: () => void;
   onSnoozedTabsClick?: () => void;
-  onEditClick: () => void;
   onSyncClick: () => void;
   onDeleteClick: () => void;
 };
 
 const MoreOptions = ({
   isSpaceActive,
-  onEditClick,
   onSyncClick,
   shouldOpenInNewWindow,
   onOpenSpace,
@@ -78,11 +75,7 @@ const MoreOptions = ({
               onClick={onSyncClick}>
               <UpdateIcon className="text-slate-500/90 mr-[5px] scale-[0.8]" /> Sync tabs
             </button>
-            <button
-              className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/15 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
-              onClick={onEditClick}>
-              <Pencil1Icon className="text-slate-500/90 mr-[5px] scale-[0.8]" /> Update Space
-            </button>
+
             <button
               className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/15 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
               onClick={onDeleteClick}>
@@ -94,7 +87,7 @@ const MoreOptions = ({
       <button
         tabIndex={0}
         onClick={() => setShowMenu(true)}
-        className={`text-slate-500/90 hover:bg-brand-darkBgAccent/20 rounded-full px-2 py-2 transition-all duration-200 outline-none focus:bg-brand-darkBgAccent/50 ${
+        className={`text-slate-500/90 hover:bg-brand-darkBgAccent/30 rounded-full px-1.5 py-1.5 transition-all duration-200 outline-none focus:bg-brand-darkBgAccent/50 ${
           showMenu ? 'bg-brand-darkBgAccent/30' : ''
         }`}>
         <DotsVerticalIcon className="scale-[1.1]" />

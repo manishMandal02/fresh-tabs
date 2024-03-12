@@ -8,7 +8,7 @@ import { useUpdateSpace } from './useUpdateSpace';
 import { SlideModal } from '../../../elements/modal';
 import ColorPicker from '../../../elements/color-picker';
 import EmojiPicker from '../../../elements/emoji-picker';
-import { updateSpaceModalAtom } from '@root/src/stores/app';
+import { showUpdateSpaceModalAtom } from '@root/src/stores/app';
 import TextInput from '../../../elements/TextInput/TextInput';
 import ErrorMessage from '../../../elements/alert-message/ErrorMessage';
 import { ISpaceWithoutId, ITab } from '@root/src/pages/types/global.types';
@@ -18,7 +18,7 @@ const UpdateSpace = () => {
 
   const [showModal, setShowModal] = useState(false);
   // update space modal global state/atom
-  const [updateSpaceModal, setUpdateSpaceModal] = useAtom(updateSpaceModalAtom);
+  const [updateSpaceModal, setUpdateSpaceModal] = useAtom(showUpdateSpaceModalAtom);
 
   // update space data
   const [updateSpaceData, setUpdateSpaceData] = useState<ISpaceWithoutId | null>(null);
@@ -84,8 +84,9 @@ const UpdateSpace = () => {
         <div className=" flex flex-col  w-full h-full py-2.5 px-4">
           <form className="mt-4 flex items-center gap-x-3" ref={formRef}>
             <TextInput placeholder="Enter space title..." value={updateSpaceData.title} onChange={onTitleChange} />
-
-            <EmojiPicker emoji={updateSpaceData.emoji} onChange={onEmojiChange} />
+            <div className="w-[45px] h-[40px] bg-brand-darkBgAccent/50 hover:bg-brand-darkBgAccent/70 focus-within:bg-brand-darkBgAccent/90 focus-within:outline-brand-darkBgAccent">
+              <EmojiPicker emoji={updateSpaceData.emoji} onChange={onEmojiChange} />
+            </div>
             <ColorPicker color={updateSpaceData.theme} onChange={onThemeChange} />
           </form>
           {/* <hr
@@ -94,7 +95,7 @@ const UpdateSpace = () => {
             /> */}
 
           {/* numTabs */}
-          <p className="text-slate-500 font-extralight mt-4 text-[14px] ml-px mb-px ">
+          <p className="text-slate-500 font-extralight mt-4 text-[14px] ml-px mb-px hover:bg-brand-darkBgAccent/70">
             {tabs.length} {tabs.length > 1 ? 'Tabs' : 'Tab'}
           </p>
 
