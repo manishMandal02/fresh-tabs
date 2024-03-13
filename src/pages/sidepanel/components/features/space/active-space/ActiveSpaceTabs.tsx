@@ -13,6 +13,8 @@ import { ISpaceWithTabs, ITabWithIndex } from '@root/src/pages/types/global.type
 import { activeSpaceAtom, dragStateAtom, selectedTabsAtom } from '@root/src/stores/app';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import DraggingOverNudge from './DraggingOverNudge';
+import { PlusIcon } from '@radix-ui/react-icons';
+import Tooltip from '../../../elements/tooltip';
 
 type Props = {
   space: ISpaceWithTabs;
@@ -21,7 +23,7 @@ type Props = {
 export const TAB_HEIGHT = 32;
 
 const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
-  console.log(' ActiveSpaceTabs ~ 🔁 rendered');
+  console.log('ActiveSpaceTabs ~ 🔁 rendered');
 
   // global state
   // selected tabs
@@ -65,7 +67,7 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
     // tab ids to remove
     const ids = selectedTabsRef.current?.map(t => t.id);
 
-    const updatedTabs = tabs?.filter(tab => !ids.includes(tab.id));
+    const updatedTabs = tabs?.filter(t => !ids.includes(t.id));
 
     await setTabsForSpace(space.id, updatedTabs);
 
@@ -166,14 +168,14 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
     await handleGoToTab(id, index);
   };
 
-  // const handleCreateNewTab = async (index: number) => {
-  //   const { id } = await chrome.tabs.create({ url: 'chrome://newtab', active: true, index: ++index });
-  //   setActiveSpace(prev => ({
-  //     ...prev,
-  //     tabs: [...tabs.toSpliced(index, 0, { id, title: 'New Tab', url: 'chrome://newtab' })],
-  //     activeTabIndex: index,
-  //   }));
-  // };
+  const handleCreateNewTab = async () => {
+    const { id, index } = await chrome.tabs.create({ url: 'chrome://newtab', active: true });
+    setActiveSpace(prev => ({
+      ...prev,
+      tabs: [...tabs.toSpliced(index, 0, { id, title: 'New Tab', url: 'chrome://newtab' })],
+      activeTabIndex: index,
+    }));
+  };
 
   // handle remove a single tab
   const handleRemoveTab = async (index: number) => {
@@ -192,9 +194,19 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
           ref={provided1.innerRef}
           className="h-full w-full px-px"
           style={{
-            minHeight: tabs.length * TAB_HEIGHT + 'px',
+            minHeight: `${tabs.length * TAB_HEIGHT}px`,
           }}>
-          {/* render draggable  */}
+          {/* add new tab button  */}
+          <Tooltip label="Add new tab" delay={1500}>
+            <button
+              className="w-[98%] flex items-center justify-center bg-brand-darkBgAccent/40 rounded-md mb-1"
+              style={{ height: `${TAB_HEIGHT - 4}px` }}
+              onClick={() => handleCreateNewTab()}>
+              <PlusIcon className="text-slate-500/80 scale-[1.1]" />
+            </button>
+          </Tooltip>
+
+          {/* render draggable  tabs */}
           {tabs?.map((tab, idx) => (
             <Draggable draggableId={'tab-' + tab.id} index={idx} key={tab.id}>
               {(provided2, { isDragging, draggingOver }) => (

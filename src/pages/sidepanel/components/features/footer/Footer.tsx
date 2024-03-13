@@ -9,6 +9,7 @@ import OtherSpacesContainer from '../space/other-space/OtherSpacesContainer';
 import Tooltip from '../../elements/tooltip';
 import { useState } from 'react';
 import Popover from '../../elements/popover';
+import { wait } from '@root/src/pages/utils';
 
 type Props = {
   isDraggingSpace: boolean;
@@ -87,29 +88,40 @@ const Footer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                     content={
                       // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
                       <div
-                        className="bg-brand-darkBg/5 px-2 py-1 rounded-md w-fit flex flex-col"
-                        onClick={() => setShowAddOptions(false)}>
+                        className="bg-brand-darkBg/40 px-2 py-1 rounded-md w-fit flex flex-col"
+                        onClick={() => setShowAddOptions(false)}
+                        onMouseEnter={() => setShowAddOptions(true)}
+                        onMouseLeave={() => setShowAddOptions(false)}>
                         <button
-                          className="text-slate-400/80 font-medium text-[10px] bg-brand-darkBgAccent/70 px-4 py-1.5 rounded-md mb-1.5"
+                          className="text-slate-400/80 font-medium text-[10px] bg-brand-darkBgAccent/70 px-5 py-[6px] rounded mb-1 outline-none hover:opacity-90 transition-all duration-200"
                           onClick={() => setNewSpaceModal({ show: true, tabs: [] })}>
-                          Add Space
+                          New Space
                         </button>
+
                         <button
-                          className="text-slate-400/80 font-medium text-[10px] bg-brand-darkBgAccent/70 px-4 py-1.5 rounded-md"
+                          className="text-slate-400/80 font-medium text-[10px] bg-brand-darkBgAccent/70 px-5 py-[6px] rounded outline-none hover:opacity-90 transition-all duration-200"
                           onClick={() => setNewNoteModal({ show: true })}>
-                          Add Note
+                          New Note
                         </button>
                       </div>
                     }>
                     <button
                       className={`!size-full absolute rounded-full outline-none flex items-center justify-center
-                    transition-all duration-200 hover:bg-brand-darkBgAccent/20 focus:bg-brand-darkBgAccent/60 focus-within:outline-slate-700/90`}
+                    transition-all duration-200 hover:bg-brand-darkBgAccent/20`}
                       style={{
                         border: isDraggingOverNewSpace ? '1px solid #29dc8071' : '',
                         backgroundColor: isDraggingOverNewSpace ? ' #3ae88e6b' : '',
                       }}
+                      onMouseEnter={() => setShowAddOptions(true)}
+                      onMouseLeave={() => {
+                        // wait .1s before closing
+                        async () => {
+                          await wait(100);
+                          setShowAddOptions(false);
+                        };
+                      }}
                       onClick={() => setShowAddOptions(true)}>
-                      <PlusIcon className="text-slate-500 scale-[1.25]" />
+                      <PlusIcon className="text-slate-500 scale-[1.3]" />
                     </button>
                   </Popover>
                 </Tooltip>
