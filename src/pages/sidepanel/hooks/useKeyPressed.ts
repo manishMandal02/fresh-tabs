@@ -36,7 +36,7 @@ export const useKeyPressed = ({
     ev => {
       const keyEv = ev as KeyboardEvent;
 
-      console.log('🚀 ~ keyEv.code: pressed ✅', keyEv.code);
+      // console.log('🚀 ~ keyEv.code: pressed ✅', keyEv.code);
 
       if (onEnterPressed && keyEv.code === 'Enter') {
         onEnterPressed();
