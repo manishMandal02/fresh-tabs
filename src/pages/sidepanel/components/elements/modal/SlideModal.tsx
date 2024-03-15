@@ -26,14 +26,14 @@ const SlideModal = ({ children, isOpen, onClose, title }: Props) => {
   const { slide } = useCustomAnimation();
 
   return isOpen ? (
-    <motion.div {...slide} className="fixed z-[999] h-screen w-screen top-0 left-0">
+    <motion.div {...slide} className="fixed z-[999] h-screen w-screen top-0 left-0 !overflow-hidden">
       {/* backdrop */}
       {/* eslint-disable-next-line */}
       <div className="z-[9999] w-screen h-screen fixed bg-brand-darkBg/20" onClick={handleClose}></div>
       {/* modal card */}
       <div
         className={`z-[99999] absolute bottom-0 flex flex-col left-0 w-full min-h-[35%] max-h-[80%] bg-brand-darkBg rounded-tl-3xl rounded-tr-3xl
-                         border-t border-brand-darkBgAccent transition-all duration-300  ease-in-out pb-2 shadow-md shadow-brand-darkBgAccent/60`}>
+                border-t border-brand-darkBgAccent transition-all duration-300  ease-in-out pb-2 shadow-md shadow-brand-darkBgAccent/60`}>
         <div className="shadow-sm shadow-brand-darkBgAccent/50 relative  py-2.5 px-3.5 min-h-8 flex items-center justify-between">
           <span className="invisible"></span>
           <p className="text-[13.5px] font-medium text-slate-500 select-none text-center">{title}</p>

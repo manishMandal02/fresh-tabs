@@ -129,7 +129,7 @@ const SidePanel = () => {
         ) : (
           <DragDropContext onDragEnd={onTabsDragEnd} onBeforeDragStart={onTabsDragStart}>
             {/* Current space */}
-            <div className="h-[95%] relative px-1.5">
+            <div className="h-[95%] relative px-1.5 ">
               <ActiveSpace
                 space={activeSpace}
                 setActiveSpace={setActiveSpace}
@@ -141,7 +141,7 @@ const SidePanel = () => {
                 {(provided2, { isDraggingOver }) => (
                   <div
                     ref={provided2.innerRef}
-                    className="flex-grow w-full absolute top-[70px] left-0 rounded-lg transition-all duration-300 ease-in-out"
+                    className="flex-grow w-full absolute top-[70px] left-0 rounded-lg transition-all duration-300 ease-in-out "
                     style={{
                       border: isDraggingOver ? '2px solid #05957f' : '#082545',
                       height: `${activeSpace?.tabs?.length * (TAB_HEIGHT * 1.15)}px`,
