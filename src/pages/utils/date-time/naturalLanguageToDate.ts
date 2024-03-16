@@ -1,4 +1,4 @@
-import { parseDate } from 'chrono-node';
+import { parseDate, parse } from 'chrono-node';
 
 // convert natural language date string to date object
 export const naturalLanguageToDate = (dateString: string) => {
@@ -8,4 +8,15 @@ export const naturalLanguageToDate = (dateString: string) => {
   });
 
   return parsedData?.getTime() || null;
+};
+
+// get date/time text hint string from a give string
+export const parseStringForDateTimeHint = (note: string) => {
+  const parsedData = parse(note, { instant: new Date() }, { forwardDate: true });
+
+  if (!parsedData || parsedData.length < 1) return null;
+
+  const lastOccurrence = parsedData.pop();
+
+  return { date: lastOccurrence.start.date(), dateString: lastOccurrence.text };
 };

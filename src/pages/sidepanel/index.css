@@ -40,3 +40,14 @@ body {
 .cc-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #232323bb;
 }
+
+/* date highlight in notes editor */
+
+.add-note-date-highlight {
+  background-color: #34d399;
+  font-size: 13px;
+  color: #24283f !important;
+  font-weight: 400;
+  padding: 1px 4px;
+  border-radius: 1px;
+}
