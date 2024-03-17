@@ -11,16 +11,22 @@ import {
   linkPlugin,
   thematicBreakPlugin,
   markdownShortcutPlugin,
-  type MDXEditorMethods,
 } from '@mdxeditor/editor';
 
-import { SlideModal } from '../../elements/modal';
+import type { MDXEditorMethods } from '@mdxeditor/editor';
+
+import { SlideModal } from '../../../elements/modal';
 import { showAddNewNoteModalAtom, snackbarAtom } from '@root/src/stores/app';
-import Spinner from '../../elements/spinner';
+import Spinner from '../../../elements/spinner';
 import { wait } from '@root/src/pages/utils';
-import { useKeyPressed } from '../../../hooks/useKeyPressed';
+import { useKeyPressed } from '../../../../hooks/useKeyPressed';
 import { parseStringForDateTimeHint } from '@root/src/pages/utils/date-time/naturalLanguageToDate';
-import { useCustomAnimation } from '../../../hooks/useAnimation';
+import { useCustomAnimation } from '../../../../hooks/useAnimation';
+import Checkbox from '../../../elements/checkbox/Checkbox';
+import { InfoCircledIcon } from '@radix-ui/react-icons';
+import Tooltip from '../../../elements/tooltip';
+import { useNewNote } from './useNewNote';
+import TextField from '../../../elements/form/text-field';
 
 const NewNote = () => {
   console.log('NewNote ~ 🔁 rendered');
@@ -31,9 +37,18 @@ const NewNote = () => {
   // local state
   const [note, setNote] = useState('');
   const [remainder, setRemainder] = useState('');
+  const [shouldAddDomain, setShouldAddDomain] = useState(false);
 
   const editorRef = useRef<MDXEditorMethods>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
+
+  // logic hook
+
+  const { inputFrom } = useNewNote();
+
+  console.log('🚀 ~ NewNote ~ inputFrom.formState.errors:', inputFrom.formState.errors);
+
+  console.log('🚀 ~ NewNote ~  inputFrom.watch(domain):', inputFrom.watch('domain'));
 
   useEffect(() => {
     if (!showModal.show) return;
@@ -97,7 +112,30 @@ const NewNote = () => {
     if (editorRef.current?.getMarkdown().length < 6) return;
 
     const res = parseStringForDateTimeHint(editorRef.current?.getMarkdown());
-    if (!res) return;
+
+    // remove this date highlight class from other spans if applied
+    const removeDateHighlightStyle = (removeAll = false) => {
+      const allSpanWithClass = editorContainerRef.current?.querySelectorAll('span.add-note-date-highlight');
+
+      if (allSpanWithClass.length > (removeAll ? 0 : 1)) {
+        for (const spanWithClass of allSpanWithClass) {
+          // remove all the classes
+          if (removeAll) {
+            spanWithClass.classList.remove('add-note-date-highlight');
+          } else {
+            //  remove all expect the last one (last occurrence of date highlight)
+            if (spanWithClass !== spanEl) {
+              spanWithClass.classList.remove('add-note-date-highlight');
+            }
+          }
+        }
+      }
+    };
+    if (!res) {
+      setRemainder('');
+      removeDateHighlightStyle(true);
+      return;
+    }
     console.log('🚀 ~ useEffect ~ res:', res);
 
     // store the last occurrence of the date hint
@@ -114,18 +152,10 @@ const NewNote = () => {
     const spanEl = span.iterateNext();
 
     if (!spanEl) return;
+    // add date highlight class
     (spanEl as HTMLSpanElement).classList.add('add-note-date-highlight');
 
-    // remove this date highlight class from other spans if applied
-    const allSpanWithClass = editorContainerRef.current?.querySelectorAll('span.add-note-date-highlight');
-
-    if (allSpanWithClass.length > 1) {
-      for (const spanWithClass of allSpanWithClass) {
-        if (spanWithClass !== spanEl) {
-          spanWithClass.classList.remove('add-note-date-highlight');
-        }
-      }
-    }
+    removeDateHighlightStyle();
   }, [note]);
 
   // animation
@@ -133,9 +163,10 @@ const NewNote = () => {
 
   return (
     <SlideModal title="New Note" isOpen={showModal.show} onClose={handleClose}>
-      <div className="min-h-[60vh] w-full h-full flex flex-col">
+      <div className="min-h-[60vh] max-h-[90vh] w-full h-full flex flex-col">
         {/* note mdn editor */}
-        <div className="px-3 mt-2.5 h-full overflow-hidden relative flex flex-col" ref={editorContainerRef}>
+        <div className="px-3 mt-2.5 mb-2 h-full overflow-hidden relative flex flex-col" ref={editorContainerRef}>
+          {/* TODO - validate note */}
           <MDXEditor
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus={{ defaultSelection: 'rootEnd' }}
@@ -143,7 +174,7 @@ const NewNote = () => {
             markdown={note}
             onChange={setNote}
             suppressHtmlProcessing={false}
-            contentEditableClassName="prose !h-[18rem] !w-full leading-[ "
+            contentEditableClassName="prose !min-h-[16rem] !h-fit max-h-[38rem] !w-full "
             placeholder="Write your note..."
             plugins={[
               headingsPlugin({ allowedHeadingLevels: [1, 2, 3] }),
@@ -153,25 +184,51 @@ const NewNote = () => {
               thematicBreakPlugin(),
               markdownShortcutPlugin(),
             ]}
-            className={`w-full h-fit !bg-brand-darkBgAccent/25 cc-scrollbar !overflow-y-auto rounded-md px-px !py-px dark-theme [&_blockquote]:!text-slate-400 [&_strong]:!text-slate-300/90 [&_span:not(.add-note-date-highlight)]:!text-slate-300/80 [&_a>span]:!underline [&_p]:!my-0 [&_li]:!my-0 [&_blockquote]:!my-1.5 [&_h1]:!my-1 [&_h2]:!my-1 [&_h3]:!my-px [&_h4]:!my-px [&_h5]:!my-px [&_h6]:!my-px ${
+            className={`w-full h-fit !bg-brand-darkBgAccent/25 cc-scrollbar !overflow-y-auto rounded-md px-px !py-px dark-theme [&_blockquote]:!text-slate-400 [&_strong]:!text-slate-300/90 [&_span:not(.add-note-date-highlight)]:!text-slate-300/90 [&_a>span]:!underline [&_p]:!my-0 [&_li]:!my-0 [&_blockquote]:!my-1.5 [&_h1]:!my-1 [&_h2]:!my-1 [&_h3]:!my-px [&_h4]:!my-px [&_h5]:!my-px [&_h6]:!my-px ${
               isModifierKeyPressed ? '[&_a]:!cursor-pointer' : ''
             }`}
           />
           {/* show note remainder */}
-          <div className="mt-2 w-full px-2">
+          <div className="w-full mt-1.5 px-2 min-h-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <Checkbox
+                id="note-domain"
+                size="sm"
+                checked={shouldAddDomain}
+                onChange={checked => {
+                  setShouldAddDomain(checked);
+                }}
+              />
+              <label htmlFor="note-domain" className="text-slate-300 font-light text-[10xp] ml-1.5 select-none">
+                Attach note to a site
+              </label>
+              <Tooltip label="This note will be attached to the site for quick access while browsing" delay={100}>
+                <InfoCircledIcon className="ml-1 text-slate-500/80" />
+              </Tooltip>
+            </div>
             {remainder ? (
               <motion.div
                 {...bounce}
-                className="pl-1.5 pr-2 py-1 rounded-md bg-brand-darkBgAccent/60  w-fit uppercase ml-auto flex items-center">
-                ⏰ <span className="ml-[5px] text-slate-400/90 font-semibold text-[10px]">{remainder}</span>
+                className="pl-1.5 pr-2 py-[1.75px] rounded-[4px] bg-brand-darkBgAccent/50  w-fit uppercase flex items-center">
+                ⏰ <span className="ml-[5px] text-slate-400/90 font-semibold text-[8px]">{remainder}</span>
               </motion.div>
             ) : null}
           </div>
         </div>
 
+        <form className="ml-4 w-[60%]">
+          <TextField
+            name="note-domain"
+            placeholder="chat.openai.com"
+            label="Domain name"
+            registerHook={inputFrom.register('domain')}
+            error={inputFrom.formState.errors.domain?.message || ''}
+          />
+        </form>
+
         {/* add note */}
         <button
-          className={`mt-8 mx-auto w-[65%] py-2.5 rounded-md text-brand-darkBg/70 font-semibold text-[13px] bg-brand-primary/90
+          className={`mt-8 mx-auto w-[65%] py-2.5 rounded-md text-brand-darkBg/70 font-semibold text-[13px] bg-brand-primary/90 
                       hover:opacity-95 transition-all duration-200 border-none outline-none focus-within:outline-slate-600`}
           onClick={handleAddNote}>
           {snackbar.isLoading ? <Spinner size="sm" /> : 'Add Note'}

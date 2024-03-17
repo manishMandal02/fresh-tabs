@@ -17,7 +17,7 @@ const TextInput = ({ value, onChange, placeholder, autoFocus = true }: Props) =>
       tabIndex={0}
       // eslint-disable-next-line jsx-a11y/no-autofocus
       autoFocus={autoFocus}
-      className="rounded bg-brand-darkBgAccent px-2.5 py-1.5 text-[1rem] text-slate-200 w-[13rem] outline-none outline-offset-[2.5px] focus-within:outline-slate-700"
+      className="rounded bg-brand-darkBgAccent/60 px-2.5 py-1.5 text-[14px] text-slate-300 placeholder:text-slate-500 placeholder:select-none w-[13rem] outline-none outline-offset-[2.5px] focus-within:outline-slate-700"
       placeholder={placeholder}
       value={value}
       onChange={onInputChange}

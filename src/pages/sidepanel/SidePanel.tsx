@@ -17,7 +17,7 @@ import { ActiveSpace, CreateSpace, UpdateSpace } from './components/features/spa
 import { appSettingsAtom, dragStateAtom, snackbarAtom } from '@root/src/stores/app';
 import { TAB_HEIGHT } from './components/features/space/active-space/ActiveSpaceTabs';
 import UserAccount from './components/features/user/UserAccount';
-import AddNewNote from './components/features/notes/NewNote';
+import AddNewNote from './components/features/notes/new-note/NewNote';
 
 // event ids of processed events
 const processedEvents: string[] = [];
