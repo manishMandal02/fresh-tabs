@@ -27,6 +27,15 @@ export interface ISpace {
   activeTabIndex: number;
 }
 
+export interface INote {
+  id: string;
+  text: string;
+  spaceId: string;
+  createdAt: number;
+  domain?: string;
+  remainderAt?: number;
+}
+
 export interface IPinnedTab {
   url: string;
   title?: string;

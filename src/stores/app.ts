@@ -48,8 +48,8 @@ export const showUserAccountModalAtom = atom(false);
 
 // add new note modal
 export const showAddNewNoteModalAtom = atom<{ show: boolean; note?: string }>({
-  show: true,
-  note: 'https://manishmndal.me',
+  show: false,
+  note: '',
 });
 
 // create new space modal

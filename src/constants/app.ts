@@ -51,6 +51,7 @@ export const AlarmName = {
 
 export const StorageKey = {
   SPACES: 'SPACES',
+  NOTES: 'NOTES',
   SETTINGS: 'SETTINGS',
   PINNED_TABS: 'PINNED_TABS',
   DAILY_SPACE_TIME_CHUNKS: 'DAILY_SPACE_TIME_CHUNKS',

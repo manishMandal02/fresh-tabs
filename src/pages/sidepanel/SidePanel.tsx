@@ -1,5 +1,6 @@
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
+import { ErrorBoundary } from 'react-error-boundary';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 
@@ -18,6 +19,7 @@ import { appSettingsAtom, dragStateAtom, snackbarAtom } from '@root/src/stores/a
 import { TAB_HEIGHT } from './components/features/space/active-space/ActiveSpaceTabs';
 import UserAccount from './components/features/user/UserAccount';
 import AddNewNote from './components/features/notes/new-note/NewNote';
+import ErrorBoundaryUI from './components/elements/error-boundary/ErrorBoundaryUI';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -120,95 +122,101 @@ const SidePanel = () => {
       {/* <div className="mt-4">
           <FavTabs tabs={globalPinnedTabs} isGlobal={true} setGlobalPinnedTabs={setGlobalPinnedTabs} />
         </div> */}
+      <ErrorBoundary FallbackComponent={ErrorBoundaryUI}>
+        {/* dnd container */}
+        <div className="!size-full !h-screen -mt-4 ">
+          {/* un saved  */}
+          {isLoadingSpaces ? (
+            <Spinner size="md" />
+          ) : (
+            <DragDropContext onDragEnd={onTabsDragEnd} onBeforeDragStart={onTabsDragStart}>
+              {/* Current space */}
+              <div className="h-[95%] relative px-1.5 ">
+                <ActiveSpace
+                  space={activeSpace}
+                  setActiveSpace={setActiveSpace}
+                  onSearchClick={handleShowCommandPalette}
+                />
 
-      {/* dnd container */}
-      <div className="!size-full !h-screen -mt-4 ">
-        {/* un saved  */}
-        {isLoadingSpaces ? (
-          <Spinner size="md" />
-        ) : (
-          <DragDropContext onDragEnd={onTabsDragEnd} onBeforeDragStart={onTabsDragStart}>
-            {/* Current space */}
-            <div className="h-[95%] relative px-1.5 ">
-              <ActiveSpace
-                space={activeSpace}
-                setActiveSpace={setActiveSpace}
-                onSearchClick={handleShowCommandPalette}
-              />
-
-              {/* dropzone for other space to open tabs in active space */}
-              <Droppable droppableId="open-non-active-space-tabs" type="SPACE">
-                {(provided2, { isDraggingOver }) => (
-                  <div
-                    ref={provided2.innerRef}
-                    className="flex-grow w-full absolute top-[70px] left-0 rounded-lg transition-all duration-300 ease-in-out "
-                    style={{
-                      border: isDraggingOver ? '2px solid #05957f' : '#082545',
-                      height: `${activeSpace?.tabs?.length * (TAB_HEIGHT * 1.15)}px`,
-                      visibility: isDraggingGlobal && draggingType === 'space' ? 'visible' : 'hidden',
-                      zIndex: isDraggingGlobal && draggingType === 'space' ? 200 : 1,
-                    }}>
-                    <motion.div
-                      animate={isDraggingGlobal && draggingType === 'space' ? 'visible' : 'hidden'}
-                      variants={animationVariants}
-                      transition={{ type: 'spring', stiffness: 900, damping: 40, duration: 0.2 }}
+                {/* dropzone for other space to open tabs in active space */}
+                <Droppable droppableId="open-non-active-space-tabs" type="SPACE">
+                  {(provided2, { isDraggingOver }) => (
+                    <div
+                      ref={provided2.innerRef}
+                      className="flex-grow w-full absolute top-[70px] left-0 rounded-lg transition-all duration-300 ease-in-out "
                       style={{
+                        border: isDraggingOver ? '2px solid #05957f' : '#082545',
+                        height: `${activeSpace?.tabs?.length * (TAB_HEIGHT * 1.15)}px`,
                         visibility: isDraggingGlobal && draggingType === 'space' ? 'visible' : 'hidden',
                         zIndex: isDraggingGlobal && draggingType === 'space' ? 200 : 1,
-                      }}
-                      className="h-full w-full bg-gradient-to-tr from-brand-darkBgAccent/20
+                      }}>
+                      <motion.div
+                        animate={isDraggingGlobal && draggingType === 'space' ? 'visible' : 'hidden'}
+                        variants={animationVariants}
+                        transition={{ type: 'spring', stiffness: 900, damping: 40, duration: 0.2 }}
+                        style={{
+                          visibility: isDraggingGlobal && draggingType === 'space' ? 'visible' : 'hidden',
+                          zIndex: isDraggingGlobal && draggingType === 'space' ? 200 : 1,
+                        }}
+                        className="h-full w-full bg-gradient-to-tr from-brand-darkBgAccent/20
                               z-[100] to-slate-800/30 flex items-center justify-center rounded-lg">
-                      <p
-                        className="text-slate-300 text-[13px] font-light bg-gradient-to-bl shadow shadow-brand-darkBgAccent/80 from-brand-darkBgAccent/90
+                        <p
+                          className="text-slate-300 text-[13px] font-light bg-gradient-to-bl shadow shadow-brand-darkBgAccent/80 from-brand-darkBgAccent/90
                           to-brand-darkBg/90 px-4 z-[100] py-2.5 rounded-md">
-                        {isDraggingOver ? 'Open tabs in this space' : 'Drop to open space tabs here'}
-                      </p>
-                    </motion.div>
-                  </div>
-                )}
-              </Droppable>
-            </div>
-            <Footer
-              isDraggingSpace={isDraggingGlobal && draggingType === 'space'}
-              isDraggingTabs={isDraggingGlobal && draggingType === 'tabs'}
-            />
-          </DragDropContext>
-        )}
-      </div>
-      {/* add new space */}
-      <CreateSpace />
-
-      {/* add new note */}
-      <AddNewNote />
-
-      {/* Edit/view space modal */}
-      <UpdateSpace />
-
-      {/* delete space alert modal */}
-      <DeleteSpaceModal />
-
-      {/* settings modal */}
-      <Settings />
-
-      {/* notification modal */}
-      <Notification />
-
-      {/* user account modal */}
-      <UserAccount />
-
-      {/* snackbar */}
-      <Snackbar show={snackbar.show} msg={snackbar.msg} isSuccess={snackbar.isSuccess} isLoading={snackbar.isLoading} />
-      {/* command palette */}
-      {showCommandPalette ? (
-        <div className="z-[99999]">
-          <CommandPalette
-            isSidePanel
-            activeSpace={activeSpace}
-            recentSites={[]}
-            onClose={() => setShowCommandPalette(false)}
-          />
+                          {isDraggingOver ? 'Open tabs in this space' : 'Drop to open space tabs here'}
+                        </p>
+                      </motion.div>
+                    </div>
+                  )}
+                </Droppable>
+              </div>
+              <Footer
+                isDraggingSpace={isDraggingGlobal && draggingType === 'space'}
+                isDraggingTabs={isDraggingGlobal && draggingType === 'tabs'}
+              />
+            </DragDropContext>
+          )}
         </div>
-      ) : null}
+        {/* add new space */}
+        <CreateSpace />
+
+        {/* add new note */}
+        <AddNewNote />
+
+        {/* Edit/view space modal */}
+        <UpdateSpace />
+
+        {/* delete space alert modal */}
+        <DeleteSpaceModal />
+
+        {/* settings modal */}
+        <Settings />
+
+        {/* notification modal */}
+        <Notification />
+
+        {/* user account modal */}
+        <UserAccount />
+
+        {/* snackbar */}
+        <Snackbar
+          show={snackbar.show}
+          msg={snackbar.msg}
+          isSuccess={snackbar.isSuccess}
+          isLoading={snackbar.isLoading}
+        />
+        {/* command palette */}
+        {showCommandPalette ? (
+          <div className="z-[99999]">
+            <CommandPalette
+              isSidePanel
+              activeSpace={activeSpace}
+              recentSites={[]}
+              onClose={() => setShowCommandPalette(false)}
+            />
+          </div>
+        ) : null}
+      </ErrorBoundary>
     </main>
   );
 };

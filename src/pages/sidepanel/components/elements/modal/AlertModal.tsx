@@ -73,8 +73,8 @@ const AlertModal = ({ children, isOpen, onClose, title, showCloseBtn = true }: P
       className="w-screen h-min  bg-brand-darkBg px-1 py-1  backdrop:bg-brand-darkBgAccent/10 fixed top-2 rounded-lg shadow shadow-brand-darkBgAccent">
       <div className="overflow-hidden w-full pt-1 z-[99] rounded-lg">
         {/* header */}
-        <div className="w-full relative mb-3 shadow-sm shadow-brand-darkBgAccent/40">
-          {title ? <h2 className="text-center text-slate-400/80 text-base font-light ">{title}</h2> : null}
+        <div className="w-full relative mb-2 shadow-sm shadow-brand-darkBgAccent/40">
+          {title ? <p className="text-center text-slate-500 text-[14px] font-light pb-1">{title}</p> : null}
           {showCloseBtn ? (
             <Cross1Icon
               className="absolute  top-px right-2 fill-slate-700/90 cursor-pointer font-thin hover:fill-slate-600/90 transition-all duration-300 ease-in-out"

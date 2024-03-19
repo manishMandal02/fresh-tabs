@@ -17,7 +17,7 @@ const Checkbox = ({ id, checked, onChange, size = 'md' }: Props) => {
   };
   return (
     <RadixCheckbox.Root
-      className={` hover:bg-brand-primary/60 flex  appearance-none  data-[state=checked]:bg-brand-primary items-center justify-center
+      className={` hover:bg-brand-darkBgAccent/90 flex  appearance-none  data-[state=checked]:bg-brand-primary items-center justify-center
                  rounded-[4px] bg-brand-darkBgAccent/70 outline-none focus:bg-brand-darkBgAccent/90 ${getSize()}`}
       checked={checked}
       onCheckedChange={checked => onChange(checked)}

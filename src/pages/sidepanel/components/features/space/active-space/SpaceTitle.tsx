@@ -22,7 +22,7 @@ const SpaceTitle = ({ space, setActiveSpace }: Props) => {
   const spaceTitleRef = useRef<HTMLDivElement>(null);
 
   const handleSpaceTitleUpdate = useCallback(() => {
-    if (!spaceTitle || spaceTitle.length < 3 || spaceTitle === space.title) return;
+    if (!spaceTitle || spaceTitle?.length < 3 || spaceTitle === space.title) return;
 
     setActiveSpace(prev => ({ ...prev, title: spaceTitle }));
     setSpaces(spaces => [...spaces.map(s => (s.id === space.id ? { ...s, title: spaceTitle } : s))]);

@@ -14,6 +14,7 @@ import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { deleteSpaceModalAtom, snackbarAtom, showNotificationModalAtom } from '@root/src/stores/app';
 import SpaceTitle from './SpaceTitle';
+import { Notes } from '../../notes';
 
 type Props = {
   space: ISpaceWithTabs;
@@ -107,7 +108,7 @@ const ActiveSpace = ({ space, setActiveSpace, onSearchClick }: Props) => {
         className="relative max-h-[90%]  cc-scrollbar min-h-fit overflow-x-hidden border-b border-brand-darkBgAccent/50">
         <Tabs tabs={[`Tabs`, 'Notes']} defaultTab={1}>
           <ActiveSpaceTabs space={space} />
-          <div className="text-center text-slate-500 py-12">Notes</div>
+          <Notes space={space} />
         </Tabs>
       </div>
 

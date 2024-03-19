@@ -3,6 +3,7 @@ import {
   IAppSettings,
   IDailySpaceTime,
   IDailySpaceTimeChunks,
+  INote,
   IPinnedTab,
   ISiteVisit,
   ISnoozedTab,
@@ -15,6 +16,7 @@ import { logger } from '@root/src/pages/utils/logger';
 type StorageValue =
   | ISpace
   | ISpace[]
+  | INote[]
   | ITab[]
   | ISnoozedTab[]
   | ISiteVisit[]

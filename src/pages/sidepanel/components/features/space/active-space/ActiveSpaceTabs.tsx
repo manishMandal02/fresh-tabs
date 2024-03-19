@@ -194,15 +194,15 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
           ref={provided1.innerRef}
           className="h-full w-full px-px"
           style={{
-            minHeight: `${tabs.length * TAB_HEIGHT}px`,
+            minHeight: `${tabs?.length * TAB_HEIGHT}px`,
           }}>
           {/* add new tab button  */}
           <Tooltip label="Add new tab" delay={1500}>
             <button
-              className="w-[98%] flex items-center justify-center bg-brand-darkBgAccent/40 rounded-md mb-1"
+              className="w-[99%] flex items-center justify-center bg-brand-darkBgAccent/30 rounded-md mb-1"
               style={{ height: `${TAB_HEIGHT - 4}px` }}
               onClick={() => handleCreateNewTab()}>
-              <PlusIcon className="text-slate-500/80 scale-[1.1]" />
+              <PlusIcon className="text-slate-500/90 scale-[1.1]" />
             </button>
           </Tooltip>
 
