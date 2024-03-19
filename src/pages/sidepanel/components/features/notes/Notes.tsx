@@ -24,7 +24,15 @@ const Notes = ({ space }: Props) => {
 
   return (
     <div>
-      {notes.length > 0 ? notes.map(note => <div key={note.id}>{note.id}</div>) : <div>No notes in this space</div>}
+      {notes.length > 0 ? (
+        notes.map(note => (
+          <div key={note.id} className="bg-brand-darkBgAccent/40 px-2 py-1">
+            <p className="text-slate-400">{note.text}</p>
+          </div>
+        ))
+      ) : (
+        <div>No notes in this space</div>
+      )}
     </div>
   );
 };

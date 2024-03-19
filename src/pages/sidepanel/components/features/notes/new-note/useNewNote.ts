@@ -37,6 +37,9 @@ export const useNewNote = ({ remainder, note }: UseNewNoteProps) => {
       .refine(value => domainWithSubdomainRegex.test(value), {
         message: 'Enter a valid domain or sub domain',
       }),
+    title: z.string().trim().min(4, {
+      message: 'Title must be at least 4 characters',
+    }),
   });
 
   type FormSchema = z.infer<typeof domainSchema>;
@@ -44,7 +47,7 @@ export const useNewNote = ({ remainder, note }: UseNewNoteProps) => {
   const inputFrom = useForm<FormSchema>({
     mode: 'onTouched',
     resolver: zodResolver(domainSchema),
-    defaultValues: { domain: '' },
+    defaultValues: { domain: '', title: '' },
   });
 
   const handleAddNote: SubmitHandler<FormSchema> = async (data, ev) => {
@@ -52,7 +55,8 @@ export const useNewNote = ({ remainder, note }: UseNewNoteProps) => {
 
     const newNote: INote = {
       id: generateId(),
-      text: note,
+      title: data.title.trim(),
+      text: note.trim(),
       spaceId: activeSpace.id,
       createdAt: new Date().getTime(),
     };

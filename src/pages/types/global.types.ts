@@ -29,6 +29,7 @@ export interface ISpace {
 
 export interface INote {
   id: string;
+  title: string;
   text: string;
   spaceId: string;
   createdAt: number;

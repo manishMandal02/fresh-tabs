@@ -51,6 +51,25 @@ div[role='textbox'] > p:has(> a > span) {
 div[role='textbox'] > p:has(> span) {
   line-height: 1.4rem !important;
 }
+/* markdown checkbox style */
+div[role='textbox'] > ul > li[role='checkbox'] {
+  line-height: 1.3rem !important;
+}
+/* markdown checkbox style */
+div[role='textbox'] > ul > li[role='checkbox']::before {
+  margin-top: 0.25rem !important;
+  /* line-height: 1.4rem !important; */
+}
+/* markdown checkbox style */
+div[role='textbox'] > ul > li[role='checkbox'][aria-checked='true']::before {
+  background-color: #34d399 !important;
+  /* line-height: 1.4rem !important; */
+}
+/* markdown checkbox style */
+div[role='textbox'] > ul > li[role='checkbox']::after {
+  top: 8px !important;
+  /* line-height: 1.4rem !important; */
+}
 
 .add-note-date-highlight {
   background-color: #34d399;
@@ -60,4 +79,3 @@ div[role='textbox'] > p:has(> span) {
   padding: 1px 4px;
   border-radius: 1px;
 }
-

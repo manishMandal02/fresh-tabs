@@ -153,13 +153,20 @@ const NewNote = () => {
   const { bounce } = useCustomAnimation();
 
   return (
-    <SlideModal title="New Note" isOpen={showModal.show} onClose={handleClose}>
+    <SlideModal title="New Note" isOpen={!showModal.show} onClose={handleClose}>
       <div className="min-h-[60vh] max-h-[90vh] w-full flex h-full flex-col justify-between">
         {/* note mdn editor */}
         <div
-          className="w-full px-2.5 mb-1.5 mt-1.5 h-[80%] overflow-hidden relative flex flex-col"
+          className="w-full px-2.5 mb-1.5 mt-2 h-[80%] overflow-hidden relative flex flex-col"
           ref={editorContainerRef}>
-          {/* TODO - validate note */}
+          <div className="mb-1.5">
+            <TextField
+              name="note-title"
+              placeholder="Title..."
+              registerHook={inputFrom.register('title')}
+              error={inputFrom.formState.errors.title?.message || ''}
+            />
+          </div>
           <MDXEditor
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus={{ defaultSelection: 'rootEnd' }}
@@ -167,8 +174,8 @@ const NewNote = () => {
             markdown={note}
             onChange={setNote}
             suppressHtmlProcessing={false}
-            contentEditableClassName="prose !min-h-[18.5rem] !h-fit !max-h-[30rem] !w-full !px-[8px] !py-[6px] group"
-            placeholder="Write your note..."
+            contentEditableClassName="prose !min-h-[16rem] !h-fit !max-h-[30rem] !w-full !px-[8px] !py-[6px] group"
+            placeholder="Note..."
             plugins={[
               headingsPlugin({ allowedHeadingLevels: [1, 2, 3] }),
               quotePlugin(),
@@ -177,7 +184,7 @@ const NewNote = () => {
               thematicBreakPlugin(),
               markdownShortcutPlugin(),
             ]}
-            className={`w-full h-fit !bg-brand-darkBgAccent/25 cc-scrollbar border border-transparent focus-within:border-slate-700/80 !overflow-y-auto rounded-md dark-theme [&_blockquote]:!text-slate-400 [&_strong]:!text-slate-300/80 [&_span:not(.add-note-date-highlight)]:!text-slate-300/80 [&_a>span]:!underline [&_p]:!my-0 [&_li]:!my-0 [&_blockquote]:!my-1.5 [&_h1]:!my-1 [&_h2]:!my-1 [&_h3]:!my-px [&_h4]:!my-px [&_h5]:!my-px [&_h6]:!my-px ${
+            className={`w-full h-fit !bg-brand-darkBgAccent/25 cc-scrollbar border border-transparent focus-within:border-slate-700/80 !overflow-y-auto rounded-md dark-theme [&_blockquote]:!text-slate-400 [&_strong]:!text-slate-300/80 [&_span:not(.add-note-date-highlight)]:!text-slate-300/80 [&_a>span]:!underline [&_p]:!my-0 [&_li]:!my-00 [&_blockquote]:!my-1.5 [&_h1]:!my-1 [&_h2]:!my-1 [&_h3]:!my-px [&_h4]:!my-px [&_h5]:!my-px [&_h6]:!my-px ${
               isModifierKeyPressed ? '[&_a]:!cursor-pointer [&_a]:!pointer-events-auto' : '[&_a]:!pointer-events-none'
             }`}
           />
@@ -217,7 +224,7 @@ const NewNote = () => {
               <TextField
                 name="note-domain"
                 placeholder="chat.openai.com"
-                label="Domain name"
+                label="Site name"
                 onPasteHandler={handleOnPasteInDomainInput}
                 registerHook={inputFrom.register('domain')}
                 error={inputFrom.formState.errors.domain?.message || ''}
@@ -227,7 +234,7 @@ const NewNote = () => {
           {/* add note */}
           <button
             type="submit"
-            disabled={!note || (shouldAddDomain && !inputFrom.watch('domain'))}
+            disabled={!note || !inputFrom.watch('title') || (shouldAddDomain && !inputFrom.watch('domain'))}
             className={`mt-4 mx-auto w-[65%] py-2.5 rounded-md text-brand-darkBg/70 font-semibold text-[13px] bg-brand-primary/90 hover:opacity-95 transition-all duration-200 
                         border-none outline-none focus-within:outline-slate-600 disabled:bg-brand-darkBgAccent disabled:text-slate-300 disabled:cursor-not-allowed `}>
             {snackbar.isLoading ? <Spinner size="sm" /> : 'Add Note'}
