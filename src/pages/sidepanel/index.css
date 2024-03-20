@@ -72,7 +72,7 @@ div[role='textbox'] > ul > li[role='checkbox']::after {
 }
 
 .add-note-date-highlight {
-  background-color: #34d399;
+  background-color: #fbbf24;
   font-size: 13px;
   color: #24283f !important;
   font-weight: 400;

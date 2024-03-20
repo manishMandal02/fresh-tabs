@@ -11,9 +11,8 @@ import {
   linkPlugin,
   thematicBreakPlugin,
   markdownShortcutPlugin,
+  type MDXEditorMethods,
 } from '@mdxeditor/editor';
-
-import type { MDXEditorMethods } from '@mdxeditor/editor';
 
 import { SlideModal } from '../../../elements/modal';
 import { showAddNewNoteModalAtom } from '@root/src/stores/app';
@@ -28,7 +27,7 @@ import Tooltip from '../../../elements/tooltip';
 import { useNewNote } from './useNewNote';
 import TextField from '../../../elements/form/text-field';
 
-const NewNote = () => {
+const NotesModal = () => {
   // global state
   const [showModal, setShowModal] = useAtom(showAddNewNoteModalAtom);
 
@@ -40,33 +39,56 @@ const NewNote = () => {
   const editorRef = useRef<MDXEditorMethods>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
+  // on close modal
+  const handleClose = () => {
+    setShowModal({ show: false, note: { text: '' } });
+    setNote('');
+    inputFrom.reset();
+  };
+
   // logic hook
-
-  const { inputFrom, snackbar, handleAddNote, handleOnPasteInDomainInput } = useNewNote({ remainder, note });
-
-  console.log('🚀 ~ NewNote ~ inputFrom.formState.errors:', inputFrom.formState.errors);
-
-  console.log('🚀 ~ NewNote ~  inputFrom.watch(domain):', inputFrom.watch('domain'));
+  const { inputFrom, snackbar, handleAddNote, handleOnPasteInDomainInput } = useNewNote({
+    remainder,
+    note,
+    noteId: showModal.note?.id || '',
+    handleClose,
+  });
 
   // init component
   useEffect(() => {
     if (!showModal.show) return;
 
-    if (showModal.note) {
-      setNote(showModal.note);
-      editorRef.current.setMarkdown(showModal.note);
+    // check if creating new note or editing note
+    if (!showModal.note?.id) {
+      // new note
+      setNote(showModal.note.text);
+    } else {
+      // editing note
+      const noteToEdit = showModal.note;
+      setNote(noteToEdit.text);
+      inputFrom.setValue('title', noteToEdit.title);
+
+      if (noteToEdit.domain) {
+        setShouldAddDomain(true);
+        inputFrom.setValue('domain', noteToEdit.domain);
+      }
+      if (noteToEdit.remainderAt) {
+        const dateHintString = parseStringForDateTimeHint(noteToEdit.text);
+        if (dateHintString.dateString) {
+          setRemainder(dateHintString.dateString);
+        }
+      }
     }
+
+    // set editor value
+    editorRef.current.setMarkdown(showModal.note?.text);
+
     (async () => {
       await wait(50);
 
       editorRef.current?.focus(null, { defaultSelection: 'rootEnd' });
     })();
   }, [showModal]);
-
-  const handleClose = () => {
-    setShowModal({ show: false, ...(showModal.note ? { note: '' } : {}) });
-    setNote('');
-  };
 
   const { isModifierKeyPressed } = useKeyPressed({ monitorModifierKeys: true });
 
@@ -127,7 +149,6 @@ const NewNote = () => {
       removeDateHighlightStyle(true);
       return;
     }
-    console.log('🚀 ~ useEffect ~ res:', res);
 
     // store the last occurrence of the date hint
     setRemainder(res.dateString);
@@ -152,8 +173,10 @@ const NewNote = () => {
   // animation
   const { bounce } = useCustomAnimation();
 
+  const buttonText = showModal.note?.id ? 'Update Note' : 'Add Note';
+
   return (
-    <SlideModal title="New Note" isOpen={!showModal.show} onClose={handleClose}>
+    <SlideModal title={showModal.note?.id ? 'Edit Note' : 'New Note'} isOpen={showModal.show} onClose={handleClose}>
       <div className="min-h-[60vh] max-h-[90vh] w-full flex h-full flex-col justify-between">
         {/* note mdn editor */}
         <div
@@ -237,7 +260,7 @@ const NewNote = () => {
             disabled={!note || !inputFrom.watch('title') || (shouldAddDomain && !inputFrom.watch('domain'))}
             className={`mt-4 mx-auto w-[65%] py-2.5 rounded-md text-brand-darkBg/70 font-semibold text-[13px] bg-brand-primary/90 hover:opacity-95 transition-all duration-200 
                         border-none outline-none focus-within:outline-slate-600 disabled:bg-brand-darkBgAccent disabled:text-slate-300 disabled:cursor-not-allowed `}>
-            {snackbar.isLoading ? <Spinner size="sm" /> : 'Add Note'}
+            {snackbar.isLoading ? <Spinner size="sm" /> : buttonText}
           </button>
         </form>
       </div>
@@ -245,4 +268,4 @@ const NewNote = () => {
   );
 };
 
-export default NewNote;
+export default NotesModal;

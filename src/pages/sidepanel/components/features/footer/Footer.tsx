@@ -100,7 +100,7 @@ const Footer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
 
                         <button
                           className="text-slate-400/80 font-medium text-[10px] bg-brand-darkBgAccent/70 px-5 py-[6px] rounded outline-none hover:opacity-90 transition-all duration-200"
-                          onClick={() => setNewNoteModal({ show: true })}>
+                          onClick={() => setNewNoteModal({ show: true, note: { text: '' } })}>
                           New Note
                         </button>
                       </div>

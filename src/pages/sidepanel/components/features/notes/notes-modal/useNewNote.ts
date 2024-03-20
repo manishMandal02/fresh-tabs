@@ -6,7 +6,7 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 
 import { snackbarAtom, activeSpaceAtom } from '@root/src/stores/app';
 import { isValidURL } from '@root/src/pages/utils/url';
-import { addNewNote } from '@root/src/services/chrome-storage/notes';
+import { addNewNote, updateNote } from '@root/src/services/chrome-storage/notes';
 import { INote } from '@root/src/pages/types/global.types';
 import { generateId } from '@root/src/pages/utils';
 import { naturalLanguageToDate } from '@root/src/pages/utils/date-time/naturalLanguageToDate';
@@ -23,9 +23,11 @@ const cleanDomainName = (domain: string) => {
 type UseNewNoteProps = {
   remainder: string;
   note: string;
+  noteId: string;
+  handleClose: () => void;
 };
 
-export const useNewNote = ({ remainder, note }: UseNewNoteProps) => {
+export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteProps) => {
   // global state
   const [snackbar, setSnackbar] = useAtom(snackbarAtom);
   const [activeSpace] = useAtom(activeSpaceAtom);
@@ -53,7 +55,7 @@ export const useNewNote = ({ remainder, note }: UseNewNoteProps) => {
   const handleAddNote: SubmitHandler<FormSchema> = async (data, ev) => {
     ev.preventDefault();
 
-    const newNote: INote = {
+    const noteObj: INote = {
       id: generateId(),
       title: data.title.trim(),
       text: note.trim(),
@@ -65,22 +67,27 @@ export const useNewNote = ({ remainder, note }: UseNewNoteProps) => {
     if (remainder) {
       const date = naturalLanguageToDate(remainder);
       if (date) {
-        newNote.remainderAt = date;
+        noteObj.remainderAt = date;
       }
     }
 
     // add note domain
     if (data.domain) {
-      newNote.domain = data.domain;
+      noteObj.domain = data.domain;
     }
-
-    const res = await addNewNote(newNote);
-
+    let res = false;
+    if (!noteId) {
+      res = await addNewNote(noteObj);
+    } else {
+      res = await updateNote(noteId, noteObj);
+    }
+    const dynamicMsg = noteId ? 'update' : 'add';
     if (res) {
-      setSnackbar({ show: true, msg: 'Note added', isSuccess: true });
+      setSnackbar({ show: true, msg: `Note ${dynamicMsg}ed`, isSuccess: true });
+      handleClose();
     } else {
       // failed
-      setSnackbar({ show: true, msg: 'Failed to add note', isSuccess: false });
+      setSnackbar({ show: true, msg: `Failed to ${dynamicMsg} note`, isSuccess: false });
     }
   };
 

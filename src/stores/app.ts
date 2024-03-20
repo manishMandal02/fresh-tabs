@@ -1,6 +1,6 @@
 import { DefaultAppSettings } from './../constants/app';
 import { atom } from 'jotai';
-import { IAppSettings, ISpace, ISpaceWithTabs, ITab, ITabWithIndex } from '../pages/types/global.types';
+import { IAppSettings, INote, ISpace, ISpaceWithTabs, ITab, ITabWithIndex } from '../pages/types/global.types';
 
 type SnackbarAtom = {
   show: boolean;
@@ -47,9 +47,9 @@ export const showNotificationModalAtom = atom(false);
 export const showUserAccountModalAtom = atom(false);
 
 // add new note modal
-export const showAddNewNoteModalAtom = atom<{ show: boolean; note?: string }>({
+export const showAddNewNoteModalAtom = atom<{ show: boolean; note: Partial<INote> }>({
   show: false,
-  note: '',
+  note: { text: '' },
 });
 
 // create new space modal

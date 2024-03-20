@@ -18,7 +18,7 @@ import { ActiveSpace, CreateSpace, UpdateSpace } from './components/features/spa
 import { appSettingsAtom, dragStateAtom, snackbarAtom } from '@root/src/stores/app';
 import { TAB_HEIGHT } from './components/features/space/active-space/ActiveSpaceTabs';
 import UserAccount from './components/features/user/UserAccount';
-import AddNewNote from './components/features/notes/new-note/NewNote';
+import AddNewNote from './components/features/notes/notes-modal/NotesModal';
 import ErrorBoundaryUI from './components/elements/error-boundary/ErrorBoundaryUI';
 
 // event ids of processed events
