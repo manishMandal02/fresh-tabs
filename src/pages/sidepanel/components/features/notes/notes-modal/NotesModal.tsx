@@ -21,10 +21,13 @@ const NotesModal = () => {
 
   // local state
   const [note, setNote] = useState('');
+
   const [remainder, setRemainder] = useState('');
   const [shouldAddDomain, setShouldAddDomain] = useState(false);
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
+
+  console.log('🚀 ~ NotesModal ~ note:', note);
 
   // on close modal
   const handleClose = () => {
@@ -95,7 +98,8 @@ const NotesModal = () => {
               error={inputFrom.formState.errors.title?.message || ''}
             />
           </div>
-          <RichTextEditor />
+          {/* editor */}
+          <RichTextEditor content={''} onChange={setNote} />
           {/* show note remainder */}
           <div className="w-full mt-1.5 px-1 min-h-8 flex items-center justify-between">
             <div className="flex items-center">
