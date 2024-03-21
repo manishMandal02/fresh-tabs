@@ -1,23 +1,10 @@
-import '@mdxeditor/editor/style.css';
-
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
-import { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  MDXEditor,
-  headingsPlugin,
-  quotePlugin,
-  listsPlugin,
-  linkPlugin,
-  thematicBreakPlugin,
-  markdownShortcutPlugin,
-  type MDXEditorMethods,
-} from '@mdxeditor/editor';
+import { useState, useEffect, useRef } from 'react';
 
 import { SlideModal } from '../../../elements/modal';
 import { showAddNewNoteModalAtom } from '@root/src/stores/app';
 import Spinner from '../../../elements/spinner';
-import { wait } from '@root/src/pages/utils';
 import { useKeyPressed } from '../../../../hooks/useKeyPressed';
 import { parseStringForDateTimeHint } from '@root/src/pages/utils/date-time/naturalLanguageToDate';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';
@@ -26,6 +13,7 @@ import { InfoCircledIcon } from '@radix-ui/react-icons';
 import Tooltip from '../../../elements/tooltip';
 import { useNewNote } from './useNewNote';
 import TextField from '../../../elements/form/text-field';
+import RichTextEditor from '../../../elements/rich-text-editor/RichTextEditor';
 
 const NotesModal = () => {
   // global state
@@ -36,7 +24,6 @@ const NotesModal = () => {
   const [remainder, setRemainder] = useState('');
   const [shouldAddDomain, setShouldAddDomain] = useState(false);
 
-  const editorRef = useRef<MDXEditorMethods>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
   // on close modal
@@ -46,12 +33,16 @@ const NotesModal = () => {
     inputFrom.reset();
   };
 
+  const { isModifierKeyPressed } = useKeyPressed({ monitorModifierKeys: true });
+
   // logic hook
   const { inputFrom, snackbar, handleAddNote, handleOnPasteInDomainInput } = useNewNote({
-    remainder,
     note,
-    noteId: showModal.note?.id || '',
+    remainder,
     handleClose,
+    editorContainerRef,
+    isModifierKeyPressed,
+    noteId: showModal.note?.id || '',
   });
 
   // init component
@@ -65,7 +56,9 @@ const NotesModal = () => {
     } else {
       // editing note
       const noteToEdit = showModal.note;
+
       setNote(noteToEdit.text);
+
       inputFrom.setValue('title', noteToEdit.title);
 
       if (noteToEdit.domain) {
@@ -80,97 +73,9 @@ const NotesModal = () => {
       }
     }
 
-    // set editor value
-    editorRef.current.setMarkdown(showModal.note?.text);
-
-    (async () => {
-      await wait(50);
-
-      editorRef.current?.focus(null, { defaultSelection: 'rootEnd' });
-    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showModal]);
 
-  const { isModifierKeyPressed } = useKeyPressed({ monitorModifierKeys: true });
-
-  // open links in editor with cmd/ctrl + click
-  const handleAnchorClick = useCallback(ev => {
-    const clickedEl = ev.target as HTMLElement;
-
-    if (clickedEl.tagName === 'SPAN' && clickedEl.parentElement.tagName === 'A') {
-      (async () => {
-        await chrome.tabs.create({ url: (clickedEl.parentElement as HTMLAnchorElement).href, active: true });
-      })();
-    }
-  }, []);
-
-  // handle click in editor box after cmd is pressed
-  useEffect(() => {
-    if (!isModifierKeyPressed) return;
-    const editorBox = editorContainerRef.current.querySelector('div[role="textbox"]');
-
-    if (!editorBox) return;
-
-    editorBox.addEventListener('click', handleAnchorClick);
-
-    () => {
-      if (!isModifierKeyPressed) {
-        editorBox?.removeEventListener('click', handleAnchorClick);
-      }
-    };
-  }, [isModifierKeyPressed, handleAnchorClick]);
-
-  // check for data hint string for remainders
-  useEffect(() => {
-    // TODO -  debounce
-    if (editorRef.current?.getMarkdown()?.length < 6) return;
-
-    const res = parseStringForDateTimeHint(editorRef.current?.getMarkdown());
-
-    // remove this date highlight class from other spans if applied
-    const removeDateHighlightStyle = (removeAll = false) => {
-      const allSpanWithClass = editorContainerRef.current?.querySelectorAll('span.add-note-date-highlight');
-
-      if (allSpanWithClass?.length > (removeAll ? 0 : 1)) {
-        for (const spanWithClass of allSpanWithClass) {
-          // remove all the classes
-          if (removeAll) {
-            spanWithClass.classList.remove('add-note-date-highlight');
-          } else {
-            //  remove all expect the last one (last occurrence of date highlight)
-            if (spanWithClass !== spanEl) {
-              spanWithClass.classList.remove('add-note-date-highlight');
-            }
-          }
-        }
-      }
-    };
-    if (!res) {
-      setRemainder('');
-      removeDateHighlightStyle(true);
-      return;
-    }
-
-    // store the last occurrence of the date hint
-    setRemainder(res.dateString);
-
-    // find the date hint el and style it
-    const span = document.evaluate(
-      `//span[contains(., '${res.dateString}')]`,
-      document,
-      null,
-      XPathResult.ANY_TYPE,
-      null,
-    );
-    const spanEl = span.iterateNext();
-
-    if (!spanEl) return;
-    // add date highlight class
-    (spanEl as HTMLSpanElement).classList.add('add-note-date-highlight');
-
-    removeDateHighlightStyle();
-  }, [note]);
-
-  // animation
   const { bounce } = useCustomAnimation();
 
   const buttonText = showModal.note?.id ? 'Update Note' : 'Add Note';
@@ -190,27 +95,7 @@ const NotesModal = () => {
               error={inputFrom.formState.errors.title?.message || ''}
             />
           </div>
-          <MDXEditor
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus={{ defaultSelection: 'rootEnd' }}
-            ref={editorRef}
-            markdown={note}
-            onChange={setNote}
-            suppressHtmlProcessing={false}
-            contentEditableClassName="prose !min-h-[16rem] !h-fit !max-h-[30rem] !w-full !px-[8px] !py-[6px] group"
-            placeholder="Note..."
-            plugins={[
-              headingsPlugin({ allowedHeadingLevels: [1, 2, 3] }),
-              quotePlugin(),
-              listsPlugin(),
-              linkPlugin(),
-              thematicBreakPlugin(),
-              markdownShortcutPlugin(),
-            ]}
-            className={`w-full h-fit !bg-brand-darkBgAccent/25 cc-scrollbar border border-transparent focus-within:border-slate-700/80 !overflow-y-auto rounded-md dark-theme [&_blockquote]:!text-slate-400 [&_strong]:!text-slate-300/80 [&_span:not(.add-note-date-highlight)]:!text-slate-300/80 [&_a>span]:!underline [&_p]:!my-0 [&_li]:!my-00 [&_blockquote]:!my-1.5 [&_h1]:!my-1 [&_h2]:!my-1 [&_h3]:!my-px [&_h4]:!my-px [&_h5]:!my-px [&_h6]:!my-px ${
-              isModifierKeyPressed ? '[&_a]:!cursor-pointer [&_a]:!pointer-events-auto' : '[&_a]:!pointer-events-none'
-            }`}
-          />
+          <RichTextEditor />
           {/* show note remainder */}
           <div className="w-full mt-1.5 px-1 min-h-8 flex items-center justify-between">
             <div className="flex items-center">
@@ -223,7 +108,7 @@ const NotesModal = () => {
                   inputFrom.reset({ domain: '' });
                 }}
               />
-              <label htmlFor="note-domain" className="text-slate-300 font-light text-[10xp] ml-1.5 select-none">
+              <label htmlFor="note-domain" className="text-slate-300 font-light text-[10xp] ml-[4px] select-none">
                 Attach note to a site
               </label>
               <Tooltip label="This note will be attached to the site for quick access while browsing" delay={100}>
@@ -234,7 +119,7 @@ const NotesModal = () => {
               <motion.div
                 {...bounce}
                 className="pl-1.5 pr-2 py-[1.75px] rounded-[4px] bg-brand-darkBgAccent/50  w-fit uppercase flex items-center">
-                ⏰ <span className="ml-[5px] text-slate-400/90 font-semibold text-[8px]">{remainder}</span>
+                ⏰ <p className="ml-[5px] text-slate-400/90 font-semibold text-[8px]">{remainder}</p>
               </motion.div>
             ) : null}
           </div>

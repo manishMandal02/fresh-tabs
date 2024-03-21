@@ -28,7 +28,7 @@ export const addNewNote = async (note: INote) => {
     logger.error({
       error,
       msg: 'Error creating note.',
-      fileTrace: 'services/chrome-storage/notes.ts:20 addNewNote ~ catch block',
+      fileTrace: 'services/chrome-storage/notes.ts:31 addNewNote ~ catch block',
     });
     return false;
   }
@@ -43,15 +43,41 @@ export const updateNote = async (id: string, note: Omit<INote, 'id'>) => {
 
     noteToUpdate = { ...noteToUpdate, ...note };
 
-    allNotes.splice(allNotes.indexOf(noteToUpdate), 1, noteToUpdate);
+    allNotes.splice(
+      allNotes.findIndex(n => n.id === id),
+      1,
+      noteToUpdate,
+    );
 
     await setNotesToStorage(allNotes);
     return true;
   } catch (error) {
     logger.error({
       error,
-      msg: 'Error updating note note.',
-      fileTrace: 'services/chrome-storage/notes.ts:20 updateNote ~ catch block',
+      msg: 'Error updating note.',
+      fileTrace: 'services/chrome-storage/notes.ts:58 updateNote ~ catch block',
+    });
+    return false;
+  }
+};
+// update note
+export const deleteNote = async (id: string) => {
+  try {
+    const allNotes = await getAllNotes();
+
+    // remove note
+    allNotes.splice(
+      allNotes.findIndex(n => n.id === id),
+      1,
+    );
+
+    await setNotesToStorage(allNotes);
+    return true;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: 'Error deleting  note.',
+      fileTrace: 'services/chrome-storage/notes.ts:80 deleteNote ~ catch block',
     });
     return false;
   }
