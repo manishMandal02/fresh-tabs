@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { useAtom } from 'jotai';
-import { ClipboardEventHandler , MutableRefObject , useCallback , useEffect } from 'react';
+import { ClipboardEventHandler } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
@@ -25,48 +25,12 @@ type UseNewNoteProps = {
   note: string;
   noteId: string;
   handleClose: () => void;
-  editorContainerRef: MutableRefObject<HTMLDivElement>;
-  isModifierKeyPressed: boolean;
 };
 
-export const useNewNote = ({
-  remainder,
-  note,
-  noteId,
-  handleClose,
-  editorContainerRef,
-  isModifierKeyPressed,
-}: UseNewNoteProps) => {
+export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteProps) => {
   // global state
   const [snackbar, setSnackbar] = useAtom(snackbarAtom);
   const [activeSpace] = useAtom(activeSpaceAtom);
-
-  // open links in editor with cmd/ctrl + click
-  const handleAnchorClick = useCallback(ev => {
-    const clickedEl = ev.target as HTMLElement;
-
-    if (clickedEl.tagName === 'SPAN' && clickedEl.parentElement.tagName === 'A') {
-      (async () => {
-        await chrome.tabs.create({ url: (clickedEl.parentElement as HTMLAnchorElement).href, active: true });
-      })();
-    }
-  }, []);
-
-  // handle click in editor box after cmd is pressed
-  useEffect(() => {
-    if (!isModifierKeyPressed) return;
-    const editorBox = editorContainerRef.current.querySelector('div[role="textbox"]');
-
-    if (!editorBox) return;
-
-    editorBox.addEventListener('click', handleAnchorClick);
-
-    () => {
-      if (!isModifierKeyPressed) {
-        editorBox?.removeEventListener('click', handleAnchorClick);
-      }
-    };
-  }, [isModifierKeyPressed, handleAnchorClick, editorContainerRef]);
 
   //
   const formSchema = z.object({

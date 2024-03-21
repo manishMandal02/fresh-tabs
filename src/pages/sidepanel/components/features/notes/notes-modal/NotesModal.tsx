@@ -5,7 +5,6 @@ import { useState, useEffect, useRef } from 'react';
 import { SlideModal } from '../../../elements/modal';
 import { showAddNewNoteModalAtom } from '@root/src/stores/app';
 import Spinner from '../../../elements/spinner';
-import { useKeyPressed } from '../../../../hooks/useKeyPressed';
 import { parseStringForDateTimeHint } from '@root/src/pages/utils/date-time/naturalLanguageToDate';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';
 import Checkbox from '../../../elements/checkbox/Checkbox';
@@ -14,6 +13,8 @@ import Tooltip from '../../../elements/tooltip';
 import { useNewNote } from './useNewNote';
 import TextField from '../../../elements/form/text-field';
 import RichTextEditor from '../../../elements/rich-text-editor/RichTextEditor';
+
+const DATE_HIGHLIGHT_CLASS_NAME = 'add-note-date-highlight';
 
 const NotesModal = () => {
   // global state
@@ -27,8 +28,6 @@ const NotesModal = () => {
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
-  console.log('🚀 ~ NotesModal ~ note:', note);
-
   // on close modal
   const handleClose = () => {
     setShowModal({ show: false, note: { text: '' } });
@@ -36,15 +35,11 @@ const NotesModal = () => {
     inputFrom.reset();
   };
 
-  const { isModifierKeyPressed } = useKeyPressed({ monitorModifierKeys: true });
-
   // logic hook
   const { inputFrom, snackbar, handleAddNote, handleOnPasteInDomainInput } = useNewNote({
     note,
     remainder,
     handleClose,
-    editorContainerRef,
-    isModifierKeyPressed,
     noteId: showModal.note?.id || '',
   });
 
@@ -78,6 +73,58 @@ const NotesModal = () => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showModal]);
+
+  // check for data hint string for remainders
+  useEffect(() => {
+    // TODO -  debounce
+    if (note?.length < 6) return;
+
+    const res = parseStringForDateTimeHint(note);
+
+    // remove this date highlight class from other spans if applied
+    const removeDateHighlightStyle = (spanElNode?: Node) => {
+      const allSpanWithClass = editorContainerRef.current?.querySelectorAll(`span.${DATE_HIGHLIGHT_CLASS_NAME}`);
+
+      if (allSpanWithClass?.length > (spanElNode ? 0 : 1)) {
+        for (const spanWithClass of allSpanWithClass) {
+          // remove all the classes
+          if (!spanElNode) {
+            spanWithClass.classList.remove(DATE_HIGHLIGHT_CLASS_NAME);
+            continue;
+          }
+
+          if (spanElNode && spanWithClass !== spanElNode) {
+            //  remove all expect the last one (last occurrence of date highlight)
+            spanWithClass.classList.remove(DATE_HIGHLIGHT_CLASS_NAME);
+          }
+        }
+      }
+    };
+    if (!res) {
+      setRemainder('');
+      removeDateHighlightStyle();
+      return;
+    }
+
+    // store the last occurrence of the date hint
+    setRemainder(res.dateString);
+
+    // find the date hint el and style it
+    const span = document.evaluate(
+      `//span[contains(., '${res.dateString}')]`,
+      document,
+      null,
+      XPathResult.ANY_TYPE,
+      null,
+    );
+    const spanEl = span.iterateNext();
+
+    if (!spanEl) return;
+    // add date highlight class
+    (spanEl as HTMLSpanElement).classList.add('add-note-date-highlight');
+
+    removeDateHighlightStyle(spanEl);
+  }, [note]);
 
   const { bounce } = useCustomAnimation();
 
