@@ -65,7 +65,8 @@ const NotesModal = () => {
       }
       if (noteToEdit.remainderAt) {
         const dateHintString = parseStringForDateTimeHint(noteToEdit.text);
-        if (dateHintString.dateString) {
+
+        if (dateHintString?.dateString) {
           setRemainder(dateHintString.dateString);
         }
       }
@@ -146,7 +147,7 @@ const NotesModal = () => {
             />
           </div>
           {/* editor */}
-          <RichTextEditor content={''} onChange={setNote} />
+          <RichTextEditor content={note} onChange={setNote} />
           {/* show note remainder */}
           <div className="w-full mt-1.5 px-1 min-h-8 flex items-center justify-between">
             <div className="flex items-center">

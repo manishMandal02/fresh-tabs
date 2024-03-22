@@ -1,4 +1,4 @@
-import { TRANSFORMERS } from '@lexical/markdown';
+import { type ElementTransformer, TRANSFORMERS } from '@lexical/markdown';
 import { isValidURL } from '@root/src/pages/utils/url';
 import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
@@ -10,9 +10,11 @@ import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
+import { $createListItemNode, $createListNode, $isListNode, ListNode } from '@lexical/list';
 
 import LineSeparatorPlugin from './seperator-line-plugin/SeparatorLinePlugin';
 import { AutoLinkPlugin } from './auto-link-plugin/AutoLinkPlugin';
+import { $createTextNode, type LexicalNode } from 'lexical';
 
 type LexicalEditorProps = {
   config: Parameters<typeof LexicalComposer>['0']['initialConfig'];
@@ -26,7 +28,7 @@ export function LexicalEditor(props: LexicalEditorProps) {
         placeholder={<Placeholder />}
         ErrorBoundary={LexicalErrorBoundary}
       />
-      <MarkdownShortcutPlugin transformers={[...TRANSFORMERS]} />
+      <MarkdownShortcutPlugin transformers={[...TRANSFORMERS, CHECKLIST_RULE]} />
       <ListPlugin />
       <LinkPlugin validateUrl={isValidURL} />
       <AutoLinkPlugin />
@@ -41,4 +43,22 @@ export function LexicalEditor(props: LexicalEditorProps) {
   );
 }
 
-const Placeholder = () => <div className="absolute top-[1.125rem] left-[1.125rem] opacity-50">Note...</div>;
+const Placeholder = () => <div className="absolute top-[0.5rem] left-[1.15rem] opacity-50">Note...</div>;
+
+const CHECKLIST_RULE: ElementTransformer = {
+  dependencies: [ListNode],
+  export: (node: LexicalNode) => {
+    return $isListNode(node) ? '[]' : null;
+  },
+  // regExp: /^(---|\*\*\*|___)\s?$/,
+  regExp: /\[([x ])?\](.+?)(?=\n|$)/g,
+  replace: parentNode => {
+    const checkList = $createListNode('check');
+    checkList.append($createListItemNode().append($createTextNode(``)));
+
+    parentNode.replace(checkList);
+    checkList.selectEnd();
+  },
+
+  type: 'element',
+};

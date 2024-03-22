@@ -76,7 +76,6 @@ export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteP
     if (data.domain) {
       noteObj.domain = data.domain;
     }
-    console.log('🚀 ~ consthandleAddNote:SubmitHandler<FormSchema>= ~ noteObj.text:', noteObj.text);
 
     let res = false;
     if (!noteId) {

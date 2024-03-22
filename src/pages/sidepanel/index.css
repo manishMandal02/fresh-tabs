@@ -52,3 +52,68 @@ body {
   padding: 1px 4px;
   border-radius: 1px;
 }
+
+ul:has(> li.rich-text-editor__listItemChecked),
+ul:has(> li.rich-text-editor__listItemUnchecked) {
+  padding-left: 0.1rem !important;
+}
+
+.rich-text-editor__listItemChecked,
+.rich-text-editor__listItemUnchecked {
+  position: relative;
+  margin-left: 8px;
+  margin-right: 8px;
+  padding-left: 24px;
+  padding-right: 24px;
+  list-style-type: none;
+  outline: none;
+}
+.rich-text-editor__listItemChecked {
+  text-decoration: line-through;
+}
+.rich-text-editor__listItemUnchecked:before,
+.rich-text-editor__listItemChecked:before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  top: 4px;
+  left: 0;
+  cursor: pointer;
+  display: block;
+  background-size: cover;
+  position: absolute;
+}
+
+.rich-text-editor__listItemUnchecked:focus:before,
+.rich-text-editor__listItemChecked:focus:before {
+  box-shadow: 0 0 0 2px #5cefb976;
+  border-radius: 2px;
+}
+.rich-text-editor__listItemUnchecked:before {
+  border: 1px solid #8d8d8d;
+  border-radius: 2px;
+}
+.rich-text-editor__listItemChecked:before {
+  border: 1px solid #34d399;
+  border-radius: 2px;
+  background-color: #34d399;
+  background-repeat: no-repeat;
+}
+.rich-text-editor__listItemChecked:after {
+  content: '';
+  cursor: pointer;
+  border-color: #121a30;
+  border-style: solid;
+  position: absolute;
+  display: block;
+  top: 7.5px;
+  width: 5px;
+  left: 6px;
+  height: 7.5px;
+  transform: rotate(45deg);
+  border-width: 0 1.5px 1.5px 0;
+}
+
+.rich-text-editor__nestedListItem {
+  list-style-type: none;
+}
