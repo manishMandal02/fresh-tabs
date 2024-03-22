@@ -49,19 +49,19 @@ const Notes = ({ space }: Props) => {
               tabIndex={-1}
               key={note.id}
               onClick={() => handleNoteClick(note)}
-              className="relative w-full bg-brand-darkBgAccent/40 px-3 py-2 rounded-[7px] cursor-pointer group overflow-hidden">
+              className="relative w-full bg-brand-darkBgAccent/40 px-3 py-[6px] rounded-[7px] cursor-pointer group overflow-hidden">
               <div className="group-hover:-translate-x-[34px]  transition-all duration-300 w-full">
                 <p className="text-slate-300/80 text-[15px] text-start">{limitCharLength(note.title, 42)}</p>
                 <div className="flex items-center justify-end mt-2.5">
                   {/*  note site */}
-                  <div className="flex items-center bg-brand-darkBg/30 border border-brand-darkBgAccent/40  w-fit px-1.5 py-[2.5px] rounded font-medium mr-1.5">
+                  <div className="flex items-center bg-brand-darkBgAccent/40 border border-brand-darkBg/30  w-fit px-1.5 py-[2.5px] rounded font-medium mr-1.5">
                     <GlobeIcon className="text-slate-500  mr-[2.5px]  scale-[0.8]" />
                     <Tooltip label={note.domain}>
                       <span className="font-light text-[10px] text-slate-300/80">{note.domain}</span>
                     </Tooltip>
                   </div>
                   {/* remainder until */}
-                  <div className="flex items-center bg-brand-darkBg/30 border border-brand-darkBgAccent/40  w-fit px-1.5 py-[2.5px] rounded font-medium">
+                  <div className="flex items-center bg-brand-darkBgAccent/40 border border-brand-darkBg/30  w-fit px-1.5 py-[2.5px] rounded font-medium">
                     <LapTimerIcon className="text-slate-500 mr-[2.5px] scale-[0.8]" />
                     <Tooltip label={new Date(note.remainderAt).toLocaleString()}>
                       <span className="font-light text-[10px] text-slate-300/80">{getTimeAgo(note.remainderAt)}</span>

@@ -36,7 +36,7 @@ const ActiveSpace = ({ space, setActiveSpace, onSearchClick }: Props) => {
 
   // local state
   // show show history
-  const [showSpaceHistory, setShowSpaceHistory] = useState(false);
+  const [showSpaceHistory, setShowSpaceHistory] = useState(true);
   // show snoozed tabs
   const [showSnoozedTabs, setShowSnoozedTabs] = useState(false);
 
