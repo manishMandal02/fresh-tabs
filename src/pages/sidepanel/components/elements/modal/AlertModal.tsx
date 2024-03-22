@@ -70,7 +70,7 @@ const AlertModal = ({ children, isOpen, onClose, title, showCloseBtn = true }: P
       {...bounce}
       onKeyDown={handleKeyDown}
       onClick={handleBackdropClick}
-      className="w-screen h-min  bg-brand-darkBg px-1 py-1  backdrop:bg-brand-darkBgAccent/10 fixed top-2 rounded-lg shadow shadow-brand-darkBgAccent">
+      className="w-screen h-min  bg-brand-darkBg px-1 py-1 border-t border-brand-darkBgAccent/70 backdrop:bg-brand-darkBgAccent/10 fixed top-2 rounded-lg shadow-md shadow-brand-darkBgAccent/70">
       <div className="overflow-hidden w-full pt-1 z-[99] rounded-lg">
         {/* header */}
         <div className="w-full relative mb-2 shadow-sm shadow-brand-darkBgAccent/40">

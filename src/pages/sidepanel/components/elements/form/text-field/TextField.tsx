@@ -23,16 +23,22 @@ const TextField = ({ name, label, placeholder, registerHook, error, onPasteHandl
     <Form>
       <Field name={name} className="flex flex-col">
         {label ? (
-          <Label className={`text-[12px] ml-px mb-[3px] ${!error ? 'text-slate-400' : 'text-rose-600'}`}>{label}</Label>
+          <Label className={`text-[12.5px] ml-px mb-[3px] ${!error ? 'text-slate-400/90' : 'text-rose-600'}`}>
+            {label}
+          </Label>
         ) : null}
 
         <RadixControl asChild>
           <input
             {...(registerHook ? { ...registerHook } : {})}
             onPaste={onPasteHandler ? onPasteHandler : null}
+            onKeyDown={ev => {
+              if (ev.code !== 'Enter') return;
+              ev.preventDefault();
+            }}
             type="text"
             placeholder={placeholder}
-            className={`bg-brand-darkBgAccent/50 text-slate-300/80 text-[13px] px-2 py-1.5 border border-transparent
+            className={`bg-brand-darkBgAccent/50 text-slate-300/80 text-[14px] px-2 py-1 border border-transparent
             focus-within:border-brand-darkBgAccent/90 outline-none rounded placeholder:text-slate-500 ${
               error ? 'bg-rose-400/10 border-rose-400/40' : ''
             }`}

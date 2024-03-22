@@ -16,12 +16,19 @@ import RichTextEditor from '../../../elements/rich-text-editor/RichTextEditor';
 
 const DATE_HIGHLIGHT_CLASS_NAME = 'add-note-date-highlight';
 
+const EDITOR_EMPTY_STATE =
+  '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
+
 const NotesModal = () => {
   // global state
   const [showModal, setShowModal] = useAtom(showAddNewNoteModalAtom);
 
   // local state
   const [note, setNote] = useState('');
+
+  useEffect(() => {
+    console.log('🚀 ~ NotesModal ~ useEffect ~ note:', note);
+  }, [note]);
 
   const [remainder, setRemainder] = useState('');
   const [shouldAddDomain, setShouldAddDomain] = useState(false);
@@ -50,12 +57,12 @@ const NotesModal = () => {
     // check if creating new note or editing note
     if (!showModal.note?.id) {
       // new note
-      setNote(showModal.note.text);
+      showModal.note.text?.length > 0 ? setNote(showModal.note.text) : setNote(EDITOR_EMPTY_STATE);
     } else {
       // editing note
       const noteToEdit = showModal.note;
 
-      setNote(noteToEdit.text);
+      noteToEdit.text?.length > 0 ? setNote(noteToEdit.text) : setNote(EDITOR_EMPTY_STATE);
 
       inputFrom.setValue('title', noteToEdit.title);
 
@@ -77,6 +84,8 @@ const NotesModal = () => {
 
   // check for data hint string for remainders
   useEffect(() => {
+    console.log('🚀 ~ useEffect ~ note:', note);
+
     // TODO -  debounce
     if (note?.length < 6) return;
 
@@ -131,14 +140,15 @@ const NotesModal = () => {
 
   const buttonText = showModal.note?.id ? 'Update Note' : 'Add Note';
 
-  return (
+  return note ? (
     <SlideModal title={showModal.note?.id ? 'Edit Note' : 'New Note'} isOpen={showModal.show} onClose={handleClose}>
       <div className="min-h-[60vh] max-h-[90vh] w-full flex h-full flex-col justify-between">
         {/* note mdn editor */}
         <div
-          className="w-full px-2.5 mb-1.5 mt-2 h-[80%] overflow-hidden relative flex flex-col"
+          className="w-full px-2.5 mb-1.5 mt-2 h-[90%] overflow-hidden relative flex flex-col"
           ref={editorContainerRef}>
-          <div className="mb-1.5">
+          {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+          <div className="mb-1.5" onKeyDown={ev => ev.stopPropagation()}>
             <TextField
               name="note-title"
               placeholder="Title..."
@@ -146,10 +156,12 @@ const NotesModal = () => {
               error={inputFrom.formState.errors.title?.message || ''}
             />
           </div>
-          {/* editor */}
-          <RichTextEditor content={note} onChange={setNote} />
+          <div className="size-full">
+            {/* editor */}
+            <RichTextEditor content={note} onChange={setNote} />
+          </div>
           {/* show note remainder */}
-          <div className="w-full mt-1.5 px-1 min-h-8 flex items-center justify-between">
+          <div className="w-full mt-1.5 px-1 min-h-8 h-fit flex items-center justify-between">
             <div className="flex items-center">
               <Checkbox
                 id="note-domain"
@@ -160,7 +172,7 @@ const NotesModal = () => {
                   inputFrom.reset({ domain: '' });
                 }}
               />
-              <label htmlFor="note-domain" className="text-slate-300 font-light text-[10xp] ml-[4px] select-none">
+              <label htmlFor="note-domain" className="text-slsate-300 font-light text-[10xp] ml-[4px] select-none">
                 Attach note to a site
               </label>
               <Tooltip label="This note will be attached to the site for quick access while browsing" delay={100}>
@@ -176,11 +188,11 @@ const NotesModal = () => {
             ) : null}
           </div>
         </div>
-        <form
-          className="w-full h-[20%] px-2.5 mt-1 mb-px flex flex-col"
-          onSubmit={inputFrom.handleSubmit(handleAddNote)}>
+
+        <div className="w-full h-[20%] px-2.5 mt-1 mb-px flex flex-col">
           {shouldAddDomain ? (
-            <div className="w-[70%] -mt-1 ml-1">
+            // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+            <div className="w-[70%] -mt-1 ml-1" onKeyDown={ev => ev.stopPropagation()}>
               <TextField
                 name="note-domain"
                 placeholder="chat.openai.com"
@@ -191,17 +203,20 @@ const NotesModal = () => {
               />
             </div>
           ) : null}
+
           {/* add note */}
           <button
-            type="submit"
+            onClick={inputFrom.handleSubmit(handleAddNote)}
             disabled={!note || !inputFrom.watch('title') || (shouldAddDomain && !inputFrom.watch('domain'))}
             className={`mt-4 mx-auto w-[65%] py-2.5 rounded-md text-brand-darkBg/70 font-semibold text-[13px] bg-brand-primary/90 hover:opacity-95 transition-all duration-200 
                         border-none outline-none focus-within:outline-slate-600 disabled:bg-brand-darkBgAccent disabled:text-slate-300 disabled:cursor-not-allowed `}>
             {snackbar.isLoading ? <Spinner size="sm" /> : buttonText}
           </button>
-        </form>
+        </div>
       </div>
     </SlideModal>
+  ) : (
+    <></>
   );
 };
 

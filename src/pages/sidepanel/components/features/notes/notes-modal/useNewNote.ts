@@ -11,7 +11,7 @@ import { INote } from '@root/src/pages/types/global.types';
 import { generateId } from '@root/src/pages/utils';
 import { naturalLanguageToDate } from '@root/src/pages/utils/date-time/naturalLanguageToDate';
 
-const domainWithSubdomainRegex = /^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,6}$/;
+const domainWithSubdomainRegex = /^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,10}$/;
 
 // remove www for domains
 const cleanDomainName = (domain: string) => {
@@ -59,7 +59,7 @@ export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteP
     const noteObj: INote = {
       id: generateId(),
       title: data.title.trim(),
-      text: note.trim(),
+      text: note,
       spaceId: activeSpace.id,
       createdAt: new Date().getTime(),
     };

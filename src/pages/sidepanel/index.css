@@ -45,12 +45,12 @@ body {
 /* date highlight in notes editor */
 
 .add-note-date-highlight {
-  background-color: #fbbf24;
-  font-size: 13px;
-  color: #24283f !important;
-  font-weight: 400;
+  background-color: #d56be5;
+  font-size: 13.5px;
+  color: #10121f !important;
+  font-weight: 500;
   padding: 1px 4px;
-  border-radius: 1px;
+  border-radius: 1.5px;
 }
 
 ul:has(> li.rich-text-editor__listItemChecked),
