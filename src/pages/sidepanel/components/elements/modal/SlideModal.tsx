@@ -23,13 +23,16 @@ const SlideModal = ({ children, isOpen, onClose, title }: Props) => {
     },
   });
 
-  const { slide } = useCustomAnimation();
+  const { slide, fade } = useCustomAnimation();
 
   return isOpen ? (
     <motion.div {...slide} className="fixed z-[999] h-screen w-screen top-0 left-0 !overflow-hidden">
       {/* backdrop */}
       {/* eslint-disable-next-line */}
-      <div className="z-[9999] w-screen h-screen fixed bg-brand-darkBg/20" onClick={handleClose}></div>
+      <motion.div
+        {...fade}
+        className="z-[9999] w-screen h-screen fixed bg-brand-darkBg/25"
+        onClick={handleClose}></motion.div>
       {/* modal card */}
       <div
         className={`z-[99999] absolute bottom-0 flex flex-col left-0 w-full min-h-[30%] max-h-[90%] bg-brand-darkBg rounded-tl-3xl rounded-tr-3xl
@@ -39,9 +42,9 @@ const SlideModal = ({ children, isOpen, onClose, title }: Props) => {
           <p className="text-[13.5px] font-medium text-slate-500 select-none text-center">{title}</p>
           {/* close btn */}
           <button
-            className=" select-none text-slate-600 hover:opacity-90 transition-all duration-200 "
+            className="select-none text-slate-600 hover:opacity-90 transition-all duration-200 "
             onClick={handleClose}>
-            <Cross1Icon className="scale-[1.1] " />
+            <Cross1Icon className="scale-[1] " />
           </button>
         </div>
         {children}

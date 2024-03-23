@@ -13,6 +13,7 @@ import { getUrlDomain } from '@root/src/pages/utils/url/get-url-domain';
 import { getISODate } from '@root/src/pages/utils/date-time/getISODate';
 import { getWeekday } from '@root/src/pages/utils/date-time/get-weekday';
 import { getSpaceHistory } from '@root/src/services/chrome-storage/space-history';
+import { getReadableDate } from '@root/src/pages/utils/date-time/getReadableDate';
 
 type Sessions = {
   date: string;
@@ -96,7 +97,7 @@ const SpaceHistory = ({ show, onClose }: Props) => {
     dateHeadingsRefs.current?.forEach(dateHeading => {
       const dateHeadingTop = dateHeading.getBoundingClientRect().top;
 
-      if (dateHeadingTop < 170 && scrollTop !== 0) {
+      if (dateHeadingTop < 160 && scrollTop !== 0) {
         const date = dateHeading?.getAttribute('data-date-heading');
         if (!date) return;
         lastDateHeadingHidden = date;
@@ -122,51 +123,56 @@ const SpaceHistory = ({ show, onClose }: Props) => {
 
   return show ? (
     <SlideModal isOpen={show} onClose={onClose} title={'History'}>
-      <div
-        id="space-history-container"
-        className="max-h-[95%]  cc-scrollbar min-h-fit overflow-x-hidden border-y pb-2 border-brand-darkBgAccent/30">
+      <div id="space-history-container" className="max-h-[95%] cc-scrollbar min-h-fit overflow-x-hidden py-2">
         {/* date info while scrolling */}
         {floatingDate ? (
           <motion.div
             {...bounce}
-            className={`z-[99] sticky top-2 mx-auto flex items-center justify-center  text-[11px] w-fit h-5  shadow-md shadow-brand-darkBgAccent/30 
-                      bg-brand-darkBg border border-brand-darkBgAccent/50 px-[15px] py-[10px] rounded-xl text-slate-300/80`}>
-            {getWeekday(new Date(floatingDate))}{' '}
-            {new Date(floatingDate).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: '2-digit' })}
+            className={`z-[99] sticky top-[2.5px] mx-auto flex items-center justify-center  text-[11px] w-fit h-5  shadow-md shadow-brand-darkBgAccent/30 
+                      bg-brand-darkBg border border-brand-darkBgAccent/50 px-[16px] py-[11px] rounded-xl text-slate-300/70`}>
+            {getWeekday(new Date(floatingDate))} {getReadableDate(floatingDate)}
           </motion.div>
         ) : null}
 
         {spaceHistory?.map(({ date, sessions }, index) => (
-          <div key={date} className="max-w-[99%]">
+          <div key={date} className="w-full">
             <Accordion
               id={date}
+              classes={{
+                triggerContainer: 'bg-brand-darkBgAccent/30 rounded-md mb-1 mx-[2px]',
+                triggerIcon: 'text-slate-600',
+              }}
               trigger={
                 // history date heading
                 <div
                   ref={el => (dateHeadingsRefs.current[index] = el)}
                   data-date-heading={date}
-                  className="text-[13px] sticky top-0  w-[98%] flex items-center justify-between rounded-md  text-left mb-[2px]  text-slate-300   py-2 px-2.5">
+                  className="text-slate-300/80 text-[13px] font-light text-left sticky top-0  w-full max-w-[96%] flex items-center justify-between rounded-md py-2 px-2">
                   <p>
                     {getISODate(date) === getISODate(new Date()) ? 'Today •' : ''} {'  '} {getWeekday(new Date(date))}
                     {'  '}
-                    {new Date(date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: '2-digit' })}
+                    {getReadableDate(date)}
                   </p>
                 </div>
               }>
               {/* date's history */}
-              <div className="px-px bg-brand-darkBgAccent/5 py-1 rounded-md ">
+              <div className="py-px px-1">
                 {sessions.map(([domain, visits]) => {
                   const sessionDomain = domain;
                   return (
-                    <div key={sessionDomain} className="rounded-md my-px">
+                    <div key={sessionDomain} className="rounded-md my-px ">
                       {/* group title (domain) */}
                       <Accordion
                         id={sessionDomain}
                         defaultCollapsed
+                        classes={{
+                          triggerContainer: 'border-b border-brand-darkBgAccent/60 mb-[2px]',
+                          triggerIcon: 'text-brand-darkBgAccent/90',
+                        }}
                         trigger={
-                          <div className="flex items-center py-[5px] m-0 -ml-px ">
+                          <div className="flex items-center py-[4px] m-0 -ml-px w-full max-w-[94%] ">
                             {/* time */}
-                            <span className="text-slate-500/80 text-[8.5px] mr-[6px]">
+                            <span className="text-slate-600 text-[8.5px] mr-[5px]">
                               {getTime(visits[0]?.timestamp)}
                             </span>
 
@@ -174,14 +180,17 @@ const SpaceHistory = ({ show, onClose }: Props) => {
                             <img
                               alt="icon"
                               src={visits[0].faviconUrl}
-                              className="size-[13.5px] mr-1.5 opacity-90 rounded-full"
+                              className="size-[13.5px]  mr-[6px] opacity-90 rounded-full border-[0.5px] border-slate-700 object-center object-scale-down"
                             />
-                            <p className="text-slate-400/80 text-[11px]">
-                              {sessionDomain} <span className="text-[9px] text-slate-500">({visits.length})</span>
-                            </p>
+                            <div className="flex items-center w-[80%] max-w-[85%]">
+                              <span className="select-text text-start text-slate-400 text-[11px] font-extralight text-ellipsis w-fit max-w-[96%] overflow-hidden whitespace-nowrap">
+                                {sessionDomain}
+                              </span>
+                              <span className="text-[10px] text-slate-400/80 ml-[2.5px]">({visits.length})</span>
+                            </div>
                           </div>
                         }>
-                        <div className="bg-brand-darkBgAccent/20">
+                        <div className="bg-brand-darkBgAccent/10 py-1 pl-px pr-1">
                           {visits.map(v => (
                             <div key={v.timestamp}>
                               <Tab

@@ -2,22 +2,33 @@
 import { HTMLProps, forwardRef } from 'react';
 import * as RadixAccordion from '@radix-ui/react-accordion';
 import { ChevronDownIcon } from '@radix-ui/react-icons';
+import { cn } from '@root/src/pages/utils/cn';
+import { omitObjProps } from '@root/src/pages/utils';
+
+type CSSClasses = HTMLProps<HTMLElement>['className'];
 
 type Props = {
   trigger: React.ReactNode;
   children: React.ReactNode;
   id: string;
   defaultCollapsed?: boolean;
+  classes?: {
+    triggerContainer?: CSSClasses;
+    triggerIcon?: CSSClasses;
+    content?: CSSClasses;
+  };
 };
 
-const Accordion = ({ id, trigger, children, defaultCollapsed }: Props) => (
+const Accordion = ({ id, trigger, children, defaultCollapsed, classes }: Props) => (
   <RadixAccordion.Root
     className=" rounded-md shadow-[0_2px_10px] shadow-black/5"
     type="single"
     collapsible
     defaultValue={id}>
     <RadixAccordionItem value={defaultCollapsed ? 'none' : id}>
-      <RadixAccordionTrigger>{trigger}</RadixAccordionTrigger>
+      <RadixAccordionTrigger classes={classes ? omitObjProps(classes, 'content') : null}>
+        {trigger}
+      </RadixAccordionTrigger>
       <RadixAccordionContent>{children}</RadixAccordionContent>
     </RadixAccordionItem>
   </RadixAccordion.Root>
@@ -31,23 +42,30 @@ const RadixAccordionItem = forwardRef<HTMLDivElement, RadixAccordion.AccordionIt
   ),
 );
 
-const RadixAccordionTrigger = forwardRef<HTMLButtonElement, HTMLProps<Element>>(
-  ({ children, ...props }, forwardedRef) => (
-    <RadixAccordion.Header className="flex">
-      {/*@ts-expect-error button type not matching radix  */}
-      <RadixAccordion.Trigger
-        className={`group flex h-fit flex-1 cursor-default items-center justify-between bg-brand-darkBgAccent/25 rounded-md px-2 !outline-none`}
-        {...props}
-        ref={forwardedRef}>
-        {children}
-        <ChevronDownIcon
-          className="text-slate-600/80 font-bold ease-[cubic-bezier(0.87,_0,_0.13,_1)] transition-transform duration-300 group-data-[state=open]:rotate-180"
-          aria-hidden
-        />
-      </RadixAccordion.Trigger>
-    </RadixAccordion.Header>
-  ),
-);
+const RadixAccordionTrigger = forwardRef<
+  HTMLButtonElement,
+  HTMLProps<Element> & { classes?: { triggerIcon?: CSSClasses; triggerContainer?: CSSClasses } }
+>(({ children, ...props }, forwardedRef) => (
+  <RadixAccordion.Header className="flex">
+    {/*@ts-expect-error button type not matching radix  */}
+    <RadixAccordion.Trigger
+      className={cn(
+        `group flex h-fit w-full flex-1 cursor-default items-center select-none justify-between px-2 !outline-none`,
+        props.classes?.triggerContainer,
+      )}
+      {...props}
+      ref={forwardedRef}>
+      {children}
+      <ChevronDownIcon
+        className={cn(
+          'text-slate-700 font-bold ease-[cubic-bezier(0.87,_0,_0.13,_1)] transition-transform duration-300 group-data-[state=open]:rotate-180',
+          props.classes?.triggerIcon,
+        )}
+        aria-hidden
+      />
+    </RadixAccordion.Trigger>
+  </RadixAccordion.Header>
+));
 
 const RadixAccordionContent = forwardRef<HTMLDivElement, HTMLProps<Element>>(({ children, ...props }, forwardedRef) => (
   <RadixAccordion.Content

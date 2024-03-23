@@ -58,7 +58,7 @@ const Tab = ({
       onDoubleClick={() => onTabDoubleClick(tabData.id)}>
       <div className="flex items-center w-full">
         <img
-          className="mr-[8px] opacity-95  size-[17px] max-w-[17px] z-10 rounded-sm object-contain object-center"
+          className="mr-[8px] opacity-90  size-[17px] max-w-[17px] z-10 rounded-sm object-contain object-center"
           src={tabData.faviconUrl || getFaviconURL(tabData.url)}
           alt="icon"
         />
