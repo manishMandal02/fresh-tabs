@@ -38,7 +38,7 @@ const TextField = ({ name, label, placeholder, registerHook, error, onPasteHandl
             }}
             type="text"
             placeholder={placeholder}
-            className={`bg-brand-darkBgAccent/50 text-slate-300/80 text-[14px] px-2 py-1 border border-transparent
+            className={`bg-brand-darkBgAccent/40 text-slate-300/80 text-[14px] px-2 py-1 border border-transparent
             focus-within:border-brand-darkBgAccent/90 outline-none rounded placeholder:text-slate-500 ${
               error ? 'bg-rose-400/10 border-rose-400/40' : ''
             }`}

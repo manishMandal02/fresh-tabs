@@ -52,33 +52,33 @@ const Menu = () => {
             {/*  eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
             <div
               onClick={() => setShowMenu(false)}
-              className={`flex flex-col text-[12px] text-slate-300/90 font-extralight whitespace-nowrap w-[10rem] bg-brand-darkBg/95  
+              className={`flex flex-col text-[11px] text-slate-300 font-extralight whitespace-nowrap w-[10rem] bg-brand-darkBg/95  
                              border border-brand-darkBgAccent/50 shadow rounded shadow-brand-darkBgAccent/60`}>
               <button
-                className="flex items-center pl-3 py-2 border-b border-brand-darkBgAccent/40 hover:bg-brand-darkBgAccent/20 transition-all duration-200 outline-none focus-visible:bg-brand-darkBgAccent/30"
+                className="flex items-center pl-3 py-2 border-b border-brand-darkBgAccent/20 hover:bg-brand-darkBgAccent/20 transition-all duration-200 outline-none focus-visible:bg-brand-darkBgAccent/30"
                 onClick={() => setShowUserAccountModal(true)}>
-                <img src={manishProfilePicUrl} alt="user" className={`mr-[11px] size-[22px] rounded-full opacity-90`} />
+                <img src={manishProfilePicUrl} alt="user" className={`mr-[8px] size-[20px] rounded-full opacity-90`} />
                 Account
               </button>
               <button
-                className="flex items-center pl-3 py-2 border-b border-brand-darkBgAccent/40 hover:bg-brand-darkBgAccent/20 transition-all duration-200 outline-none focus-visible:bg-brand-darkBgAccent/30"
+                className="flex items-center pl-3 py-2 border-b border-brand-darkBgAccent/20 hover:bg-brand-darkBgAccent/20 transition-all duration-200 outline-none focus-visible:bg-brand-darkBgAccent/30"
                 onClick={() => setShowAnalytics(true)}>
-                <BarChartIcon className={`text-slate-600 mr-[8px] scale-[1]`} /> Analytics
+                <BarChartIcon className={`text-slate-600 mr-[10px] scale-[1]`} /> Analytics
               </button>
               <button
-                className="flex items-center pl-3 py-2 border-b border-brand-darkBgAccent/40 hover:bg-brand-darkBgAccent/20 transition-all duration-200 outline-none focus-visible:bg-brand-darkBgAccent/30"
+                className="flex items-center pl-3 py-2 border-b border-brand-darkBgAccent/20 hover:bg-brand-darkBgAccent/20 transition-all duration-200 outline-none focus-visible:bg-brand-darkBgAccent/30"
                 onClick={handleDiscardTabs}>
-                <MoonIcon className={`text-slate-600 mr-[8px] scale-[1]`} /> Discard Tabs
+                <MoonIcon className={`text-slate-600 mr-[10px] scale-[1]`} /> Discard Tabs
               </button>
               <button
-                className="flex items-center pl-3 py-2 border-b border-brand-darkBgAccent/40 hover:bg-brand-darkBgAccent/20 transition-all duration-200 outline-none focus-visible:bg-brand-darkBgAccent/30"
+                className="flex items-center pl-3 py-2 border-b border-brand-darkBgAccent/20 hover:bg-brand-darkBgAccent/20 transition-all duration-200 outline-none focus-visible:bg-brand-darkBgAccent/30"
                 onClick={handleSaveSpacesToBM}>
-                <BookmarkIcon className={`text-slate-600  mr-[8px] scale-[1]`} /> Save to Bookmark
+                <BookmarkIcon className={`text-slate-600  mr-[10px] scale-[1]`} /> Save to Bookmark
               </button>
               <button
                 className="flex items-center pl-3 py-2 hover:bg-brand-darkBgAccent/20 transition-all duration-200 outline-none focus-visible:bg-brand-darkBgAccent/30"
                 onClick={() => setShowSettingsModal(true)}>
-                <GearIcon className={`text-slate-600  mr-[8px] scale-[1]`} /> Preferences
+                <GearIcon className={`text-slate-600  mr-[10px] scale-[1]`} /> Preferences
               </button>
             </div>
           </>

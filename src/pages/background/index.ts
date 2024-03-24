@@ -113,6 +113,8 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 
 // TODO - reset day at 3am at default
 
+// TODO - DnD checks (tabs, spaces, merge, delete, create)
+
 // helpers for chrome event handlers
 const createUnsavedSpacesOnInstall = async () => {
   try {

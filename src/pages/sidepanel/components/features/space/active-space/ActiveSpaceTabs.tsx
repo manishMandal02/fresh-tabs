@@ -199,10 +199,10 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
           {/* add new tab button  */}
           <Tooltip label="Add new tab" delay={1500}>
             <button
-              className="w-[99%] flex items-center justify-center bg-brand-darkBgAccent/30 rounded-md mb-1"
-              style={{ height: `${TAB_HEIGHT - 4}px` }}
+              className="w-[99%] flex items-center justify-center bg-brand-darkBgAccent/20 rounded-md mb-[5px] mt-[0.5px] transition-all duration-300 hover:bg-brand-darkBgAccent/25"
+              style={{ height: `${TAB_HEIGHT - 5}px` }}
               onClick={() => handleCreateNewTab()}>
-              <PlusIcon className="text-slate-500/90 scale-[1.1]" />
+              <PlusIcon className="text-slate-600 scale-[1]" />
             </button>
           </Tooltip>
 
@@ -278,13 +278,13 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
                       style={{
                         height: TAB_HEIGHT + 'px',
                       }}
-                      className="absolute  w-[99%] top-0 left-0 rounded-lg border  border-slate-700/80 bg-brand-darkBgAccent/60 z-10"></motion.div>
+                      className="absolute  w-[99%] top-0 left-0 rounded-lg border  border-slate-700/60 bg-brand-darkBgAccent/60 z-10"></motion.div>
                   ) : null}
                   {/* selected tab indicator */}
                   {isTabSelected(tab.id) ? (
                     <motion.div
                       {...bounce}
-                      className={`absolute w-[99%] top-0 left-0 rounded-lg border border-brand-darkBgAccent/40 bg-brand-darkBgAccent/80 z-10`}
+                      className={`absolute w-[99%] top-0 left-0 rounded-lg border border-brand-darkBgAccent/30 bg-brand-darkBgAccent/80 z-10`}
                       style={{
                         height: TAB_HEIGHT + 'px',
                         borderWidth: areTabsBeingDragged && !isDragging ? '3px' : '1px',

@@ -59,7 +59,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
             {...provided1.droppableProps}
             ref={provided1.innerRef}
             {...bounce}
-            className="w-fit flex justify-center items-center gap-x-[.4rem]"
+            className="w-fit flex justify-center items-center gap-x-[.45rem]"
             style={{
               width: 100 / spaces.length + '%',
             }}>

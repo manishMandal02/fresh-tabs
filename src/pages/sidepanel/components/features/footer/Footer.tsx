@@ -1,15 +1,11 @@
-import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { Droppable } from 'react-beautiful-dnd';
 
 import Menu from './Menu';
-import { showAddNewNoteModalAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
-import { PlusIcon, TrashIcon } from '@radix-ui/react-icons';
+import { TrashIcon } from '@radix-ui/react-icons';
 import OtherSpacesContainer from '../space/other-space/OtherSpacesContainer';
-import Tooltip from '../../elements/tooltip';
-import { useState } from 'react';
-import Popover from '../../elements/popover';
-import { wait } from '@root/src/pages/utils';
+
+import AddButton from './AddButton';
 
 type Props = {
   isDraggingSpace: boolean;
@@ -17,14 +13,6 @@ type Props = {
 };
 
 const Footer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
-  // global state
-  const [, setNewSpaceModal] = useAtom(showNewSpaceModalAtom);
-  const [, setNewNoteModal] = useAtom(showAddNewNoteModalAtom);
-
-  // local state
-  // show add option on add click
-  const [showAddOption, setShowAddOptions] = useState(false);
-
   const animationVariants = {
     visible: { scale: 1, opacity: 1 },
     hidden: { scale: 0, opacity: 0 },
@@ -81,50 +69,10 @@ const Footer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                   zIndex: !isDraggingSpace ? 200 : 1,
                 }}>
                 {/* click option: add note & add space  */}
-                <Tooltip label={isDraggingSpace || isDraggingTabs ? '' : 'Add new space'} delay={1500}>
-                  <Popover
-                    open={showAddOption}
-                    onChange={open => setShowAddOptions(open)}
-                    content={
-                      // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-                      <div
-                        className="bg-brand-darkBg/40 px-2 py-1 rounded-md w-fit flex flex-col"
-                        onClick={() => setShowAddOptions(false)}
-                        onMouseEnter={() => setShowAddOptions(true)}
-                        onMouseLeave={() => setShowAddOptions(false)}>
-                        <button
-                          className="text-slate-400/80 font-medium text-[10px] bg-brand-darkBgAccent/70 px-5 py-[6px] rounded mb-1 outline-none hover:opacity-90 transition-all duration-200"
-                          onClick={() => setNewSpaceModal({ show: true, tabs: [] })}>
-                          New Space
-                        </button>
-
-                        <button
-                          className="text-slate-400/80 font-medium text-[10px] bg-brand-darkBgAccent/70 px-5 py-[6px] rounded outline-none hover:opacity-90 transition-all duration-200"
-                          onClick={() => setNewNoteModal({ show: true, note: { text: '' } })}>
-                          New Note
-                        </button>
-                      </div>
-                    }>
-                    <button
-                      className={`!size-full absolute rounded-full outline-none flex items-center justify-center
-                    transition-all duration-200 hover:bg-brand-darkBgAccent/20`}
-                      style={{
-                        border: isDraggingOverNewSpace ? '1px solid #29dc8071' : '',
-                        backgroundColor: isDraggingOverNewSpace ? ' #3ae88e6b' : '',
-                      }}
-                      onMouseEnter={() => setShowAddOptions(true)}
-                      onMouseLeave={() => {
-                        // wait .1s before closing
-                        async () => {
-                          await wait(100);
-                          setShowAddOptions(false);
-                        };
-                      }}
-                      onClick={() => setShowAddOptions(true)}>
-                      <PlusIcon className="text-slate-500 scale-[1.3]" />
-                    </button>
-                  </Popover>
-                </Tooltip>
+                <AddButton
+                  isDraggingGlobal={isDraggingSpace || isDraggingTabs}
+                  isDraggingOver={isDraggingOverNewSpace}
+                />
               </motion.div>
             )}
           </Droppable>

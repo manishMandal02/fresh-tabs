@@ -36,7 +36,7 @@ const ActiveSpace = ({ space, setActiveSpace, onSearchClick }: Props) => {
 
   // local state
   // show show history
-  const [showSpaceHistory, setShowSpaceHistory] = useState(true);
+  const [showSpaceHistory, setShowSpaceHistory] = useState(false);
   // show snoozed tabs
   const [showSnoozedTabs, setShowSnoozedTabs] = useState(false);
 
@@ -105,8 +105,8 @@ const ActiveSpace = ({ space, setActiveSpace, onSearchClick }: Props) => {
       {/* tabs */}
       <div
         id="active-space-scrollable-container"
-        className="relative max-h-[90%]  cc-scrollbar min-h-fit overflow-x-hidden border-b border-brand-darkBgAccent/50">
-        <Tabs tabs={[`Tabs`, 'Notes']} defaultTab={2}>
+        className="relative max-h-[90%]  cc-scrollbar min-h-fit overflow-x-hidden border-b border-brand-darkBgAccent/20">
+        <Tabs tabs={[`Tabs`, 'Notes']} defaultTab={1}>
           <ActiveSpaceTabs space={space} />
           <Notes space={space} />
         </Tabs>

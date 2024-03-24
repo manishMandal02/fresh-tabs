@@ -172,7 +172,7 @@ const NotesModal = () => {
                   inputFrom.reset({ domain: '' });
                 }}
               />
-              <label htmlFor="note-domain" className="text-slsate-300 font-light text-[10xp] ml-[4px] select-none">
+              <label htmlFor="note-domain" className="text-slate-300/80 font-light text-[10px] ml-[4px] select-none">
                 Attach note to a site
               </label>
               <Tooltip label="This note will be attached to the site for quick access while browsing" delay={100}>
