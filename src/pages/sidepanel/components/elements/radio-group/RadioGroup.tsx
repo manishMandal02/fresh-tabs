@@ -1,4 +1,5 @@
 import * as RadioGroupRadix from '@radix-ui/react-radio-group';
+import { cn } from '@root/src/pages/utils/cn';
 
 export type RadioOptions = {
   value: string;
@@ -19,22 +20,30 @@ const RadioGroup = <T = string,>({ options, value, onChange, defaultValue }: Pro
         className="flex  gap-x-4"
         defaultValue={defaultValue}
         value={value as string}
-        onValueChange={value => onChange(value as T)}>
-        {options.map(({ value, label }) => (
-          <div key={value} className="flex items-center border border-slate-700/40  px-3 rounded-md py-1.5 w-fit ">
-            <RadioGroupRadix.Item
-              className="bg-slate-600 w-[16px] h-[16px] rounded-full outline-none cursor-pointer"
-              value={value}
-              id={value}>
-              <RadioGroupRadix.Indicator className="flex items-center justify-center w-full h-full relative after:content-[''] after:block after:w-[8px] after:h-[8px] after:rounded-[50%] after:bg-emerald-400" />
-            </RadioGroupRadix.Item>
+        onValueChange={v => onChange(v as T)}>
+        {options.map(({ value: v, label }) => (
+          <RadioGroupRadix.Item
+            key={v}
+            className={cn(
+              'bg-brand-darkBg/80 w-fit py-1.5 px-2.5 flex items-center justify-center border border-brand-darkBgAccent/35 shadow-sm shadow-brand-darkBg rounded cursor-pointer',
+              {
+                'before:content-[""] before:block before:w-[8px] before:h-[8px] before:rounded-[50%] before:bg-brand-darkBgAccent':
+                  v !== value,
+              },
+            )}
+            value={v}
+            id={v}>
+            <RadioGroupRadix.Indicator
+              className={`flex items-center justify-center w-full h-full relative 
+                            after:content-[''] after:block after:w-[8px] after:h-[8px] after:rounded-[50%] after:bg-brand-primary/80`}
+            />
             <label
-              className="text-slate-300/90 text-[12px] leading-none pl-2.5 cursor-pointer select-text"
-              htmlFor={value}
+              className="text-slate-400 text-[11px] font-light leading-none pl-2 cursor-pointer select-text text-nowrap"
+              htmlFor={v}
               dangerouslySetInnerHTML={{ __html: label }}>
               {/* {label} */}
             </label>
-          </div>
+          </RadioGroupRadix.Item>
         ))}
       </RadioGroupRadix.Root>
     </form>

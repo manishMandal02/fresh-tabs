@@ -8,8 +8,9 @@ type Props = {
 };
 
 const Switch = ({ id, checked, onChange, size = 'medium' }: Props) => {
-  const switchSize = size === 'medium' ? 'w-[36px] h-[20px] bg-slate-600' : 'w-[22px] h-[12px] bg-slate-700';
-  const thumbSize = size === 'medium' ? ' w-[14px] h-[14px] bg-white' : ' w-[9px] h-[9px] bg-slate-300';
+  const switchSize =
+    size === 'medium' ? 'w-[34px] h-[18px] bg-brand-darkBgAccent/90' : 'w-[22px] h-[12px] bg-brand-darkBgAccent/90';
+  const thumbSize = size === 'medium' ? ' w-[14px] h-[14px] bg-slate-300' : ' w-[9px] h-[9px] bg-slate-300';
   return (
     <form>
       <div className="flex items-center">
@@ -17,10 +18,10 @@ const Switch = ({ id, checked, onChange, size = 'medium' }: Props) => {
           id={id}
           checked={checked}
           onCheckedChange={onChange}
-          className={`${switchSize} bg-blackA6 rounded-full relative  data-[state=checked]:bg-emerald-500 outline-none cursor-default`}>
+          className={`${switchSize} rounded-full relative  transition-all duration-200 data-[state=checked]:bg-brand-primary/90 outline-none cursor-default`}>
           <SwitchRadix.Thumb
             className={`block ${thumbSize}  rounded-full 
-                        transition-transform duration-100 translate-x-[20%] will-change-transform data-[state=checked]:translate-x-[130%]`}
+                        transition-transform duration-300 translate-x-[20%] will-change-transform data-[state=checked]:bg-white data-[state=checked]:translate-x-[130%]`}
           />
         </SwitchRadix.Root>
       </div>

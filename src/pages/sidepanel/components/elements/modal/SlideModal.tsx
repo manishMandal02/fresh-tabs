@@ -39,7 +39,7 @@ const SlideModal = ({ children, isOpen, onClose, title }: Props) => {
                 border-t border-brand-darkBgAccent transition-all duration-300  ease-in-out pb-1 shadow-md shadow-brand-darkBgAccent/60`}>
         <div className="shadow-sm shadow-brand-darkBgAccent/50 relative  py-2.5 px-3.5 min-h-8 flex items-center justify-between">
           <span className="invisible"></span>
-          <p className="text-[13.5px] font-medium text-slate-500 select-none text-center">{title}</p>
+          <p className="text-[15px] font-light  text-slate-400/80 select-none text-center">{title}</p>
           {/* close btn */}
           <button
             className="select-none text-slate-600 hover:opacity-90 transition-all duration-200 "

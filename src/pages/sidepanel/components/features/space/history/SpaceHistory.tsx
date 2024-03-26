@@ -147,7 +147,7 @@ const SpaceHistory = ({ show, onClose }: Props) => {
                 <div
                   ref={el => (dateHeadingsRefs.current[index] = el)}
                   data-date-heading={date}
-                  className="text-slate-300/80 text-[13px] font-light text-left sticky top-0  w-full max-w-[96%] flex items-center justify-between rounded-md py-2 px-2">
+                  className="text-slate-300/90 text-[12px] font-light text-left sticky top-0  w-full max-w-[96%] flex items-center justify-between rounded-md py-2 px-2">
                   <p>
                     {getISODate(date) === getISODate(new Date()) ? 'Today •' : ''} {'  '} {getWeekday(new Date(date))}
                     {'  '}
@@ -172,7 +172,7 @@ const SpaceHistory = ({ show, onClose }: Props) => {
                         trigger={
                           <div className="flex items-center py-[4px] m-0 -ml-px w-full max-w-[94%] ">
                             {/* time */}
-                            <span className="text-slate-600 text-[8.5px] mr-[5px]">
+                            <span className="text-slate-500/70 font-light text-[8.5px] mr-[6px]">
                               {getTime(visits[0]?.timestamp)}
                             </span>
 
@@ -183,10 +183,10 @@ const SpaceHistory = ({ show, onClose }: Props) => {
                               className="size-[13.5px]  mr-[6px] opacity-90 rounded-full border-[0.5px] border-slate-700 object-center object-scale-down"
                             />
                             <div className="flex items-center w-[80%] max-w-[85%]">
-                              <span className="select-text text-start text-slate-400 text-[11px] font-extralight text-ellipsis w-fit max-w-[96%] overflow-hidden whitespace-nowrap">
+                              <span className="select-text text-start text-slate-300/70 text-[11px] font-light text-ellipsis w-fit max-w-[96%] overflow-hidden whitespace-nowrap">
                                 {sessionDomain}
                               </span>
-                              <span className="text-[10px] text-slate-400/80 ml-[2.5px]">({visits.length})</span>
+                              <span className="text-[10px] text-slate-500/80 ml-[2.5px]">({visits.length})</span>
                             </div>
                           </div>
                         }>

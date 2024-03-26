@@ -1,15 +1,17 @@
-import { useState, useEffect, memo } from 'react';
-import RadioGroup, { RadioOptions } from '../../elements/radio-group/RadioGroup';
 import { useAtom } from 'jotai';
-import { appSettingsAtom, showSettingsModalAtom, snackbarAtom } from '@root/src/stores/app';
-import { IAppSettings } from '@root/src/pages/types/global.types';
-import { AlarmName, DefaultAppSettings } from '@root/src/constants/app';
-import { MdOpenInNew } from 'react-icons/md';
+import { OpenInNewWindowIcon } from '@radix-ui/react-icons';
+import { useState, useEffect, memo, ReactNode, FC } from 'react';
+
+import Spinner from '../../elements/spinner';
 import { SlideModal } from '../../elements/modal';
 import Switch from '../../elements/switch/Switch';
-import Spinner from '../../elements/spinner';
+import Accordion from '../../elements/accordion/Accordion';
+import { IAppSettings } from '@root/src/pages/types/global.types';
+import { AlarmName, DefaultAppSettings } from '@root/src/constants/app';
 import { saveSettings } from '@root/src/services/chrome-storage/settings';
+import RadioGroup, { RadioOptions } from '../../elements/radio-group/RadioGroup';
 import { createAlarm, deleteAlarm } from '@root/src/services/chrome-alarms/helpers';
+import { appSettingsAtom, showSettingsModalAtom, snackbarAtom } from '@root/src/stores/app';
 
 const autoSaveToBookmark: RadioOptions[] = [
   { value: 'off', label: 'Off' },
@@ -109,76 +111,115 @@ const Settings = () => {
     await chrome.tabs.create({ url: 'chrome://extensions/shortcuts', active: true });
   };
 
+  const SettingsHeader: FC<{ heading: string }> = ({ heading }) => (
+    <p className="text-[14px] text-slate-400 font-light my-1 ml-1">{heading}</p>
+  );
+  const BodyContainer: FC<{ children?: ReactNode }> = ({ children }) => <div className="py-2 px-2">{children}</div>;
+
   return (
     <SlideModal title="Preferences" isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)}>
-      <div className="relative flex flex-col  w-full h-[32rem] py-4 px-3.5 text-slate-400 ">
-        {/* shortcuts */}
-        <div className="mt-1">
-          <span className="text-[14px]  font-light tracking-wide ">Shortcut to open FreshTabs</span>
-          <div className="flex items-center ">
+      <div className="relative flex flex-col w-full h-fit max-h-[90vh] pt-2 pb-1 px-1.5 text-slate-400">
+        {/* general */}
+        <Accordion
+          id="general"
+          classes={{
+            triggerContainer:
+              'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px',
+            triggerIcon: 'scale-[1.1] text-slate-700',
+            content: 'bg-brand-darkBgAccent/15 border-b  border-brand-darkBgAccent/30 rounded-br-md rounded-bl-md mb-1',
+          }}
+          trigger={<SettingsHeader heading="General" />}>
+          {/* accordion body */}
+          <BodyContainer>
+            {/* save & sync */}
+            <div className="">
+              <p className="text-[12px]  font-light tracking-wide ml-1">Auto Save to Browser Bookmark</p>
+              <RadioGroup
+                options={autoSaveToBookmark}
+                value={settingsUpdateData.autoSaveToBookmark}
+                defaultValue={autoSaveToBookmark[0].value}
+                onChange={value => handleSettingsChange('autoSaveToBookmark', value)}
+              />
+            </div>
+            {/* save & sync */}
+            <p className="text-[12px] mt-1.5  font-light tracking-wide ml-1">Delete Unsaved spaces after sessions</p>
             <RadioGroup
-              options={[{ label: openAppShortcut, value: openAppShortcut }]}
-              value={openAppShortcut}
-              defaultValue={openAppShortcut}
-              onChange={() => {}}
+              options={deleteUnsavedSpacesOptions}
+              value={settingsUpdateData.deleteUnsavedSpace}
+              defaultValue={deleteUnsavedSpacesOptions[0].value}
+              onChange={value => handleSettingsChange('deleteUnsavedSpace', value)}
             />
-            <button
-              className="ml-2 flex items-center gap-x-1 border border-slate-700 rounded-sm px-2 py-1"
-              onClick={openChromeShortcutSettings}>
-              Change Shortcut In Chrome <MdOpenInNew />
-            </button>
-          </div>
-        </div>
-        <hr className="w-3/4 mx-auto h-px bg-slate-700/20 rounded-md border-none mt-4 mb-3" />
-        {/* save & sync */}
-        <div className="">
-          <span className="text-[14px]  font-light tracking-wide ">Auto Save to Browser Bookmark</span>
-          <RadioGroup
-            options={autoSaveToBookmark}
-            value={settingsUpdateData.autoSaveToBookmark}
-            defaultValue={autoSaveToBookmark[0].value}
-            onChange={value => handleSettingsChange('autoSaveToBookmark', value)}
-          />
-        </div>
-        <hr className="w-3/4 mx-auto h-px bg-slate-700/20 rounded-md border-none mt-4 mb-3" />
-        {/* save & sync */}
-        <div className="">
-          <span className="text-[14px]  font-light tracking-wide ">Delete Unsaved spaces after sessions</span>
-          <RadioGroup
-            options={deleteUnsavedSpacesOptions}
-            value={settingsUpdateData.deleteUnsavedSpace}
-            defaultValue={deleteUnsavedSpacesOptions[0].value}
-            onChange={value => handleSettingsChange('deleteUnsavedSpace', value)}
-          />
-        </div>
 
-        <hr className="w-3/4 mx-auto h-px bg-slate-700/20 rounded-md border-none mt-4 mb-3" />
+            {/* open space in */}
+            <div className="mt-2.5">
+              <span className="text-[12px]  font-light tracking-wide ml-1 ">Open space in</span>
+              <RadioGroup
+                options={openSpaceOption}
+                value={settingsUpdateData.openSpace}
+                defaultValue={openSpaceOption[0].value}
+                onChange={value => handleSettingsChange('openSpace', value)}
+              />
+            </div>
+          </BodyContainer>
+        </Accordion>
+        {/* shortcuts */}
+        <Accordion
+          id="shortcuts"
+          classes={{
+            triggerContainer:
+              'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px',
+            triggerIcon: 'scale-[1.1] text-slate-700',
+            content: 'bg-brand-darkBgAccent/15 border-b  border-brand-darkBgAccent/30 rounded-br-md rounded-bl-md mb-1',
+          }}
+          trigger={<SettingsHeader heading="Shortcuts" />}>
+          {/* accordion body */}
+          <BodyContainer>
+            <p className="text-[12px] font-light tracking-wide ml-1">Shortcut to open FreshTabs</p>
+            <div className="flex items-center mt-1">
+              <RadioGroup
+                options={[{ label: openAppShortcut, value: openAppShortcut }]}
+                value={openAppShortcut}
+                defaultValue={openAppShortcut}
+                onChange={() => {}}
+              />
+              <button
+                className={`ml-2.5 flex items-center justify-between gap-x-1 px-2.5 py-1 text-slate-400 text-[11px] font-light 
+                          bg-brand-darkBg border border-brand-darkBgAccent/60 rounded shadow-sm shadow-brand-darkBg`}
+                onClick={openChromeShortcutSettings}>
+                Change Shortcut In Chrome <OpenInNewWindowIcon className="text-slate-600" />
+              </button>
+            </div>
+          </BodyContainer>
+        </Accordion>
+        {/* command palette */}
+        <Accordion
+          id="command-palette"
+          classes={{
+            triggerContainer:
+              'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px',
+            triggerIcon: 'scale-[1.1] text-slate-700',
+            content: 'bg-brand-darkBgAccent/15 border-b  border-brand-darkBgAccent/30 rounded-br-md rounded-bl-md',
+          }}
+          trigger={<SettingsHeader heading="Command Palette" />}>
+          {/* accordion body */}
+          <BodyContainer>
+            {/* include bookmarks in search */}
+            <div className="flex items-center justify-between px-2">
+              <p className="text-[12px]  font-light tracking-wide ml-1">Include Bookmarks in Search</p>
+              <Switch
+                size="medium"
+                id="include-bookmark-in-search"
+                checked={settingsUpdateData.includeBookmarksInSearch}
+                onChange={checked => handleSettingsChange('includeBookmarksInSearch', checked)}
+              />
+            </div>
+          </BodyContainer>
+        </Accordion>
 
-        {/* open space in */}
-        <div className="">
-          <span className="text-[14px]  font-light tracking-wide ">Open space in</span>
-          <RadioGroup
-            options={openSpaceOption}
-            value={settingsUpdateData.openSpace}
-            defaultValue={openSpaceOption[0].value}
-            onChange={value => handleSettingsChange('openSpace', value)}
-          />
-        </div>
-        {/* include bookmarks in search */}
-        <div className="mt-3 flex items-center justify-between pr-2.5 border-b border-slate-700/30 rounded-sm  py-1 pb-2.5">
-          <label htmlFor="include-bookmark-in-search" className="text-[14px] mr-12  font-light tracking-wide">
-            Include Bookmarks in Search
-          </label>
-          <Switch
-            id="include-bookmark-in-search"
-            checked={settingsUpdateData.includeBookmarksInSearch}
-            onChange={checked => handleSettingsChange('includeBookmarksInSearch', checked)}
-          />
-        </div>
         {/* save button */}
         <button
-          className={` mt-8 mx-auto w-[90%] py-2  disabled:cursor-default
-                      rounded-md text-slate-500 font-medium text-base shadow shadow-slate-500 hover:opacity-80 transition-all duration-300`}
+          className={`mt-4 mx-auto w-[60%] py-2.5 border border-brand-darkBgAccent/70 tex-[15px] text-slate-700 font-semibold hover:opacity-90 transition-all duration-300 
+                      rounded-md bg-brand-primary/90 disabled:cursor-default disabled:bg-transparent disabled:text-slate-500 `}
           onClick={handleSaveSettings}
           disabled={!hasSettingsChanged}>
           {snackbar.isLoading ? <Spinner size="sm" /> : 'Save'}
