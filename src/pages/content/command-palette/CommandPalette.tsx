@@ -424,7 +424,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
             tabIndex={-1}
             onClick={handleSearchIconClick}>
             {!subCommand ? (
-              <MagnifyingGlassIcon className="text-slate-600 bg-transparent md:scale-[1.5] scale-[1] ml-1.5 mr-1 md:ml-3 md:mr-[9px]" />
+              <MagnifyingGlassIcon className="text-slate-600 bg-transparent md:scale-[1.5] scale-[1] ml-[6px] mr-[4px] md:ml-3 md:mr-[9px]" />
             ) : (
               SubCommandIndicator()
             )}
@@ -493,7 +493,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
             </div>
           ) : null}
         </div>
-
         {/* navigation guide */}
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions*/}
         <div

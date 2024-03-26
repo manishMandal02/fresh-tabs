@@ -2,42 +2,35 @@ import { SetStateAction, useAtom } from 'jotai';
 import { Dispatch, useState, memo } from 'react';
 import { BellIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
 
+import { Notes } from '../../notes';
+import SpaceTitle from './SpaceTitle';
 import SnoozedTabs from './SnoozedTabs';
 import MoreOptions from '../more-options';
 import Tabs from '../../../elements/tabs/Tabs';
 import ActiveSpaceTabs from './ActiveSpaceTabs';
 import SpaceHistory from '../history/SpaceHistory';
-
 import { useKeyPressed } from '../../../../hooks/useKeyPressed';
 import { ISpaceWithTabs } from '@root/src/pages/types/global.types';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
-import { deleteSpaceModalAtom, snackbarAtom, showNotificationModalAtom } from '@root/src/stores/app';
-import SpaceTitle from './SpaceTitle';
-import { Notes } from '../../notes';
+import { deleteSpaceModalAtom, snackbarAtom } from '@root/src/stores/app';
 
 type Props = {
   space: ISpaceWithTabs;
   setActiveSpace: Dispatch<SetStateAction<ISpaceWithTabs>>;
   onSearchClick: () => void;
+  onNotificationClick: () => void;
 };
 
-const ActiveSpace = ({ space, setActiveSpace, onSearchClick }: Props) => {
+const ActiveSpace = ({ space, setActiveSpace, onSearchClick, onNotificationClick }: Props) => {
   console.log('ActiveSpace ~ 🔁 rendered');
 
   // global state
-  // snackbar atom
   const [, setSnackbar] = useAtom(snackbarAtom);
-
-  //  notification modal atom
-  const [, setShowNotification] = useAtom(showNotificationModalAtom);
-  // delete space modal
   const [, setDeleteSpaceModal] = useAtom(deleteSpaceModalAtom);
 
   // local state
-  // show show history
   const [showSpaceHistory, setShowSpaceHistory] = useState(false);
-  // show snoozed tabs
   const [showSnoozedTabs, setShowSnoozedTabs] = useState(false);
 
   //  key press
@@ -86,7 +79,7 @@ const ActiveSpace = ({ space, setActiveSpace, onSearchClick }: Props) => {
           {/* Notification */}
           <button
             tabIndex={0}
-            onClick={() => setShowNotification(true)}
+            onClick={onNotificationClick}
             className={`text-slate-500/90 hover:bg-brand-darkBgAccent/30  px-1.5 py-1.5 rounded-full transition-all duration-200 outline-none focus:bg-brand-darkBgAccent/60`}>
             <BellIcon className="scale-[1.1]" />
           </button>

@@ -5,7 +5,6 @@
 /* custom scroll bar */
 .cc-scrollbar::-webkit-scrollbar {
   width: 8px;
-
   height: 4px;
 }
 

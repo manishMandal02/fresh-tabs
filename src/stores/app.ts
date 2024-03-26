@@ -38,7 +38,7 @@ export const dragStateAtom = atom<{ isDragging: boolean; type: 'space' | 'tabs' 
 
 //- modal atoms
 // settings modal
-export const showSettingsModalAtom = atom(true);
+export const showSettingsModalAtom = atom(false);
 
 // notification
 export const showNotificationModalAtom = atom(false);

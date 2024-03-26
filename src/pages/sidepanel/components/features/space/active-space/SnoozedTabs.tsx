@@ -32,31 +32,36 @@ const SnoozedTabs = ({ show, onClose }: Props) => {
 
   // TODO - handle delete snoozed
 
+  // TODO - show filter options as all space snoozed tabs, etc.
+
   const { bounce } = useCustomAnimation();
 
   return (
     <SlideModal isOpen={show} onClose={onClose} title={`Snoozed Tabs (${snoozedTabs?.length || 0})`}>
-      <div className="">
+      <div className="px-1.5 py-1.5 min-h-[40vh] max-h-[80vh]">
         {snoozedTabs?.map(tab => (
           <motion.div
             {...bounce}
             key={tab.snoozedAt}
-            className="max-w-full w-full flex justify-center pl-2 mb-1.5 last:mb-0 pr-1 bg-brand-darkBgAccent/30 rounded-lg py-1.5 ">
-            <div className="w-[10%] flex items-center">
+            className="max-w-full w-full flex justify-center px-2 mb-1.5 last:mb-0 bg-brand-darkBgAccent/30 rounded-lg py-1.5 ">
+            {/* left container */}
+            <div className="w-[9%] flex items-center">
               <img src={tab.faviconUrl} alt="icon" className="w-[1.7rem] h-[1.7rem] rounded-md opacity-90" />
             </div>
-            <div className="flex flex-col justify-center w-[90%] pl-1.5 mt-1">
+            {/* right */}
+            <div className="flex flex-col justify-center w-[90%] pl-1.5 mt-[3.5px]">
               <p className="text-slate-300/90 max-w-[97%] whitespace-nowrap overflow-hidden text-ellipsis">
                 {tab.title}
               </p>
-              <div className="text-slate-400 flex items-center justify-between">
+              {/* right con.. > bottom container */}
+              <div className="text-slate-400 flex items-center justify-between mt-1">
                 {/* snoozed at time */}
-                <span className="text-[11px] font-medium opacity-60 ml-px ">snoozed {getTimeAgo(tab.snoozedAt)}</span>
+                <span className="text-[11px] text-slate-500 ml-px">snoozed {getTimeAgo(tab.snoozedAt)}</span>
                 {/* snoozed until */}
-                <span className=" bg-brand-darkBg/70 w-fit px-2 py-px rounded font-medium mr-2.5 -mb-px">
+                <span className=" bg-brand-darkBg/70 w-fit px-[9px] py-[1.5px] rounded font-medium mr-2.5 -mb-px select-none ">
                   <span className="opacity-90">⏰</span> &nbsp;
                   <Tooltip label={new Date(tab.snoozedUntil).toLocaleString()}>
-                    <span className="font-semibold text-[11px]">{getTimeAgo(tab.snoozedUntil)}</span>
+                    <span className="font-medium text-[11px] text-slate-300/70">{getTimeAgo(tab.snoozedUntil)}</span>
                   </Tooltip>
                 </span>
               </div>

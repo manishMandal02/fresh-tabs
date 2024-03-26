@@ -105,8 +105,6 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 
 // TODO - store favicon url in ITab
 
-// TODO -
-
 // TODO - track num of times user switch spaces
 
 // TODO - Use UTC date & time stamp for server (save user timezone)
@@ -114,6 +112,9 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 // TODO - reset day at 3am at default
 
 // TODO - DnD checks (tabs, spaces, merge, delete, create)
+
+// TODO - attach a root container for command palette on site load complete,
+//-- and then append the react component on command palette shortcut
 
 // helpers for chrome event handlers
 const createUnsavedSpacesOnInstall = async () => {

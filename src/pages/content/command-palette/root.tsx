@@ -40,20 +40,22 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace }: AppendConta
 
   // append root react component for command palette
   document.body.append(commandPaletteContainer);
-  const rootIntoShadow = document.createElement('div');
+  // const rootIntoShadow = document.createElement('div');
 
-  rootIntoShadow.id = 'shadow-root';
+  // rootIntoShadow.id = 'shadow-root';
 
-  const shadowRoot = commandPaletteContainer.attachShadow({ mode: 'open' });
+  // const shadowRoot = commandPaletteContainer.attachShadow({ mode: 'open' });
 
-  shadowRoot.appendChild(rootIntoShadow);
+  // shadowRoot.appendChild(rootIntoShadow);
 
-  /** Inject styles into shadow dom */
+  // /** Inject styles into shadow dom */
   const styleElement = document.createElement('style');
   styleElement.innerHTML = injectedStyle;
-  shadowRoot.appendChild(styleElement);
+  // shadowRoot.appendChild(styleElement);
 
-  createRoot(rootIntoShadow).render(
+  document.body.append(styleElement);
+
+  createRoot(commandPaletteContainer).render(
     <CommandPalette recentSites={recentSites} activeSpace={activeSpace} onClose={handleClose} />,
   );
 };
