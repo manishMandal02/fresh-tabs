@@ -4,6 +4,7 @@ import injectedStyle from './injected.css?inline';
 import { CommandPaletteContainerId } from '@root/src/constants/app';
 import { IMessageEventContentScript, ISpace, ITab } from '../../types/global.types';
 import CommandPalette from '.';
+import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
 
 refreshOnUpdate('pages/content');
 
@@ -26,6 +27,8 @@ type AppendContainerProps = {
 const appendCommandPaletteContainer = ({ recentSites, activeSpace }: AppendContainerProps) => {
   if (document.getElementById(CommandPaletteContainerId)) return;
 
+  const userSelectedText = getUserSelectionText();
+
   const commandPaletteContainer = document.createElement('div');
 
   commandPaletteContainer.id = CommandPaletteContainerId;
@@ -45,7 +48,7 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace }: AppendConta
 
   rootIntoShadow.id = 'shadow-root';
 
-  const shadowRoot = commandPaletteContainer.attachShadow({ mode: 'closed' });
+  const shadowRoot = commandPaletteContainer.attachShadow({ mode: 'open' });
 
   shadowRoot.appendChild(rootIntoShadow);
 
@@ -55,7 +58,12 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace }: AppendConta
   shadowRoot.appendChild(styleElement);
 
   createRoot(rootIntoShadow).render(
-    <CommandPalette recentSites={recentSites} activeSpace={activeSpace} onClose={handleClose} />,
+    <CommandPalette
+      recentSites={recentSites}
+      activeSpace={activeSpace}
+      onClose={handleClose}
+      userSelectedText={userSelectedText}
+    />,
   );
 };
 

@@ -1,4 +1,4 @@
-import { DesktopIcon } from '@radix-ui/react-icons';
+import { DesktopIcon, FilePlusIcon } from '@radix-ui/react-icons';
 import { useState, useCallback, useMemo } from 'react';
 
 import { getCommandIcon } from './CommandPalette';
@@ -189,6 +189,27 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
           setFocusedCommandIndex(1);
         } else {
           await publishEvents({ event: 'MOVE_TAB_TO_SPACE', payload: { spaceId: focusedCommand.metadata as string } });
+          handleCloseCommandPalette();
+        }
+        break;
+      }
+      case CommandType.NewNote: {
+        if (!subCommand) {
+          setSubCommand(CommandType.NewNote);
+          setSearchQueryPlaceholder('Note...');
+          setSuggestedCommands([
+            {
+              label: 'Save Note',
+              type: CommandType.NewNote,
+              index: 1,
+              icon: FilePlusIcon,
+            },
+          ]);
+
+          setFocusedCommandIndex(1);
+        } else {
+          // TODO - send event to create new note
+          // await publishEvents({ event: 'MOVE_TAB_TO_SPACE', payload: { spaceId: focusedCommand.metadata as string } });
           handleCloseCommandPalette();
         }
         break;

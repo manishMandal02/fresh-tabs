@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { MdOutlineKeyboardReturn } from 'react-icons/md';
-import { useState, useEffect, useRef, MouseEventHandler, ReactEventHandler, useCallback } from 'react';
+import { useState, useEffect, useRef, MouseEventHandler, useCallback } from 'react';
 import {
   ArrowUpIcon,
   MagnifyingGlassIcon,
@@ -12,25 +12,26 @@ import {
   MoveIcon,
   DesktopIcon,
   Cross1Icon,
-  Link2Icon,
+  FilePlusIcon,
 } from '@radix-ui/react-icons';
 
-import { cn } from '@root/src/utils/cn';
+import Command from './command/Command';
 import { debounce } from '../../../utils/debounce';
 import { getFaviconURL } from '../../../utils/url';
 import { CommandType } from '@root/src/constants/app';
 import { useCommandPalette } from './useCommandPalette';
-import { isValidURL } from '../../../utils/url/validate-url';
 import { publishEvents } from '../../../utils/publish-events';
+import CommandSectionLabel from './command/CommandSectionLabel';
+import { ICommand, ISpace, ITab } from '../../types/global.types';
 import { prettifyDate } from '../../../utils/date-time/prettifyDate';
-import { ICommand, ISpace, ITab, RadixIconType } from '../../types/global.types';
 import { useCustomAnimation } from '../../sidepanel/hooks/useAnimation';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
+import SearchBox from './search-box/SearchBox';
 
 // default static commands
-const staticCommands: ICommand[] = [
+export const staticCommands: ICommand[] = [
   { index: 1, type: CommandType.SwitchTab, label: 'Switch Tab', icon: PinRightIcon },
   { index: 2, type: CommandType.NewNote, label: 'New Note', icon: FileTextIcon },
   { index: 3, type: CommandType.SwitchSpace, label: 'Switch Space', icon: EnterIcon },
@@ -42,16 +43,10 @@ const staticCommands: ICommand[] = [
   { index: 8, type: CommandType.CloseTab, label: 'Close Tab', icon: Cross1Icon },
 ];
 
-const isStaticCommands = (label: string) => {
-  return staticCommands.some(cmd => cmd.label === label);
-};
+const isStaticCommands = (label: string) => staticCommands.some(cmd => cmd.label === label);
 
 export const getCommandIcon = (type: CommandType) => {
-  // if (type === CommandType.RecentSite) {
-  //   return { label: 'Open', Icon: MdLink };
-  // }
-
-  const cmd = staticCommands.find(cmd => cmd.type === type);
+  const cmd = staticCommands.find(c => c.type === type);
 
   return { Icon: cmd.icon, label: cmd.label };
 };
@@ -65,7 +60,7 @@ const webSearchCommand = (query: string, index: number) => {
   };
 };
 
-const COMMAND_HEIGHT = 30;
+export const COMMAND_HEIGHT = 30;
 
 const SUGGESTED_COMMANDS_MAX_HEIGHT = 400;
 
@@ -74,13 +69,14 @@ type Props = {
   recentSites: ITab[];
   onClose?: () => void;
   isSidePanel?: boolean;
+  userSelectedText?: string;
 };
 
 // TODO - Fix - when typing fast and selecting command that opens sub commands, the sub command assumes that theres text in the input box while there isn't any.
 // its' because of the multi useEffect  updating the commands/search
 // 👆 this is also causing another bug where the search box is empty but the suggestion box assumes that there's still some part of the erase text
 
-const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false }: Props) => {
+const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, isSidePanel = false }: Props) => {
   // loading search result
   const [isLoadingResults, setIsLoadingResults] = useState(false);
 
@@ -105,6 +101,11 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
     setSearchQuery,
     setSearchQueryPlaceholder,
   } = useCommandPalette({ activeSpace, modalRef, onClose });
+
+  // focus search input box
+  const handleFocusSearchInput = () => {
+    inputRef.current?.focus();
+  };
 
   // check if the focused command is visible
   useEffect(() => {
@@ -133,14 +134,25 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
   // initialize component
   useEffect(() => {
     modalRef.current?.showModal();
-    inputRef.current?.focus();
+    handleFocusSearchInput();
 
-    setDefaultSuggestedCommands();
-  }, [setDefaultSuggestedCommands]);
-
-  const handleSearchIconClick = () => {
-    inputRef.current?.focus();
-  };
+    if (!userSelectedText) {
+      setDefaultSuggestedCommands();
+    } else {
+      setSubCommand(CommandType.NewNote);
+      setSuggestedCommands([
+        {
+          index: 1,
+          label: 'Save note',
+          type: CommandType.NewNote,
+          icon: FilePlusIcon,
+        },
+      ]);
+      setFocusedCommandIndex(1);
+    }
+    // run when component mounts
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleGlobalSearch = useCallback(async () => {
     const matchedCommands: ICommand[] = [];
@@ -259,18 +271,11 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
     }
   }, [searchQuery, subCommand, suggestedCommandsForSubCommand, setFocusedCommandIndex, setSuggestedCommands]);
 
+  // on command select/click
   const onCommandClick = async (index: number) => {
     setFocusedCommandIndex(index);
     await handleSelectCommand();
   };
-
-  // handle fallback image for favicon icons
-  const handleImageLoadError: ReactEventHandler<HTMLImageElement> = ev => {
-    ev.stopPropagation();
-    ev.currentTarget.src = 'https://freshinbox.xyz/favicon.ico';
-  };
-
-  const { bounce } = useCustomAnimation();
 
   // check if modal's backdrop was clicked
   const handleBackdropClick: MouseEventHandler<HTMLDialogElement> = ev => {
@@ -292,130 +297,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
     }
   };
 
-  // show sub command indicator instead of search icon in search box
-  const SubCommandIndicator = (type?: CommandType) => {
-    // get command icon
-    let label = 'Switch Space';
-
-    const cmdType = type || subCommand;
-
-    const { Icon } = getCommandIcon(cmdType);
-
-    if (cmdType === CommandType.NewSpace) {
-      label = 'New Space';
-    } else if (cmdType === CommandType.AddToSpace) {
-      label = 'Move Tab';
-    } else if (cmdType === CommandType.SwitchTab) {
-      label = 'Switch Tab';
-    } else if (cmdType === CommandType.SnoozeTab) {
-      label = 'Snooze Tab';
-    }
-
-    return (
-      <div className="flex items-center justify-start h-full border-r border-brand-darkBgAccent/50 pl-[9px] pr-[6.5px] mr-1.5 bg-brand-darkBgAccent/40">
-        <Icon className=" text-slate-500/80 mr-1.5 scale-[1]" />
-        <p className="text-slate-400 text-[12px]  m-0 p-0 whitespace-nowrap">{label}</p>
-      </div>
-    );
-  };
-
-  // command section label
-  const CommandSectionLabel = (index: number, cmdLabel: string) => {
-    if (index < 1 || isStaticCommands(cmdLabel)) return;
-
-    let sectionLabel = '';
-
-    let Icon = Link2Icon;
-
-    if (
-      index ===
-      suggestedCommands.find(cmd1 => cmd1.type === CommandType.SwitchTab && staticCommands[0].label !== cmd1.label)
-        ?.index
-    ) {
-      sectionLabel = 'Switch to opened tabs';
-      Icon = getCommandIcon(CommandType.SwitchTab).Icon as RadixIconType;
-    } else if (index === suggestedCommands.find(cmd1 => cmd1.type === CommandType.RecentSite)?.index) {
-      sectionLabel = 'Open recently visited sites';
-    } else if (
-      index ===
-      suggestedCommands.find(cmd1 => cmd1.type === CommandType.SwitchSpace && staticCommands[1].label !== cmd1.label)
-        ?.index
-    ) {
-      sectionLabel = 'Switch space';
-      Icon = getCommandIcon(CommandType.SwitchSpace).Icon as RadixIconType;
-    }
-
-    if (!sectionLabel) return;
-
-    return (
-      <>
-        <div className="flex items-center justify-start gap-x-1 mt-1.5 ml-2.5 mb-1">
-          <p key={index} className="text-[12.5px] font-light text-slate-500 " tabIndex={-1}>
-            {sectionLabel}
-          </p>
-          <Icon className=" text-slate-700 ml-px scale-[1]" />
-        </div>
-        <hr key={index} className="h-px bg-brand-darkBgAccent border-none w-full m-0 p-0" tabIndex={-1} />
-      </>
-    );
-  };
-
-  // const CommandTypeLabel = (type: CommandType) => {
-  //   // get command icon
-  //   const { Icon, label } = getCommandIcon(type);
-
-  //   return (
-  //     <div className="flex items-center justify-start border-r border-brand-darkBgAccent/50 pl-[3px] pr-[4px] mr-1 bg-brand-darkBgAccent/30 ml-2 h-full">
-  //       <Icon className=" fill-slate-600 text-slate-600 mr-1.5" size={12} />
-  //       {/* <p className="text-slate-500 text-[10px]  m-0 p-0 whitespace-nowrap">{label}</p> */}
-  //     </div>
-  //   );
-  // };
-
-  // command component
-
-  const Command = ({ index, label, icon: Icon }: ICommand) => {
-    const isFocused = focusedCommandIndex === index;
-
-    return (
-      <button
-        id={`fresh-tabs-command-${index}`}
-        className={`w-full flex items-center justify-start px-[8px] py-[4px] md:py-[6px] outline-none first:pt-[6px] md:first:pt-[7.5px]
-        transition-all duration-200 ease-in ${isFocused ? 'bg-brand-darkBgAccent/50' : ''} `}
-        onClick={() => onCommandClick(index)}
-        style={{ height: COMMAND_HEIGHT + 'px' }}>
-        {/* special commands */}
-
-        {/* {!isStaticCommands(label) && type !== CommandType.WebSearch ? CommandTypeLabel(type) : null} */}
-
-        <div className="w-[22px]">
-          {typeof Icon === 'string' ? (
-            !isValidURL(Icon) ? (
-              <span className="w-[16px] mr-2.5 h-fit text-start">{Icon}</span>
-            ) : (
-              <img
-                alt="icon"
-                src={Icon}
-                onError={handleImageLoadError}
-                className="w-[14px] h-fit rounded-md opacity-95 object-scale-down object-center"
-              />
-            )
-          ) : (
-            <Icon
-              className={cn(
-                'text-slate-500/70 w-[14px] scale-[1]',
-                { 'text-slate-500/90': isFocused },
-                { 'scale-[0.92]': label === 'New Space' },
-              )}
-            />
-          )}
-        </div>
-        <p
-          className="text-[12px] text-start text-slate-300/80 font-light min-w-[50%] max-w-[95%] whitespace-nowrap  overflow-hidden text-ellipsis"
-          dangerouslySetInnerHTML={{ __html: label }}></p>
-      </button>
-    );
-  };
+  const { bounce } = useCustomAnimation();
 
   return (
     <div className="w-screen h-screen flex items-center justify-center fixed top-0 left-0 overflow-hidden">
@@ -431,61 +313,24 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
           ev.nativeEvent.stopImmediatePropagation();
         }}
         {...bounce}
-        // working on bigger screen
-        // className=" m-0 flex items-center outline-none flex-col justify-center top-[20%] h-fit max-h-[75vh] w-[520px] max-w-[60%] left-[33.5%] backdrop:to-brand-darkBg/30 p-px bg-transparent">
-        // smaller screen
-        className=" mx-auto top-[20%] left-/12 flex items-center outline-none flex-col justify-center backdrop:to-brand-darkBg/30  h-fit min-w-[600px] w-[40%] max-w-[40%]  p-px bg-transparent">
+        className={`mx-auto top-[20%] left-/12 flex items-center outline-none flex-col justify-center 
+                  backdrop:to-brand-darkBg/30  h-fit min-w-[600px] w-[40%] max-w-[40%]  p-px bg-transparent`}>
         <div className="w-full h-[500px] relative overflow-visible">
           {/* search box */}
-          <div
-            className={`w-full h-[32px] min-h-[32px] md:h-[50px] md:min-h-[50px] flex items-center bg-brand-darkBg rounded-tl-xl rounded-tr-xl
-                        shadow-sm shadow-brand-darkBgAccent/60 border border-brand-darkBgAccent/70 border-collapse`}>
-            {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events */}
-            <button
-              className="h-full max-h-full rounded-tl-xl rounded-bl-xl "
-              tabIndex={-1}
-              onClick={handleSearchIconClick}>
-              {!subCommand ? (
-                <MagnifyingGlassIcon className="text-slate-600 bg-transparent md:scale-[1.5] scale-[1] ml-[6px] mr-[4px] md:ml-3 md:mr-[9px]" />
-              ) : (
-                SubCommandIndicator()
-              )}
-            </button>
-            <input
-              // eslint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus
-              ref={inputRef}
-              placeholder={searchQueryPlaceholder}
-              onChange={ev => {
-                ev.nativeEvent.stopImmediatePropagation();
-
-                setSearchQuery(ev.currentTarget.value);
-              }}
-              type="text"
-              spellCheck={false}
-              onKeyDown={ev => {
-                ev.stopPropagation();
-
-                ev.nativeEvent.stopImmediatePropagation();
-
-                console.log('🚀 ~ CommandPalette ~ ev.nativeEvent.composedPath():', ev.nativeEvent.composedPath());
-
-                if (ev.key === 'Backspace' && !searchQuery.trim()) {
-                  setSubCommand(null);
-                  setDefaultSuggestedCommands();
-                  setSuggestedCommandsForSubCommand([]);
-                  setFocusedCommandIndex(1);
-                  return;
-                }
-                if (ev.key.includes('ArrowDown') || ev.key.includes('ArrowUp')) {
-                  ev.preventDefault();
-                }
-              }}
-              value={searchQuery}
-              className={`text-[12px] md:text-[14px] text-slate-300 w-auto flex-grow px-px py-1.5 md:py-2.5  placeholder:text-slate-600 placeholder:font-light
-                        rounded-tr-xl caret-slate-300 caret rounded-br-xl outline-none border-none bg-transparent`}
-            />
-          </div>
+          <SearchBox
+            ref={inputRef}
+            handleFocusSearchInput={handleFocusSearchInput}
+            searchQuery={searchQuery}
+            placeholder={searchQueryPlaceholder}
+            setSearchQuery={setSearchQuery}
+            subCommand={subCommand}
+            onClearSearch={() => {
+              setSubCommand(null);
+              setDefaultSuggestedCommands();
+              setSuggestedCommandsForSubCommand([]);
+              setFocusedCommandIndex(1);
+            }}
+          />
           {/* search suggestions and result */}
           <div
             ref={suggestionContainerRef}
@@ -498,12 +343,35 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
             {suggestedCommands.length > 0 &&
               suggestedCommands?.map(cmd => {
                 const renderCommands: JSX.Element[] = [];
-                renderCommands.push(CommandSectionLabel(cmd.index, cmd.label));
 
-                renderCommands.push(Command(cmd));
+                // section label
+                // do not render  for sub commands
+                !subCommand &&
+                  renderCommands.push(
+                    <CommandSectionLabel
+                      key={cmd.index}
+                      index={cmd.index}
+                      isStaticCommand={isStaticCommands(cmd.label)}
+                      suggestedCommands={suggestedCommands}
+                    />,
+                  );
 
+                //  command
+                renderCommands.push(
+                  <Command
+                    index={cmd.index}
+                    label={cmd.label}
+                    Icon={cmd.icon}
+                    key={cmd.index}
+                    isFocused={focusedCommandIndex === cmd.index}
+                    onClick={() => onCommandClick(cmd.index)}
+                  />,
+                );
+
+                // render commands & labels
                 return <>{renderCommands.map(cmd1 => cmd1)}</>;
               })}
+
             {/* lading commands ui (skeleton) */}
             {isLoadingResults
               ? [1, 2].map(v => (
@@ -529,8 +397,9 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
           {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions*/}
           <div
             className={`bg-brand-darkBg/95 shadow-sm shadow-slate-800/70  w-full flex items-center justify-between px-1 py-px select-none
-                      rounded-bl-md rounded-br-md border-t border-brand-darkBgAccent   `}
-            onClick={() => inputRef.current?.focus()}>
+                      rounded-bl-md rounded-br-md border-t border-brand-darkBgAccent`}
+            // focuses on the search input box if clicked
+            onClick={handleFocusSearchInput}>
             {!isSidePanel ? (
               <div className=" text-slate-600/90 font-medium text-[10px] ml-2">FreshTabs</div>
             ) : (

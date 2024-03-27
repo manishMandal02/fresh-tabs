@@ -3,7 +3,7 @@ import { IAppSettings, IPinnedTab, ISpaceWithTabs } from '../pages/types/global.
 export const CommandPaletteContainerId = 'fresh-tabs-command-palette-container';
 
 export const FRESH_TABS_BOOKMARK_TITLE = '#Fresh Tabs ~ ⚠️ Do not delete this, managed by extension.';
-
+export const FALLBACK_ICON = 'https://freshinbox.xyz/favicon.ico';
 export const DISCARD_TAB_URL_PREFIX = 'data:text/html,';
 
 export const SNOOZED_TAB_GROUP_TITLE = '⏰ Snoozed';
