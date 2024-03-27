@@ -1,15 +1,16 @@
+import { DesktopIcon } from '@radix-ui/react-icons';
 import { useState, useCallback, useMemo } from 'react';
-import { ICommand, ISpace } from '../../types/global.types';
-import { publishEvents } from '../../utils/publish-events';
-import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
-import { CommandType } from '@root/src/constants/app';
-import { useKeyPressed } from '../../sidepanel/hooks/useKeyPressed';
-import { MdNewLabel } from 'react-icons/md';
-import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
-import { getFaviconURL } from '../../utils/url';
-import { naturalLanguageToDate } from '../../utils/date-time/naturalLanguageToDate';
+
 import { getCommandIcon } from './CommandPalette';
-import { prettifyDate } from '../../utils/date-time/prettifyDate';
+import { getFaviconURL } from '../../../utils/url';
+import { CommandType } from '@root/src/constants/app';
+import { ICommand, ISpace } from '../../types/global.types';
+import { publishEvents } from '../../../utils/publish-events';
+import { useKeyPressed } from '../../sidepanel/hooks/useKeyPressed';
+import { prettifyDate } from '../../../utils/date-time/prettifyDate';
+import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
+import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
+import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
 
 type UseCommandPaletteProps = {
   activeSpace: ISpace;
@@ -154,7 +155,7 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
               label: 'Create & switch space',
               type: CommandType.NewSpace,
               index: 1,
-              icon: MdNewLabel,
+              icon: DesktopIcon,
             },
           ]);
 

@@ -1,7 +1,7 @@
 import { StorageKey } from '@root/src/constants/app';
 import { IDailySpaceTime, IDailySpaceTimeChunks } from '@root/src/pages/types/global.types';
-import { logger } from '@root/src/pages/utils';
-import { getISODate } from '@root/src/pages/utils/date-time/getISODate';
+import { logger } from '@root/src/utils';
+import { getISODate } from '@root/src/utils/date-time/getISODate';
 import { getDailySpaceTime, setDailySpaceTime } from '@root/src/services/chrome-storage/space-analytics';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 

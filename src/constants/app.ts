@@ -1,5 +1,5 @@
 import { IAppSettings, IPinnedTab, ISpaceWithTabs } from '../pages/types/global.types';
-
+// if changing this then make sure to update the injected.css for command palette
 export const CommandPaletteContainerId = 'fresh-tabs-command-palette-container';
 
 export const FRESH_TABS_BOOKMARK_TITLE = '#Fresh Tabs ~ ⚠️ Do not delete this, managed by extension.';
@@ -24,6 +24,7 @@ export enum ThemeColor {
 
 export enum CommandType {
   NewSpace = 'new-space',
+  NewNote = 'new-note',
   SwitchSpace = 'switch-space',
   AddToSpace = 'add-to-space',
   SwitchTab = 'switch-tab',
@@ -32,6 +33,7 @@ export enum CommandType {
   TopSite = 'top-site',
   DiscardTabs = 'discard-tabs',
   SnoozeTab = 'snooze-tab',
+  CloseTab = 'close-tab',
 }
 
 export const ALARM_NAME_PREFiX = {

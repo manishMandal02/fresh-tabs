@@ -1,4 +1,4 @@
-import { logger } from '@root/src/pages/utils';
+import { logger } from '@root/src/utils';
 import { getStorage, setStorage } from './helpers';
 import { StorageKey } from '@root/src/constants/app';
 import { ISiteVisit } from '@root/src/pages/types/global.types';

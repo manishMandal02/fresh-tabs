@@ -9,14 +9,14 @@ reloadOnUpdate('pages/background');
 reloadOnUpdate('pages/content/style.scss');
 // ***
 
-import { logger } from '../utils/logger';
-import { debounceWithEvents, generateId, wait } from '../utils';
-import { retryAtIntervals } from '../utils/retryAtIntervals';
-import { asyncMessageHandler } from '../utils/asyncMessageHandler';
+import { logger } from '../../utils/logger';
+import { debounceWithEvents, generateId, wait } from '../../utils';
+import { retryAtIntervals } from '../../utils/retryAtIntervals';
+import { asyncMessageHandler } from '../../utils/asyncMessageHandler';
 import { handleSnoozedTabAlarm } from './handler/alarm/snoozed-tab';
-import { getFaviconURL, isChromeUrl, parseUrl } from '../utils/url';
+import { getFaviconURL, isChromeUrl, parseUrl } from '../../utils/url';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
-import { publishEvents, publishEventsTab } from '../utils/publish-events';
+import { publishEvents, publishEventsTab } from '../../utils/publish-events';
 import { handleMergeSpaceHistoryAlarm } from './handler/alarm/mergeSpaceHistory';
 import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers';
 import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
@@ -469,15 +469,18 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
     let activeTabId = currentTab?.id;
 
     if (currentTab?.url && isChromeUrl(currentTab?.url)) {
+      // chrome url
       // switch tab as content script doesn't work on chrome pages
 
       //  TODO - use space history
       // get last visited url
       const recentlyVisitedURL = await getRecentlyVisitedSites(1);
 
+      console.log('🚀 ~ chrome.commands.onCommand.addListener ~ recentlyVisitedURL:', recentlyVisitedURL);
+
       const tabs = await chrome.tabs.query({ currentWindow: true });
 
-      if (tabs.length < 2 || tabs.filter(t => isChromeUrl(t.url)).length === tabs.length) {
+      if (tabs?.length < 2 || tabs.filter(t => isChromeUrl(t.url)).length === tabs.length) {
         // create new tab if one 1 tab exists
         const newTab = await chrome.tabs.create({ url: recentlyVisitedURL[0].url, active: true });
         activeTabId = newTab.id;

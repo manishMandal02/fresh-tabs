@@ -1,4 +1,4 @@
-import { getFaviconURL } from '@root/src/pages/utils/url';
+import { getFaviconURL } from '@root/src/utils/url';
 import { motion } from 'framer-motion';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';
 

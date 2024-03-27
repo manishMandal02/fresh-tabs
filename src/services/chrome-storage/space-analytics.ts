@@ -1,7 +1,7 @@
 // space usage in time records
 
 import { StorageKey } from '@root/src/constants/app';
-import { logger } from '@root/src/pages/utils';
+import { logger } from '@root/src/utils';
 import { getStorage, setStorage } from './helpers';
 import { IDailySpaceTime, IDailySpaceTimeChunks } from '@root/src/pages/types/global.types';
 

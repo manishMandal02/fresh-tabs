@@ -4,18 +4,17 @@
 
 /* custom scroll bar */
 .cc-scrollbar::-webkit-scrollbar {
-  width: 8px;
-  height: 4px;
+  width: 6px;
 }
 
 /* Track */
 .cc-scrollbar::-webkit-scrollbar-track {
-  background: #162537a7;
+  background: #111a26a7;
 }
 
 /* Handle */
 .cc-scrollbar::-webkit-scrollbar-thumb {
-  background: #293d60b1;
+  background: #0a172bb1;
   border-radius: 16px;
 }
 
@@ -23,3 +22,7 @@
 .cc-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #232323bb;
 }
+/* 
+#fresh-tabs-command-palette-container {
+  all: initial;
+} */

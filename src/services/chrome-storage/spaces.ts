@@ -1,9 +1,9 @@
 import { SampleSpaces, StorageKey, ThemeColor } from './../../constants/app';
 import { getStorage } from './helpers/get';
 import { ISpace, ISpaceWithoutId, ITab } from '@root/src/pages/types/global.types';
-import { logger } from '@root/src/pages/utils/logger';
+import { logger } from '@root/src/utils/logger';
 import { setStorage } from './helpers/set';
-import { generateId } from '@root/src/pages/utils/generateId';
+import { generateId } from '@root/src/utils/generateId';
 import { getTabsInSpace, setTabsForSpace } from './tabs';
 
 // get all spaces

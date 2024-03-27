@@ -7,13 +7,13 @@ import { SlideModal } from '../../../elements/modal';
 import { activeSpaceIdAtom } from '@root/src/stores/app';
 import Accordion from '../../../elements/accordion/Accordion';
 import { ISiteVisit } from '@root/src/pages/types/global.types';
-import { getTime } from '@root/src/pages/utils/date-time/get-time';
+import { getTime } from '@root/src/utils/date-time/get-time';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';
-import { getUrlDomain } from '@root/src/pages/utils/url/get-url-domain';
-import { getISODate } from '@root/src/pages/utils/date-time/getISODate';
-import { getWeekday } from '@root/src/pages/utils/date-time/get-weekday';
+import { getUrlDomain } from '@root/src/utils/url/get-url-domain';
+import { getISODate } from '@root/src/utils/date-time/getISODate';
+import { getWeekday } from '@root/src/utils/date-time/get-weekday';
 import { getSpaceHistory } from '@root/src/services/chrome-storage/space-history';
-import { getReadableDate } from '@root/src/pages/utils/date-time/getReadableDate';
+import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 
 type Sessions = {
   date: string;

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Tooltip from '../../../elements/tooltip';
 import { ISnoozedTab } from '@root/src/pages/types/global.types';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';
-import { getTimeAgo } from '@root/src/pages/utils/date-time/time-ago';
+import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
 import { getSnoozedTabs } from '@root/src/services/chrome-storage/snooze-tabs';
 import { SlideModal } from '../../../elements/modal';
 import { useAtom } from 'jotai';

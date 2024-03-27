@@ -1,7 +1,7 @@
 import { SNOOZED_TAB_GROUP_TITLE } from '@root/src/constants/app';
 import { ISpace } from '@root/src/pages/types/global.types';
-import { logger } from '@root/src/pages/utils';
-import { getTimeAgo } from '@root/src/pages/utils/date-time/time-ago';
+import { logger } from '@root/src/utils';
+import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
 import { showUnSnoozedNotification } from '@root/src/services/chrome-notification/notification';
 import { getTabToUnSnooze, removeSnoozedTab } from '@root/src/services/chrome-storage/snooze-tabs';
 import { getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';

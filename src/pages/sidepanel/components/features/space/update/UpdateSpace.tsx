@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAtom } from 'jotai';
 
 import { Tab } from '../tab';
-import { wait } from '@root/src/pages/utils';
+import { wait } from '@root/src/utils';
 import Spinner from '../../../elements/spinner';
 import { useUpdateSpace } from './useUpdateSpace';
 import { SlideModal } from '../../../elements/modal';

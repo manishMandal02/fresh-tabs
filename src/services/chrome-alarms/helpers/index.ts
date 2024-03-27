@@ -1,7 +1,7 @@
 import { AlarmName } from '@root/src/constants/app';
 import { UnionTypeFromObjectValues } from '@root/src/pages/types/utility.types';
-import { naturalLanguageToDate } from '@root/src/pages/utils/date-time/naturalLanguageToDate';
-import { logger } from '@root/src/pages/utils/logger';
+import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
+import { logger } from '@root/src/utils/logger';
 
 type AlarmNameType = UnionTypeFromObjectValues<typeof AlarmName>;
 

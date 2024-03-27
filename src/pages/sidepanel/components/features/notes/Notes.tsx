@@ -6,9 +6,9 @@ import DeleteNote from './DeleteNote';
 import Tooltip from '../../elements/tooltip';
 import { showAddNewNoteModalAtom } from '@root/src/stores/app';
 import { INote, ISpace } from '@root/src/pages/types/global.types';
-import { getTimeAgo } from '@root/src/pages/utils/date-time/time-ago';
+import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
 import { getNotesBySpace } from '@root/src/services/chrome-storage/notes';
-import { limitCharLength } from '@root/src/pages/utils';
+import { limitCharLength } from '@root/src/utils';
 
 type Props = {
   space: ISpace;

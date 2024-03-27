@@ -10,10 +10,10 @@ import {
 } from '@root/src/stores/app';
 import { deleteSpace, setSpacesToStorage, updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
-import { logger } from '../../utils/logger';
+import { logger } from '../../../utils/logger';
 import { createDiscardedTabs } from '@root/src/services/chrome-tabs/tabs';
-import { scrollActiveSpaceBottom } from '../../utils/scrollActiveSpaceBottom';
-import { wait } from '../../utils';
+import { scrollActiveSpaceBottom } from '../../../utils/scrollActiveSpaceBottom';
+import { wait } from '../../../utils';
 
 //* dropped reasons to handle
 // --draggable -single/multi tab--

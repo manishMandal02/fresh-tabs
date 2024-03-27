@@ -1,5 +1,5 @@
 import * as RadioGroupRadix from '@radix-ui/react-radio-group';
-import { cn } from '@root/src/pages/utils/cn';
+import { cn } from '@root/src/utils/cn';
 
 export type RadioOptions = {
   value: string;

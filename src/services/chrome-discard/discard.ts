@@ -1,4 +1,4 @@
-import { logger } from '@root/src/pages/utils/logger';
+import { logger } from '@root/src/utils/logger';
 
 // discard all other tabs (exclude audible tabs)
 export const discardTabs = async (autoDiscard = false) => {

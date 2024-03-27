@@ -11,7 +11,7 @@ import {
   ITab,
 } from '@root/src/pages/types/global.types';
 import { UnionTypeFromObjectValues } from '@root/src/pages/types/utility.types';
-import { logger } from '@root/src/pages/utils/logger';
+import { logger } from '@root/src/utils/logger';
 
 type StorageValue =
   | ISpace

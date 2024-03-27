@@ -1,6 +1,7 @@
 import { ITab } from '@root/src/pages/types/global.types';
 import { getCurrentTab } from '../chrome-tabs/tabs';
-import { logger } from '@root/src/pages/utils/logger';
+import { logger } from '@root/src/utils/logger';
+import { isChromeUrl } from '@root/src/utils/url';
 
 const getSitesFromHistory = async (maxResults: number) => {
   const sites = await chrome.history.search({ maxResults, text: '' });
@@ -9,20 +10,16 @@ const getSitesFromHistory = async (maxResults: number) => {
     return [];
   }
 
-  if (sites.length === 1) {
-    return [{ url: sites[0].url, title: sites[0].title, id: 0 }];
-  }
+  // if (sites.length === 1) {
+  //   return [{ url: sites[0].url, title: sites[0].title, id: 0 }];
+  // }
 
   const currentTab = await getCurrentTab();
 
   // remove duplicates and return site url & title
 
   return sites.filter((s1, idx) => {
-    if (
-      sites.findIndex(s2 => s2.title === s1.title) === idx &&
-      s1.url !== currentTab?.url &&
-      !s1.url.startsWith('chrome://')
-    ) {
+    if (sites.findIndex(s2 => s2.title === s1.title) === idx && s1.url !== currentTab?.url && !isChromeUrl(s1.url)) {
       return true;
     } else {
       return false;
@@ -39,6 +36,8 @@ export const getRecentlyVisitedSites = async (maxResults = 4): Promise<ITab[]> =
 
     while (sites.length < maxResults) {
       sites = await getSitesFromHistory(Math.ceil((maxResults * i) / 2));
+
+      console.log('🚀 ~ getRecentlyVisitedSites ~ sites:', sites);
 
       i++;
     }

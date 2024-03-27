@@ -1,7 +1,7 @@
 import { useAtom } from 'jotai';
 import { useState } from 'react';
 
-import { wait } from '@root/src/pages/utils';
+import { wait } from '@root/src/utils';
 import Tooltip from '../../elements/tooltip';
 import Popover from '../../elements/popover';
 import { PlusIcon } from '@radix-ui/react-icons';

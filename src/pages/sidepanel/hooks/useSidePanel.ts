@@ -2,7 +2,7 @@ import { useAtom } from 'jotai';
 import { MutableRefObject, useCallback } from 'react';
 
 import { useTabsDnd } from './useTabsDnd';
-import { logger } from '../../utils/logger';
+import { logger } from '../../../utils/logger';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
 import { IMessageEventSidePanel, ISpaceWithTabs } from '../../types/global.types';

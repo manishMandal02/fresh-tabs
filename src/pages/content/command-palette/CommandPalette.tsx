@@ -1,32 +1,45 @@
 import { motion } from 'framer-motion';
-import { FaFolder, FaSearch } from 'react-icons/fa';
-import { BsFillMoonStarsFill } from 'react-icons/bs';
-import { MdOutlineKeyboardReturn, MdMoveDown } from 'react-icons/md';
-import { FaArrowRightFromBracket, FaArrowRight, FaLink } from 'react-icons/fa6';
-import { ArrowUpIcon, MagnifyingGlassIcon, LapTimerIcon } from '@radix-ui/react-icons';
+import { MdOutlineKeyboardReturn } from 'react-icons/md';
 import { useState, useEffect, useRef, MouseEventHandler, ReactEventHandler, useCallback } from 'react';
+import {
+  ArrowUpIcon,
+  MagnifyingGlassIcon,
+  ClockIcon,
+  FileTextIcon,
+  EnterIcon,
+  PinRightIcon,
+  MoonIcon,
+  MoveIcon,
+  DesktopIcon,
+  Cross1Icon,
+  Link2Icon,
+} from '@radix-ui/react-icons';
 
-import { debounce } from '../../utils/debounce';
-import { getFaviconURL } from '../../utils/url';
+import { cn } from '@root/src/utils/cn';
+import { debounce } from '../../../utils/debounce';
+import { getFaviconURL } from '../../../utils/url';
 import { CommandType } from '@root/src/constants/app';
 import { useCommandPalette } from './useCommandPalette';
-import { isValidURL } from '../../utils/url/validate-url';
-import { publishEvents } from '../../utils/publish-events';
-import { prettifyDate } from '../../utils/date-time/prettifyDate';
-import { ICommand, ISpace, ITab } from '../../types/global.types';
+import { isValidURL } from '../../../utils/url/validate-url';
+import { publishEvents } from '../../../utils/publish-events';
+import { prettifyDate } from '../../../utils/date-time/prettifyDate';
+import { ICommand, ISpace, ITab, RadixIconType } from '../../types/global.types';
 import { useCustomAnimation } from '../../sidepanel/hooks/useAnimation';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
-import { naturalLanguageToDate } from '../../utils/date-time/naturalLanguageToDate';
+import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
 
 // default static commands
 const staticCommands: ICommand[] = [
-  { index: 1, type: CommandType.SwitchTab, label: 'Switch Tab', icon: FaArrowRight },
-  { index: 2, type: CommandType.SwitchSpace, label: 'Switch Space', icon: FaArrowRightFromBracket },
-  { index: 3, type: CommandType.NewSpace, label: 'New Space', icon: FaFolder },
-  { index: 4, type: CommandType.AddToSpace, label: 'Move Tab', icon: MdMoveDown },
-  { index: 5, type: CommandType.SnoozeTab, label: 'Snooze Tab', icon: LapTimerIcon },
-  { index: 6, type: CommandType.DiscardTabs, label: 'Discard Tabs', icon: BsFillMoonStarsFill },
+  { index: 1, type: CommandType.SwitchTab, label: 'Switch Tab', icon: PinRightIcon },
+  { index: 2, type: CommandType.NewNote, label: 'New Note', icon: FileTextIcon },
+  { index: 3, type: CommandType.SwitchSpace, label: 'Switch Space', icon: EnterIcon },
+  { index: 4, type: CommandType.NewSpace, label: 'New Space', icon: DesktopIcon },
+  { index: 5, type: CommandType.AddToSpace, label: 'Move Tab', icon: MoveIcon },
+  { index: 6, type: CommandType.SnoozeTab, label: 'Snooze Tab', icon: ClockIcon },
+  { index: 7, type: CommandType.DiscardTabs, label: 'Discard Tabs', icon: MoonIcon },
+  // TODO - add handler
+  { index: 8, type: CommandType.CloseTab, label: 'Close Tab', icon: Cross1Icon },
 ];
 
 const isStaticCommands = (label: string) => {
@@ -48,7 +61,7 @@ const webSearchCommand = (query: string, index: number) => {
     index,
     label: `Web Search: <b className="text-slate-300">${query}</b>`,
     type: CommandType.WebSearch,
-    icon: FaSearch,
+    icon: MagnifyingGlassIcon,
   };
 };
 
@@ -62,6 +75,10 @@ type Props = {
   onClose?: () => void;
   isSidePanel?: boolean;
 };
+
+// TODO - Fix - when typing fast and selecting command that opens sub commands, the sub command assumes that theres text in the input box while there isn't any.
+// its' because of the multi useEffect  updating the commands/search
+// 👆 this is also causing another bug where the search box is empty but the suggestion box assumes that there's still some part of the erase text
 
 const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false }: Props) => {
   // loading search result
@@ -296,7 +313,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
 
     return (
       <div className="flex items-center justify-start h-full border-r border-brand-darkBgAccent/50 pl-[9px] pr-[6.5px] mr-1.5 bg-brand-darkBgAccent/40">
-        <Icon className=" fill-slate-600 text-slate-600 mr-1.5" size={14} />
+        <Icon className=" text-slate-500/80 mr-1.5 scale-[1]" />
         <p className="text-slate-400 text-[12px]  m-0 p-0 whitespace-nowrap">{label}</p>
       </div>
     );
@@ -308,7 +325,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
 
     let sectionLabel = '';
 
-    let Icon = FaLink;
+    let Icon = Link2Icon;
 
     if (
       index ===
@@ -316,7 +333,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
         ?.index
     ) {
       sectionLabel = 'Switch to opened tabs';
-      Icon = FaArrowRight;
+      Icon = getCommandIcon(CommandType.SwitchTab).Icon as RadixIconType;
     } else if (index === suggestedCommands.find(cmd1 => cmd1.type === CommandType.RecentSite)?.index) {
       sectionLabel = 'Open recently visited sites';
     } else if (
@@ -325,7 +342,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
         ?.index
     ) {
       sectionLabel = 'Switch space';
-      Icon = FaArrowRightFromBracket;
+      Icon = getCommandIcon(CommandType.SwitchSpace).Icon as RadixIconType;
     }
 
     if (!sectionLabel) return;
@@ -336,7 +353,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
           <p key={index} className="text-[12.5px] font-light text-slate-500 " tabIndex={-1}>
             {sectionLabel}
           </p>
-          <Icon className=" fill-slate-700 text-slate-700 ml-px" size={14} />
+          <Icon className=" text-slate-700 ml-px scale-[1]" />
         </div>
         <hr key={index} className="h-px bg-brand-darkBgAccent border-none w-full m-0 p-0" tabIndex={-1} />
       </>
@@ -363,7 +380,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
     return (
       <button
         id={`fresh-tabs-command-${index}`}
-        className={`w-full flex items-center justify-start px-[9px] py-[4px] md:py-[6px] outline-none first:pt-[6px] md:first:pt-[7.5px]
+        className={`w-full flex items-center justify-start px-[8px] py-[4px] md:py-[6px] outline-none first:pt-[6px] md:first:pt-[7.5px]
         transition-all duration-200 ease-in ${isFocused ? 'bg-brand-darkBgAccent/50' : ''} `}
         onClick={() => onCommandClick(index)}
         style={{ height: COMMAND_HEIGHT + 'px' }}>
@@ -374,31 +391,34 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
         <div className="w-[22px]">
           {typeof Icon === 'string' ? (
             !isValidURL(Icon) ? (
-              <span className="w-[16px] h-fit text-start">{Icon}</span>
+              <span className="w-[16px] mr-2.5 h-fit text-start">{Icon}</span>
             ) : (
               <img
                 alt="icon"
                 src={Icon}
                 onError={handleImageLoadError}
-                className="w-[14px] h-fit object-left rounded-md opacity-95 object-scale-down"
+                className="w-[14px] h-fit rounded-md opacity-95 object-scale-down object-center"
               />
             )
           ) : (
             <Icon
-              className="fill-slate-600 text-slate-500 w-[14px]  object-scale-down object-center"
-              size={label !== 'Go to Tab' ? 16 : 14}
+              className={cn(
+                'text-slate-500/70 w-[14px] scale-[1]',
+                { 'text-slate-500/90': isFocused },
+                { 'scale-[0.92]': label === 'New Space' },
+              )}
             />
           )}
         </div>
         <p
-          className="text-[12px] text-start text-slate-400 font-light min-w-[50%] max-w-[95%] whitespace-nowrap  overflow-hidden text-ellipsis"
+          className="text-[12px] text-start text-slate-300/80 font-light min-w-[50%] max-w-[95%] whitespace-nowrap  overflow-hidden text-ellipsis"
           dangerouslySetInnerHTML={{ __html: label }}></p>
       </button>
     );
   };
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center fixed top-0 left-0 overflow-hidden ">
+    <div className="w-screen h-screen flex items-center justify-center fixed top-0 left-0 overflow-hidden">
       {/* backdrop */}
 
       <motion.dialog
@@ -408,115 +428,128 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, isSidePanel = false
         onClick={handleBackdropClick}
         onKeyDown={ev => {
           ev.stopPropagation();
+          ev.nativeEvent.stopImmediatePropagation();
         }}
         {...bounce}
         // working on bigger screen
         // className=" m-0 flex items-center outline-none flex-col justify-center top-[20%] h-fit max-h-[75vh] w-[520px] max-w-[60%] left-[33.5%] backdrop:to-brand-darkBg/30 p-px bg-transparent">
         // smaller screen
-        className="absolute mt-[10rem] md:mt-[12rem] mx-auto  flex items-center outline-none flex-col justify-center backdrop:to-brand-darkBg/30  h-fit w-[80%] max-w-[90%] md:w-[45%] md:max-w-[60%] p-px bg-transparent">
-        {/* search box */}
-        <div
-          className={` w-full  h-[32px] min-h-[32px] md:h-[50px] md:min-h-[50px] flex items-center bg-brand-darkBg
-                        rounded-xl md:rounded-2xl  shadow-sm shadow-brand-darkBgAccent/60 border border-brand-darkBgAccent/70 border-collapse `}>
-          {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events */}
-          <button
-            className="h-full max-h-full rounded-tl-xl rounded-bl-xl "
-            tabIndex={-1}
-            onClick={handleSearchIconClick}>
-            {!subCommand ? (
-              <MagnifyingGlassIcon className="text-slate-600 bg-transparent md:scale-[1.5] scale-[1] ml-[6px] mr-[4px] md:ml-3 md:mr-[9px]" />
-            ) : (
-              SubCommandIndicator()
-            )}
-          </button>
-          <input
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-            ref={inputRef}
-            placeholder={searchQueryPlaceholder}
-            onChange={ev => setSearchQuery(ev.currentTarget.value)}
-            type="text"
-            spellCheck={false}
-            onKeyDown={ev => {
-              if (ev.key === 'Backspace' && !searchQuery.trim()) {
-                setSubCommand(null);
-                setDefaultSuggestedCommands();
-                setSuggestedCommandsForSubCommand([]);
-                setFocusedCommandIndex(1);
-                return;
-              }
-              if (ev.key.includes('ArrowDown') || ev.key.includes('ArrowUp')) {
-                ev.preventDefault();
-              }
-            }}
-            value={searchQuery}
-            className={`text-[12px] md:text-[14px] text-slate-300 w-auto flex-grow px-px py-1.5 md:py-2.5  placeholder:text-slate-600 placeholder:font-light
+        className=" mx-auto top-[20%] left-/12 flex items-center outline-none flex-col justify-center backdrop:to-brand-darkBg/30  h-fit min-w-[600px] w-[40%] max-w-[40%]  p-px bg-transparent">
+        <div className="w-full h-[500px] relative overflow-visible">
+          {/* search box */}
+          <div
+            className={`w-full h-[32px] min-h-[32px] md:h-[50px] md:min-h-[50px] flex items-center bg-brand-darkBg rounded-tl-xl rounded-tr-xl
+                        shadow-sm shadow-brand-darkBgAccent/60 border border-brand-darkBgAccent/70 border-collapse`}>
+            {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events */}
+            <button
+              className="h-full max-h-full rounded-tl-xl rounded-bl-xl "
+              tabIndex={-1}
+              onClick={handleSearchIconClick}>
+              {!subCommand ? (
+                <MagnifyingGlassIcon className="text-slate-600 bg-transparent md:scale-[1.5] scale-[1] ml-[6px] mr-[4px] md:ml-3 md:mr-[9px]" />
+              ) : (
+                SubCommandIndicator()
+              )}
+            </button>
+            <input
+              // eslint-disable-next-line jsx-a11y/no-autofocus
+              autoFocus
+              ref={inputRef}
+              placeholder={searchQueryPlaceholder}
+              onChange={ev => {
+                ev.nativeEvent.stopImmediatePropagation();
+
+                setSearchQuery(ev.currentTarget.value);
+              }}
+              type="text"
+              spellCheck={false}
+              onKeyDown={ev => {
+                ev.stopPropagation();
+
+                ev.nativeEvent.stopImmediatePropagation();
+
+                console.log('🚀 ~ CommandPalette ~ ev.nativeEvent.composedPath():', ev.nativeEvent.composedPath());
+
+                if (ev.key === 'Backspace' && !searchQuery.trim()) {
+                  setSubCommand(null);
+                  setDefaultSuggestedCommands();
+                  setSuggestedCommandsForSubCommand([]);
+                  setFocusedCommandIndex(1);
+                  return;
+                }
+                if (ev.key.includes('ArrowDown') || ev.key.includes('ArrowUp')) {
+                  ev.preventDefault();
+                }
+              }}
+              value={searchQuery}
+              className={`text-[12px] md:text-[14px] text-slate-300 w-auto flex-grow px-px py-1.5 md:py-2.5  placeholder:text-slate-600 placeholder:font-light
                         rounded-tr-xl caret-slate-300 caret rounded-br-xl outline-none border-none bg-transparent`}
-          />
-        </div>
-        {/* search suggestions and result */}
-        <div
-          ref={suggestionContainerRef}
-          style={{
-            maxHeight: SUGGESTED_COMMANDS_MAX_HEIGHT + 'px',
-          }}
-          className={`bg-brand-darkBg w-[99%] h-fit overflow-hidden overflow-y-auto cc-scrollbar mt-1 cc-scrollbar mx-auto shadow-sm rounded-md
-                        rounded-bl-none rounded-br-none shadow-slate-800/50 border border-y-0 border-slate-600/40 border-collapse `}>
-          {/* actions */}
-          {suggestedCommands.length > 0 &&
-            suggestedCommands?.map(cmd => {
-              const renderCommands: JSX.Element[] = [];
-              renderCommands.push(CommandSectionLabel(cmd.index, cmd.label));
+            />
+          </div>
+          {/* search suggestions and result */}
+          <div
+            ref={suggestionContainerRef}
+            style={{
+              maxHeight: SUGGESTED_COMMANDS_MAX_HEIGHT + 'px',
+            }}
+            className={`bg-brand-darkBg w-full h-fit overflow-hidden overflow-y-auto cc-scrollbar cc-scrollbar mx-auto shadow-sm
+                         shadow-slate-800/50 border-x  border-x-slate-600/40  border-collapse `}>
+            {/* actions */}
+            {suggestedCommands.length > 0 &&
+              suggestedCommands?.map(cmd => {
+                const renderCommands: JSX.Element[] = [];
+                renderCommands.push(CommandSectionLabel(cmd.index, cmd.label));
 
-              renderCommands.push(Command(cmd));
+                renderCommands.push(Command(cmd));
 
-              return <>{renderCommands.map(cmd1 => cmd1)}</>;
-            })}
-          {/* lading commands ui (skeleton) */}
-          {isLoadingResults
-            ? [1, 2].map(v => (
-                <div key={v} className="w-full  mb-[5px] mt-1.5 flex items-center justify-start">
-                  <span className="w-[24px] h-[25px] bg-brand-darkBgAccent/70 ml-2  rounded animate-pulse"></span>
-                  <div
-                    style={{ width: v % 2 !== 0 ? '40%' : '75%' }}
-                    className="bg-brand-darkBgAccent/70 h-[25px] ml-2 rounded animate-pulse"></div>
-                </div>
-              ))
-            : null}
+                return <>{renderCommands.map(cmd1 => cmd1)}</>;
+              })}
+            {/* lading commands ui (skeleton) */}
+            {isLoadingResults
+              ? [1, 2].map(v => (
+                  <div key={v} className="w-full  mb-[5px] mt-1.5 flex items-center justify-start">
+                    <span className="w-[24px] h-[25px] bg-brand-darkBgAccent/70 ml-2  rounded animate-pulse"></span>
+                    <div
+                      style={{ width: v % 2 !== 0 ? '40%' : '75%' }}
+                      className="bg-brand-darkBgAccent/70 h-[25px] ml-2 rounded animate-pulse"></div>
+                  </div>
+                ))
+              : null}
 
-          {/* no commands found */}
-          {suggestedCommands.length === 0 ? (
-            <div
-              className="w-full flex items-center  justify-center text-slate-500 text-sm font-light py-1"
-              style={{ height: COMMAND_HEIGHT + 'px' }}>
-              No result for {searchQuery || ''}
+            {/* no commands found */}
+            {suggestedCommands.length === 0 ? (
+              <div
+                className="w-full flex items-center  justify-center text-slate-500 text-sm font-light py-1"
+                style={{ height: COMMAND_HEIGHT + 'px' }}>
+                No result for {searchQuery || ''}
+              </div>
+            ) : null}
+          </div>
+          {/* navigation guide */}
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions*/}
+          <div
+            className={`bg-brand-darkBg/95 shadow-sm shadow-slate-800/70  w-full flex items-center justify-between px-1 py-px select-none
+                      rounded-bl-md rounded-br-md border-t border-brand-darkBgAccent   `}
+            onClick={() => inputRef.current?.focus()}>
+            {!isSidePanel ? (
+              <div className=" text-slate-600/90 font-medium text-[10px] ml-2">FreshTabs</div>
+            ) : (
+              <span className="invisible"></span>
+            )}
+            <div className="gap-x-px  text-slate-500/80 text-[8px] flex items-center py-1">
+              <span className="mr-2 flex items-center bg-brand-darkBgAccent/30 px-1.5 pt-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
+                <ArrowUpIcon className="text-slate-500/80 mr-[0.5px] scale-[0.65]" />
+                <kbd>Up</kbd>
+              </span>
+              <span className="mr-2 flex items-center bg-brand-darkBgAccent/30 px-1.5 pt-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
+                <ArrowUpIcon className="text-slate-500/80 mr-[0.5px] rotate-180 scale-[0.65]" />
+                <kbd>Down</kbd>
+              </span>
+              <span className="mr-2 flex items-center bg-brand-darkBgAccent/30 px-1.5 py-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
+                <MdOutlineKeyboardReturn className="text-slate-500//80 mr-1 font-medium -mb-px " size={11} />
+                <kbd>Enter</kbd>
+              </span>
             </div>
-          ) : null}
-        </div>
-        {/* navigation guide */}
-        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions*/}
-        <div
-          className={`bg-slate-900/95 shadow-sm shadow-slate-800/70  w-[99%] flex items-center justify-between px-1 py-px select-none
-                      rounded-bl-md rounded-br-md border-t border-brand-darkBgAccent/80   `}
-          onClick={() => inputRef.current?.focus()}>
-          {!isSidePanel ? (
-            <div className=" text-slate-600/90 text-[10px]">FreshTabs</div>
-          ) : (
-            <span className="invisible"></span>
-          )}
-          <div className="gap-x-px  text-slate-600 text-[8px] flex items-center py-1">
-            <span className="mr-2 flex items-center bg-brand-darkBgAccent/30 px-1.5 pt-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
-              <ArrowUpIcon className="text-slate-500/80 mr-[0.5px] scale-[0.65]" />
-              <kbd>Up</kbd>
-            </span>
-            <span className="mr-2 flex items-center bg-brand-darkBgAccent/30 px-1.5 pt-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
-              <ArrowUpIcon className="text-slate-500/80 mr-[0.5px] rotate-180 scale-[0.65]" />
-              <kbd>Down</kbd>
-            </span>
-            <span className="mr-2 flex items-center bg-brand-darkBgAccent/30 px-1.5 py-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
-              <MdOutlineKeyboardReturn className="text-slate-500/80 mr-1 font-medium -mb-px " size={11} />
-              <kbd>Enter</kbd>
-            </span>
           </div>
         </div>
       </motion.dialog>

@@ -1,7 +1,7 @@
 import { MdCancel, MdCheckCircle } from 'react-icons/md';
 import Spinner from '../spinner';
 import { useState, useEffect } from 'react';
-import { wait } from '@root/src/pages/utils';
+import { wait } from '@root/src/utils';
 import { useAtom } from 'jotai';
 import { snackbarAtom } from '@root/src/stores/app';
 

@@ -1,4 +1,4 @@
-import { getFaviconURL } from '@root/src/pages/utils/url';
+import { getFaviconURL } from '@root/src/utils/url';
 import Tooltip from '../../../elements/tooltip';
 import { MdAdd } from 'react-icons/md';
 import { IPinnedTab } from '@root/src/pages/types/global.types';

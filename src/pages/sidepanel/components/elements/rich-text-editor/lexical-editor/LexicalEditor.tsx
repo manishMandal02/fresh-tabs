@@ -1,5 +1,5 @@
 import { type ElementTransformer, TRANSFORMERS } from '@lexical/markdown';
-import { isValidURL } from '@root/src/pages/utils/url';
+import { isValidURL } from '@root/src/utils/url';
 import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';

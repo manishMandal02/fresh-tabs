@@ -5,11 +5,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
 import { snackbarAtom, activeSpaceAtom } from '@root/src/stores/app';
-import { isValidURL } from '@root/src/pages/utils/url';
+import { isValidURL } from '@root/src/utils/url';
 import { addNewNote, updateNote } from '@root/src/services/chrome-storage/notes';
 import { INote } from '@root/src/pages/types/global.types';
-import { generateId } from '@root/src/pages/utils';
-import { naturalLanguageToDate } from '@root/src/pages/utils/date-time/naturalLanguageToDate';
+import { generateId } from '@root/src/utils';
+import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
 
 const domainWithSubdomainRegex = /^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,10}$/;
 

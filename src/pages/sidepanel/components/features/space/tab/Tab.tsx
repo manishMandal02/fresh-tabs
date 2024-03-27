@@ -5,10 +5,10 @@ import { memo } from 'react';
 import { Cross1Icon, CopyIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
 
 import { ITab } from '@root/src/pages/types/global.types';
-import { getFaviconURL } from '@root/src/pages/utils/url';
+import { getFaviconURL } from '@root/src/utils/url';
 import { TAB_HEIGHT } from '../active-space/ActiveSpaceTabs';
 import { createTab, goToTab } from '@root/src/services/chrome-tabs/tabs';
-import { copyToClipboard } from '@root/src/pages/utils/copy-to-clipboard';
+import { copyToClipboard } from '@root/src/utils/copy-to-clipboard';
 
 type Props = {
   tabData: ITab & { faviconUrl?: string };

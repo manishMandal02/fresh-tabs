@@ -1,5 +1,5 @@
 import * as TabsRadix from '@radix-ui/react-tabs';
-import { generateId } from '@root/src/pages/utils';
+import { generateId } from '@root/src/utils';
 import { ReactNode } from 'react';
 
 type Props<T extends string[]> = {

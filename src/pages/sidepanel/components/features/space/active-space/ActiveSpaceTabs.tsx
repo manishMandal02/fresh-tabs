@@ -4,7 +4,7 @@ import { Droppable, Draggable } from 'react-beautiful-dnd';
 import { MouseEventHandler, useState, useCallback, useEffect, useRef, useMemo, memo } from 'react';
 
 import { Tab } from '../tab';
-import { logger } from '@root/src/pages/utils';
+import { logger } from '@root/src/utils';
 import { goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { useKeyPressed } from '../../../../hooks/useKeyPressed';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';

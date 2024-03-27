@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { SlideModal } from '../../../elements/modal';
 import { showAddNewNoteModalAtom } from '@root/src/stores/app';
 import Spinner from '../../../elements/spinner';
-import { parseStringForDateTimeHint } from '@root/src/pages/utils/date-time/naturalLanguageToDate';
+import { parseStringForDateTimeHint } from '@root/src/utils/date-time/naturalLanguageToDate';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';
 import Checkbox from '../../../elements/checkbox/Checkbox';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
