@@ -26,7 +26,14 @@ import { addSnoozedTab, getTabToUnSnooze } from '@root/src/services/chrome-stora
 import { handleMergeDailySpaceTimeChunksAlarm } from './handler/alarm/mergeDailySpaceTimeChunks';
 import { getSpaceHistory, setSpaceHistory } from '@root/src/services/chrome-storage/space-history';
 import { getDailySpaceTime, setDailySpaceTime } from '@root/src/services/chrome-storage/space-analytics';
-import { ICommand, IDailySpaceTimeChunks, IMessageEventContentScript, ISiteVisit, ITab } from './../types/global.types';
+import {
+  ICommand,
+  IDailySpaceTimeChunks,
+  IMessageEventContentScript,
+  INote,
+  ISiteVisit,
+  ITab,
+} from './../types/global.types';
 import {
   checkNewWindowTabs,
   createNewSpace,
@@ -60,6 +67,8 @@ import {
   AlarmName,
   ALARM_NAME_PREFiX,
 } from '@root/src/constants/app';
+import { addNewNote } from '@root/src/services/chrome-storage/notes';
+import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';
 
 logger.info('🏁 background loaded');
 
@@ -293,6 +302,29 @@ chrome.runtime.onMessage.addListener(
         return true;
       }
 
+      case 'NEW_NOTE': {
+        const { activeSpace, note } = payload;
+
+        const currentTab = await getCurrentTab();
+
+        const domain = cleanDomainName(getUrlDomain(currentTab.url)) || '';
+
+        // TODO - create note title
+        const title = currentTab.title || '';
+
+        // new note data
+        const newNote: INote = {
+          title,
+          domain,
+          id: generateId(),
+          text: note,
+          spaceId: activeSpace.id,
+          createdAt: new Date().getTime(),
+        };
+        // create note
+        await addNewNote(newNote);
+        break;
+      }
       case 'GO_TO_URL': {
         const { url, shouldOpenInNewTab } = payload;
 
@@ -386,6 +418,14 @@ chrome.runtime.onMessage.addListener(
         await createAlarm({ name: AlarmName.snoozedTab(spaceId), triggerAfter: triggerTimeInMinutes });
         // close the tab
         await chrome.tabs.remove(id);
+        return true;
+      }
+
+      case 'CLOSE_TAB': {
+        const currentTab = await getCurrentTab();
+
+        await chrome.tabs.remove(currentTab.id);
+
         return true;
       }
       default: {

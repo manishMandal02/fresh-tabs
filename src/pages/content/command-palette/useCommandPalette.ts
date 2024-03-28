@@ -257,6 +257,11 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
             payload: { spaceId: activeSpace.id, snoozedUntil: focusedCommand.metadata as number },
           });
         }
+        break;
+      }
+      case CommandType.CloseTab: {
+        await publishEvents({ event: 'CLOSE_TAB' });
+        break;
       }
     }
 

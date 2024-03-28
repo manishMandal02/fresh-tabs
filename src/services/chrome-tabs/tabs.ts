@@ -26,7 +26,6 @@ const createActiveTab = async (url: string, index: number, windowId) => {
 // creates a html url tabs that doesn't load tab until user visits them
 export const createDiscardedTabs = async (tabs: ITab[], windowId?: number) => {
   //  set html for discard tabs so they load only after visited by user
-  // TODO - handle already discarded urls here
   const discardedTabHTML = (tab: ITab) => `
       <!DOCTYPE html>
       <html>

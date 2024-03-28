@@ -22,7 +22,6 @@ const DeleteNote = ({ noteId, onClose }: Props) => {
   return noteId ? (
     <AlertModal isOpen={!!noteId} title="Confirm Delete" showCloseBtn={false} onClose={onClose}>
       <div className=" px-3 py-2.5 text-slate-400  h-fit">
-        {/* TODO - show a extra caution warning for active space, and also for   space opened in other window  */}
         <p className="font-light text-sm">Are you sure you want to delete this note?</p>
 
         <div className=" mt-3 ml-auto w-fit">

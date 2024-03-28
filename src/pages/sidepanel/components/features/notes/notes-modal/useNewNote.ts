@@ -10,15 +10,9 @@ import { addNewNote, updateNote } from '@root/src/services/chrome-storage/notes'
 import { INote } from '@root/src/pages/types/global.types';
 import { generateId } from '@root/src/utils';
 import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
+import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';
 
 const domainWithSubdomainRegex = /^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,10}$/;
-
-// remove www for domains
-const cleanDomainName = (domain: string) => {
-  if (domain?.split('.')[0] !== 'www') return domain;
-
-  return domain.replace('www.', '');
-};
 
 type UseNewNoteProps = {
   remainder: string;
@@ -93,7 +87,7 @@ export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteP
   };
 
   const handleOnPasteInDomainInput: ClipboardEventHandler<HTMLInputElement> = ev => {
-    //TODO - check if pasted text is a sub domain
+    // check if pasted text is a sub domain
 
     // don't allow default paste value
     ev.preventDefault();
@@ -111,7 +105,7 @@ export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteP
 
     // valid url, extract domain including subdomain
     // paste to input field
-    inputFrom.setValue('domain', cleanDomainName(new URL(pastedText).hostname));
+    inputFrom.setValue('domain', cleanDomainName(getUrlDomain(pastedText)));
   };
   return {
     inputFrom,

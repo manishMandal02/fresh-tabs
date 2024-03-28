@@ -99,11 +99,13 @@ type MessageEventsContentScript =
   | 'SWITCH_TAB'
   | 'SWITCH_SPACE'
   | 'NEW_SPACE'
+  | 'NEW_NOTE'
   | 'MOVE_TAB_TO_SPACE'
   | 'GO_TO_URL'
   | 'WEB_SEARCH'
   | 'DISCARD_TABS'
   | 'SNOOZE_TAB'
+  | 'CLOSE_TAB'
   | 'SEARCH';
 
 interface IEventPayloadContentScript {
@@ -116,6 +118,7 @@ interface IEventPayloadContentScript {
   activeSpace?: ISpace;
   shouldOpenInNewTab?: boolean;
   snoozedUntil?: number;
+  note?: string;
 }
 
 export interface IMessageEventContentScript {
