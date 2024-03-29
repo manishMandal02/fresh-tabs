@@ -4,13 +4,13 @@ import { ClipboardEventHandler } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
-import { snackbarAtom, activeSpaceAtom } from '@root/src/stores/app';
-import { isValidURL } from '@root/src/utils/url';
-import { addNewNote, updateNote } from '@root/src/services/chrome-storage/notes';
-import { INote } from '@root/src/pages/types/global.types';
 import { generateId } from '@root/src/utils';
-import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
+import { isValidURL } from '@root/src/utils/url';
+import { INote } from '@root/src/pages/types/global.types';
+import { snackbarAtom, activeSpaceAtom } from '@root/src/stores/app';
+import { addNewNote, updateNote } from '@root/src/services/chrome-storage/notes';
 import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';
+import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
 
 const domainWithSubdomainRegex = /^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,10}$/;
 
@@ -26,7 +26,6 @@ export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteP
   const [snackbar, setSnackbar] = useAtom(snackbarAtom);
   const [activeSpace] = useAtom(activeSpaceAtom);
 
-  //
   const formSchema = z.object({
     domain: z
       .string()
@@ -41,11 +40,32 @@ export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteP
 
   type FormSchema = z.infer<typeof formSchema>;
 
+  // react hook hook init
   const inputFrom = useForm<FormSchema>({
     mode: 'onTouched',
     resolver: zodResolver(formSchema),
     defaultValues: { domain: '', title: '' },
   });
+
+  const handleOnPasteInDomainInput: ClipboardEventHandler<HTMLInputElement> = ev => {
+    // check if pasted text is a sub domain
+
+    // don't allow default paste value
+    ev.preventDefault();
+
+    const pastedText = ev.clipboardData.getData('text');
+    // if yes - do nothing
+    if (domainWithSubdomainRegex.test(pastedText)) {
+      inputFrom.setValue('domain', cleanDomainName(pastedText));
+      return;
+    }
+
+    // not a valid url
+    if (!isValidURL(pastedText)) return;
+
+    // valid url, extract domain including subdomain and paste to input field
+    inputFrom.setValue('domain', cleanDomainName(getUrlDomain(pastedText)));
+  };
 
   const handleAddNote: SubmitHandler<FormSchema> = async (data, ev) => {
     ev.preventDefault();
@@ -86,27 +106,6 @@ export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteP
     }
   };
 
-  const handleOnPasteInDomainInput: ClipboardEventHandler<HTMLInputElement> = ev => {
-    // check if pasted text is a sub domain
-
-    // don't allow default paste value
-    ev.preventDefault();
-
-    const pastedText = ev.clipboardData.getData('text');
-    // if yes - do nothing
-    if (domainWithSubdomainRegex.test(pastedText)) {
-      inputFrom.setValue('domain', cleanDomainName(pastedText));
-      return;
-    }
-
-    // check if it's a url
-    // mot a valid url
-    if (!isValidURL(pastedText)) return;
-
-    // valid url, extract domain including subdomain
-    // paste to input field
-    inputFrom.setValue('domain', cleanDomainName(getUrlDomain(pastedText)));
-  };
   return {
     inputFrom,
     handleAddNote,

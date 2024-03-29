@@ -33,8 +33,9 @@ const TextField = ({ name, label, placeholder, registerHook, error, onPasteHandl
             {...(registerHook ? { ...registerHook } : {})}
             onPaste={onPasteHandler ? onPasteHandler : null}
             onKeyDown={ev => {
-              if (ev.code !== 'Enter') return;
-              ev.preventDefault();
+              if (ev.code === 'Enter') {
+                ev.preventDefault();
+              }
             }}
             type="text"
             placeholder={placeholder}

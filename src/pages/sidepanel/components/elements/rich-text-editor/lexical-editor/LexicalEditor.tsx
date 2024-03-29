@@ -1,43 +1,49 @@
-import { type ElementTransformer, TRANSFORMERS } from '@lexical/markdown';
 import { isValidURL } from '@root/src/utils/url';
+import { $createTextNode, type LexicalNode } from 'lexical';
 import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
+import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import LexicalErrorBoundary from '@lexical/react/LexicalErrorBoundary';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin';
-import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
+import { type ElementTransformer, TRANSFORMERS } from '@lexical/markdown';
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import { $createListItemNode, $createListNode, $isListNode, ListNode } from '@lexical/list';
 
-import LineSeparatorPlugin from './seperator-line-plugin/SeparatorLinePlugin';
+import AutofocusPlugin from './auto-focus-plugin/AutoFocusPlugin';
 import { AutoLinkPlugin } from './auto-link-plugin/AutoLinkPlugin';
-import { $createTextNode, type LexicalNode } from 'lexical';
+import LineSeparatorPlugin from './seperator-line-plugin/SeparatorLinePlugin';
 
 type LexicalEditorProps = {
   config: Parameters<typeof LexicalComposer>['0']['initialConfig'];
 } & { onChange: (value: string) => void };
 
-export function LexicalEditor(props: LexicalEditorProps) {
+export function LexicalEditor({ config, onChange }: LexicalEditorProps) {
+  console.log('🚀 ~ LexicalEditor ~ onChange:', onChange);
+
   return (
-    <LexicalComposer initialConfig={props.config}>
+    <LexicalComposer initialConfig={config}>
       <RichTextPlugin
         contentEditable={<ContentEditable />}
         placeholder={<Placeholder />}
         ErrorBoundary={LexicalErrorBoundary}
       />
-      <MarkdownShortcutPlugin transformers={[...TRANSFORMERS, CHECKLIST_RULE]} />
+      <AutofocusPlugin />
+      <HistoryPlugin />
       <ListPlugin />
-      <LinkPlugin validateUrl={isValidURL} />
-      <AutoLinkPlugin />
       <CheckListPlugin />
       <LineSeparatorPlugin />
-      <HistoryPlugin />
+      <AutoLinkPlugin />
+      <LinkPlugin validateUrl={isValidURL} />
+      <MarkdownShortcutPlugin transformers={[...TRANSFORMERS, CHECKLIST_RULE]} />
       <OnChangePlugin
         ignoreHistoryMergeTagChange={false}
-        onChange={state => props.onChange(JSON.stringify(state.toJSON()))}
+        onChange={state => {
+          onChange(JSON.stringify(state.toJSON()));
+        }}
       />
     </LexicalComposer>
   );

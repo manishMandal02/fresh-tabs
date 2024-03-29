@@ -1,4 +1,4 @@
-import { DesktopIcon, FilePlusIcon } from '@radix-ui/react-icons';
+import { DesktopIcon } from '@radix-ui/react-icons';
 import { useState, useCallback, useMemo } from 'react';
 
 import { getCommandIcon } from './CommandPalette';
@@ -91,6 +91,7 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
     const focusedCommand = suggestedCommands.find(cmd => cmd.index === focusedCommandIndex);
 
     if (!focusedCommand?.type) return;
+
     switch (focusedCommand.type) {
       case CommandType.SwitchTab: {
         if (!subCommand && !focusedCommand.metadata) {
@@ -194,24 +195,9 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
         break;
       }
       case CommandType.NewNote: {
-        if (!subCommand) {
-          setSubCommand(CommandType.NewNote);
-          setSearchQueryPlaceholder('Note...');
-          setSuggestedCommands([
-            {
-              label: 'Save Note',
-              type: CommandType.NewNote,
-              index: 1,
-              icon: FilePlusIcon,
-            },
-          ]);
-
-          setFocusedCommandIndex(1);
-        } else {
-          // TODO - send event to create new note
-          // await publishEvents({ event: 'MOVE_TAB_TO_SPACE', payload: { spaceId: focusedCommand.metadata as string } });
-          handleCloseCommandPalette();
-        }
+        // set sub command
+        // note: saving notes in create note (create-note > CreateNote.tsx)
+        setSubCommand(CommandType.NewNote);
         break;
       }
       case CommandType.WebSearch: {

@@ -2,22 +2,19 @@ import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 
-import { SlideModal } from '../../../elements/modal';
-import { showAddNewNoteModalAtom } from '@root/src/stores/app';
-import Spinner from '../../../elements/spinner';
-import { parseStringForDateTimeHint } from '@root/src/utils/date-time/naturalLanguageToDate';
-import { useCustomAnimation } from '../../../../hooks/useAnimation';
-import Checkbox from '../../../elements/checkbox/Checkbox';
-import { InfoCircledIcon } from '@radix-ui/react-icons';
-import Tooltip from '../../../elements/tooltip';
 import { useNewNote } from './useNewNote';
+import Spinner from '../../../elements/spinner';
+import Tooltip from '../../../elements/tooltip';
+import { SlideModal } from '../../../elements/modal';
+import { InfoCircledIcon } from '@radix-ui/react-icons';
 import TextField from '../../../elements/form/text-field';
-import RichTextEditor from '../../../elements/rich-text-editor/RichTextEditor';
+import Checkbox from '../../../elements/checkbox/Checkbox';
+import { showAddNewNoteModalAtom } from '@root/src/stores/app';
+import { useCustomAnimation } from '../../../../hooks/useAnimation';
+import RichTextEditor, { EDITOR_EMPTY_STATE } from '../../../elements/rich-text-editor/RichTextEditor';
+import { parseStringForDateTimeHint } from '@root/src/utils/date-time/naturalLanguageToDate';
 
 const DATE_HIGHLIGHT_CLASS_NAME = 'add-note-date-highlight';
-
-const EDITOR_EMPTY_STATE =
-  '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
 const NotesModal = () => {
   // global state
@@ -25,11 +22,6 @@ const NotesModal = () => {
 
   // local state
   const [note, setNote] = useState('');
-
-  useEffect(() => {
-    console.log('🚀 ~ NotesModal ~ useEffect ~ note:', note);
-  }, [note]);
-
   const [remainder, setRemainder] = useState('');
   const [shouldAddDomain, setShouldAddDomain] = useState(false);
 
@@ -84,8 +76,6 @@ const NotesModal = () => {
 
   // check for data hint string for remainders
   useEffect(() => {
-    console.log('🚀 ~ useEffect ~ note:', note);
-
     // TODO -  debounce
     if (note?.length < 6) return;
 
@@ -148,7 +138,7 @@ const NotesModal = () => {
           className="w-full px-2.5 mb-1.5 mt-2 h-[90%] overflow-hidden relative flex flex-col"
           ref={editorContainerRef}>
           {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
-          <div className="mb-1.5" onKeyDown={ev => ev.stopPropagation()}>
+          <div className="mb-1.5">
             <TextField
               name="note-title"
               placeholder="Title..."

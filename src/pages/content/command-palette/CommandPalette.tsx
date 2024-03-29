@@ -12,7 +12,6 @@ import {
   MoveIcon,
   DesktopIcon,
   Cross1Icon,
-  FilePlusIcon,
 } from '@radix-ui/react-icons';
 
 import Command from './command/Command';
@@ -29,6 +28,7 @@ import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
 import SearchBox from './search-box/SearchBox';
+import CreateNote from './create-note';
 
 // default static commands
 export const staticCommands: ICommand[] = [
@@ -140,19 +140,10 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
       setDefaultSuggestedCommands();
     } else {
       setSubCommand(CommandType.NewNote);
-      setSuggestedCommands([
-        {
-          index: 1,
-          label: 'Save note',
-          type: CommandType.NewNote,
-          icon: FilePlusIcon,
-        },
-      ]);
-      setFocusedCommandIndex(1);
     }
     // run when component mounts
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [userSelectedText]);
 
   const handleGlobalSearch = useCallback(async () => {
     const matchedCommands: ICommand[] = [];
@@ -220,6 +211,13 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
 
   // on global search
   useEffect(() => {
+    if (subCommand === CommandType.NewNote) {
+      // do nothing if subCommand is new note (taking a new)
+      // clear command suggestions
+      setSuggestedCommands([]);
+      return;
+    }
+
     if (searchQuery.trim() && !subCommand) {
       setIsLoadingResults(true);
       // debounce search
@@ -301,8 +299,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
 
   return (
     <div className="w-screen h-screen flex items-center justify-center fixed top-0 left-0 overflow-hidden">
-      {/* backdrop */}
-
       <motion.dialog
         aria-modal
         tabIndex={-1}
@@ -316,110 +312,121 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
         className={`mx-auto top-[20%] left-/12 flex items-center outline-none flex-col justify-center 
                   backdrop:to-brand-darkBg/30  h-fit min-w-[600px] w-[40%] max-w-[40%]  p-px bg-transparent`}>
         <div className="w-full h-[500px] relative overflow-visible">
-          {/* search box */}
-          <SearchBox
-            ref={inputRef}
-            handleFocusSearchInput={handleFocusSearchInput}
-            searchQuery={searchQuery}
-            placeholder={searchQueryPlaceholder}
-            setSearchQuery={setSearchQuery}
-            subCommand={subCommand}
-            onClearSearch={() => {
-              setSubCommand(null);
-              setDefaultSuggestedCommands();
-              setSuggestedCommandsForSubCommand([]);
-              setFocusedCommandIndex(1);
-            }}
-          />
+          <>
+            {subCommand !== CommandType.NewNote ? (
+              // search box
+              <SearchBox
+                ref={inputRef}
+                handleFocusSearchInput={handleFocusSearchInput}
+                searchQuery={searchQuery}
+                placeholder={searchQueryPlaceholder}
+                setSearchQuery={setSearchQuery}
+                subCommand={subCommand}
+                onClearSearch={() => {
+                  setSubCommand(null);
+                  setDefaultSuggestedCommands();
+                  setSuggestedCommandsForSubCommand([]);
+                  setFocusedCommandIndex(1);
+                }}
+              />
+            ) : (
+              // create note
+              <CreateNote userSelectedText={userSelectedText} onClose={() => handleCloseCommandPalette()} />
+            )}
+          </>
           {/* search suggestions and result */}
-          <div
-            ref={suggestionContainerRef}
-            style={{
-              maxHeight: SUGGESTED_COMMANDS_MAX_HEIGHT + 'px',
-            }}
-            className={`bg-brand-darkBg w-full h-fit overflow-hidden overflow-y-auto cc-scrollbar cc-scrollbar mx-auto shadow-sm
+          {subCommand !== CommandType.NewNote ? (
+            <div
+              ref={suggestionContainerRef}
+              style={{
+                maxHeight: SUGGESTED_COMMANDS_MAX_HEIGHT + 'px',
+              }}
+              className={`bg-brand-darkBg w-full h-fit overflow-hidden overflow-y-auto cc-scrollbar cc-scrollbar mx-auto shadow-sm
                          shadow-slate-800/50 border-x  border-x-slate-600/40  border-collapse `}>
-            {/* actions */}
-            {suggestedCommands.length > 0 &&
-              suggestedCommands?.map(cmd => {
-                const renderCommands: JSX.Element[] = [];
+              {/* actions */}
+              {suggestedCommands.length > 0 &&
+                suggestedCommands?.map(cmd => {
+                  const renderCommands: JSX.Element[] = [];
 
-                // section label
-                // do not render  for sub commands
-                !subCommand &&
+                  // section label
+                  // do not render  for sub commands
+                  !subCommand &&
+                    renderCommands.push(
+                      <CommandSectionLabel
+                        key={cmd.index}
+                        index={cmd.index}
+                        isStaticCommand={isStaticCommands(cmd.label)}
+                        suggestedCommands={suggestedCommands}
+                      />,
+                    );
+
+                  //  command
                   renderCommands.push(
-                    <CommandSectionLabel
-                      key={cmd.index}
+                    <Command
                       index={cmd.index}
-                      isStaticCommand={isStaticCommands(cmd.label)}
-                      suggestedCommands={suggestedCommands}
+                      label={cmd.label}
+                      Icon={cmd.icon}
+                      key={cmd.index}
+                      isFocused={focusedCommandIndex === cmd.index}
+                      onClick={() => onCommandClick(cmd.index)}
                     />,
                   );
 
-                //  command
-                renderCommands.push(
-                  <Command
-                    index={cmd.index}
-                    label={cmd.label}
-                    Icon={cmd.icon}
-                    key={cmd.index}
-                    isFocused={focusedCommandIndex === cmd.index}
-                    onClick={() => onCommandClick(cmd.index)}
-                  />,
-                );
+                  // render commands & labels
+                  return <>{renderCommands.map(cmd1 => cmd1)}</>;
+                })}
 
-                // render commands & labels
-                return <>{renderCommands.map(cmd1 => cmd1)}</>;
-              })}
+              {/* lading commands ui (skeleton) */}
+              {isLoadingResults
+                ? [1, 2].map(v => (
+                    <div key={v} className="w-full  mb-[5px] mt-1.5 flex items-center justify-start">
+                      <span className="w-[24px] h-[25px] bg-brand-darkBgAccent/70 ml-2  rounded animate-pulse"></span>
+                      <div
+                        style={{ width: v % 2 !== 0 ? '40%' : '75%' }}
+                        className="bg-brand-darkBgAccent/70 h-[25px] ml-2 rounded animate-pulse"></div>
+                    </div>
+                  ))
+                : null}
 
-            {/* lading commands ui (skeleton) */}
-            {isLoadingResults
-              ? [1, 2].map(v => (
-                  <div key={v} className="w-full  mb-[5px] mt-1.5 flex items-center justify-start">
-                    <span className="w-[24px] h-[25px] bg-brand-darkBgAccent/70 ml-2  rounded animate-pulse"></span>
-                    <div
-                      style={{ width: v % 2 !== 0 ? '40%' : '75%' }}
-                      className="bg-brand-darkBgAccent/70 h-[25px] ml-2 rounded animate-pulse"></div>
-                  </div>
-                ))
-              : null}
-
-            {/* no commands found */}
-            {suggestedCommands.length === 0 ? (
-              <div
-                className="w-full flex items-center  justify-center text-slate-500 text-sm font-light py-1"
-                style={{ height: COMMAND_HEIGHT + 'px' }}>
-                No result for {searchQuery || ''}
-              </div>
-            ) : null}
-          </div>
-          {/* navigation guide */}
-          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions*/}
-          <div
-            className={`bg-brand-darkBg/95 shadow-sm shadow-slate-800/70  w-full flex items-center justify-between px-1 py-px select-none
-                      rounded-bl-md rounded-br-md border-t border-brand-darkBgAccent`}
-            // focuses on the search input box if clicked
-            onClick={handleFocusSearchInput}>
-            {!isSidePanel ? (
-              <div className=" text-slate-600/90 font-medium text-[10px] ml-2">FreshTabs</div>
-            ) : (
-              <span className="invisible"></span>
-            )}
-            <div className="gap-x-px  text-slate-500/80 text-[8px] flex items-center py-1">
-              <span className="mr-2 flex items-center bg-brand-darkBgAccent/30 px-1.5 pt-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
-                <ArrowUpIcon className="text-slate-500/80 mr-[0.5px] scale-[0.65]" />
-                <kbd>Up</kbd>
-              </span>
-              <span className="mr-2 flex items-center bg-brand-darkBgAccent/30 px-1.5 pt-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
-                <ArrowUpIcon className="text-slate-500/80 mr-[0.5px] rotate-180 scale-[0.65]" />
-                <kbd>Down</kbd>
-              </span>
-              <span className="mr-2 flex items-center bg-brand-darkBgAccent/30 px-1.5 py-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
-                <MdOutlineKeyboardReturn className="text-slate-500//80 mr-1 font-medium -mb-px " size={11} />
-                <kbd>Enter</kbd>
-              </span>
+              {/* no commands found */}
+              {suggestedCommands.length === 0 ? (
+                <div
+                  className="w-full flex items-center  justify-center text-slate-500 text-sm font-light py-1"
+                  style={{ height: COMMAND_HEIGHT + 'px' }}>
+                  No result for {searchQuery || ''}
+                </div>
+              ) : null}
             </div>
-          </div>
+          ) : null}
+          {/* navigation guide */}
+          {subCommand !== CommandType.NewNote ? (
+            // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+            <div
+              className={`bg-brand-darkBg/95 shadow-sm shadow-slate-800/70  w-full flex items-center justify-between px-1 py-px select-none
+                      rounded-bl-md rounded-br-md border-t border-brand-darkBgAccent`}
+              // focuses on the search input box if clicked
+              onClick={handleFocusSearchInput}>
+              {!isSidePanel ? (
+                <div className=" text-slate-600/90 font-medium text-[10px] ml-2">FreshTabs</div>
+              ) : (
+                <span className="invisible"></span>
+              )}
+              <div className="gap-x-px  text-slate-500/80 text-[8px] flex items-center py-1">
+                <span className="mr-2 flex items-center bg-brand-darkBgAccent/30 px-1.5 pt-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
+                  <ArrowUpIcon className="text-slate-500/80 mr-[0.5px] scale-[0.65]" />
+                  <kbd>Up</kbd>
+                </span>
+                <span className="mr-2 flex items-center bg-brand-darkBgAccent/30 px-1.5 pt-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
+                  <ArrowUpIcon className="text-slate-500/80 mr-[0.5px] rotate-180 scale-[0.65]" />
+                  <kbd>Down</kbd>
+                </span>
+                <span className="mr-2 flex items-center bg-brand-darkBgAccent/30 px-1.5 py-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
+                  <MdOutlineKeyboardReturn className="text-slate-500//80 mr-1 font-medium -mb-px " size={11} />
+                  <kbd>Enter</kbd>
+                </span>
+              </div>
+            </div>
+          ) : null}
         </div>
       </motion.dialog>
     </div>

@@ -16,6 +16,13 @@ const handleClose = () => {
 
   commandPaletteContainerEl.replaceChildren();
   commandPaletteContainerEl.remove();
+
+  // close note capture command if opened
+  const containerEl = document.getElementById('fresh-tabs-create-note-command-container');
+  if (!containerEl) return;
+  containerEl.replaceChildren();
+  containerEl.remove();
+
   document.body.style.overflow = 'auto';
 };
 
