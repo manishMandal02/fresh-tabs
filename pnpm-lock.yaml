@@ -92,6 +92,9 @@ dependencies:
   react-error-boundary:
     specifier: ^4.0.13
     version: 4.0.13(react@18.2.0)
+  react-frame-component:
+    specifier: ^5.2.6
+    version: 5.2.6(prop-types@15.8.1)(react-dom@18.2.0)(react@18.2.0)
   react-hook-form:
     specifier: ^7.51.1
     version: 7.51.1(react@18.2.0)
@@ -226,6 +229,9 @@ devDependencies:
   tailwindcss:
     specifier: ^3.4.0
     version: 3.4.0
+  tailwindcss-all:
+    specifier: ^0.0.2
+    version: 0.0.2
   ts-loader:
     specifier: 9.5.0
     version: 9.5.0(typescript@5.2.2)(webpack@5.89.0)
@@ -6107,6 +6113,18 @@ packages:
     resolution: {integrity: sha512-nsO+KSNgo1SbJqJEYRE9ERzo7YtYbou/OqjSQKxV7jcKox7+usiUVZOAC+XnDOABXggQTno0Y1CpVnuWEc1boQ==}
     dev: false
 
+  /react-frame-component@5.2.6(prop-types@15.8.1)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-CwkEM5VSt6nFwZ1Op8hi3JB5rPseZlmnp5CGiismVTauE6S4Jsc4TNMlT0O7Cts4WgIC3ZBAQ2p1Mm9XgLbj+w==}
+    peerDependencies:
+      prop-types: ^15.5.9
+      react: '>= 16.3'
+      react-dom: '>= 16.3'
+    dependencies:
+      prop-types: 15.8.1
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
   /react-geiger@1.1.0(react@18.2.0):
     resolution: {integrity: sha512-Zi5MGdrDaVevzVrmhrGld0449LNvJugvKplzM/OXn8zbcX/9rJOmxAtNwCTNu8o/gJzkcN730fsw4YCF4CkhEw==}
     peerDependencies:
@@ -6842,6 +6860,10 @@ packages:
     resolution: {integrity: sha512-tWANXsnmJzgw6mQ07nE3aCDkCK4QdT3ThPMCzawoYA2Pws7vSTCvz3Vrjg61jVUGfFZPJzxEP+NimbcW+EdaDw==}
     dependencies:
       '@babel/runtime': 7.24.1
+    dev: true
+
+  /tailwindcss-all@0.0.2:
+    resolution: {integrity: sha512-TVcYjtVn/y9mCxxN6RhaONyvD23HantNLtq7wuEZV9xDgZ4K9tCJ4RJNeKH7d6jSwQMuNHDJVV0WOFBNVuSyjw==}
     dev: true
 
   /tailwindcss@3.4.0:

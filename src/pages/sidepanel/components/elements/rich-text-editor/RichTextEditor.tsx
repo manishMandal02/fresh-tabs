@@ -28,8 +28,6 @@ export const EDITOR_EMPTY_STATE =
   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
 const RichTextEditor = ({ content, onChange, userSelectedText }: Props) => {
-  console.log('🚀 ~ RichTextEditor ~ userSelectedText:', userSelectedText);
-
   return (
     <div
       id="editor-wrapper"
@@ -45,8 +43,6 @@ const RichTextEditor = ({ content, onChange, userSelectedText }: Props) => {
             : () => {
                 const root = $getRoot();
 
-                console.log('🚀 ~ RichTextEditor ~ root:', root);
-
                 const quote = $createQuoteNode();
                 const quoteParagraphs = userSelectedText.trim().split('\n');
                 quoteParagraphs.forEach((para, idx) => {
@@ -56,7 +52,6 @@ const RichTextEditor = ({ content, onChange, userSelectedText }: Props) => {
                     quote.append($createLineBreakNode());
                   }
                 });
-                console.log('🚀 ~ RichTextEditor ~ quote:', quote);
 
                 root.append(quote);
 

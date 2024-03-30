@@ -1,10 +1,11 @@
 import { createRoot } from 'react-dom/client';
+import Frame, { FrameContextConsumer } from 'react-frame-component';
 import refreshOnUpdate from 'virtual:reload-on-update-in-view';
 import injectedStyle from './injected.css?inline';
 import { CommandPaletteContainerId } from '@root/src/constants/app';
 import { IMessageEventContentScript, ISpace, ITab } from '../../types/global.types';
-import CommandPalette from '.';
 import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
+import CommandPalette from './CommandPalette';
 
 refreshOnUpdate('pages/content');
 
@@ -43,34 +44,47 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace }: AppendConta
   commandPaletteContainer.style.height = '100vh';
   commandPaletteContainer.style.width = '100vw';
   commandPaletteContainer.style.position = 'fixed';
-  commandPaletteContainer.style.top = 'auto';
-  commandPaletteContainer.style.left = 'auto';
+  commandPaletteContainer.style.top = '0px';
+  commandPaletteContainer.style.left = '0px';
+  commandPaletteContainer.style.zIndex = '2147483647';
 
+  // prevent scrolling on host site
   document.body.style.overflow = 'hidden';
 
   // append root react component for command palette
   document.body.append(commandPaletteContainer);
 
-  const rootIntoShadow = document.createElement('div');
+  // const rootIntoShadow = document.createElement('div');
 
-  rootIntoShadow.id = 'shadow-root';
+  // rootIntoShadow.id = 'shadow-root';
 
-  const shadowRoot = commandPaletteContainer.attachShadow({ mode: 'open' });
+  // const shadowRoot = commandPaletteContainer.attachShadow({ mode: 'open' });
 
-  shadowRoot.appendChild(rootIntoShadow);
+  // shadowRoot.appendChild(rootIntoShadow);
 
-  /** Inject styles into shadow dom */
-  const styleElement = document.createElement('style');
-  styleElement.innerHTML = injectedStyle;
-  shadowRoot.appendChild(styleElement);
+  // /** Inject styles into shadow dom */
+  // const styleElement = document.createElement('style');
+  // styleElement.innerHTML = injectedStyle;
+  // shadowRoot.appendChild(styleElement);
 
-  createRoot(rootIntoShadow).render(
-    <CommandPalette
-      recentSites={recentSites}
-      activeSpace={activeSpace}
-      onClose={handleClose}
-      userSelectedText={userSelectedText}
-    />,
+  createRoot(commandPaletteContainer).render(
+    <Frame className="!w-fit !h-[550px] !border-none !fixed top-[40%] !left-1/2 " style={{ all: 'inherit' }}>
+      <FrameContextConsumer>
+        {({ document }) => {
+          const style = document.createElement('style');
+          style.innerHTML = injectedStyle;
+          document.head.appendChild(style);
+          return (
+            <CommandPalette
+              recentSites={recentSites}
+              activeSpace={activeSpace}
+              onClose={handleClose}
+              userSelectedText={userSelectedText}
+            />
+          );
+        }}
+      </FrameContextConsumer>
+    </Frame>,
   );
 };
 

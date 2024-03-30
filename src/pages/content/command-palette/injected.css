@@ -14,7 +14,7 @@
 
 /* Handle */
 .cc-scrollbar::-webkit-scrollbar-thumb {
-  background: #0a172bb1;
+  background: #01050ab1;
   border-radius: 16px;
 }
 
@@ -22,7 +22,3 @@
 .cc-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #232323bb;
 }
-/* 
-#fresh-tabs-command-palette-container {
-  all: initial;
-} */

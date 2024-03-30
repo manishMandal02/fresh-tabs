@@ -22,8 +22,6 @@ type LexicalEditorProps = {
 } & { onChange: (value: string) => void };
 
 export function LexicalEditor({ config, onChange }: LexicalEditorProps) {
-  console.log('🚀 ~ LexicalEditor ~ onChange:', onChange);
-
   return (
     <LexicalComposer initialConfig={config}>
       <RichTextPlugin
