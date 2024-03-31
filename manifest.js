@@ -52,7 +52,6 @@ const manifest = {
   side_panel: {
     default_path: 'src/pages/sidepanel/index.html',
   },
-
   options_page: 'src/pages/options/index.html',
   background: {
     service_worker: 'src/pages/background/index.js',

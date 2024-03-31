@@ -1,13 +1,19 @@
 import { createRoot } from 'react-dom/client';
 import Frame, { FrameContextConsumer } from 'react-frame-component';
-import refreshOnUpdate from 'virtual:reload-on-update-in-view';
+
 import injectedStyle from './injected.css?inline';
+import refreshOnUpdate from 'virtual:reload-on-update-in-view';
 import { CommandPaletteContainerId } from '@root/src/constants/app';
-import { IMessageEventContentScript, ISpace, ITab } from '../../types/global.types';
 import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
-import CommandPalette from './CommandPalette';
+import { IMessageEventContentScript, ISpace, ITab } from '../../types/global.types';
+import CommandPalette, { COMMAND_PALETTE_HEIGHT, COMMAND_PALETTE_WIDTH } from './CommandPalette';
 
 refreshOnUpdate('pages/content');
+
+const handleBackgroundCLick = () => {
+  // close command palette
+  handleClose();
+};
 
 // close command palette
 const handleClose = () => {
@@ -17,12 +23,6 @@ const handleClose = () => {
 
   commandPaletteContainerEl.replaceChildren();
   commandPaletteContainerEl.remove();
-
-  // close note capture command if opened
-  const containerEl = document.getElementById('fresh-tabs-create-note-command-container');
-  if (!containerEl) return;
-  containerEl.replaceChildren();
-  containerEl.remove();
 
   document.body.style.overflow = 'auto';
 };
@@ -37,22 +37,29 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace }: AppendConta
 
   const userSelectedText = getUserSelectionText();
 
-  const commandPaletteContainer = document.createElement('div');
+  const commandPaletteContainer = document.createElement('div') as HTMLDivElement;
 
   commandPaletteContainer.id = CommandPaletteContainerId;
 
   commandPaletteContainer.style.height = '100vh';
   commandPaletteContainer.style.width = '100vw';
-  commandPaletteContainer.style.position = 'fixed';
-  commandPaletteContainer.style.top = '0px';
-  commandPaletteContainer.style.left = '0px';
   commandPaletteContainer.style.zIndex = '2147483647';
+
+  commandPaletteContainer.style.position = 'fixed';
+  commandPaletteContainer.style.top = '0';
+  commandPaletteContainer.style.left = '0';
+
+  commandPaletteContainer.style.display = 'flex';
+  commandPaletteContainer.style.alignItems = 'center';
+  commandPaletteContainer.style.justifyContent = 'center';
 
   // prevent scrolling on host site
   document.body.style.overflow = 'hidden';
 
   // append root react component for command palette
   document.body.append(commandPaletteContainer);
+
+  commandPaletteContainer.addEventListener('click', handleBackgroundCLick);
 
   // const rootIntoShadow = document.createElement('div');
 
@@ -68,12 +75,25 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace }: AppendConta
   // shadowRoot.appendChild(styleElement);
 
   createRoot(commandPaletteContainer).render(
-    <Frame className="!w-fit !h-[550px] !border-none !fixed top-[40%] !left-1/2 " style={{ all: 'inherit' }}>
+    <Frame
+      style={{
+        // all: 'inherit',
+        width: COMMAND_PALETTE_WIDTH + 'px',
+        height: COMMAND_PALETTE_HEIGHT + 'px',
+        border: 'none',
+        borderRadius: '12px',
+        colorScheme: 'none',
+        background: 'none',
+      }}
+      id="fresh-tabs-command"
+      title="fresh-tabs-iframe"
+      allowTransparency={true}>
       <FrameContextConsumer>
-        {({ document }) => {
-          const style = document.createElement('style');
+        {context => {
+          const style = context.document.createElement('style');
           style.innerHTML = injectedStyle;
-          document.head.appendChild(style);
+          context.document.head.appendChild(style);
+          context.document.body.style.background = 'none';
           return (
             <CommandPalette
               recentSites={recentSites}
@@ -87,6 +107,12 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace }: AppendConta
     </Frame>,
   );
 };
+
+// TODO try creating the html for iframe and then add that html to iframe (create it yourself), then add the react app to iframe
+// make sure to include iframe html to web_accessible_resources in manifest.json
+
+//LINK - https://stackoverflow.com/questions/70867944/create-iframe-using-google-chrome-extension-manifest-v3/70870192#70870192
+//LINK - https://stackoverflow.com/questions/70867944/create-iframe-using-google-chrome-extension-manifest-v3/70870192#70870192
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   const event = msg as IMessageEventContentScript;

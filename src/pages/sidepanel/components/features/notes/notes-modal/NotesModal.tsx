@@ -14,8 +14,6 @@ import { useCustomAnimation } from '../../../../hooks/useAnimation';
 import RichTextEditor, { EDITOR_EMPTY_STATE } from '../../../elements/rich-text-editor/RichTextEditor';
 import { parseStringForDateTimeHint } from '@root/src/utils/date-time/naturalLanguageToDate';
 
-const DATE_HIGHLIGHT_CLASS_NAME = 'add-note-date-highlight';
-
 const NotesModal = () => {
   // global state
   const [showModal, setShowModal] = useAtom(showAddNewNoteModalAtom);
@@ -74,58 +72,6 @@ const NotesModal = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showModal]);
 
-  // check for data hint string for remainders
-  useEffect(() => {
-    // TODO -  debounce
-    if (note?.length < 6) return;
-
-    const res = parseStringForDateTimeHint(note);
-
-    // remove this date highlight class from other spans if applied
-    const removeDateHighlightStyle = (spanElNode?: Node) => {
-      const allSpanWithClass = editorContainerRef.current?.querySelectorAll(`span.${DATE_HIGHLIGHT_CLASS_NAME}`);
-
-      if (allSpanWithClass?.length > (spanElNode ? 0 : 1)) {
-        for (const spanWithClass of allSpanWithClass) {
-          // remove all the classes
-          if (!spanElNode) {
-            spanWithClass.classList.remove(DATE_HIGHLIGHT_CLASS_NAME);
-            continue;
-          }
-
-          if (spanElNode && spanWithClass !== spanElNode) {
-            //  remove all expect the last one (last occurrence of date highlight)
-            spanWithClass.classList.remove(DATE_HIGHLIGHT_CLASS_NAME);
-          }
-        }
-      }
-    };
-    if (!res) {
-      setRemainder('');
-      removeDateHighlightStyle();
-      return;
-    }
-
-    // store the last occurrence of the date hint
-    setRemainder(res.dateString);
-
-    // find the date hint el and style it
-    const span = document.evaluate(
-      `//span[contains(., '${res.dateString}')]`,
-      document,
-      null,
-      XPathResult.ANY_TYPE,
-      null,
-    );
-    const spanEl = span.iterateNext();
-
-    if (!spanEl) return;
-    // add date highlight class
-    (spanEl as HTMLSpanElement).classList.add('add-note-date-highlight');
-
-    removeDateHighlightStyle(spanEl);
-  }, [note]);
-
   const { bounce } = useCustomAnimation();
 
   const buttonText = showModal.note?.id ? 'Update Note' : 'Add Note';
@@ -148,7 +94,7 @@ const NotesModal = () => {
           </div>
           <div className="size-full">
             {/* editor */}
-            <RichTextEditor content={note} onChange={setNote} />
+            <RichTextEditor content={note} onChange={setNote} setRemainder={setRemainder} />
           </div>
           {/* show note remainder */}
           <div className="w-full mt-1.5 px-1 min-h-8 h-fit flex items-center justify-between">

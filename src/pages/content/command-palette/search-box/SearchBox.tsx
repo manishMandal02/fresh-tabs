@@ -4,8 +4,6 @@ import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
 import { getCommandIcon } from '../CommandPalette';
 import { CommandType } from '@root/src/constants/app';
 
-const SEARCH_INPUT_ID = 'fresh-tab-command-palette-search-input';
-
 // show sub command indicator instead of search icon when a sub command is selected
 const SubCommandIndicator: FC<{ subCommandType?: CommandType }> = ({ subCommandType }) => {
   const { Icon, label } = getCommandIcon(subCommandType);
@@ -48,7 +46,6 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           ref={ref}
-          id={SEARCH_INPUT_ID}
           placeholder={placeholder}
           onChange={ev => {
             ev.nativeEvent.stopImmediatePropagation();

@@ -29,6 +29,7 @@ import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
 import SearchBox from './search-box/SearchBox';
 import CreateNote from './create-note';
+import { cn } from '@root/src/utils/cn';
 
 // default static commands
 export const staticCommands: ICommand[] = [
@@ -59,6 +60,9 @@ const webSearchCommand = (query: string, index: number) => {
     icon: MagnifyingGlassIcon,
   };
 };
+
+export const COMMAND_PALETTE_HEIGHT = 500;
+export const COMMAND_PALETTE_WIDTH = 600;
 
 export const COMMAND_HEIGHT = 30;
 
@@ -275,43 +279,33 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
     await handleSelectCommand();
   };
 
-  // check if modal's backdrop was clicked
-  const handleBackdropClick: MouseEventHandler<HTMLDialogElement> = ev => {
-    const dialogEl = modalRef.current;
+  // on modal card container click
+  const handleBackdropClick: MouseEventHandler<HTMLDivElement> = ev => {
+    const clickedEl = ev.target as HTMLElement;
 
-    // check if dialog was clicked or outside
+    // close command palette if clicked outside the modal
+    if (clickedEl.id !== 'command-palette-modal-container') return;
 
-    const rect = dialogEl.getBoundingClientRect();
-
-    const isInDialog =
-      rect.top <= ev.clientY &&
-      ev.clientY <= rect.top + rect.height &&
-      rect.left <= ev.clientX &&
-      ev.clientX <= rect.left + rect.width;
-
-    if (!isInDialog) {
-      // outside click
-      handleCloseCommandPalette();
-    }
+    handleCloseCommandPalette();
   };
 
   const { bounce } = useCustomAnimation();
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center fixed top-0 left-0 overflow-hidden">
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+    <div className=" overflow-hidden" onClick={handleBackdropClick}>
       <motion.dialog
         aria-modal
         tabIndex={-1}
         ref={modalRef}
-        onClick={handleBackdropClick}
-        onKeyDown={ev => {
-          ev.stopPropagation();
-          ev.nativeEvent.stopImmediatePropagation();
-        }}
         {...bounce}
-        className={`mx-auto top-[20%] left-/12 flex items-center outline-none flex-col justify-center 
-                  backdrop:to-brand-darkBg/30  h-fit min-w-[600px] w-[40%] max-w-[40%]  p-px bg-transparent`}>
-        <div className="w-full h-[500px] relative overflow-visible">
+        style={{
+          height: COMMAND_PALETTE_HEIGHT + 'px',
+          width: COMMAND_PALETTE_WIDTH + 'px',
+        }}
+        className={cn(`flex items-center outline-none flex-col justify-center m-0 p-0 overflow-hidden
+                  backdrop:bg-transparent backdrop:hidden bg-transparent`)}>
+        <div id="command-palette-modal-container" className="size-full relative overflow-hidden">
           <>
             {subCommand !== CommandType.NewNote ? (
               // search box
