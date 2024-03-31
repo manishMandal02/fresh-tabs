@@ -4,7 +4,7 @@
 
 /* custom scroll bar */
 .cc-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 /* Track */
@@ -14,7 +14,7 @@
 
 /* Handle */
 .cc-scrollbar::-webkit-scrollbar-thumb {
-  background: #01050ab1;
+  background: #010406b1;
   border-radius: 16px;
 }
 

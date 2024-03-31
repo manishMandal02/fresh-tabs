@@ -7,6 +7,7 @@ import RichTextEditor, {
 } from '@root/src/pages/sidepanel/components/elements/rich-text-editor/RichTextEditor';
 import { useCustomAnimation } from '@root/src/pages/sidepanel/hooks/useAnimation';
 import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
+import { COMMAND_PALETTE_SIZE } from '../CommandPalette';
 
 type Props = {
   userSelectedText: string;
@@ -29,7 +30,13 @@ const CreateNote = ({ userSelectedText }: Props) => {
   const { bounce } = useCustomAnimation();
 
   return note ? (
-    <div className="relative w-full max-h-[500px] h-fit bg-brand-darkBg rounded-lg cc-scroll-bar">
+    <div
+      style={{
+        height: COMMAND_PALETTE_SIZE.HEIGHT - 200 + 'px',
+        maxHeight: COMMAND_PALETTE_SIZE.MAX_HEIGHT + 'px',
+        width: COMMAND_PALETTE_SIZE.MAX_WIDTH - 100 + 'px',
+      }}
+      className="relative bg-brand-darkBg rounded-lg cc-scroll-bar">
       {/* editor */}
       <RichTextEditor
         content={note}

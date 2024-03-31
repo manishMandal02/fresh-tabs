@@ -61,8 +61,12 @@ const webSearchCommand = (query: string, index: number) => {
   };
 };
 
-export const COMMAND_PALETTE_HEIGHT = 500;
-export const COMMAND_PALETTE_WIDTH = 600;
+export const COMMAND_PALETTE_SIZE = {
+  HEIGHT: 500,
+  WIDTH: 600,
+  MAX_HEIGHT: 500 + 100,
+  MAX_WIDTH: 600 + 200,
+} as const;
 
 export const COMMAND_HEIGHT = 30;
 
@@ -280,31 +284,42 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
   };
 
   // on modal card container click
-  const handleBackdropClick: MouseEventHandler<HTMLDivElement> = ev => {
-    const clickedEl = ev.target as HTMLElement;
+  const handleBackdropClick: MouseEventHandler<HTMLDialogElement> = ev => {
+    const dialogEl = modalRef.current;
 
-    // close command palette if clicked outside the modal
-    if (clickedEl.id !== 'command-palette-modal-container') return;
+    // check if dialog was clicked or outside
 
-    handleCloseCommandPalette();
+    const rect = dialogEl.getBoundingClientRect();
+
+    const isInDialog =
+      rect.top <= ev.clientY &&
+      ev.clientY <= rect.top + rect.height &&
+      rect.left <= ev.clientX &&
+      ev.clientX <= rect.left + rect.width;
+
+    if (!isInDialog) {
+      // outside click
+      handleCloseCommandPalette();
+    }
   };
 
   const { bounce } = useCustomAnimation();
 
   return (
-    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-    <div className=" overflow-hidden" onClick={handleBackdropClick}>
+    <div className=" overflow-hidden">
       <motion.dialog
         aria-modal
         tabIndex={-1}
+        onClick={handleBackdropClick}
         ref={modalRef}
         {...bounce}
         style={{
-          height: COMMAND_PALETTE_HEIGHT + 'px',
-          width: COMMAND_PALETTE_WIDTH + 'px',
+          minWidth: COMMAND_PALETTE_SIZE.WIDTH,
+          width: 'fit-content',
+          maxWidth: COMMAND_PALETTE_SIZE.MAX_WIDTH + 'px',
         }}
-        className={cn(`flex items-center outline-none flex-col justify-center m-0 p-0 overflow-hidden
-                  backdrop:bg-transparent backdrop:hidden bg-transparent`)}>
+        className={cn(`flex items-center h-fit max-h-full outline-none flex-col justify-center m-0 p-0 overflow-hidden
+                       mx-auto backdrop:bg-transparent  bg-transparent`)}>
         <div id="command-palette-modal-container" className="size-full relative overflow-hidden">
           <>
             {subCommand !== CommandType.NewNote ? (
@@ -335,7 +350,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
               style={{
                 maxHeight: SUGGESTED_COMMANDS_MAX_HEIGHT + 'px',
               }}
-              className={`bg-brand-darkBg w-full h-fit overflow-hidden overflow-y-auto cc-scrollbar cc-scrollbar mx-auto shadow-sm
+              className={`bg-brand-darkBg w-ft max-w-[600px] h-fit max-h-full overflow-hidden overflow-y-auto cc-scrollbar cc-scrollbar mx-auto shadow-sm
                          shadow-slate-800/50 border-x  border-x-slate-600/40  border-collapse `}>
               {/* actions */}
               {suggestedCommands.length > 0 &&

@@ -6,7 +6,7 @@ import refreshOnUpdate from 'virtual:reload-on-update-in-view';
 import { CommandPaletteContainerId } from '@root/src/constants/app';
 import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
 import { IMessageEventContentScript, ISpace, ITab } from '../../types/global.types';
-import CommandPalette, { COMMAND_PALETTE_HEIGHT, COMMAND_PALETTE_WIDTH } from './CommandPalette';
+import CommandPalette, { COMMAND_PALETTE_SIZE } from './CommandPalette';
 
 refreshOnUpdate('pages/content');
 
@@ -78,8 +78,8 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace }: AppendConta
     <Frame
       style={{
         // all: 'inherit',
-        width: COMMAND_PALETTE_WIDTH + 'px',
-        height: COMMAND_PALETTE_HEIGHT + 'px',
+        width: COMMAND_PALETTE_SIZE.MAX_WIDTH + 'px',
+        height: COMMAND_PALETTE_SIZE.MAX_HEIGHT + 'px',
         border: 'none',
         borderRadius: '12px',
         colorScheme: 'none',
