@@ -2,14 +2,14 @@ import { useAtom } from 'jotai';
 import { OpenInNewWindowIcon } from '@radix-ui/react-icons';
 import { useState, useEffect, memo, ReactNode, FC } from 'react';
 
-import Spinner from '../../elements/spinner';
-import { SlideModal } from '../../elements/modal';
-import Switch from '../../elements/switch/Switch';
-import Accordion from '../../elements/accordion/Accordion';
+import Spinner from '../../../../../components/spinner';
+import { SlideModal } from '../../../../../components/modal';
+import Switch from '../../../../../components/switch/Switch';
+import Accordion from '../../../../../components/accordion/Accordion';
 import { IAppSettings } from '@root/src/pages/types/global.types';
 import { AlarmName, DefaultAppSettings } from '@root/src/constants/app';
 import { saveSettings } from '@root/src/services/chrome-storage/settings';
-import RadioGroup, { RadioOptions } from '../../elements/radio-group/RadioGroup';
+import RadioGroup, { RadioOptions } from '../../../../../components/radio-group/RadioGroup';
 import { createAlarm, deleteAlarm } from '@root/src/services/chrome-alarms/helpers';
 import { appSettingsAtom, showSettingsModalAtom, snackbarAtom } from '@root/src/stores/app';
 

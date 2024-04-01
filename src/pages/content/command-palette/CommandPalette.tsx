@@ -340,7 +340,11 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
               />
             ) : (
               // create note
-              <CreateNote userSelectedText={userSelectedText} onClose={() => handleCloseCommandPalette()} />
+              <CreateNote
+                userSelectedText={userSelectedText}
+                onClose={() => handleCloseCommandPalette()}
+                activeSpace={activeSpace}
+              />
             )}
           </>
           {/* search suggestions and result */}

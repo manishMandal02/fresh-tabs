@@ -7,6 +7,8 @@ import { CommandPaletteContainerId } from '@root/src/constants/app';
 import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
 import { IMessageEventContentScript, ISpace, ITab } from '../../types/global.types';
 import CommandPalette, { COMMAND_PALETTE_SIZE } from './CommandPalette';
+import { getSpace } from '@root/src/services/chrome-storage/spaces';
+import { wait } from '@root/src/utils';
 
 refreshOnUpdate('pages/content');
 
@@ -30,12 +32,13 @@ const handleClose = () => {
 type AppendContainerProps = {
   recentSites: ITab[];
   activeSpace: ISpace;
+  selectedText?: string;
 };
 
-const appendCommandPaletteContainer = ({ recentSites, activeSpace }: AppendContainerProps) => {
+const appendCommandPaletteContainer = ({ recentSites, activeSpace, selectedText }: AppendContainerProps) => {
   if (document.getElementById(CommandPaletteContainerId)) return;
 
-  const userSelectedText = getUserSelectionText();
+  const userSelectedText = selectedText || getUserSelectionText();
 
   const commandPaletteContainer = document.createElement('div') as HTMLDivElement;
 
@@ -113,6 +116,18 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace }: AppendConta
 
 //LINK - https://stackoverflow.com/questions/70867944/create-iframe-using-google-chrome-extension-manifest-v3/70870192#70870192
 //LINK - https://stackoverflow.com/questions/70867944/create-iframe-using-google-chrome-extension-manifest-v3/70870192#70870192
+
+// TODO - testing - loads command palette on site load
+
+(async () => {
+  await wait(250);
+  const activeSpace = await getSpace('148626a9faf');
+
+  console.log('🚀 ~ activeSpace:', activeSpace);
+
+  const selectedText = 'Transform your Gmail experience—say goodbye to clutter effortlessly';
+  appendCommandPaletteContainer({ activeSpace, selectedText, recentSites: [] });
+})();
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   const event = msg as IMessageEventContentScript;

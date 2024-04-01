@@ -1,5 +1,5 @@
 import { useAtom } from 'jotai';
-import { AlertModal } from '../../elements/modal';
+import { AlertModal } from '../../../../../components/modal';
 import { snackbarAtom } from '@root/src/stores/app';
 import { deleteNote } from '@root/src/services/chrome-storage/notes';
 

@@ -7,8 +7,8 @@ import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 
 import Footer from './components/features/footer';
 import { useSidePanel } from './hooks/useSidePanel';
-import Spinner from './components/elements/spinner';
-import Snackbar from './components/elements/snackbar';
+import Spinner from '../../components/spinner';
+import Snackbar from '../../components/snackbar';
 import CommandPalette from '../content/command-palette';
 import Settings from './components/features/settings/Settings';
 import { IMessageEventSidePanel } from '../types/global.types';
@@ -20,7 +20,7 @@ import { appSettingsAtom, dragStateAtom, showNotificationModalAtom, snackbarAtom
 import { TAB_HEIGHT } from './components/features/space/active-space/ActiveSpaceTabs';
 import UserAccount from './components/features/user/UserAccount';
 import AddNewNote from './components/features/notes/notes-modal/NotesModal';
-import ErrorBoundaryUI from './components/elements/error-boundary/ErrorBoundaryUI';
+import ErrorBoundaryUI from '../../components/error-boundary/ErrorBoundaryUI';
 
 // event ids of processed events
 const processedEvents: string[] = [];

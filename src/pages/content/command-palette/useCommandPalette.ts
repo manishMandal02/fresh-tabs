@@ -6,7 +6,7 @@ import { getFaviconURL } from '../../../utils/url';
 import { CommandType } from '@root/src/constants/app';
 import { ICommand, ISpace } from '../../types/global.types';
 import { publishEvents } from '../../../utils/publish-events';
-import { useKeyPressed } from '../../sidepanel/hooks/useKeyPressed';
+import { useKeyShortcuts } from '../../sidepanel/hooks/useKeyShortcuts';
 import { prettifyDate } from '../../../utils/date-time/prettifyDate';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
@@ -52,7 +52,7 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
   }, [modalRef, onClose]);
 
   // handle key press
-  const { isModifierKeyPressed } = useKeyPressed({
+  const { isModifierKeyPressed } = useKeyShortcuts({
     parentConTainerEl: modalRef.current,
     monitorModifierKeys: true,
     onEscapePressed: () => {

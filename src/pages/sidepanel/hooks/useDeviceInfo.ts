@@ -6,7 +6,7 @@ export const useDeviceInfo = () => {
   const [isMac, setIsMac] = useState(false);
 
   useEffect(() => {
-    if (navigator.userAgent.toLowerCase().includes('Mac')) {
+    if (navigator.userAgent.toLowerCase().includes('mac')) {
       setIsMac(true);
     } else {
       setIsMac(false);

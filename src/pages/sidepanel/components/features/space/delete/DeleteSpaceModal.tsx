@@ -2,8 +2,8 @@ import { useAtom } from 'jotai';
 import { createPortal } from 'react-dom';
 import { useEffect, useCallback, useState } from 'react';
 
-import Spinner from '../../../elements/spinner';
-import { AlertModal } from '../../../elements/modal';
+import Spinner from '../../../../../../components/spinner';
+import { AlertModal } from '../../../../../../components/modal';
 import { AlarmName } from '@root/src/constants/app';
 import { ISpace } from '@root/src/pages/types/global.types';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';

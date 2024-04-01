@@ -1,12 +1,12 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
-import Tooltip from '../../../elements/tooltip';
+import Tooltip from '../../../../../../components/tooltip';
 import { ISnoozedTab } from '@root/src/pages/types/global.types';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
 import { getSnoozedTabs } from '@root/src/services/chrome-storage/snooze-tabs';
-import { SlideModal } from '../../../elements/modal';
+import { SlideModal } from '../../../../../../components/modal';
 import { useAtom } from 'jotai';
 import { activeSpaceIdAtom } from '@root/src/stores/app';
 

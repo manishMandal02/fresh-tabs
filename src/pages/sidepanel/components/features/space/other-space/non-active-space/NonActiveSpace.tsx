@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useAtom } from 'jotai';
 import { ExitIcon, ExternalLinkIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 
-import Popover from '../../../../elements/popover';
-import Tooltip from '../../../../elements/tooltip';
+import Popover from '../../../../../../../components/popover';
+import Tooltip from '../../../../../../../components/tooltip';
 import { ISpace } from '@root/src/pages/types/global.types';
 import { openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
@@ -13,7 +13,7 @@ import {
   nonActiveSpacesAtom,
   showUpdateSpaceModalAtom,
 } from '@root/src/stores/app';
-import { useKeyPressed } from '@root/src/pages/sidepanel/hooks/useKeyPressed';
+import { useKeyShortcuts } from '@root/src/pages/sidepanel/hooks/useKeyShortcuts';
 
 type Props = {
   space: ISpace;
@@ -60,7 +60,7 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
     }
   };
 
-  const { isModifierKeyPressed } = useKeyPressed({ monitorModifierKeys: true });
+  const { isModifierKeyPressed } = useKeyShortcuts({ monitorModifierKeys: true });
 
   return (
     <>

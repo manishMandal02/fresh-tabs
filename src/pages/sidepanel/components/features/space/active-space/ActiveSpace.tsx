@@ -6,10 +6,10 @@ import { Notes } from '../../notes';
 import SpaceTitle from './SpaceTitle';
 import SnoozedTabs from './SnoozedTabs';
 import MoreOptions from '../more-options';
-import Tabs from '../../../elements/tabs/Tabs';
+import Tabs from '../../../../../../components/tabs/Tabs';
 import ActiveSpaceTabs from './ActiveSpaceTabs';
 import SpaceHistory from '../history/SpaceHistory';
-import { useKeyPressed } from '../../../../hooks/useKeyPressed';
+import { useKeyShortcuts } from '../../../../hooks/useKeyShortcuts';
 import { ISpaceWithTabs } from '@root/src/pages/types/global.types';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
@@ -34,7 +34,7 @@ const ActiveSpace = ({ space, setActiveSpace, onSearchClick, onNotificationClick
   const [showSnoozedTabs, setShowSnoozedTabs] = useState(false);
 
   //  key press
-  useKeyPressed({
+  useKeyShortcuts({
     monitorModifierKeys: false,
   });
 

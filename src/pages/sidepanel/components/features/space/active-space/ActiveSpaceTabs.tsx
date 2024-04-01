@@ -6,7 +6,7 @@ import { MouseEventHandler, useState, useCallback, useEffect, useRef, useMemo, m
 import { Tab } from '../tab';
 import { logger } from '@root/src/utils';
 import { goToTab } from '@root/src/services/chrome-tabs/tabs';
-import { useKeyPressed } from '../../../../hooks/useKeyPressed';
+import { useKeyShortcuts } from '../../../../hooks/useKeyShortcuts';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';
 import TabDraggedOutsideActiveSpace from './TabDraggedOutsideActiveSpace';
 import { ISpaceWithTabs, ITabWithIndex } from '@root/src/pages/types/global.types';
@@ -14,7 +14,7 @@ import { activeSpaceAtom, dragStateAtom, selectedTabsAtom } from '@root/src/stor
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import DraggingOverNudge from './DraggingOverNudge';
 import { PlusIcon } from '@radix-ui/react-icons';
-import Tooltip from '../../../elements/tooltip';
+import Tooltip from '../../../../../../components/tooltip';
 
 type Props = {
   space: ISpaceWithTabs;
@@ -36,7 +36,7 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
   // mouse pos on drag start
   const [mouseXOnDrag, setMouseXOnDrag] = useState(0);
 
-  // used ref to store value as the useKeyPressed hook
+  // used ref to store value as the useKeyShortcuts hook
   // didn't get the updated state in the callback
   const selectedTabsRef = useRef<ITabWithIndex[]>([]);
 
@@ -93,7 +93,7 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
 
   const { bounce } = useCustomAnimation();
 
-  const { isModifierKeyPressed, isShiftKeyPressed } = useKeyPressed({
+  const { isModifierKeyPressed, isShiftKeyPressed } = useKeyShortcuts({
     monitorModifierKeys: true,
     onDeletePressed: () => {
       (async () => await handleRemoveTabs())();

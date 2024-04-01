@@ -3,15 +3,15 @@ import { motion } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 
 import { useNewNote } from './useNewNote';
-import Spinner from '../../../elements/spinner';
-import Tooltip from '../../../elements/tooltip';
-import { SlideModal } from '../../../elements/modal';
+import Spinner from '../../../../../../components/spinner';
+import Tooltip from '../../../../../../components/tooltip';
+import { SlideModal } from '../../../../../../components/modal';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
-import TextField from '../../../elements/form/text-field';
-import Checkbox from '../../../elements/checkbox/Checkbox';
+import TextField from '../../../../../../components/form/text-field';
+import Checkbox from '../../../../../../components/checkbox/Checkbox';
 import { showAddNewNoteModalAtom } from '@root/src/stores/app';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';
-import RichTextEditor, { EDITOR_EMPTY_STATE } from '../../../elements/rich-text-editor/RichTextEditor';
+import RichTextEditor, { EDITOR_EMPTY_STATE } from '../../../../../../components/rich-text-editor/RichTextEditor';
 import { parseStringForDateTimeHint } from '@root/src/utils/date-time/naturalLanguageToDate';
 
 const NotesModal = () => {

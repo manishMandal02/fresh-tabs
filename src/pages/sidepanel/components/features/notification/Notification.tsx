@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 
-import { SlideModal } from '../../elements/modal';
+import { SlideModal } from '../../../../../components/modal';
 import { showNotificationModalAtom } from '@root/src/stores/app';
 
 const Notification = () => {

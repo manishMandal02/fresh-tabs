@@ -2,7 +2,7 @@ import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { HamburgerMenuIcon, BarChartIcon, MoonIcon, BookmarkIcon, GearIcon } from '@radix-ui/react-icons';
 
-import Popover from '../../elements/popover';
+import Popover from '../../../../../components/popover';
 import Analytics from '../space/analytics/Analytics';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
 import { showSettingsModalAtom, showUserAccountModalAtom, snackbarAtom } from '@root/src/stores/app';

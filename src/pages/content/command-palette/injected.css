@@ -27,10 +27,10 @@
 /* date highlight in notes editor */
 
 .add-note-date-highlight {
-  background-color: #d56be5;
+  background-color: #21d4a1;
   font-size: 13.5px;
   color: #10121f !important;
-  font-weight: 500;
-  padding: 1px 4px;
+  font-weight: 400;
+  padding: 2px 6px;
   border-radius: 1.5px;
 }

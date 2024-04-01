@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 
-import { SlideModal } from '../../elements/modal';
+import { SlideModal } from '../../../../../components/modal';
 import { showUserAccountModalAtom } from '@root/src/stores/app';
 
 const testUser = {

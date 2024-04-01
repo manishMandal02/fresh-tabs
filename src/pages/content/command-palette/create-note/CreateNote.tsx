@@ -1,20 +1,24 @@
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 import { useFrame } from 'react-frame-component';
+import { ClockIcon, GlobeIcon } from '@radix-ui/react-icons';
 
-import RichTextEditor, {
-  EDITOR_EMPTY_STATE,
-} from '@root/src/pages/sidepanel/components/elements/rich-text-editor/RichTextEditor';
-import { useCustomAnimation } from '@root/src/pages/sidepanel/hooks/useAnimation';
-import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
+import KBD from '@root/src/components/kbd/KBD';
 import { COMMAND_PALETTE_SIZE } from '../CommandPalette';
+import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
+import { useCustomAnimation } from '@root/src/pages/sidepanel/hooks/useAnimation';
+import RichTextEditor, { EDITOR_EMPTY_STATE } from '@root/src/components/rich-text-editor/RichTextEditor';
+import { publishEvents } from '@root/src/utils';
+import { ISpace } from '@root/src/pages/types/global.types';
 
 type Props = {
+  activeSpace: ISpace;
   userSelectedText: string;
   onClose?: () => void;
 };
 
-const CreateNote = ({ userSelectedText }: Props) => {
+const CreateNote = ({ userSelectedText, onClose, activeSpace }: Props) => {
   const { document: iFrameDoc } = useFrame();
 
   // local state
@@ -25,45 +29,74 @@ const CreateNote = ({ userSelectedText }: Props) => {
     setNote(EDITOR_EMPTY_STATE);
   }, [userSelectedText]);
 
-  // TODO - create a note title
-
   const { bounce } = useCustomAnimation();
 
+  useHotkeys(
+    'mod+enter',
+    async () => {
+      await publishEvents({
+        event: 'NEW_NOTE',
+        payload: { note, url: document.location.href, activeSpace },
+      });
+      // TODO - show note captured/save snackbar
+      onClose();
+    },
+    [],
+    { document: iFrameDoc, enableOnContentEditable: true, preventDefault: true, enableOnFormTags: true },
+  );
+
   return note ? (
-    <div
-      style={{
-        height: COMMAND_PALETTE_SIZE.HEIGHT - 200 + 'px',
-        maxHeight: COMMAND_PALETTE_SIZE.MAX_HEIGHT + 'px',
-        width: COMMAND_PALETTE_SIZE.MAX_WIDTH - 100 + 'px',
-      }}
-      className="relative bg-brand-darkBg rounded-lg cc-scroll-bar">
-      {/* editor */}
-      <RichTextEditor
-        content={note}
-        onChange={setNote}
-        userSelectedText={userSelectedText}
-        setRemainder={setRemainder}
-        rootDocument={iFrameDoc}
-      />
-      <div className="absolute top-1.5 right-2 flex items-center justify-center space-x-2">
-        {/* remainder */}
-        {remainder ? (
-          <motion.div
-            {...bounce}
-            className="flex items-center px-2.5 py-px rounded-lg bg-brand-darkBgAccent text-slate-300/80 text-[12px] font-medium shadow-md shadow-brand-darkBg/80">
-            <span className="opacity-90 mr-1.5">⏰</span>
-            <span className="text-brand-text">{remainder}</span>
-          </motion.div>
-        ) : null}
-        {/* remainder */}
-        {document.location.href ? (
-          <motion.div
-            {...bounce}
-            className="flex items-center px-2.5 py-px rounded-lg bg-brand-darkBgAccent text-slate-300/80 text-[12px] font-medium shadow-md shadow-brand-darkBg/80">
-            <span className="opacity-90 mr-1.5">⏰</span>
-            <span className="text-brand-text">{cleanDomainName(document.location.hostname)}</span>
-          </motion.div>
-        ) : null}
+    <div className="h-fit w-fit p-3.5 border border-brand-darkBg/50  bg-gradient-to-b from-brand-darkBgAccent/95 to-gray-800/95 rounded-lg">
+      <div
+        style={{
+          height: COMMAND_PALETTE_SIZE.HEIGHT - 150 + 'px',
+          maxHeight: COMMAND_PALETTE_SIZE.MAX_HEIGHT + 'px',
+          width: COMMAND_PALETTE_SIZE.MAX_WIDTH - 100 + 'px',
+        }}
+        className="relative bg-brand-darkBg rounded-lg cc-scroll-bar">
+        {/* editor */}
+        <RichTextEditor
+          content={note}
+          onChange={setNote}
+          userSelectedText={userSelectedText}
+          setRemainder={setRemainder}
+          rootDocument={iFrameDoc}
+        />
+      </div>
+      {/* save command */}
+      <div className="w-full bg-brand-darkBg rounded-b-lg -mt-1.5 px-3 py-2 flex items-center justify-between">
+        {/* left container */}
+        <div className="flex items-center justify-center space-x-2">
+          {/* site domain */}
+          {document.location.href ? (
+            <motion.div
+              {...bounce}
+              className="flex items-center px-2 py-1 rounded-lg bg-brand-darkBgAccent/65 text-slate-300/80 text-[12px] font-medium mt-1.5">
+              <GlobeIcon className="text-slate-500 scale-[1] mr-1.5" />
+              <span className="">{cleanDomainName(document.location.hostname)}</span>
+            </motion.div>
+          ) : null}
+
+          {/* remainder */}
+          {remainder ? (
+            <motion.div
+              {...bounce}
+              className="flex items-center px-2 py-1 rounded-lg bg-brand-darkBgAccent/65 text-slate-300/80 text-[12px] font-medium mt-1.5">
+              <ClockIcon className="text-slate-500 scale-[1] mr-1.5" />
+              <span className="capitalize">{remainder}</span>
+            </motion.div>
+          ) : null}
+        </div>
+
+        {/*  save note shortcut */}
+        <div className="flex items-center mt-1.5">
+          <p className="text-slate-400/90 text-[13.5px]">Save</p>
+          <span className="ml-2 flex items-center">
+            <KBD modifierKey />
+            <span className="font-bold text-slate-400/70 text-[13px] mx-[5px]">+</span>
+            <KBD>Enter</KBD>
+          </span>
+        </div>
       </div>
     </div>
   ) : (

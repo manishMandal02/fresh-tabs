@@ -303,11 +303,11 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'NEW_NOTE': {
-        const { activeSpace, note } = payload;
+        const { activeSpace, note, url } = payload;
 
         const currentTab = await getCurrentTab();
 
-        const domain = cleanDomainName(getUrlDomain(currentTab.url)) || '';
+        const domain = cleanDomainName(getUrlDomain(url)) || '';
 
         // TODO - create note title
         const title = currentTab.title || '';

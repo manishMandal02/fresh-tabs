@@ -9,7 +9,7 @@ import {
   LapTimerIcon,
 } from '@radix-ui/react-icons';
 
-import Popover from '../../../elements/popover';
+import Popover from '../../../../../../components/popover';
 
 type Props = {
   isSpaceActive: boolean;

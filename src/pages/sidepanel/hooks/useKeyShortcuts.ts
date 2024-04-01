@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
+
 import { useDeviceInfo } from './useDeviceInfo';
 
-type useKeyPressedProps = {
+type useKeyShortcutsProps = {
   monitorModifierKeys?: boolean;
   onDeletePressed?: () => void;
   onEscapePressed?: () => void;
@@ -12,7 +13,7 @@ type useKeyPressedProps = {
   parentConTainerEl?: HTMLElement;
 };
 
-export const useKeyPressed = ({
+export const useKeyShortcuts = ({
   monitorModifierKeys = true,
   parentConTainerEl = null,
   onDeletePressed,
@@ -21,7 +22,7 @@ export const useKeyPressed = ({
   onTabPressed,
   onArrowUpPressed,
   onArrowDownPressed,
-}: useKeyPressedProps) => {
+}: useKeyShortcutsProps) => {
   // TODO - keep track if the event listener is added already or not
   //  ctrl/cmd key press status
   const [isModifierKeyPressed, setIsModifierKeyPressed] = useState(false);

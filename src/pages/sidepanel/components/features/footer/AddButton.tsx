@@ -2,8 +2,8 @@ import { useAtom } from 'jotai';
 import { useState } from 'react';
 
 import { wait } from '@root/src/utils';
-import Tooltip from '../../elements/tooltip';
-import Popover from '../../elements/popover';
+import Tooltip from '../../../../../components/tooltip';
+import Popover from '../../../../../components/popover';
 import { PlusIcon } from '@radix-ui/react-icons';
 import { showAddNewNoteModalAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
 

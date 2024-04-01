@@ -3,9 +3,9 @@ import { motion } from 'framer-motion';
 import { useState, useEffect, useRef, memo } from 'react';
 
 import { Tab } from '../tab';
-import { SlideModal } from '../../../elements/modal';
+import { SlideModal } from '../../../../../../components/modal';
 import { activeSpaceIdAtom } from '@root/src/stores/app';
-import Accordion from '../../../elements/accordion/Accordion';
+import Accordion from '../../../../../../components/accordion/Accordion';
 import { ISiteVisit } from '@root/src/pages/types/global.types';
 import { getTime } from '@root/src/utils/date-time/get-time';
 import { useCustomAnimation } from '../../../../hooks/useAnimation';

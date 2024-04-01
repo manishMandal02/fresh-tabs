@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { GlobeIcon, LapTimerIcon, TrashIcon } from '@radix-ui/react-icons';
 
 import DeleteNote from './DeleteNote';
-import Tooltip from '../../elements/tooltip';
+import Tooltip from '../../../../../components/tooltip';
 import { showAddNewNoteModalAtom } from '@root/src/stores/app';
 import { INote, ISpace } from '@root/src/pages/types/global.types';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';

@@ -1,8 +1,8 @@
-import PieChart, { PieChartData } from '../../../elements/charts/PieChart';
+import PieChart, { PieChartData } from '../../../../../../components/charts/PieChart';
 import { useState, useEffect } from 'react';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
-import DatePicker from '../../../elements/date-picker/DatePicker';
-import { SlideModal } from '../../../elements/modal';
+import DatePicker from '../../../../../../components/date-picker/DatePicker';
+import { SlideModal } from '../../../../../../components/modal';
 
 const filterOptions = ['Today', 'Yesterday', '7 days', '30 days', 'Custom', 'All'];
 

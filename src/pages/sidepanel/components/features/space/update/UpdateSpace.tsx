@@ -3,14 +3,14 @@ import { useAtom } from 'jotai';
 
 import { Tab } from '../tab';
 import { wait } from '@root/src/utils';
-import Spinner from '../../../elements/spinner';
+import Spinner from '../../../../../../components/spinner';
 import { useUpdateSpace } from './useUpdateSpace';
-import { SlideModal } from '../../../elements/modal';
-import ColorPicker from '../../../elements/color-picker';
-import EmojiPicker from '../../../elements/emoji-picker';
+import { SlideModal } from '../../../../../../components/modal';
+import ColorPicker from '../../../../../../components/color-picker';
+import EmojiPicker from '../../../../../../components/emoji-picker';
 import { showUpdateSpaceModalAtom } from '@root/src/stores/app';
-import TextInput from '../../../elements/TextInput/TextInput';
-import ErrorMessage from '../../../elements/alert-message/ErrorMessage';
+import TextInput from '../../../../../../components/TextInput/TextInput';
+import ErrorMessage from '../../../../../../components/alert-message/ErrorMessage';
 import { ISpaceWithoutId, ITab } from '@root/src/pages/types/global.types';
 
 const UpdateSpace = () => {

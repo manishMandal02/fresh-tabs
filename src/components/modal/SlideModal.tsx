@@ -1,8 +1,8 @@
 import { ReactNode, memo } from 'react';
 import { Cross1Icon } from '@radix-ui/react-icons';
 import { motion } from 'framer-motion';
-import { useCustomAnimation } from '../../../hooks/useAnimation';
-import { useKeyPressed } from '../../../hooks/useKeyPressed';
+import { useCustomAnimation } from '../../pages/sidepanel/hooks/useAnimation';
+import { useKeyShortcuts } from '../../pages/sidepanel/hooks/useKeyShortcuts';
 
 type Props = {
   isOpen: boolean;
@@ -17,7 +17,7 @@ const SlideModal = ({ children, isOpen, onClose, title }: Props) => {
     onClose();
   };
 
-  useKeyPressed({
+  useKeyShortcuts({
     onEscapePressed: () => {
       handleClose();
     },

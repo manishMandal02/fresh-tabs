@@ -127,8 +127,8 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
     <div
       id="editor-wrapper"
       ref={editorContainerRef}
-      className={`relative prose h-full min-w-full  prose-p:leading-[1.55rem] prose-a:text-slate-300/80 !caret-slate-200 prose-code:text-slate-400 prose-li:my-px prose-li:leading-[1.5rem] prose-ul:my-1 prose-hr:my-3 prose-hr:border-[1.1px] prose-hr:border-slate-700/80 prose-p:my-0 prose-headings:my-1
-                prose-blockquote:text-slate-400 prose-blockquote:my-[10px] text-slate-300/90  prose-headings:text-slate-300/80 prose-strong:!text-slate-300/80 prose-strong:!font-extrabold`}>
+      className={`relative prose h-full min-w-full prose-p:leading-[1.5rem] prose-a:text-slate-300/80 !caret-slate-200 prose-code:text-slate-400 prose-li:my-px prose-li:leading-[1.5rem] prose-ul:my-1 prose-hr:my-3 prose-hr:border-[1.1px]
+                prose-hr:border-slate-700/80 prose-p:my-0 prose-headings:my-1 prose-blockquote:text-slate-400 prose-blockquote:my-[10px] text-slate-300/90  prose-headings:text-slate-300/80 prose-strong:!text-slate-300/80 prose-strong:!font-extrabold`}>
       <LexicalEditor
         onChange={debouncedChangeHandler}
         config={{
@@ -140,7 +140,11 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
                 const root = $getRoot();
 
                 const quote = $createQuoteNode();
-                const quoteParagraphs = userSelectedText.trim().split('\n');
+                const quoteParagraphs = userSelectedText
+                  .trim()
+                  .split('\n')
+                  .filter(line => line);
+
                 quoteParagraphs.forEach((para, idx) => {
                   const textNode = $createTextNode(para);
                   quote.append(textNode);
@@ -175,6 +179,7 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
               listitemUnchecked: 'rich-text-editor__listItemUnchecked',
             },
           },
+
           onError: error => {
             logger.error({
               error,
