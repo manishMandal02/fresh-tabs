@@ -62,15 +62,13 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
 
   // check for data hint string for remainders
   const debouncedChangeHandler = useCallback(
-    (note: string) => {
+    debounce((note: string) => {
       // debounce  change handler
-      debounce(() => onChange(note), 500);
+      onChange(note);
 
       if (!setRemainder) return;
 
       const res = parseStringForDateTimeHint(note);
-
-      console.log('🚀 ~ RichTextEditor ~ res:', res);
 
       if (!res) {
         // date hint not found, remove highlight class if added previously
@@ -90,8 +88,6 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
         null,
       );
       const spanEl = span.iterateNext() as HTMLSpanElement;
-
-      console.log('🚀 ~ RichTextEditor ~ spanEl:', spanEl);
 
       if (!spanEl) return;
 
@@ -116,7 +112,7 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
         removeDateHighlightStyle();
         setRemainder('');
       }
-    },
+    }, 500),
     [onChange, setRemainder, rootDocument],
   );
 

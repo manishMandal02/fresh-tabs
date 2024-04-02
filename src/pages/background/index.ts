@@ -69,6 +69,7 @@ import {
 } from '@root/src/constants/app';
 import { addNewNote } from '@root/src/services/chrome-storage/notes';
 import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';
+import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
 
 logger.info('🏁 background loaded');
 
@@ -303,7 +304,7 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'NEW_NOTE': {
-        const { activeSpace, note, url } = payload;
+        const { activeSpace, note, url, noteRemainder } = payload;
 
         const currentTab = await getCurrentTab();
 
@@ -320,7 +321,9 @@ chrome.runtime.onMessage.addListener(
           text: note,
           spaceId: activeSpace.id,
           createdAt: new Date().getTime(),
+          ...(noteRemainder && { remainderAt: naturalLanguageToDate(noteRemainder) }),
         };
+
         // create note
         await addNewNote(newNote);
 

@@ -64,6 +64,7 @@ const NotesModal = () => {
         const dateHintString = parseStringForDateTimeHint(noteToEdit.text);
 
         if (dateHintString?.dateString) {
+          // TODO - highlight style for date hint
           setRemainder(dateHintString.dateString);
         }
       }
@@ -81,7 +82,7 @@ const NotesModal = () => {
       <div className="min-h-[60vh] max-h-[90vh] w-full flex h-full flex-col justify-between">
         {/* note mdn editor */}
         <div
-          className="w-full px-2.5 mb-1.5 mt-2 h-[90%] overflow-hidden relative flex flex-col"
+          className="w-full px-2.5 mb-1.5 mt-2 h-[90%] overflow-hidden relative flex flex-col "
           ref={editorContainerRef}>
           {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
           <div className="mb-1.5">
@@ -92,7 +93,7 @@ const NotesModal = () => {
               error={inputFrom.formState.errors.title?.message || ''}
             />
           </div>
-          <div className="size-full">
+          <div className="w-full h-[300px] max-h-full">
             {/* editor */}
             <RichTextEditor content={note} onChange={setNote} setRemainder={setRemainder} />
           </div>

@@ -29,6 +29,7 @@
 .add-note-date-highlight {
   background-color: #21d4a1;
   font-size: 13.5px;
+  caret-color: #10121f;
   color: #10121f !important;
   font-weight: 400;
   padding: 2px 6px;

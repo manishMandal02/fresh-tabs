@@ -41,7 +41,7 @@ const SnackbarContentScript = ({ title }: Props) => {
     // wait 0.1s
     // await wait(100);
     //  round div drop
-    animate(scope.current, { y: '60px' }, { duration: 0.1, type: 'spring', damping: 16, stiffness: 80 });
+    animate(scope.current, { y: '60px' }, { duration: 0.1, type: 'spring', damping: 20, stiffness: 80 });
     // expand width
     animate(
       scope.current,

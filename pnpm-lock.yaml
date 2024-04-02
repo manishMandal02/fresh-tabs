@@ -148,6 +148,9 @@ devDependencies:
   '@types/react-dom':
     specifier: 18.2.14
     version: 18.2.14
+  '@types/web':
+    specifier: ^0.0.142
+    version: 0.0.142
   '@types/ws':
     specifier: 8.5.8
     version: 8.5.8
@@ -2463,6 +2466,10 @@ packages:
 
   /@types/semver@7.5.6:
     resolution: {integrity: sha512-dn1l8LaMea/IjDoHNd9J52uBbInB796CDffS6VdIxvqYCPSG0V0DzHp76GpaWnlhg88uYyPbXCDIowa86ybd5A==}
+    dev: true
+
+  /@types/web@0.0.142:
+    resolution: {integrity: sha512-QWDvMW+P3sdq8rhiw3dNyBR64O5adSY80gBjRd2xI3BADGsAFpAglblWucsGUjKVKyPm4EbYZkvFs7BRxPsBOg==}
     dev: true
 
   /@types/ws@8.5.8:

@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 import { useCallback, useEffect, useState } from 'react';
-import { GlobeIcon, LapTimerIcon, TrashIcon } from '@radix-ui/react-icons';
+import { CounterClockwiseClockIcon, GlobeIcon, TrashIcon } from '@radix-ui/react-icons';
 
 import DeleteNote from './DeleteNote';
 import Tooltip from '../../../../../components/tooltip';
@@ -49,26 +49,34 @@ const Notes = ({ space }: Props) => {
               tabIndex={-1}
               key={note.id}
               onClick={() => handleNoteClick(note)}
-              className="relative w-full bg-brand-darkBgAccent/40 px-3 py-[6px] rounded-[7px] mb-1.5 cursor-pointer group overflow-hidden">
+              className="relative w-full bg-brand-darkBgAccent/25 px-3 py-[8px] rounded-[7px] mb-1.5 cursor-pointer group overflow-hidden">
               <div className="group-hover:-translate-x-[34px]  transition-all duration-300 w-full">
-                <p className="text-slate-300/80 text-[15px] text-start">{limitCharLength(note.title, 42)}</p>
-                <div className="flex items-center justify-end mt-2.5">
+                <p className="text-slate-300/80 text-[14px] text-start">{limitCharLength(note.title, 42)}</p>
+                <div className="flex items-center justify-end mt-3">
+                  {/*  note site */}
+                  {note.remainderAt ? (
+                    <div className="flex items-center bg-brand-darkBgAccent/35 border border-brand-darkBg/30  w-fit px-1.5 py-[2.5px] rounded-md font- mr-1.5">
+                      <p className="mr-[4px]  scale-[0.85] opacity-90">⏰</p>
+                      <Tooltip label={new Date(note.remainderAt).toLocaleString()}>
+                        <span className="font-light text-[9px] text-slate-400">{getTimeAgo(note.remainderAt)}</span>
+                      </Tooltip>
+                    </div>
+                  ) : null}
                   {/*  note site */}
                   {note.domain ? (
-                    <div className="flex items-center bg-brand-darkBgAccent/40 border border-brand-darkBg/30  w-fit px-1.5 py-[2.5px] rounded font-medium mr-1.5">
-                      <GlobeIcon className="text-slate-500  mr-[2.5px]  scale-[0.8]" />
+                    <div className="flex items-center bg-brand-darkBgAccent/35 border border-brand-darkBg/30  w-fit px-1.5 py-[2.5px] rounded-md font- mr-1.5">
+                      <GlobeIcon className="text-slate-500  mr-[2.5px]  scale-[0.7]" />
                       <Tooltip label={note.domain}>
-                        <span className="font-light text-[10px] text-slate-300/80">{note.domain}</span>
+                        <span className="font-light text-[9px] text-slate-400">{note.domain}</span>
                       </Tooltip>
                     </div>
                   ) : null}
                   {/* remainder until */}
-
-                  {note?.remainderAt ? (
-                    <div className="flex items-center bg-brand-darkBgAccent/40 border border-brand-darkBg/30  w-fit px-1.5 py-[2.5px] rounded font-medium">
-                      <LapTimerIcon className="text-slate-500 mr-[2.5px] scale-[0.8]" />
-                      <Tooltip label={new Date(note.remainderAt).toLocaleString()}>
-                        <span className="font-light text-[10px] text-slate-300/80">{getTimeAgo(note.remainderAt)}</span>
+                  {note?.createdAt ? (
+                    <div className="flex items-center bg-brand-darkBgAccent/35 border border-brand-darkBg/30  w-fit px-1.5 py-[2.5px] rounded-md font-">
+                      <CounterClockwiseClockIcon className="text-slate-500 mr-[2.5px] scale-[0.7]" />
+                      <Tooltip label={new Date(note.createdAt).toLocaleString()}>
+                        <span className="font-light text-[9px] text-slate-400">{getTimeAgo(note.createdAt)}</span>
                       </Tooltip>
                     </div>
                   ) : null}
@@ -87,7 +95,7 @@ const Notes = ({ space }: Props) => {
             </button>
           ))
         ) : (
-          <div>No notes in this space</div>
+          <div className="text-slate-400 text-center py-6">No notes in this space</div>
         )}
       </div>
       {deleteNoteId ? <DeleteNote noteId={deleteNoteId} onClose={() => setDeleteNoteId('')} /> : null}

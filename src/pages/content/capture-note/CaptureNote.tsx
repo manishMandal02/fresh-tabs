@@ -1,16 +1,16 @@
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useFrame } from 'react-frame-component';
+import { useState, useEffect, useCallback } from 'react';
 import { ClockIcon, GlobeIcon } from '@radix-ui/react-icons';
 
 import KBD from '@root/src/components/kbd/KBD';
-import { COMMAND_PALETTE_SIZE } from '../command-palette/CommandPalette';
-import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
-import { useCustomAnimation } from '@root/src/pages/sidepanel/hooks/useAnimation';
-import RichTextEditor, { EDITOR_EMPTY_STATE } from '@root/src/components/rich-text-editor/RichTextEditor';
 import { publishEvents } from '@root/src/utils';
 import { ISpace } from '@root/src/pages/types/global.types';
+import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
+import { COMMAND_PALETTE_SIZE } from '../command-palette/CommandPalette';
+import { useCustomAnimation } from '@root/src/pages/sidepanel/hooks/useAnimation';
+import RichTextEditor, { EDITOR_EMPTY_STATE } from '@root/src/components/rich-text-editor/RichTextEditor';
 
 type Props = {
   activeSpace: ISpace;
@@ -31,21 +31,21 @@ const CreateNote = ({ userSelectedText, onClose, activeSpace }: Props) => {
 
   const { bounce } = useCustomAnimation();
 
-  const handleSaveNote = async () => {
+  const handleSaveNote = useCallback(async () => {
     await publishEvents({
       event: 'NEW_NOTE',
-      payload: { note, url: document.location.href, activeSpace },
+      payload: { note, url: document.location.href, activeSpace, noteRemainder: remainder },
     });
     // TODO - show note captured/save snackbar
     onClose();
-  };
+  }, [note, activeSpace, onClose, remainder]);
 
   useHotkeys(
     'mod+enter',
     async () => {
       await handleSaveNote();
     },
-    [],
+    [note, remainder],
     {
       document: iFrameDoc,
       enableOnContentEditable: true,

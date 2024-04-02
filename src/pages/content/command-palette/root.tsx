@@ -41,7 +41,7 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace, selectedText 
 
   const userSelectedText = selectedText || getUserSelectionText();
 
-  const commandPaletteContainer = document.createElement('div') as HTMLDivElement;
+  const commandPaletteContainer = document.createElement('div');
 
   commandPaletteContainer.id = CommandPaletteContainerId;
 
@@ -102,9 +102,9 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace, selectedText 
 const handleShowSnackbar = (title: string) => {
   console.log('🚀 ~ handleShowSnackbar ~ title:', title);
 
-  const root = (document as Document).createElement('div');
+  const root = document.createElement('div');
 
-  (document as Document).body.appendChild(root);
+  document.body.appendChild(root);
 
   const shadowRoot = root.attachShadow({ mode: 'open' });
 

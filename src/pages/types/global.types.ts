@@ -117,6 +117,7 @@ interface IEventPayloadContentScript {
   tabId?: number;
   spaceTitle?: string;
   searchQuery?: string;
+  noteRemainder?: string;
   activeSpace?: ISpace;
   shouldOpenInNewTab?: boolean;
   snoozedUntil?: number;
