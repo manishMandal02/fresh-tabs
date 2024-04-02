@@ -12,7 +12,7 @@ export const naturalLanguageToDate = (dateString: string) => {
 
 // get date/time text hint string from a give string
 export const parseStringForDateTimeHint = (note: string) => {
-  const parsedData = parse(note.replace('@', 'at'), { instant: new Date() }, { forwardDate: true });
+  const parsedData = parse(note.replace('@', ' at '), { instant: new Date() }, { forwardDate: true });
 
   if (!parsedData || parsedData.length < 1) return null;
 
@@ -20,5 +20,5 @@ export const parseStringForDateTimeHint = (note: string) => {
 
   console.log('🚀 ~ parseStringForDateTimeHint ~ lastOccurrence:', lastOccurrence);
 
-  return { date: lastOccurrence.start.date(), dateString: lastOccurrence.text.replace('at', '@') };
+  return { date: lastOccurrence.start.date(), dateString: lastOccurrence.text.replace(/\bat\b/g, '@') };
 };

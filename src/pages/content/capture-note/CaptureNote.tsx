@@ -5,7 +5,7 @@ import { useFrame } from 'react-frame-component';
 import { ClockIcon, GlobeIcon } from '@radix-ui/react-icons';
 
 import KBD from '@root/src/components/kbd/KBD';
-import { COMMAND_PALETTE_SIZE } from '../CommandPalette';
+import { COMMAND_PALETTE_SIZE } from '../command-palette/CommandPalette';
 import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
 import { useCustomAnimation } from '@root/src/pages/sidepanel/hooks/useAnimation';
 import RichTextEditor, { EDITOR_EMPTY_STATE } from '@root/src/components/rich-text-editor/RichTextEditor';
@@ -31,18 +31,27 @@ const CreateNote = ({ userSelectedText, onClose, activeSpace }: Props) => {
 
   const { bounce } = useCustomAnimation();
 
+  const handleSaveNote = async () => {
+    await publishEvents({
+      event: 'NEW_NOTE',
+      payload: { note, url: document.location.href, activeSpace },
+    });
+    // TODO - show note captured/save snackbar
+    onClose();
+  };
+
   useHotkeys(
     'mod+enter',
     async () => {
-      await publishEvents({
-        event: 'NEW_NOTE',
-        payload: { note, url: document.location.href, activeSpace },
-      });
-      // TODO - show note captured/save snackbar
-      onClose();
+      await handleSaveNote();
     },
     [],
-    { document: iFrameDoc, enableOnContentEditable: true, preventDefault: true, enableOnFormTags: true },
+    {
+      document: iFrameDoc,
+      enableOnContentEditable: true,
+      preventDefault: true,
+      enableOnFormTags: true,
+    },
   );
 
   return note ? (
@@ -90,10 +99,14 @@ const CreateNote = ({ userSelectedText, onClose, activeSpace }: Props) => {
 
         {/*  save note shortcut */}
         <div className="flex items-center mt-1.5">
-          <p className="text-slate-400/90 text-[13.5px]">Save</p>
+          <button
+            className="text-slate-400 text-[13.5px]  px-4 py-1 rounded-md bg-brand-darkBgAccent/30 select-none hover:bg-brand-darkBgAccent/50 duration-300 transition-colors"
+            onClick={handleSaveNote}>
+            Save
+          </button>
           <span className="ml-2 flex items-center">
             <KBD modifierKey />
-            <span className="font-bold text-slate-400/70 text-[13px] mx-[5px]">+</span>
+            <span className="font-bold text-slate-400/70 text-[13px] mx-[5px] select-none">+</span>
             <KBD>Enter</KBD>
           </span>
         </div>

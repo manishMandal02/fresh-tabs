@@ -43,14 +43,11 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
 
     if (allSpanWithClass.length < 1) return;
 
-    console.log('🚀 ~ removeDateHighlightStyle ~ allSpanWithClass:', allSpanWithClass);
-
     if (allSpanWithClass?.length > (!spanElNode ? 0 : 1)) {
       for (const spanWithClass of allSpanWithClass) {
         // remove classes from all span
         if (!spanElNode) {
           spanWithClass.classList.remove(DATE_HIGHLIGHT_CLASS_NAME);
-          console.log('🚀 ~ removeDateHighlightStyle ~ spanWithClass.classList:', spanWithClass.classList);
 
           continue;
         }
@@ -73,6 +70,8 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
 
       const res = parseStringForDateTimeHint(note);
 
+      console.log('🚀 ~ RichTextEditor ~ res:', res);
+
       if (!res) {
         // date hint not found, remove highlight class if added previously
         setRemainder('');
@@ -92,22 +91,20 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
       );
       const spanEl = span.iterateNext() as HTMLSpanElement;
 
+      console.log('🚀 ~ RichTextEditor ~ spanEl:', spanEl);
+
       if (!spanEl) return;
 
       // check if the "remind" keyword exists in the span text
 
       const text = spanEl.textContent?.toLowerCase() || '';
 
-      console.log('🚀 ~ RichTextEditor ~ text:', text);
-
       const dateStringIndex = text.indexOf(res.dateString.toLowerCase());
-
-      console.log('🚀 ~ RichTextEditor ~ dateStringIndex:', dateStringIndex);
 
       if (
         text.includes('remind') &&
         text.indexOf('remind') < dateStringIndex - 1 &&
-        text.indexOf('remind') > dateStringIndex - 15
+        text.indexOf('remind') > dateStringIndex - 20
       ) {
         // set the last occurrence of the date hint
         setRemainder(res.dateString);

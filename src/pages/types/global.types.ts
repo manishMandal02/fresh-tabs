@@ -96,6 +96,7 @@ export interface IMessageEventSidePanel {
 type MessageEventsContentScript =
   | 'CHECK_CONTENT_SCRIPT_LOADED'
   | 'SHOW_COMMAND_PALETTE'
+  | 'SHOW_SNACKBAR'
   | 'SWITCH_TAB'
   | 'SWITCH_SPACE'
   | 'NEW_SPACE'
@@ -110,6 +111,7 @@ type MessageEventsContentScript =
 
 interface IEventPayloadContentScript {
   recentSites?: ITab[];
+  snackbarMsg?: string;
   url?: string;
   spaceId?: string;
   tabId?: number;

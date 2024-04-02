@@ -15,8 +15,11 @@ import {
 } from '@radix-ui/react-icons';
 
 import Command from './command/Command';
-import { debounce } from '../../../utils/debounce';
+import { cn } from '@root/src/utils/cn';
+import CaptureNote from '../capture-note';
+import SearchBox from './search-box/SearchBox';
 import { getFaviconURL } from '../../../utils/url';
+import { debounce } from '../../../utils/debounce';
 import { CommandType } from '@root/src/constants/app';
 import { useCommandPalette } from './useCommandPalette';
 import { publishEvents } from '../../../utils/publish-events';
@@ -27,9 +30,6 @@ import { useCustomAnimation } from '../../sidepanel/hooks/useAnimation';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
-import SearchBox from './search-box/SearchBox';
-import CreateNote from './create-note';
-import { cn } from '@root/src/utils/cn';
 
 // default static commands
 export const staticCommands: ICommand[] = [
@@ -340,7 +340,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
               />
             ) : (
               // create note
-              <CreateNote
+              <CaptureNote
                 userSelectedText={userSelectedText}
                 onClose={() => handleCloseCommandPalette()}
                 activeSpace={activeSpace}

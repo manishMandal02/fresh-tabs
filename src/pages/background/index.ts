@@ -323,6 +323,12 @@ chrome.runtime.onMessage.addListener(
         };
         // create note
         await addNewNote(newNote);
+
+        await publishEventsTab(currentTab.id, {
+          event: 'SHOW_SNACKBAR',
+          payload: { snackbarMsg: 'Note Captured' },
+        });
+
         break;
       }
       case 'GO_TO_URL': {

@@ -2,16 +2,17 @@ import { createRoot } from 'react-dom/client';
 import Frame, { FrameContextConsumer } from 'react-frame-component';
 
 import injectedStyle from './injected.css?inline';
+import { SnackbarContentScript } from '../snackbar';
 import refreshOnUpdate from 'virtual:reload-on-update-in-view';
 import { CommandPaletteContainerId } from '@root/src/constants/app';
+import CommandPalette, { COMMAND_PALETTE_SIZE } from './CommandPalette';
 import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
 import { IMessageEventContentScript, ISpace, ITab } from '../../types/global.types';
-import CommandPalette, { COMMAND_PALETTE_SIZE } from './CommandPalette';
-import { getSpace } from '@root/src/services/chrome-storage/spaces';
-import { wait } from '@root/src/utils';
 
+// development: refresh content page on update
 refreshOnUpdate('pages/content');
 
+// handles click for backdrop of command palette container iframe
 const handleBackgroundCLick = () => {
   // close command palette
   handleClose();
@@ -64,19 +65,6 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace, selectedText 
 
   commandPaletteContainer.addEventListener('click', handleBackgroundCLick);
 
-  // const rootIntoShadow = document.createElement('div');
-
-  // rootIntoShadow.id = 'shadow-root';
-
-  // const shadowRoot = commandPaletteContainer.attachShadow({ mode: 'open' });
-
-  // shadowRoot.appendChild(rootIntoShadow);
-
-  // /** Inject styles into shadow dom */
-  // const styleElement = document.createElement('style');
-  // styleElement.innerHTML = injectedStyle;
-  // shadowRoot.appendChild(styleElement);
-
   createRoot(commandPaletteContainer).render(
     <Frame
       style={{
@@ -111,34 +99,52 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace, selectedText 
   );
 };
 
-// TODO try creating the html for iframe and then add that html to iframe (create it yourself), then add the react app to iframe
-// make sure to include iframe html to web_accessible_resources in manifest.json
+const handleShowSnackbar = (title: string) => {
+  console.log('🚀 ~ handleShowSnackbar ~ title:', title);
 
-//LINK - https://stackoverflow.com/questions/70867944/create-iframe-using-google-chrome-extension-manifest-v3/70870192#70870192
-//LINK - https://stackoverflow.com/questions/70867944/create-iframe-using-google-chrome-extension-manifest-v3/70870192#70870192
+  const root = (document as Document).createElement('div');
+
+  (document as Document).body.appendChild(root);
+
+  const shadowRoot = root.attachShadow({ mode: 'open' });
+
+  const rootIntoShadow = document.createElement('div');
+
+  rootIntoShadow.id = 'shadow-root';
+
+  shadowRoot.appendChild(rootIntoShadow);
+
+  createRoot(rootIntoShadow).render(<SnackbarContentScript title={title} />);
+};
 
 // TODO - testing - loads command palette on site load
 
-(async () => {
-  await wait(250);
-  const activeSpace = await getSpace('148626a9faf');
+// (async () => {
+//   const activeSpace = await getSpace('148626a9faf');
 
-  console.log('🚀 ~ activeSpace:', activeSpace);
+//   console.log('🚀 ~ activeSpace:', activeSpace);
 
-  const selectedText = 'Transform your Gmail experience—say goodbye to clutter effortlessly';
-  appendCommandPaletteContainer({ activeSpace, selectedText, recentSites: [] });
-})();
+//   const selectedText = 'Transform your Gmail experience—say goodbye to clutter effortlessly';
+//   appendCommandPaletteContainer({ activeSpace, selectedText, recentSites: [] });
+// })();
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   const event = msg as IMessageEventContentScript;
 
-  const { recentSites, activeSpace } = event.payload;
+  const { recentSites, activeSpace, snackbarMsg } = event.payload;
 
-  if (msg.event === 'SHOW_COMMAND_PALETTE') {
+  console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ snackbarMsg:', snackbarMsg);
+
+  const msgEvent = event.event;
+
+  if (msgEvent === 'SHOW_COMMAND_PALETTE') {
     appendCommandPaletteContainer({
       recentSites,
       activeSpace,
     });
+  }
+  if (msgEvent === 'SHOW_SNACKBAR') {
+    handleShowSnackbar(snackbarMsg);
   }
   sendResponse(true);
 });
