@@ -38,8 +38,8 @@ const CommandIcon: FC<IconProps> = ({ Icon, isFocused, label }) => {
   return (
     <Icon
       className={cn(
-        'text-slate-500/70 w-[14px] scale-[1]',
-        { 'text-slate-500/90': isFocused },
+        'text-slate-400/90 w-[14px] scale-[1]',
+        { 'text-slate-300/90': isFocused },
         { 'scale-[0.92]': label === 'New Space' },
       )}
     />
@@ -59,8 +59,8 @@ const Command = ({ index, label, Icon, isFocused, onClick }: Props) => {
     <button
       id={`fresh-tabs-command-${index}`}
       className={cn(
-        'w-full flex items-center justify-start px-[8px] py-[4px] md:py-[6px] outline-none first:pt-[6px] md:first:pt-[7.5px] transition-all duration-200 ease-in',
-        { 'bg-brand-darkBgAccent/50': isFocused },
+        'w-full flex items-center justify-start pl-[12px] pr-[10px] md:py-[6px] outline-none first:pt-[6px] md:first:pt-[7.5px] transition-all duration-100 ease-in',
+        { 'bg-brand-darkBgAccent/60': isFocused },
       )}
       onClick={onClick}
       style={{ height: COMMAND_HEIGHT + 'px' }}>
@@ -70,7 +70,10 @@ const Command = ({ index, label, Icon, isFocused, onClick }: Props) => {
       </div>
       {/* label */}
       <p
-        className="text-[12px] text-start text-slate-300/80 font-light min-w-[50%] max-w-[95%] whitespace-nowrap  overflow-hidden text-ellipsis"
+        className={cn(
+          'text-[12px] text-start text-slate-400/90 min-w-[50%] max-w-[95%] whitespace-nowrap  overflow-hidden text-ellipsis transition-colors duration-150',
+          { 'text-slate-300/90': isFocused },
+        )}
         dangerouslySetInnerHTML={{ __html: label }}></p>
     </button>
   );

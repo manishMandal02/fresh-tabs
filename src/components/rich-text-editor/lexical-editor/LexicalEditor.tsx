@@ -19,14 +19,14 @@ import LineSeparatorPlugin from './seperator-line-plugin/SeparatorLinePlugin';
 
 type LexicalEditorProps = {
   config: Parameters<typeof LexicalComposer>['0']['initialConfig'];
-} & { onChange: (value: string) => void };
+} & { placeholder?: string; onChange: (value: string) => void };
 
-export function LexicalEditor({ config, onChange }: LexicalEditorProps) {
+export function LexicalEditor({ config, onChange, placeholder }: LexicalEditorProps) {
   return (
     <LexicalComposer initialConfig={config}>
       <RichTextPlugin
         contentEditable={<ContentEditable />}
-        placeholder={<Placeholder />}
+        placeholder={<Placeholder text={placeholder} />}
         ErrorBoundary={LexicalErrorBoundary}
       />
       <AutofocusPlugin />
@@ -47,7 +47,9 @@ export function LexicalEditor({ config, onChange }: LexicalEditorProps) {
   );
 }
 
-const Placeholder = () => <div className="absolute top-[0.5rem] left-[1.15rem] opacity-50">Note...</div>;
+const Placeholder = ({ text }: { text: string }) => (
+  <div className="absolute top-[0.5rem] left-[1.15rem] opacity-50">{text}</div>
+);
 
 const CHECKLIST_RULE: ElementTransformer = {
   dependencies: [ListNode],

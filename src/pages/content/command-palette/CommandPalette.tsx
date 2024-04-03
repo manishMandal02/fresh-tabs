@@ -1,25 +1,13 @@
 import { motion } from 'framer-motion';
 import { MdOutlineKeyboardReturn } from 'react-icons/md';
 import { useState, useEffect, useRef, MouseEventHandler, useCallback } from 'react';
-import {
-  ArrowUpIcon,
-  MagnifyingGlassIcon,
-  ClockIcon,
-  FileTextIcon,
-  EnterIcon,
-  PinRightIcon,
-  MoonIcon,
-  MoveIcon,
-  DesktopIcon,
-  Cross1Icon,
-} from '@radix-ui/react-icons';
+import { ArrowUpIcon } from '@radix-ui/react-icons';
 
 import Command from './command/Command';
 import { cn } from '@root/src/utils/cn';
 import CaptureNote from '../capture-note';
 import SearchBox from './search-box/SearchBox';
 import { getFaviconURL } from '../../../utils/url';
-import { debounce } from '../../../utils/debounce';
 import { CommandType } from '@root/src/constants/app';
 import { useCommandPalette } from './useCommandPalette';
 import { publishEvents } from '../../../utils/publish-events';
@@ -29,37 +17,8 @@ import { prettifyDate } from '../../../utils/date-time/prettifyDate';
 import { useCustomAnimation } from '../../sidepanel/hooks/useAnimation';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
+import { staticCommands, useCommand, webSearchCommand } from './command/useCommand';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
-
-// default static commands
-export const staticCommands: ICommand[] = [
-  { index: 1, type: CommandType.SwitchTab, label: 'Switch Tab', icon: PinRightIcon },
-  { index: 2, type: CommandType.NewNote, label: 'New Note', icon: FileTextIcon },
-  { index: 3, type: CommandType.SwitchSpace, label: 'Switch Space', icon: EnterIcon },
-  { index: 4, type: CommandType.NewSpace, label: 'New Space', icon: DesktopIcon },
-  { index: 5, type: CommandType.AddToSpace, label: 'Move Tab', icon: MoveIcon },
-  { index: 6, type: CommandType.SnoozeTab, label: 'Snooze Tab', icon: ClockIcon },
-  { index: 7, type: CommandType.DiscardTabs, label: 'Discard Tabs', icon: MoonIcon },
-  // TODO - add handler
-  { index: 8, type: CommandType.CloseTab, label: 'Close Tab', icon: Cross1Icon },
-];
-
-const isStaticCommands = (label: string) => staticCommands.some(cmd => cmd.label === label);
-
-export const getCommandIcon = (type: CommandType) => {
-  const cmd = staticCommands.find(c => c.type === type);
-
-  return { Icon: cmd.icon, label: cmd.label };
-};
-
-const webSearchCommand = (query: string, index: number) => {
-  return {
-    index,
-    label: `Web Search: <b className="text-slate-300">${query}</b>`,
-    type: CommandType.WebSearch,
-    icon: MagnifyingGlassIcon,
-  };
-};
 
 export const COMMAND_PALETTE_SIZE = {
   HEIGHT: 500,
@@ -68,7 +27,7 @@ export const COMMAND_PALETTE_SIZE = {
   MAX_WIDTH: 600 + 200,
 } as const;
 
-export const COMMAND_HEIGHT = 30;
+export const COMMAND_HEIGHT = 36;
 
 const SUGGESTED_COMMANDS_MAX_HEIGHT = 400;
 
@@ -76,7 +35,6 @@ type Props = {
   activeSpace: ISpace;
   recentSites: ITab[];
   onClose?: () => void;
-  isSidePanel?: boolean;
   userSelectedText?: string;
 };
 
@@ -84,7 +42,7 @@ type Props = {
 // its' because of the multi useEffect  updating the commands/search
 // 👆 this is also causing another bug where the search box is empty but the suggestion box assumes that there's still some part of the erase text
 
-const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, isSidePanel = false }: Props) => {
+const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }: Props) => {
   // loading search result
   const [isLoadingResults, setIsLoadingResults] = useState(false);
 
@@ -110,6 +68,8 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
     setSearchQueryPlaceholder,
   } = useCommandPalette({ activeSpace, modalRef, onClose });
 
+  const { isStaticCommand, getCommandIcon } = useCommand();
+
   // focus search input box
   const handleFocusSearchInput = () => {
     inputRef.current?.focus();
@@ -117,7 +77,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
 
   // check if the focused command is visible
   useEffect(() => {
-    const numOfVisibleCommands = SUGGESTED_COMMANDS_MAX_HEIGHT / COMMAND_HEIGHT;
+    const numOfVisibleCommands = (SUGGESTED_COMMANDS_MAX_HEIGHT - 15) / COMMAND_HEIGHT;
 
     if (focusedCommandIndex < numOfVisibleCommands && suggestionContainerRef.current?.scrollTop < 1) return;
 
@@ -137,7 +97,8 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
     }));
 
     setSuggestedCommands([...staticCommands, ...(recentSitesCommands || [])]);
-  }, [recentSites, setSuggestedCommands]);
+    setFocusedCommandIndex(1);
+  }, [recentSites, setSuggestedCommands, setFocusedCommandIndex]);
 
   // initialize component
   useEffect(() => {
@@ -153,36 +114,30 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userSelectedText]);
 
+  // search commands
   const handleGlobalSearch = useCallback(async () => {
     const matchedCommands: ICommand[] = [];
 
+    const searchQueryLowerCase = searchQuery.toLowerCase();
+
     // query static matchedCommands label
     staticCommands
-      .filter(cmd => cmd.label.toLowerCase().includes(searchQuery.toLowerCase()))
+      .filter(
+        cmd =>
+          cmd.label.toLowerCase().includes(searchQueryLowerCase) ||
+          cmd?.alias.toLowerCase().includes(searchQueryLowerCase),
+      )
       .forEach((cmd, idx) => {
         matchedCommands.push({ ...cmd, index: idx + 1 });
-      });
-
-    // query space title
-    const spaces = await getAllSpaces();
-
-    spaces
-      .filter(s => s.id !== activeSpace.id && s.title.toLowerCase().includes(searchQuery.toLowerCase()))
-      .forEach(space => {
-        matchedCommands.push({
-          index: matchedCommands.length + 1,
-          type: CommandType.SwitchSpace,
-          label: space.title,
-          icon: space.emoji,
-          metadata: space.id,
-        });
       });
 
     // query current tab url/title (words match)
     let tabs = await getTabsInSpace(activeSpace.id);
 
     if (tabs?.length > 0) {
-      tabs = tabs.filter(tab => tab.title.toLowerCase().includes(searchQuery.toLowerCase()));
+      // show all current tabs
+
+      tabs = tabs.filter(tab => tab.title.toLowerCase().includes(searchQueryLowerCase));
 
       tabs.forEach(tab => {
         matchedCommands.push({
@@ -191,8 +146,42 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
           label: tab.title,
           icon: getFaviconURL(tab.url, false),
           metadata: tab.id,
+          alias: 'Opened tabs',
         });
       });
+    }
+
+    // query space title
+    let spaces = await getAllSpaces();
+
+    spaces = spaces.filter(s => s.id !== activeSpace.id);
+
+    if (searchQueryLowerCase.includes('space')) {
+      // show all spaces
+      spaces.forEach(space => {
+        matchedCommands.push({
+          index: matchedCommands.length + 1,
+          type: CommandType.SwitchSpace,
+          label: space.title,
+          icon: space.emoji,
+          metadata: space.id,
+          alias: 'Space',
+        });
+      });
+    } else {
+      // show matched spaces
+      spaces
+        .filter(s => s.title.toLowerCase().includes(searchQueryLowerCase))
+        .forEach(space => {
+          matchedCommands.push({
+            index: matchedCommands.length + 1,
+            type: CommandType.SwitchSpace,
+            label: space.title,
+            icon: space.emoji,
+            metadata: space.id,
+            alias: 'Space',
+          });
+        });
     }
 
     matchedCommands.push(webSearchCommand(searchQuery, matchedCommands.length + 1));
@@ -229,7 +218,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
     if (searchQuery.trim() && !subCommand) {
       setIsLoadingResults(true);
       // debounce search
-      debounce(handleGlobalSearch)();
+      handleGlobalSearch();
     } else if (!searchQuery.trim() && !subCommand) {
       // reset search
       setDefaultSuggestedCommands();
@@ -237,6 +226,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
       setFocusedCommandIndex(1);
     }
   }, [
+    setSuggestedCommands,
     searchQuery,
     handleGlobalSearch,
     setFocusedCommandIndex,
@@ -275,7 +265,14 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
       setSuggestedCommands(suggestedCommandsForSubCommand);
       setFocusedCommandIndex(1);
     }
-  }, [searchQuery, subCommand, suggestedCommandsForSubCommand, setFocusedCommandIndex, setSuggestedCommands]);
+  }, [
+    searchQuery,
+    subCommand,
+    suggestedCommandsForSubCommand,
+    setFocusedCommandIndex,
+    setSuggestedCommands,
+    getCommandIcon,
+  ]);
 
   // on command select/click
   const onCommandClick = async (index: number) => {
@@ -319,34 +316,37 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
           maxWidth: COMMAND_PALETTE_SIZE.MAX_WIDTH + 'px',
         }}
         className={cn(`flex items-center h-fit max-h-full outline-none flex-col justify-center m-0 p-0 overflow-hidden
-                       mx-auto backdrop:bg-transparent  bg-transparent`)}>
-        <div id="command-palette-modal-container" className="size-full relative overflow-hidden">
-          <>
-            {subCommand !== CommandType.NewNote ? (
-              // search box
-              <SearchBox
-                ref={inputRef}
-                handleFocusSearchInput={handleFocusSearchInput}
-                searchQuery={searchQuery}
-                placeholder={searchQueryPlaceholder}
-                setSearchQuery={setSearchQuery}
-                subCommand={subCommand}
-                onClearSearch={() => {
-                  setSubCommand(null);
-                  setDefaultSuggestedCommands();
-                  setSuggestedCommandsForSubCommand([]);
-                  setFocusedCommandIndex(1);
-                }}
-              />
-            ) : (
-              // create note
-              <CaptureNote
-                userSelectedText={userSelectedText}
-                onClose={() => handleCloseCommandPalette()}
-                activeSpace={activeSpace}
-              />
-            )}
-          </>
+                       mx-auto backdrop:bg-transparent  bg-transparent rounded-lg`)}>
+        <div className="size-full relative overflow-hidden rounded-lg">
+          {subCommand !== CommandType.NewNote ? (
+            // search box
+            <SearchBox
+              ref={inputRef}
+              handleFocusSearchInput={handleFocusSearchInput}
+              searchQuery={searchQuery}
+              placeholder={searchQueryPlaceholder}
+              setSearchQuery={setSearchQuery}
+              subCommand={subCommand}
+              onClearSearch={() => {
+                setSubCommand(null);
+                setDefaultSuggestedCommands();
+                setSuggestedCommandsForSubCommand([]);
+                setFocusedCommandIndex(1);
+              }}
+            />
+          ) : (
+            // create note
+            <CaptureNote
+              userSelectedText={userSelectedText}
+              activeSpace={activeSpace}
+              onClose={() => handleCloseCommandPalette()}
+              handleGoBack={() => {
+                console.log('🚀 ~ CommandPalette ~ handleGoBack: called 🚀');
+                setSubCommand(null);
+                setDefaultSuggestedCommands();
+              }}
+            />
+          )}
           {/* search suggestions and result */}
           {subCommand !== CommandType.NewNote ? (
             <div
@@ -354,8 +354,8 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
               style={{
                 maxHeight: SUGGESTED_COMMANDS_MAX_HEIGHT + 'px',
               }}
-              className={`bg-brand-darkBg w-ft max-w-[600px] h-fit max-h-full overflow-hidden overflow-y-auto cc-scrollbar cc-scrollbar mx-auto shadow-sm
-                         shadow-slate-800/50 border-x  border-x-slate-600/40  border-collapse `}>
+              className={`bg-brand-darkBg w-ft max-w-[600px] h-fit max-h-full overflow-hidden overflow-y-auto cc-scrollbar cc-scrollbar mx-auto shadow-md
+                         shadow-slate-800/80 `}>
               {/* actions */}
               {suggestedCommands.length > 0 &&
                 suggestedCommands?.map(cmd => {
@@ -368,7 +368,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
                       <CommandSectionLabel
                         key={cmd.index}
                         index={cmd.index}
-                        isStaticCommand={isStaticCommands(cmd.label)}
+                        isStaticCommand={isStaticCommand(cmd.label)}
                         suggestedCommands={suggestedCommands}
                       />,
                     );
@@ -415,25 +415,21 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText, i
           {subCommand !== CommandType.NewNote ? (
             // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
             <div
-              className={`bg-brand-darkBg/95 shadow-sm shadow-slate-800/70  w-full flex items-center justify-between px-1 py-px select-none
-                      rounded-bl-md rounded-br-md border-t border-brand-darkBgAccent`}
+              className={`bg-brand-darkBg/95 shadow-sm shadow-slate-800/70  w-full flex items-center justify-between px-1.5 py-1 select-none
+                      rounded-bl-md rounded-br-md border-t border-brand-darkBgAccent/60`}
               // focuses on the search input box if clicked
               onClick={handleFocusSearchInput}>
-              {!isSidePanel ? (
-                <div className=" text-slate-600/90 font-medium text-[10px] ml-2">FreshTabs</div>
-              ) : (
-                <span className="invisible"></span>
-              )}
+              <div className=" text-slate-500 text-[10px] ml-2">FreshTabs</div>
               <div className="gap-x-px  text-slate-500/80 text-[8px] flex items-center py-1">
-                <span className="mr-2 flex items-center bg-brand-darkBgAccent/30 px-1.5 pt-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
+                <span className="mr-2 flex items-center bg-brand-darkBgAccent/50 px-1.5 pt-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
                   <ArrowUpIcon className="text-slate-500/80 mr-[0.5px] scale-[0.65]" />
                   <kbd>Up</kbd>
                 </span>
-                <span className="mr-2 flex items-center bg-brand-darkBgAccent/30 px-1.5 pt-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
+                <span className="mr-2 flex items-center bg-brand-darkBgAccent/50 px-1.5 pt-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
                   <ArrowUpIcon className="text-slate-500/80 mr-[0.5px] rotate-180 scale-[0.65]" />
                   <kbd>Down</kbd>
                 </span>
-                <span className="mr-2 flex items-center bg-brand-darkBgAccent/30 px-1.5 py-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
+                <span className="mr-2 flex items-center bg-brand-darkBgAccent/50 px-1.5 pt-[1.75px] pb-[1.25px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
                   <MdOutlineKeyboardReturn className="text-slate-500//80 mr-1 font-medium -mb-px " size={11} />
                   <kbd>Enter</kbd>
                 </span>

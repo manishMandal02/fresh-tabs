@@ -23,6 +23,17 @@
   background: #232323bb;
 }
 
+/* glassmorphism bg */
+
+.glassmorphism-bg {
+  background: #3130302b;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(6.5px);
+  -webkit-backdrop-filter: blur(6.5px);
+  border-radius: 8px;
+  border: 1px solid #ffffff2e;
+}
+
 /* notes editor styles */
 /* date highlight in notes editor */
 

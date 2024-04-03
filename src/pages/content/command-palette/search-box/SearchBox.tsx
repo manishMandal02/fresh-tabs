@@ -1,17 +1,18 @@
-import { FC, forwardRef, PropsWithChildren } from 'react';
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
+import { FC, forwardRef, PropsWithChildren } from 'react';
 
-import { getCommandIcon } from '../CommandPalette';
+import { useCommand } from '../command/useCommand';
 import { CommandType } from '@root/src/constants/app';
 
 // show sub command indicator instead of search icon when a sub command is selected
 const SubCommandIndicator: FC<{ subCommandType?: CommandType }> = ({ subCommandType }) => {
+  const { getCommandIcon } = useCommand();
   const { Icon, label } = getCommandIcon(subCommandType);
 
   return (
-    <div className="flex items-center justify-start h-full border-r border-brand-darkBgAccent/50 pl-[9px] pr-[6.5px] mr-1.5 bg-brand-darkBgAccent/40">
-      <Icon className=" text-slate-500/80 mr-1.5 scale-[1]" />
-      <p className="text-slate-400 text-[12px]  m-0 p-0 whitespace-nowrap">{label}</p>
+    <div className="flex items-center justify-start h-full border-r border-brand-darkBgAccent/60 pl-[9px] pr-[6.5px] mr-1.5 rounded-tl-xl bg-brand-darkBgAccent/40">
+      <Icon className=" text-slate-400 mr-1.5 scale-[1]" />
+      <p className="text-slate-400/80   text-[12px] font-medium  m-0 p-0 whitespace-nowrap">{label}</p>
     </div>
   );
 };
@@ -37,7 +38,7 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
           tabIndex={-1}
           onClick={handleFocusSearchInput}>
           {!subCommand ? (
-            <MagnifyingGlassIcon className="text-slate-600 bg-transparent md:scale-[1.5] scale-[1] ml-[6px] mr-[4px] md:ml-3 md:mr-[9px]" />
+            <MagnifyingGlassIcon className="text-slate-500/80 bg-transparent md:scale-[1.5] scale-[1] ml-[6px] mr-[4px] md:ml-3 md:mr-[9px]" />
           ) : (
             <SubCommandIndicator subCommandType={subCommand} />
           )}
@@ -67,7 +68,7 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
             }
           }}
           value={searchQuery}
-          className={`text-[12px] md:text-[14px] text-slate-300 w-auto flex-grow px-px py-1.5 md:py-2.5  placeholder:text-slate-600 placeholder:font-light
+          className={`text-[12px] md:text-[14px] text-slate-300 w-auto flex-grow px-px py-1.5 md:py-2.5  placeholder:text-slate-500/80 placeholder:font-light
                 rounded-tr-xl caret-slate-300 caret rounded-br-xl outline-none border-none bg-transparent`}
         />
       </div>

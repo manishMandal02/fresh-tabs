@@ -7,7 +7,8 @@ export interface ICommand {
   index: number;
   type: CommandType;
   label: string;
-  icon?: string | RadixIconType;
+  alias?: string;
+  icon: string | RadixIconType;
   metadata?: string | number;
 }
 

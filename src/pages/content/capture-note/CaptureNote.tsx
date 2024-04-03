@@ -16,9 +16,10 @@ type Props = {
   activeSpace: ISpace;
   userSelectedText: string;
   onClose?: () => void;
+  handleGoBack: () => void;
 };
 
-const CreateNote = ({ userSelectedText, onClose, activeSpace }: Props) => {
+const CreateNote = ({ userSelectedText, onClose, activeSpace, handleGoBack }: Props) => {
   const { document: iFrameDoc } = useFrame();
 
   // local state
@@ -54,8 +55,23 @@ const CreateNote = ({ userSelectedText, onClose, activeSpace }: Props) => {
     },
   );
 
+  useHotkeys(
+    'mod+backspace',
+    () => {
+      if (note !== EDITOR_EMPTY_STATE) return;
+      handleGoBack();
+    },
+    [note, EDITOR_EMPTY_STATE],
+    {
+      enableOnContentEditable: true,
+      document: iFrameDoc,
+      preventDefault: true,
+    },
+  );
+
   return note ? (
-    <div className="h-fit w-fit p-3.5 border border-brand-darkBg/50  bg-gradient-to-b from-brand-darkBgAccent/95 to-gray-800/95 rounded-lg">
+    <div className="h-fit w-fit p-3.5 border border-brand-darkBg/50 rounded-lg glassmorphism-bg">
+      {/* editor container  */}
       <div
         style={{
           height: COMMAND_PALETTE_SIZE.HEIGHT - 150 + 'px',
@@ -65,6 +81,7 @@ const CreateNote = ({ userSelectedText, onClose, activeSpace }: Props) => {
         className="relative bg-brand-darkBg rounded-lg cc-scroll-bar">
         {/* editor */}
         <RichTextEditor
+          placeholder={`Note... \n\n press {cmd + backspace} to go back`}
           content={note}
           onChange={setNote}
           userSelectedText={userSelectedText}
@@ -72,15 +89,15 @@ const CreateNote = ({ userSelectedText, onClose, activeSpace }: Props) => {
           rootDocument={iFrameDoc}
         />
       </div>
-      {/* save command */}
-      <div className="w-full bg-brand-darkBg rounded-b-lg -mt-1.5 px-3 py-2 flex items-center justify-between">
+      {/* options container */}
+      <div className="w-full bg-brand-darkBg/95 rounded-b-lg -mt-1.5 px-3 py-2 flex items-center justify-between ">
         {/* left container */}
         <div className="flex items-center justify-center space-x-2">
           {/* site domain */}
           {document.location.href ? (
             <motion.div
               {...bounce}
-              className="flex items-center px-2 py-1 rounded-lg bg-brand-darkBgAccent/65 text-slate-300/80 text-[12px] font-medium mt-1.5">
+              className="flex items-center px-2 py-1 rounded-lg bg-brand-darkBgAccent/50 text-slate-300/80 text-[12px] font-medium mt-1.5">
               <GlobeIcon className="text-slate-500 scale-[1] mr-1.5" />
               <span className="">{cleanDomainName(document.location.hostname)}</span>
             </motion.div>
@@ -90,7 +107,7 @@ const CreateNote = ({ userSelectedText, onClose, activeSpace }: Props) => {
           {remainder ? (
             <motion.div
               {...bounce}
-              className="flex items-center px-2 py-1 rounded-lg bg-brand-darkBgAccent/65 text-slate-300/80 text-[12px] font-medium mt-1.5">
+              className="flex items-center px-2 py-1 rounded-lg bg-brand-darkBgAccent/50 text-slate-300/80 text-[12px] font-medium mt-1.5">
               <ClockIcon className="text-slate-500 scale-[1] mr-1.5" />
               <span className="capitalize">{remainder}</span>
             </motion.div>
@@ -100,7 +117,7 @@ const CreateNote = ({ userSelectedText, onClose, activeSpace }: Props) => {
         {/*  save note shortcut */}
         <div className="flex items-center mt-1.5">
           <button
-            className="text-slate-400 text-[13.5px]  px-4 py-1 rounded-md bg-brand-darkBgAccent/30 select-none hover:bg-brand-darkBgAccent/50 duration-300 transition-colors"
+            className="text-slate-400 text-[13.5px]  px-4 py-1 rounded-md bg-brand-darkBgAccent/50 select-none hover:bg-brand-darkBgAccent/50 duration-300 transition-colors"
             onClick={handleSaveNote}>
             Save
           </button>

@@ -21,9 +21,11 @@ export const parseStringForDateTimeHint = (note: string) => {
   let dateString = lastOccurrence.text;
 
   // change back at to @
-  if (lastOccurrence.text.includes(' at ')) {
-    dateString = lastOccurrence.text.replace(/\s*\b(at)\b\s*/g, '  ');
+  if (note.includes(' @ ') && lastOccurrence.text.includes(' at ')) {
+    dateString = lastOccurrence.text.replace(/\s*\b(at)\b\s*/g, ' @ ');
   }
+
+  console.log('🚀 ~ parseStringForDateTimeHint ~ dateString:', dateString);
 
   return { date: lastOccurrence.start.date(), dateString };
 };

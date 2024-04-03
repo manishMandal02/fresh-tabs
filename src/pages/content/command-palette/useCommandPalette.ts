@@ -1,7 +1,6 @@
-import { DesktopIcon } from '@radix-ui/react-icons';
+import { PlusIcon } from '@radix-ui/react-icons';
 import { useState, useCallback, useMemo } from 'react';
 
-import { getCommandIcon } from './CommandPalette';
 import { getFaviconURL } from '../../../utils/url';
 import { CommandType } from '@root/src/constants/app';
 import { ICommand, ISpace } from '../../types/global.types';
@@ -11,6 +10,7 @@ import { prettifyDate } from '../../../utils/date-time/prettifyDate';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
+import { useCommand } from './command/useCommand';
 
 type UseCommandPaletteProps = {
   activeSpace: ISpace;
@@ -37,6 +37,8 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
 
   // current focused command index
   const [focusedCommandIndex, setFocusedCommandIndex] = useState(1);
+
+  const { getCommandIcon } = useCommand();
 
   // default suggested time for snooze tab command
   const defaultSuggestedSnoozeTimeLabels: string[] = useMemo(
@@ -97,7 +99,7 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
         if (!subCommand && !focusedCommand.metadata) {
           const tabs = await getTabsInSpace(activeSpace.id);
 
-          const tabCommands = tabs.map((tab, idx) => {
+          const tabCommands = tabs.map<ICommand>((tab, idx) => {
             return {
               label: tab.title,
               type: CommandType.SwitchTab,
@@ -156,13 +158,13 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
               label: 'Create & switch space',
               type: CommandType.NewSpace,
               index: 1,
-              icon: DesktopIcon,
+              icon: PlusIcon,
             },
           ]);
 
           setFocusedCommandIndex(1);
         } else {
-          if (!searchQuery) return;
+          if (searchQuery?.length < 3) return;
           await publishEvents({ event: 'NEW_SPACE', payload: { spaceTitle: searchQuery } });
           handleCloseCommandPalette();
         }

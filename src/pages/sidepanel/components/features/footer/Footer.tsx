@@ -54,6 +54,7 @@ const Footer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
             )}
           </Droppable>
 
+          {/* TODO - not a good ux currently */}
           {/* Add new space button */}
           <Droppable droppableId={'add-new-space'} direction="horizontal" mode="standard" type="TAB">
             {(provided, { isDraggingOver: isDraggingOverNewSpace }) => (

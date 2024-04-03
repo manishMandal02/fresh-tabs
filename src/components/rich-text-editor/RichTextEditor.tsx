@@ -23,6 +23,7 @@ const EDITOR_NODES = [
 
 type Props = {
   content: string;
+  placeholder?: string;
   onChange: (content: string) => void;
   userSelectedText?: string;
   setRemainder?: (remainder: string) => void;
@@ -34,7 +35,7 @@ export const DATE_HIGHLIGHT_CLASS_NAME = 'add-note-date-highlight';
 export const EDITOR_EMPTY_STATE =
   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
-const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, rootDocument }: Props) => {
+const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, rootDocument, placeholder }: Props) => {
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
   // remove date highlight class from other spans if applied
@@ -70,6 +71,8 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
 
       const res = parseStringForDateTimeHint(note);
 
+      console.log('🚀 ~ debounce ~ res.dateString:', res?.dateString);
+
       if (!res) {
         // date hint not found, remove highlight class if added previously
         setRemainder('');
@@ -83,6 +86,7 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
       const span = rootDocumentToSearch.evaluate(
         `//span[contains(., '${res.dateString}')]`,
         rootDocumentToSearch,
+
         null,
         XPathResult.ANY_TYPE,
         null,
@@ -112,7 +116,7 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
         removeDateHighlightStyle();
         setRemainder('');
       }
-    }, 500),
+    }, 300),
     [onChange, setRemainder, rootDocument],
   );
 
@@ -124,6 +128,7 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
                 prose-hr:border-slate-700/80 prose-p:my-0 prose-headings:my-1 prose-blockquote:text-slate-400 prose-blockquote:my-[10px] text-slate-300/90  prose-headings:text-slate-300/80 prose-strong:!text-slate-300/80 prose-strong:!font-extrabold`}>
       <LexicalEditor
         onChange={debouncedChangeHandler}
+        placeholder={placeholder || 'Note...'}
         config={{
           namespace: 'note-editor',
           nodes: EDITOR_NODES,

@@ -251,6 +251,25 @@ const recordDailySpaceTime = async (windowId: number) => {
   logger.info('👍 Recorded daily space time chunk.');
 };
 
+//  show command palette
+export const showCommandPaletteContentScript = async (tabId: number, windowId: number) => {
+  const recentSites = await getRecentlyVisitedSites();
+
+  const activeSpace = await getSpaceByWindow(windowId);
+
+  // send msg/event to content scr
+  await retryAtIntervals({
+    interval: 1000,
+    retries: 3,
+    callback: async () => {
+      return await publishEventsTab(tabId, {
+        event: 'SHOW_COMMAND_PALETTE',
+        payload: { activeSpace, recentSites },
+      });
+    },
+  });
+};
+
 // * chrome event listeners
 
 // handle events from content script (command palette)
@@ -557,10 +576,6 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
       }
     }
 
-    const recentSites = await getRecentlyVisitedSites();
-
-    const activeSpace = await getSpaceByWindow(currentTab.windowId);
-
     // TODO - try using the content script to load command palette
     // const testScript = await chrome.scripting.executeScript({
     //   target: { tabId: currentTab.id },
@@ -576,16 +591,7 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
       await wait(250);
     }
 
-    retryAtIntervals({
-      interval: 1000,
-      retries: 3,
-      callback: async () => {
-        return await publishEventsTab(activeTabId, {
-          event: 'SHOW_COMMAND_PALETTE',
-          payload: { activeSpace, recentSites },
-        });
-      },
-    });
+    await showCommandPaletteContentScript(activeTabId, currentTab.windowId);
   }
 });
 

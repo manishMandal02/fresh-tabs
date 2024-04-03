@@ -5,22 +5,23 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 
-import Footer from './components/features/footer';
-import { useSidePanel } from './hooks/useSidePanel';
 import Spinner from '../../components/spinner';
 import Snackbar from '../../components/snackbar';
-import CommandPalette from '../content/command-palette';
+import Footer from './components/features/footer';
+import { useSidePanel } from './hooks/useSidePanel';
 import Settings from './components/features/settings/Settings';
 import { IMessageEventSidePanel } from '../types/global.types';
+import { showCommandPaletteContentScript } from '../background';
+import UserAccount from './components/features/user/UserAccount';
+import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
 import Notification from './components/features/notification/Notification';
+import AddNewNote from './components/features/notes/notes-modal/NotesModal';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
+import ErrorBoundaryUI from '../../components/error-boundary/ErrorBoundaryUI';
 import DeleteSpaceModal from './components/features/space/delete/DeleteSpaceModal';
 import { ActiveSpace, CreateSpace, UpdateSpace } from './components/features/space';
-import { appSettingsAtom, dragStateAtom, showNotificationModalAtom, snackbarAtom } from '@root/src/stores/app';
 import { TAB_HEIGHT } from './components/features/space/active-space/ActiveSpaceTabs';
-import UserAccount from './components/features/user/UserAccount';
-import AddNewNote from './components/features/notes/notes-modal/NotesModal';
-import ErrorBoundaryUI from '../../components/error-boundary/ErrorBoundaryUI';
+import { appSettingsAtom, dragStateAtom, showNotificationModalAtom, snackbarAtom } from '@root/src/stores/app';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -40,9 +41,6 @@ const SidePanel = () => {
 
   //  loading spaces state
   const [isLoadingSpaces, setIsLoadingSpaces] = useState(false);
-
-  // show command palette
-  const [showCommandPalette, setShowCommandPalette] = useState(false);
 
   //  global pinned tabs
   // const [globalPinnedTabs, setGlobalPinnedTabs] = useState<IPinnedTab[]>([]);
@@ -115,9 +113,10 @@ const SidePanel = () => {
     hidden: { scale: 0, opacity: 0 },
   };
 
-  const handleShowCommandPalette = useCallback(() => {
-    setShowCommandPalette(true);
-  }, []);
+  const handleShowCommandPalette = useCallback(async () => {
+    const currentTab = await getCurrentTab();
+    await showCommandPaletteContentScript(currentTab.id, activeSpace?.windowId);
+  }, [activeSpace]);
 
   const handleShowNotification = useCallback(() => {
     setShowNotification(true);
@@ -215,17 +214,6 @@ const SidePanel = () => {
             isSuccess={snackbar.isSuccess}
             isLoading={snackbar.isLoading}
           />
-          {/* command palette */}
-          {showCommandPalette ? (
-            <div className="z-[99999]">
-              <CommandPalette
-                isSidePanel
-                activeSpace={activeSpace}
-                recentSites={[]}
-                onClose={() => setShowCommandPalette(false)}
-              />
-            </div>
-          ) : null}
         </ErrorBoundary>
       </main>
     </Geiger>

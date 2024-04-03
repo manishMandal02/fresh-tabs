@@ -8,9 +8,13 @@ import { CommandPaletteContainerId } from '@root/src/constants/app';
 import CommandPalette, { COMMAND_PALETTE_SIZE } from './CommandPalette';
 import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
 import { IMessageEventContentScript, ISpace, ITab } from '../../types/global.types';
+import { getSpace } from '@root/src/services/chrome-storage/spaces';
 
 // development: refresh content page on update
 refreshOnUpdate('pages/content');
+
+// host page position to reset after closing command palette
+let hostBackgroundPosition = 'auto';
 
 // handles click for backdrop of command palette container iframe
 const handleBackgroundCLick = () => {
@@ -27,7 +31,7 @@ const handleClose = () => {
   commandPaletteContainerEl.replaceChildren();
   commandPaletteContainerEl.remove();
 
-  document.body.style.overflow = 'auto';
+  document.body.style.overflow = hostBackgroundPosition;
 };
 
 type AppendContainerProps = {
@@ -58,6 +62,7 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace, selectedText 
   commandPaletteContainer.style.justifyContent = 'center';
 
   // prevent scrolling on host site
+  hostBackgroundPosition = document.body.style.overflow;
   document.body.style.overflow = 'hidden';
 
   // append root react component for command palette
@@ -119,14 +124,15 @@ const handleShowSnackbar = (title: string) => {
 
 // TODO - testing - loads command palette on site load
 
-// (async () => {
-//   const activeSpace = await getSpace('148626a9faf');
+(async () => {
+  // return;
+  const activeSpace = await getSpace('148626a9faf');
 
-//   console.log('🚀 ~ activeSpace:', activeSpace);
+  console.log('🚀 ~ activeSpace:', activeSpace);
 
-//   const selectedText = 'Transform your Gmail experience—say goodbye to clutter effortlessly';
-//   appendCommandPaletteContainer({ activeSpace, selectedText, recentSites: [] });
-// })();
+  // const selectedText = 'Transform your Gmail experience—say goodbye to clutter effortlessly';
+  appendCommandPaletteContainer({ activeSpace, recentSites: [] });
+})();
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   const event = msg as IMessageEventContentScript;
