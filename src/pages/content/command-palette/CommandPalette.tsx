@@ -1,18 +1,17 @@
 import { motion } from 'framer-motion';
-import { MdOutlineKeyboardReturn } from 'react-icons/md';
 import { useState, useEffect, useRef, MouseEventHandler, useCallback } from 'react';
-import { ArrowUpIcon } from '@radix-ui/react-icons';
 
 import Command from './command/Command';
 import { cn } from '@root/src/utils/cn';
 import CaptureNote from '../capture-note';
 import SearchBox from './search-box/SearchBox';
 import { getFaviconURL } from '../../../utils/url';
+import CommandDivider from './command/CommandDivider';
 import { CommandType } from '@root/src/constants/app';
 import { useCommandPalette } from './useCommandPalette';
 import { getTime } from '@root/src/utils/date-time/get-time';
 import { publishEvents } from '../../../utils/publish-events';
-import CommandSectionLabel from './command/CommandSectionLabel';
+import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
 import { ICommand, ISpace, ITab } from '../../types/global.types';
 import { useCustomAnimation } from '../../sidepanel/hooks/useAnimation';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
@@ -20,7 +19,7 @@ import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { staticCommands, useCommand, webSearchCommand } from './command/useCommand';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
-import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
+import KBD from '@root/src/components/kbd/KBD';
 
 export const COMMAND_PALETTE_SIZE = {
   HEIGHT: 500,
@@ -40,6 +39,8 @@ type Props = {
   userSelectedText?: string;
 };
 
+// TODO - add group helpers commands
+
 // TODO - Fix - when typing fast and selecting command that opens sub commands, the sub command assumes that theres text in the input box while there isn't any.
 // its' because of the multi useEffect  updating the commands/search
 // 👆 this is also causing another bug where the search box is empty but the suggestion box assumes that there's still some part of the erase text
@@ -54,20 +55,20 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
   const suggestionContainerRef = useRef<HTMLDivElement>(null);
 
   const {
-    handleSelectCommand,
-    searchQueryPlaceholder,
-    setSubCommand,
     subCommand,
+    searchQuery,
+    setSubCommand,
+    setSearchQuery,
     suggestedCommands,
-    suggestedCommandsForSubCommand,
-    setSuggestedCommands,
+    handleSelectCommand,
     focusedCommandIndex,
+    setSuggestedCommands,
+    searchQueryPlaceholder,
     setFocusedCommandIndex,
     handleCloseCommandPalette,
-    setSuggestedCommandsForSubCommand,
-    searchQuery,
-    setSearchQuery,
     setSearchQueryPlaceholder,
+    suggestedCommandsForSubCommand,
+    setSuggestedCommandsForSubCommand,
   } = useCommandPalette({ activeSpace, modalRef, onClose });
 
   const { isStaticCommand, getCommandIcon } = useCommand();
@@ -123,9 +124,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
     const searchQueryLowerCase = searchQuery.toLowerCase().trim();
 
     // TODO:
-    // filter all commands with label , alias
-    // show all spaces when space, all spaces, switch space
-    // show opened tabs when tabs, all tabs, opened tabs
+    // use regex to match search words
     // search bookmarks if enabled
     // search notes if enabled
 
@@ -186,7 +185,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
     spaces = spaces.filter(s => s.id !== activeSpace.id);
 
     if (
-      searchQueryLowerCase === 'space' ||
+      searchQueryLowerCase.startsWith('space') ||
       searchQueryLowerCase.includes('all space') ||
       searchQueryLowerCase === 'switch' ||
       searchQueryLowerCase === 'switch space'
@@ -258,7 +257,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
 
     if (searchQuery.trim() && !subCommand) {
       setIsLoadingResults(true);
-      // debounce search
       handleGlobalSearch();
     } else if (!searchQuery.trim() && !subCommand) {
       // reset search
@@ -278,8 +276,10 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
 
   // on search during sub command
   useEffect(() => {
-    if (subCommand && searchQuery && suggestedCommandsForSubCommand.length > 0) {
-      // filter the suggested sub commands based on search query, also update the index
+    //
+    // filter the suggested sub commands based on search query, also update the index
+    if (subCommand && searchQuery.trim() && suggestedCommandsForSubCommand.length > 0) {
+      // handle snooze sub command, generate date & time based on user input
       if (subCommand === CommandType.SnoozeTab) {
         const parsedDateFromSearch = naturalLanguageToDate(searchQuery);
         if (parsedDateFromSearch) {
@@ -297,19 +297,26 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
         }
         setFocusedCommandIndex(1);
       } else {
+        //  filter suggested sub-commands based on user input
         const filteredSubCommands = suggestedCommandsForSubCommand
           .filter(c => c.label.toLowerCase().includes(searchQuery.toLowerCase()))
           .map((cmd, idx) => ({ ...cmd, index: idx + 1 }));
         setSuggestedCommands(filteredSubCommands);
-        setFocusedCommandIndex(1);
+
+        //  only updated focused index if out of range
+        (focusedCommandIndex < 1 || focusedCommandIndex > filteredSubCommands.length) && setFocusedCommandIndex(1);
       }
     } else if (subCommand && !searchQuery && suggestedCommandsForSubCommand.length > 0) {
       setSuggestedCommands(suggestedCommandsForSubCommand);
-      setFocusedCommandIndex(1);
+
+      //  only updated focused index if out of range
+      (focusedCommandIndex < 1 || focusedCommandIndex > suggestedCommandsForSubCommand.length) &&
+        setFocusedCommandIndex(1);
     }
   }, [
     searchQuery,
     subCommand,
+    focusedCommandIndex,
     suggestedCommandsForSubCommand,
     setFocusedCommandIndex,
     setSuggestedCommands,
@@ -319,7 +326,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
   // on command select/click
   const onCommandClick = async (index: number) => {
     setFocusedCommandIndex(index);
-    await handleSelectCommand();
+    await handleSelectCommand(index);
   };
 
   // on modal card container click
@@ -358,8 +365,8 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
           maxWidth: COMMAND_PALETTE_SIZE.MAX_WIDTH + 'px',
         }}
         className={cn(`flex items-center h-fit max-h-full outline-none flex-col justify-center m-0 p-0 overflow-hidden
-                       mx-auto backdrop:bg-transparent  bg-transparent rounded-lg`)}>
-        <div className="size-full relative overflow-hidden rounded-lg">
+                       mx-auto backdrop:bg-transparent  bg-transparent rounded-lg shadow-2xl shadow-brand-darkBgAccent`)}>
+        <div className="size-full relative overflow-hidden rounded-lg ">
           {subCommand !== CommandType.NewNote ? (
             // search box
             <SearchBox
@@ -406,7 +413,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
                   // do not render  for sub commands
                   !subCommand &&
                     renderCommands.push(
-                      <CommandSectionLabel
+                      <CommandDivider
                         key={cmd.index}
                         index={cmd.index}
                         isStaticCommand={isStaticCommand(cmd.label)}
@@ -417,13 +424,15 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
                   //  command
                   renderCommands.push(
                     <Command
-                      searchTerm={searchQuery.toLowerCase().trim()}
+                      key={cmd.index}
                       index={cmd.index}
                       label={cmd.label}
                       type={cmd.type}
-                      alias={cmd?.alias || ''}
                       Icon={cmd.icon}
-                      key={cmd.index}
+                      searchTerm={searchQuery.toLowerCase().trim()}
+                      alias={cmd?.alias || ''}
+                      isSubCommand={!!subCommand}
+                      isStaticCommand={isStaticCommand(cmd.label)}
                       isFocused={focusedCommandIndex === cmd.index}
                       onClick={() => onCommandClick(cmd.index)}
                     />,
@@ -459,24 +468,16 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
           {subCommand !== CommandType.NewNote ? (
             // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
             <div
-              className={`bg-brand-darkBg/95 shadow-sm shadow-slate-800/70  w-full flex items-center justify-between px-1.5 py-1 select-none
+              className={`bg-brand-darkBg/95 shadow-sm shadow-slate-800/70  w-full flex items-center justify-between px-2 pt-1 pb-2 select-none
                       rounded-bl-md rounded-br-md border-t border-brand-darkBgAccent/60`}
               // focuses on the search input box if clicked
               onClick={handleFocusSearchInput}>
-              <div className=" text-slate-500 text-[10px] ml-2">FreshTabs</div>
-              <div className="gap-x-px  text-slate-500/90 text-[8px] flex items-center py-1">
-                <span className="mr-2 flex items-center bg-brand-darkBgAccent/50 px-1.5 pt-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
-                  <ArrowUpIcon className="text-slate-500/80 mr-[0.5px] scale-[0.65]" />
-                  <kbd>Up</kbd>
-                </span>
-                <span className="mr-2 flex items-center bg-brand-darkBgAccent/50 px-1.5 pt-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
-                  <ArrowUpIcon className="text-slate-500/90 mr-[0.5px] rotate-180 scale-[0.65]" />
-                  <kbd>Down</kbd>
-                </span>
-                <span className="mr-2 flex items-center bg-brand-darkBgAccent/50 px-1.5 pt-[1.75px] pb-[1.25px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
-                  <MdOutlineKeyboardReturn className="text-slate-500/90 mr-1 font-medium -mb-px " size={11} />
-                  <kbd>Enter</kbd>
-                </span>
+              <div className="text-slate-500 text-[10.5px] ml-1">FreshTabs</div>
+              <div className="flex items-center gap-x-[7px]">
+                <KBD upArrowKey />
+                <KBD downArrowKey />
+                <KBD modifierKey />
+                <KBD enterKey />
               </div>
             </div>
           ) : null}

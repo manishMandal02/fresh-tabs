@@ -1,15 +1,18 @@
 import { useDeviceInfo } from '@root/src/pages/sidepanel/hooks/useDeviceInfo';
+import { CSSClasses } from '@root/src/pages/types/global.types';
 import { cn } from '@root/src/utils/cn';
-import { memo , ReactNode } from 'react';
+import { memo, ReactNode } from 'react';
 
 type Props = {
   children?: ReactNode;
   modifierKey?: boolean;
-  //   shiftKey?: boolean;
-  //   optionKey?: boolean;
+  enterKey?: boolean;
+  upArrowKey?: boolean;
+  downArrowKey?: boolean;
+  classes?: CSSClasses;
 };
 
-const KBD = ({ children, modifierKey }: Props) => {
+const KBD = ({ children, modifierKey, enterKey, upArrowKey, downArrowKey, classes }: Props) => {
   const { isMac } = useDeviceInfo();
 
   console.log('🚀 ~ KBD ~ isMac:', isMac);
@@ -21,6 +24,12 @@ const KBD = ({ children, modifierKey }: Props) => {
       return 'Ctrl';
     }
 
+    if (enterKey) return '↵';
+
+    if (upArrowKey) return '⬆';
+
+    if (downArrowKey) return '⬇';
+
     return children;
   };
 
@@ -28,8 +37,10 @@ const KBD = ({ children, modifierKey }: Props) => {
     <kbd
       className={cn(
         `inline-flex justify-center items-center px-[7px] bg-brand-darkBgAccent/60 text-[12px] rounded-md h-[20px]
-         select-none border border-brand-darkBg/70 text-slate-300/80 shadow-[0px_2px_0px_0px_#ffffff28]`,
-        { 'text-[16px]': modifierKey },
+         select-none border border-brand-darkBg/70 text-slate-400/80 shadow-[0px_2px_0px_0px_#ffffff1c]`,
+        { 'text-[16px]': modifierKey || enterKey },
+        { 'text-[10px]': upArrowKey || downArrowKey },
+        classes,
       )}>
       {key()}
     </kbd>

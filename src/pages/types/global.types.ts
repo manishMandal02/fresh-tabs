@@ -1,8 +1,11 @@
 import { IconProps } from '@radix-ui/react-icons/dist/types';
 import { CommandType, ThemeColor } from '@root/src/constants/app';
-import { ForwardRefExoticComponent } from 'react';
+import { ForwardRefExoticComponent, HTMLProps } from 'react';
 
 export type RadixIconType = ForwardRefExoticComponent<IconProps & React.RefAttributes<SVGSVGElement>>;
+
+export type CSSClasses = HTMLProps<HTMLElement>['className'];
+
 export interface ICommand {
   index: number;
   type: CommandType;
@@ -119,6 +122,7 @@ interface IEventPayloadContentScript {
   spaceTitle?: string;
   searchQuery?: string;
   noteRemainder?: string;
+  shouldCloseCurrentTab?: boolean;
   activeSpace?: ISpace;
   shouldOpenInNewTab?: boolean;
   snoozedUntil?: number;

@@ -122,9 +122,9 @@ const CreateNote = ({ userSelectedText, onClose, activeSpace, handleGoBack }: Pr
             Save
           </button>
           <span className="ml-2 flex items-center">
-            <KBD modifierKey />
+            <KBD modifierKey classes="text-slate-300/90" />
             <span className="font-bold text-slate-400/70 text-[13px] mx-[5px] select-none">+</span>
-            <KBD>Enter</KBD>
+            <KBD classes="text-slate-300/90">Enter</KBD>
           </span>
         </div>
       </div>

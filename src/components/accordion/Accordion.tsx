@@ -3,8 +3,7 @@ import { HTMLProps, forwardRef } from 'react';
 import * as RadixAccordion from '@radix-ui/react-accordion';
 import { ChevronDownIcon } from '@radix-ui/react-icons';
 import { cn } from '@root/src/utils/cn';
-
-type CSSClasses = HTMLProps<HTMLElement>['className'];
+import { CSSClasses } from '@root/src/pages/types/global.types';
 
 type Props = {
   trigger: React.ReactNode;

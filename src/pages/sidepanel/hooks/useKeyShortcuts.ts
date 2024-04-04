@@ -37,6 +37,8 @@ export const useKeyShortcuts = ({
     ev => {
       const keyEv = ev as KeyboardEvent;
 
+      console.log('🚀 ~ keyEv.code:', keyEv.metaKey);
+
       // console.log('🚀 ~ keyEv.code: pressed ✅', keyEv.code);
 
       if (onEnterPressed && keyEv.code === 'Enter') {
@@ -93,7 +95,7 @@ export const useKeyShortcuts = ({
   }, []);
 
   // key press event listeners
-  // for side panels
+  // for content script (command palette)
   useEffect(() => {
     if (parentConTainerEl) {
       parentConTainerEl.addEventListener('keydown', handleKeydown);
@@ -106,7 +108,7 @@ export const useKeyShortcuts = ({
     };
   }, [parentConTainerEl, handleKeyUp, handleKeydown, monitorModifierKeys]);
 
-  // content script (command palette)
+  // side panel
   useEffect(() => {
     if (parentConTainerEl) return;
     document.body.addEventListener('keydown', handleKeydown);

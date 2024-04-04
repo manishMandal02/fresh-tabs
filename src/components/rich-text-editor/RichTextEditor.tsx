@@ -42,7 +42,7 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
   const removeDateHighlightStyle = (spanElNode?: Node) => {
     const allSpanWithClass = editorContainerRef.current?.querySelectorAll(`span.${DATE_HIGHLIGHT_CLASS_NAME}`);
 
-    if (allSpanWithClass.length < 1) return;
+    if (allSpanWithClass?.length < 1) return;
 
     if (allSpanWithClass?.length > (!spanElNode ? 0 : 1)) {
       for (const spanWithClass of allSpanWithClass) {

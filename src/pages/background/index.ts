@@ -277,13 +277,21 @@ chrome.runtime.onMessage.addListener(
   asyncMessageHandler<IMessageEventContentScript, boolean | ICommand[]>(async request => {
     const { event, payload } = request;
 
-    logger.info(`Event received at background service: ${event}`);
+    logger.info(`Event received at background: ${event}`);
 
     switch (event) {
       case 'SWITCH_TAB': {
-        const { tabId } = payload;
+        const { tabId, shouldCloseCurrentTab } = payload;
+
+        const currentTab = await getCurrentTab();
+
+        console.log('🚀 ~ currentTab:', currentTab);
 
         await goToTab(tabId);
+
+        if (shouldCloseCurrentTab) {
+          await chrome.tabs.remove(currentTab.id);
+        }
 
         return true;
       }
