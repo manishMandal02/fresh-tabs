@@ -71,6 +71,9 @@ dependencies:
   framer-motion:
     specifier: ^10.18.0
     version: 10.18.0(react-dom@18.2.0)(react@18.2.0)
+  highlight-words-core:
+    specifier: ^1.2.2
+    version: 1.2.2
   jotai:
     specifier: ^2.6.1
     version: 2.6.1(@types/react@18.2.37)(react@18.2.0)
@@ -4646,6 +4649,10 @@ packages:
     dependencies:
       function-bind: 1.1.2
     dev: true
+
+  /highlight-words-core@1.2.2:
+    resolution: {integrity: sha512-BXUKIkUuh6cmmxzi5OIbUJxrG8OAk2MqoL1DtO3Wo9D2faJg2ph5ntyuQeLqaHJmzER6H5tllCDA9ZnNe9BVGg==}
+    dev: false
 
   /hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}

@@ -118,7 +118,14 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
   const handleGlobalSearch = useCallback(async () => {
     const matchedCommands: ICommand[] = [];
 
-    const searchQueryLowerCase = searchQuery.toLowerCase();
+    const searchQueryLowerCase = searchQuery.toLowerCase().trim();
+
+    // TODO:
+    // filter all commands with label , alias
+    // show all spaces when space, all spaces, switch space
+    // show opened tabs when tabs, all tabs, opened tabs
+    // search bookmarks if enabled
+    // search notes if enabled
 
     // query static matchedCommands label
     staticCommands
@@ -135,20 +142,40 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
     let tabs = await getTabsInSpace(activeSpace.id);
 
     if (tabs?.length > 0) {
-      // show all current tabs
-
-      tabs = tabs.filter(tab => tab.title.toLowerCase().includes(searchQueryLowerCase));
-
-      tabs.forEach(tab => {
-        matchedCommands.push({
-          index: matchedCommands.length + 1,
-          type: CommandType.SwitchTab,
-          label: tab.title,
-          icon: getFaviconURL(tab.url, false),
-          metadata: tab.id,
-          alias: 'Opened tabs',
+      if (
+        searchQueryLowerCase === 'tabs' ||
+        searchQueryLowerCase === 'all tabs' ||
+        searchQueryLowerCase === 'switch' ||
+        searchQueryLowerCase === 'switch tabs' ||
+        searchQueryLowerCase === 'opened tabs'
+      ) {
+        //  show all opened tabs
+        tabs.forEach(tab => {
+          matchedCommands.push({
+            index: matchedCommands.length + 1,
+            type: CommandType.SwitchTab,
+            label: tab.title,
+            icon: getFaviconURL(tab.url, false),
+            metadata: tab.id,
+            alias: 'Opened tabs',
+          });
         });
-      });
+      } else {
+        // filter matched tabs
+
+        tabs = tabs.filter(tab => tab.title.toLowerCase().includes(searchQueryLowerCase));
+
+        tabs.forEach(tab => {
+          matchedCommands.push({
+            index: matchedCommands.length + 1,
+            type: CommandType.SwitchTab,
+            label: tab.title,
+            icon: getFaviconURL(tab.url, false),
+            metadata: tab.id,
+            alias: 'Opened tabs',
+          });
+        });
+      }
     }
 
     // query space title
@@ -156,7 +183,12 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
 
     spaces = spaces.filter(s => s.id !== activeSpace.id);
 
-    if (searchQueryLowerCase.includes('space')) {
+    if (
+      searchQueryLowerCase === 'space' ||
+      searchQueryLowerCase.includes('all space') ||
+      searchQueryLowerCase === 'switch' ||
+      searchQueryLowerCase === 'switch space'
+    ) {
       // show all spaces
       spaces.forEach(space => {
         matchedCommands.push({
@@ -169,7 +201,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
         });
       });
     } else {
-      // show matched spaces
+      // filtered matched spaces
       spaces
         .filter(s => s.title.toLowerCase().includes(searchQueryLowerCase))
         .forEach(space => {
@@ -184,21 +216,28 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
         });
     }
 
-    matchedCommands.push(webSearchCommand(searchQuery, matchedCommands.length + 1));
+    if (matchedCommands.length < 6) {
+      matchedCommands.push(webSearchCommand(searchQuery, matchedCommands.length + 1));
+    }
 
+    //
     setSuggestedCommands(matchedCommands);
 
-    const res = await publishEvents<ICommand[]>({ event: 'SEARCH', payload: { searchQuery } });
+    setFocusedCommandIndex(1);
 
-    if (res?.length > 0) {
-      const resMatchedCommands: ICommand[] = [];
-      res.forEach((cmd, idx) => {
-        resMatchedCommands.push({
-          ...cmd,
-          index: idx + matchedCommands.length + 1,
+    if (matchedCommands.length < 6) {
+      const res = await publishEvents<ICommand[]>({ event: 'SEARCH', payload: { searchQuery } });
+
+      if (res?.length > 0) {
+        const resMatchedCommands: ICommand[] = [];
+        res.forEach((cmd, idx) => {
+          resMatchedCommands.push({
+            ...cmd,
+            index: idx + matchedCommands.length + 1,
+          });
         });
-      });
-      setSuggestedCommands(prev => [...prev, ...resMatchedCommands]);
+        setSuggestedCommands(prev => [...prev, ...resMatchedCommands]);
+      }
     }
 
     setIsLoadingResults(false);
@@ -222,7 +261,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
     } else if (!searchQuery.trim() && !subCommand) {
       // reset search
       setDefaultSuggestedCommands();
-      setSearchQueryPlaceholder('Search...');
+      setSearchQueryPlaceholder('Switch...');
       setFocusedCommandIndex(1);
     }
   }, [
@@ -235,7 +274,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
     setSearchQueryPlaceholder,
   ]);
 
-  // on search for sub command
+  // on search during sub command
   useEffect(() => {
     if (subCommand && searchQuery && suggestedCommandsForSubCommand.length > 0) {
       // filter the suggested sub commands based on search query, also update the index
@@ -341,7 +380,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
               activeSpace={activeSpace}
               onClose={() => handleCloseCommandPalette()}
               handleGoBack={() => {
-                console.log('🚀 ~ CommandPalette ~ handleGoBack: called 🚀');
                 setSubCommand(null);
                 setDefaultSuggestedCommands();
               }}
@@ -376,8 +414,11 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
                   //  command
                   renderCommands.push(
                     <Command
+                      searchTerm={searchQuery.toLowerCase().trim()}
                       index={cmd.index}
                       label={cmd.label}
+                      type={cmd.type}
+                      alias={cmd?.alias || ''}
                       Icon={cmd.icon}
                       key={cmd.index}
                       isFocused={focusedCommandIndex === cmd.index}
@@ -420,17 +461,17 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
               // focuses on the search input box if clicked
               onClick={handleFocusSearchInput}>
               <div className=" text-slate-500 text-[10px] ml-2">FreshTabs</div>
-              <div className="gap-x-px  text-slate-500/80 text-[8px] flex items-center py-1">
+              <div className="gap-x-px  text-slate-500/90 text-[8px] flex items-center py-1">
                 <span className="mr-2 flex items-center bg-brand-darkBgAccent/50 px-1.5 pt-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
                   <ArrowUpIcon className="text-slate-500/80 mr-[0.5px] scale-[0.65]" />
                   <kbd>Up</kbd>
                 </span>
                 <span className="mr-2 flex items-center bg-brand-darkBgAccent/50 px-1.5 pt-[1px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
-                  <ArrowUpIcon className="text-slate-500/80 mr-[0.5px] rotate-180 scale-[0.65]" />
+                  <ArrowUpIcon className="text-slate-500/90 mr-[0.5px] rotate-180 scale-[0.65]" />
                   <kbd>Down</kbd>
                 </span>
                 <span className="mr-2 flex items-center bg-brand-darkBgAccent/50 px-1.5 pt-[1.75px] pb-[1.25px]  rounded-sm shadow-sm shadow-brand-darkBgAccent">
-                  <MdOutlineKeyboardReturn className="text-slate-500//80 mr-1 font-medium -mb-px " size={11} />
+                  <MdOutlineKeyboardReturn className="text-slate-500/90 mr-1 font-medium -mb-px " size={11} />
                   <kbd>Enter</kbd>
                 </span>
               </div>

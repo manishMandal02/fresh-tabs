@@ -1,13 +1,11 @@
 import { PlusIcon } from '@radix-ui/react-icons';
 import { useState, useCallback, useMemo } from 'react';
 
-import { getFaviconURL } from '../../../utils/url';
 import { CommandType } from '@root/src/constants/app';
 import { ICommand, ISpace } from '../../types/global.types';
 import { publishEvents } from '../../../utils/publish-events';
 import { useKeyShortcuts } from '../../sidepanel/hooks/useKeyShortcuts';
 import { prettifyDate } from '../../../utils/date-time/prettifyDate';
-import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
 import { useCommand } from './command/useCommand';
@@ -96,55 +94,15 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
 
     switch (focusedCommand.type) {
       case CommandType.SwitchTab: {
-        if (!subCommand && !focusedCommand.metadata) {
-          const tabs = await getTabsInSpace(activeSpace.id);
+        await publishEvents({ event: 'SWITCH_TAB', payload: { tabId: focusedCommand.metadata as number } });
 
-          const tabCommands = tabs.map<ICommand>((tab, idx) => {
-            return {
-              label: tab.title,
-              type: CommandType.SwitchTab,
-              index: 1 + idx,
-              icon: getFaviconURL(tab.url, false),
-              metadata: tab.id,
-            };
-          });
-
-          setSubCommand(CommandType.SwitchTab);
-          setSuggestedCommandsForSubCommand(tabCommands);
-          setSuggestedCommands(tabCommands);
-          setSearchQueryPlaceholder('Select tab');
-          setFocusedCommandIndex(1);
-        } else {
-          await publishEvents({ event: 'SWITCH_TAB', payload: { tabId: focusedCommand.metadata as number } });
-
-          handleCloseCommandPalette();
-        }
+        handleCloseCommandPalette();
         break;
       }
 
       case CommandType.SwitchSpace: {
-        if (!subCommand && !focusedCommand.metadata) {
-          const allSpaces = await getAllSpaces();
-
-          const switchSpaceCommands = allSpaces
-            .filter(s => s.windowId !== activeSpace.windowId)
-            .map<ICommand>((space, idx) => ({
-              label: space.title,
-              type: CommandType.SwitchSpace,
-              index: idx + 1,
-              icon: space.emoji,
-              metadata: space.id,
-            }));
-
-          setSubCommand(CommandType.SwitchSpace);
-          setSuggestedCommandsForSubCommand(switchSpaceCommands);
-          setSuggestedCommands(switchSpaceCommands);
-          setSearchQueryPlaceholder('Select space');
-          setFocusedCommandIndex(1);
-        } else {
-          await publishEvents({ event: 'SWITCH_SPACE', payload: { spaceId: focusedCommand.metadata as string } });
-          handleCloseCommandPalette();
-        }
+        await publishEvents({ event: 'SWITCH_SPACE', payload: { spaceId: focusedCommand.metadata as string } });
+        handleCloseCommandPalette();
 
         break;
       }
@@ -244,11 +202,14 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
             event: 'SNOOZE_TAB',
             payload: { spaceId: activeSpace.id, snoozedUntil: focusedCommand.metadata as number },
           });
+
+          handleCloseCommandPalette();
         }
         break;
       }
       case CommandType.CloseTab: {
         await publishEvents({ event: 'CLOSE_TAB' });
+        handleCloseCommandPalette();
         break;
       }
     }
@@ -262,6 +223,7 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
     handleCloseCommandPalette,
     searchQuery,
     subCommand,
+    getCommandIcon,
     defaultSuggestedSnoozeTimeLabels,
   ]);
 

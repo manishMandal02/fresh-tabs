@@ -1,10 +1,11 @@
 import { FC, ReactEventHandler } from 'react';
 
 import { cn } from '@root/src/utils/cn';
+import { findAll } from 'highlight-words-core';
 import { isValidURL } from '@root/src/utils/url';
 import { COMMAND_HEIGHT } from '../CommandPalette';
 import { RadixIconType } from '@root/src/pages/types/global.types';
-import { FALLBACK_ICON } from '@root/src/constants/app';
+import { CommandType, FALLBACK_ICON } from '@root/src/constants/app';
 
 type CommandIcon = RadixIconType | string;
 
@@ -12,10 +13,10 @@ type CommandIcon = RadixIconType | string;
 type IconProps = {
   Icon: CommandIcon;
   isFocused: boolean;
-  label: string;
+  type: CommandType;
 };
 
-const CommandIcon: FC<IconProps> = ({ Icon, isFocused, label }) => {
+const CommandIcon: FC<IconProps> = ({ Icon, isFocused, type }) => {
   // handle fallback image for favicon icons
   const handleImageLoadError: ReactEventHandler<HTMLImageElement> = ev => {
     ev.stopPropagation();
@@ -40,7 +41,7 @@ const CommandIcon: FC<IconProps> = ({ Icon, isFocused, label }) => {
       className={cn(
         'text-slate-400/90 w-[14px] scale-[1]',
         { 'text-slate-300/90': isFocused },
-        { 'scale-[0.92]': label === 'New Space' },
+        { 'scale-[0.92]': type === CommandType.NewNote },
       )}
     />
   );
@@ -49,12 +50,45 @@ const CommandIcon: FC<IconProps> = ({ Icon, isFocused, label }) => {
 type Props = {
   index: number;
   label: string;
+  searchTerm: string;
+  type: CommandType;
   Icon: CommandIcon;
   isFocused: boolean;
+  alias?: string;
   onClick: () => void;
 };
 
-const Command = ({ index, label, Icon, isFocused, onClick }: Props) => {
+const Command = ({ index, label, Icon, isFocused, type, searchTerm, onClick, alias }: Props) => {
+  let commandLabel = label;
+
+  if (searchTerm) {
+    commandLabel = `${commandLabel}`;
+    const chunks = findAll({
+      label,
+      searchTerm,
+    });
+    const highlightedText = chunks
+      .map(chunk => {
+        const { end, highlight, start } = chunk;
+        const text = label.substring(start, end - start);
+        if (highlight) {
+          return `<mark>${text}</mark>`;
+        } else {
+          return text;
+        }
+      })
+      .join('');
+
+    commandLabel = highlightedText;
+  }
+
+  if (
+    alias &&
+    (type === CommandType.AddToSpace || type === CommandType.SnoozeTab || type === CommandType.DiscardTabs)
+  ) {
+    commandLabel = `${commandLabel} <span style="font-weight:200; opacity:0.8; font-size: 10px; margin-left: 4px;">(${alias})</span>`;
+  }
+
   return (
     <button
       id={`fresh-tabs-command-${index}`}
@@ -66,7 +100,7 @@ const Command = ({ index, label, Icon, isFocused, onClick }: Props) => {
       style={{ height: COMMAND_HEIGHT + 'px' }}>
       {/* icon */}
       <div className="w-[22px]">
-        <CommandIcon isFocused={isFocused} Icon={Icon} label={label} />
+        <CommandIcon isFocused={isFocused} Icon={Icon} type={type} />
       </div>
       {/* label */}
       <p
@@ -74,7 +108,7 @@ const Command = ({ index, label, Icon, isFocused, onClick }: Props) => {
           'text-[12px] text-start text-slate-400/90 min-w-[50%] max-w-[95%] whitespace-nowrap  overflow-hidden text-ellipsis transition-colors duration-150',
           { 'text-slate-300/90': isFocused },
         )}
-        dangerouslySetInnerHTML={{ __html: label }}></p>
+        dangerouslySetInnerHTML={{ __html: commandLabel }}></p>
     </button>
   );
 };
