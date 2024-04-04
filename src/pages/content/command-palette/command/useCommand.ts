@@ -30,10 +30,10 @@ export const staticCommands: ICommand[] = [
 export const webSearchCommand = (query: string, index: number): ICommand => {
   return {
     index,
-    label: `Web Search: <b className="text-slate-300">${query}</b>`,
+    label: `Web Search:`,
+    alias: query.trim(),
     type: CommandType.WebSearch,
     icon: MagnifyingGlassIcon,
-    alias: 'Google search',
   };
 };
 

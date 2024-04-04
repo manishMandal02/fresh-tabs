@@ -10,15 +10,17 @@ import SearchBox from './search-box/SearchBox';
 import { getFaviconURL } from '../../../utils/url';
 import { CommandType } from '@root/src/constants/app';
 import { useCommandPalette } from './useCommandPalette';
+import { getTime } from '@root/src/utils/date-time/get-time';
 import { publishEvents } from '../../../utils/publish-events';
 import CommandSectionLabel from './command/CommandSectionLabel';
 import { ICommand, ISpace, ITab } from '../../types/global.types';
-import { prettifyDate } from '../../../utils/date-time/prettifyDate';
 import { useCustomAnimation } from '../../sidepanel/hooks/useAnimation';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
+import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { staticCommands, useCommand, webSearchCommand } from './command/useCommand';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
+import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
 
 export const COMMAND_PALETTE_SIZE = {
   HEIGHT: 500,
@@ -283,7 +285,8 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
         if (parsedDateFromSearch) {
           const dynamicTimeCommand: ICommand = {
             index: 1,
-            label: prettifyDate(parsedDateFromSearch),
+            label: `${getReadableDate(parsedDateFromSearch)} @ ${getTime(parsedDateFromSearch)}`,
+            alias: getTimeAgo(parsedDateFromSearch),
             type: CommandType.SnoozeTab,
             icon: getCommandIcon(CommandType.SnoozeTab).Icon,
             metadata: parsedDateFromSearch,

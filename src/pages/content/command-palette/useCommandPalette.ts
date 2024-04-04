@@ -1,14 +1,15 @@
 import { PlusIcon } from '@radix-ui/react-icons';
 import { useState, useCallback, useMemo } from 'react';
 
+import { useCommand } from './command/useCommand';
 import { CommandType } from '@root/src/constants/app';
 import { ICommand, ISpace } from '../../types/global.types';
 import { publishEvents } from '../../../utils/publish-events';
-import { useKeyShortcuts } from '../../sidepanel/hooks/useKeyShortcuts';
-import { prettifyDate } from '../../../utils/date-time/prettifyDate';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
+import { useKeyShortcuts } from '../../sidepanel/hooks/useKeyShortcuts';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
-import { useCommand } from './command/useCommand';
+import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
+import { getTime } from '@root/src/utils/date-time/get-time';
 
 type UseCommandPaletteProps = {
   activeSpace: ISpace;
@@ -186,7 +187,8 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
         if (!subCommand && !focusedCommand.metadata) {
           const snoozeTabSubCommands = defaultSuggestedSnoozeTimeLabels.map<ICommand>((label, idx) => ({
             index: idx + 1,
-            label: label + ` <span style='opacity: 0.5;'>${prettifyDate(naturalLanguageToDate(label))}</span>`,
+            label: label,
+            alias: `${getReadableDate(naturalLanguageToDate(label))} @ ${getTime(naturalLanguageToDate(label))}`,
             type: CommandType.SnoozeTab,
             metadata: naturalLanguageToDate(label),
             icon: getCommandIcon(CommandType.SnoozeTab).Icon,
