@@ -6,6 +6,11 @@ export type RadixIconType = ForwardRefExoticComponent<IconProps & React.RefAttri
 
 export type CSSClasses = HTMLProps<HTMLElement>['className'];
 
+export interface ISearchFilters {
+  searchBookmarks: boolean;
+  searchNotes: boolean;
+}
+
 export interface ICommand {
   index: number;
   type: CommandType;
@@ -122,6 +127,7 @@ interface IEventPayloadContentScript {
   spaceTitle?: string;
   searchQuery?: string;
   noteRemainder?: string;
+  searchFilterPreferences?: ISearchFilters;
   shouldCloseCurrentTab?: boolean;
   activeSpace?: ISpace;
   shouldOpenInNewTab?: boolean;
@@ -136,6 +142,7 @@ export interface IMessageEventContentScript {
 
 export interface IAppSettings {
   includeBookmarksInSearch: boolean;
+  includeNotesInSearch: boolean;
   deleteUnsavedSpace: 'immediately' | 'week';
   openSpace: 'newWindow' | 'sameWindow';
   autoSaveToBookmark: 'off' | 'daily' | 'weekly';

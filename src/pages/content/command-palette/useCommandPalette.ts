@@ -1,5 +1,5 @@
 import { PlusIcon } from '@radix-ui/react-icons';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 
 import { useCommand } from './command/useCommand';
 import { CommandType } from '@root/src/constants/app';
@@ -10,20 +10,30 @@ import { useKeyShortcuts } from '../../sidepanel/hooks/useKeyShortcuts';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { getTime } from '@root/src/utils/date-time/get-time';
+import { useFrame } from 'react-frame-component';
+
+// default suggested time for snooze tab command
+const defaultSuggestedSnoozeTimeLabels = [
+  'After 2 hours',
+  'Tomorrow at same time',
+  'Tomorrow at 4pm',
+  'Tuesday 2pm',
+  'After 1 week',
+];
 
 type UseCommandPaletteProps = {
   activeSpace: ISpace;
-  modalRef: React.RefObject<HTMLDialogElement>;
   onClose: () => void;
 };
 
-export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommandPaletteProps) => {
+export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPaletteProps) => {
   // local state
   // search/commands suggestions
   const [suggestedCommands, setSuggestedCommands] = useState<ICommand[]>([]);
 
   // search query
   const [searchQuery, setSearchQuery] = useState('');
+  const { document: iFrameDoc } = useFrame();
 
   // save suggestedCommands for sub commands if search query is not empty for during sub command action
   // we can revert to this suggested commands if search query is empty again
@@ -39,23 +49,17 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
 
   const { getCommandIcon } = useCommand();
 
-  // default suggested time for snooze tab command
-  const defaultSuggestedSnoozeTimeLabels: string[] = useMemo(
-    () => ['After 2 hours', 'Tomorrow at same time', 'Tomorrow at 4pm', 'Tuesday 2pm', 'After 1 week'],
-    [],
-  );
-
   // close command palette
   const handleCloseCommandPalette = useCallback(() => {
-    modalRef.current?.close();
     // remove parent container
     onClose();
-  }, [modalRef, onClose]);
+  }, [onClose]);
 
   // handle key press
   const { isModifierKeyPressed } = useKeyShortcuts({
-    parentConTainerEl: modalRef.current,
+    isSidePanel: false,
     monitorModifierKeys: true,
+    parentConTainerEl: iFrameDoc.body.querySelector('dialog'),
     onEscapePressed: () => {
       handleCloseCommandPalette();
     },
@@ -178,7 +182,7 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
           break;
         }
 
-        case CommandType.RecentSite: {
+        case CommandType.Link: {
           await publishEvents({
             event: 'GO_TO_URL',
             payload: { url: focusedCommand.metadata as string, shouldOpenInNewTab: isModifierKeyPressed },
@@ -235,7 +239,6 @@ export const useCommandPalette = ({ activeSpace, modalRef, onClose }: UseCommand
       searchQuery,
       subCommand,
       getCommandIcon,
-      defaultSuggestedSnoozeTimeLabels,
     ],
   );
 

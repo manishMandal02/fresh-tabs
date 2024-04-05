@@ -11,10 +11,12 @@ type useKeyShortcutsProps = {
   onArrowUpPressed?: () => void;
   onArrowDownPressed?: () => void;
   parentConTainerEl?: HTMLElement;
+  isSidePanel?: boolean;
 };
 
 export const useKeyShortcuts = ({
   monitorModifierKeys = true,
+  isSidePanel = true,
   parentConTainerEl = null,
   onDeletePressed,
   onEscapePressed,
@@ -37,9 +39,7 @@ export const useKeyShortcuts = ({
     ev => {
       const keyEv = ev as KeyboardEvent;
 
-      console.log('🚀 ~ keyEv.code:', keyEv.metaKey);
-
-      // console.log('🚀 ~ keyEv.code: pressed ✅', keyEv.code);
+      // console.log('🚀 ~ content script ⚠️ ~ keyEv.code:', keyEv.metaKey);
 
       if (onEnterPressed && keyEv.code === 'Enter') {
         onEnterPressed();
@@ -97,7 +97,7 @@ export const useKeyShortcuts = ({
   // key press event listeners
   // for content script (command palette)
   useEffect(() => {
-    if (parentConTainerEl) {
+    if (parentConTainerEl && !isSidePanel) {
       parentConTainerEl.addEventListener('keydown', handleKeydown);
       monitorModifierKeys && parentConTainerEl.addEventListener('keyup', handleKeyUp);
     }
@@ -106,11 +106,11 @@ export const useKeyShortcuts = ({
       parentConTainerEl?.removeEventListener('keydown', handleKeydown);
       monitorModifierKeys && parentConTainerEl?.removeEventListener('keyup', handleKeyUp);
     };
-  }, [parentConTainerEl, handleKeyUp, handleKeydown, monitorModifierKeys]);
+  }, [isSidePanel, parentConTainerEl, handleKeyUp, handleKeydown, monitorModifierKeys]);
 
   // side panel
   useEffect(() => {
-    if (parentConTainerEl) return;
+    if (!isSidePanel) return;
     document.body.addEventListener('keydown', handleKeydown);
     monitorModifierKeys && document.body.addEventListener('keyup', handleKeyUp);
 

@@ -4,11 +4,11 @@ import Frame, { FrameContextConsumer } from 'react-frame-component';
 import injectedStyle from './injected.css?inline';
 import { SnackbarContentScript } from '../snackbar';
 import refreshOnUpdate from 'virtual:reload-on-update-in-view';
+import { getSpace } from '@root/src/services/chrome-storage/spaces';
 import { CommandPaletteContainerId } from '@root/src/constants/app';
 import CommandPalette, { COMMAND_PALETTE_SIZE } from './CommandPalette';
 import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
-import { IMessageEventContentScript, ISpace, ITab } from '../../types/global.types';
-import { getSpace } from '@root/src/services/chrome-storage/spaces';
+import { IMessageEventContentScript, ISearchFilters, ISpace, ITab } from '../../types/global.types';
 
 // development: refresh content page on update
 refreshOnUpdate('pages/content');
@@ -38,9 +38,15 @@ type AppendContainerProps = {
   recentSites: ITab[];
   activeSpace: ISpace;
   selectedText?: string;
+  searchFilterPreferences?: ISearchFilters;
 };
 
-const appendCommandPaletteContainer = ({ recentSites, activeSpace, selectedText }: AppendContainerProps) => {
+const appendCommandPaletteContainer = ({
+  recentSites,
+  activeSpace,
+  selectedText,
+  searchFilterPreferences,
+}: AppendContainerProps) => {
   if (document.getElementById(CommandPaletteContainerId)) return;
 
   const userSelectedText = selectedText || getUserSelectionText();
@@ -96,6 +102,7 @@ const appendCommandPaletteContainer = ({ recentSites, activeSpace, selectedText 
               activeSpace={activeSpace}
               onClose={handleClose}
               userSelectedText={userSelectedText}
+              searchFiltersPreference={searchFilterPreferences}
             />
           );
         }}
@@ -126,20 +133,22 @@ const handleShowSnackbar = (title: string) => {
 
 (async () => {
   // return;
-  const activeSpace = await getSpace('148626a9faf');
+  const activeSpace = await getSpace('61e549a192');
 
   console.log('🚀 ~ activeSpace:', activeSpace);
 
   // const selectedText = 'Transform your Gmail experience—say goodbye to clutter effortlessly';
-  appendCommandPaletteContainer({ activeSpace, recentSites: [] });
+  appendCommandPaletteContainer({
+    activeSpace,
+    recentSites: [],
+    searchFilterPreferences: { searchBookmarks: false, searchNotes: false },
+  });
 })();
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   const event = msg as IMessageEventContentScript;
 
-  const { recentSites, activeSpace, snackbarMsg } = event.payload;
-
-  console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ snackbarMsg:', snackbarMsg);
+  const { recentSites, activeSpace, snackbarMsg, searchFilterPreferences } = event.payload;
 
   const msgEvent = event.event;
 
@@ -147,6 +156,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     appendCommandPaletteContainer({
       recentSites,
       activeSpace,
+      searchFilterPreferences,
     });
   }
   if (msgEvent === 'SHOW_SNACKBAR') {

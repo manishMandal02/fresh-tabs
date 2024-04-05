@@ -3,7 +3,8 @@ import { IAppSettings, IPinnedTab, ISpaceWithTabs } from '../pages/types/global.
 export const CommandPaletteContainerId = 'fresh-tabs-command-palette-container';
 
 export const FRESH_TABS_BOOKMARK_TITLE = '#Fresh Tabs ~ ⚠️ Do not delete this, managed by extension.';
-export const FALLBACK_ICON = 'https://freshinbox.xyz/favicon.ico';
+// TODO - update to
+export const FALLBACK_ICON = '🌐';
 export const DISCARD_TAB_URL_PREFIX = 'data:text/html,';
 
 export const SNOOZED_TAB_GROUP_TITLE = '⏰ Snoozed';
@@ -29,8 +30,7 @@ export enum CommandType {
   AddToSpace = 'add-to-space',
   SwitchTab = 'switch-tab',
   WebSearch = 'web-search',
-  RecentSite = 'recent-site',
-  TopSite = 'top-site',
+  Link = 'link',
   DiscardTabs = 'discard-tabs',
   SnoozeTab = 'snooze-tab',
   CloseTab = 'close-tab',
@@ -67,7 +67,8 @@ export const StorageKey = {
 // union type of all storage value (SPACES, TABS-${string}, etc.)
 
 export const DefaultAppSettings: IAppSettings = {
-  includeBookmarksInSearch: false,
+  includeBookmarksInSearch: true,
+  includeNotesInSearch: false,
   deleteUnsavedSpace: 'immediately',
   openSpace: 'newWindow',
   autoSaveToBookmark: 'daily',

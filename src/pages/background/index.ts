@@ -73,7 +73,7 @@ import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguage
 
 logger.info('🏁 background loaded');
 
-// IIFE - checks for alarms, its not guaranteed to persist
+//* IIFE - checks for alarms, its not guaranteed to persist
 (async () => {
   const autoSaveToBMAlarm = await getAlarm(AlarmName.autoSaveBM);
 
@@ -257,6 +257,8 @@ export const showCommandPaletteContentScript = async (tabId: number, windowId: n
 
   const activeSpace = await getSpaceByWindow(windowId);
 
+  const preferences = await getAppSettings();
+
   // send msg/event to content scr
   await retryAtIntervals({
     interval: 1000,
@@ -264,7 +266,14 @@ export const showCommandPaletteContentScript = async (tabId: number, windowId: n
     callback: async () => {
       return await publishEventsTab(tabId, {
         event: 'SHOW_COMMAND_PALETTE',
-        payload: { activeSpace, recentSites },
+        payload: {
+          activeSpace,
+          recentSites,
+          searchFilterPreferences: {
+            searchBookmarks: preferences.includeBookmarksInSearch,
+            searchNotes: preferences.includeNotesInSearch,
+          },
+        },
       });
     },
   });
@@ -284,8 +293,6 @@ chrome.runtime.onMessage.addListener(
         const { tabId, shouldCloseCurrentTab } = payload;
 
         const currentTab = await getCurrentTab();
-
-        console.log('🚀 ~ currentTab:', currentTab);
 
         await goToTab(tabId);
 
@@ -359,7 +366,7 @@ chrome.runtime.onMessage.addListener(
           payload: { snackbarMsg: 'Note Captured' },
         });
 
-        break;
+        return true;
       }
       case 'GO_TO_URL': {
         const { url, shouldOpenInNewTab } = payload;
@@ -395,11 +402,33 @@ chrome.runtime.onMessage.addListener(
         return true;
       }
       case 'SEARCH': {
-        const { searchQuery } = payload;
+        const { searchQuery, searchFilterPreferences } = payload;
 
         const matchedCommands: ICommand[] = [];
 
-        // TODO - query bookmark (words match)
+        if (searchFilterPreferences.searchBookmarks) {
+          const bookmarks = await chrome.bookmarks.search({ query: searchQuery });
+
+          // do not show more than 10 bookmarks results
+          bookmarks.length > 10 && bookmarks.splice(10);
+
+          if (bookmarks?.length > 0) {
+            bookmarks.forEach((item, idx) => {
+              if (!item.url) return;
+
+              matchedCommands.push({
+                index: idx,
+                type: CommandType.Link,
+                label: item.title,
+                icon: getFaviconURL(item.url, false),
+                metadata: item.url,
+                alias: 'Bookmark',
+              });
+            });
+          }
+        }
+        // return the matched results if more than 6 (won't search history)
+        if (matchedCommands.length > 6) return matchedCommands;
 
         // query history (words match)
         const history = await chrome.history.search({ text: searchQuery, maxResults: 4 });
@@ -408,10 +437,11 @@ chrome.runtime.onMessage.addListener(
           history.forEach((item, idx) => {
             matchedCommands.push({
               index: idx,
-              type: CommandType.RecentSite,
+              type: CommandType.Link,
               label: item.title,
               icon: getFaviconURL(item.url, false),
               metadata: item.url,
+              alias: 'History',
             });
           });
         }
@@ -420,8 +450,6 @@ chrome.runtime.onMessage.addListener(
       }
       case 'WEB_SEARCH': {
         const { searchQuery, shouldOpenInNewTab } = payload;
-
-        console.log('🚀 ~ searchQuery:', searchQuery);
 
         // TODO - new tab search opens a tab in the end (open a new next tab and search)
 
@@ -531,8 +559,6 @@ chrome.runtime.onInstalled.addListener(async info => {
 
 // shortcut commands
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  console.log('🚀 ~ chrome.commands.onCommand.addListener ~ tab:', tab);
-
   // TODO - handle new tab
   if (command === 'cmdPalette') {
     let currentTab = tab;
@@ -724,6 +750,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
     // add/update tab
     await updateTabHandler(tabId);
+    // TODO - find notes for this site
+    // if yes, send a event to context script with notes data
   }
 });
 
@@ -923,6 +951,3 @@ const debounceTabReplacedListener = debounceWithEvents(handleTabsReplaced, 500);
 chrome.webNavigation.onTabReplaced.addListener(({ replacedTabId, tabId }) => {
   debounceTabReplacedListener({ replacedTabId, tabId });
 });
-
-//
-chrome.runtime;

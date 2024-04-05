@@ -1,6 +1,14 @@
 import { FC, ReactEventHandler } from 'react';
 import Highlighter from 'react-highlight-words';
-import { Cross1Icon, EnterIcon, ExternalLinkIcon, OpenInNewWindowIcon, PinRightIcon } from '@radix-ui/react-icons';
+import {
+  CounterClockwiseClockIcon,
+  Cross1Icon,
+  EnterIcon,
+  ExternalLinkIcon,
+  OpenInNewWindowIcon,
+  PinRightIcon,
+  StarFilledIcon,
+} from '@radix-ui/react-icons';
 
 import { cn } from '@root/src/utils/cn';
 import { isValidURL } from '@root/src/utils/url';
@@ -41,6 +49,7 @@ const Command = ({
 
   // listen to cmd/ctrl key press
   const { isModifierKeyPressed } = useKeyShortcuts({
+    isSidePanel: false,
     monitorModifierKeys: true,
     parentConTainerEl: iFrameDoc.body.querySelector('dialog'),
   });
@@ -103,6 +112,13 @@ const Command = ({
     );
   };
 
+  // show link indicator for link type before title
+  const LinkTypeIndicatorIcon: FC = () => {
+    const classes = ' text-slate-400/80 scale-[.6] mr-[0.5px]';
+    if (alias === 'Bookmark') return <StarFilledIcon className={cn(classes, 'scale-[.7] mr-[0.75px]')} />;
+    if (alias === 'History') return <CounterClockwiseClockIcon className={classes} />;
+  };
+
   return (
     <button
       id={`fresh-tabs-command-${index}`}
@@ -119,9 +135,11 @@ const Command = ({
       {/* label */}
       <div
         className={cn(
-          'text-[12px] text-start text-slate-400/80 min-w-[50%] max-w-[95%] whitespace-nowrap  overflow-hidden text-ellipsis transition-colors duration-150',
+          'text-[12px] flex items-center text-start text-slate-400/80 min-w-[50%] max-w-[95%] whitespace-nowrap  overflow-hidden text-ellipsis transition-colors duration-150',
           { 'text-slate-300/90': isFocused },
         )}>
+        <LinkTypeIndicatorIcon />
+
         <Highlighter
           searchWords={type !== CommandType.SnoozeTab ? [escapedSearchTerm] : []}
           textToHighlight={label}

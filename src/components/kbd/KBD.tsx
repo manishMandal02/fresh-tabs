@@ -15,8 +15,6 @@ type Props = {
 const KBD = ({ children, modifierKey, enterKey, upArrowKey, downArrowKey, classes }: Props) => {
   const { isMac } = useDeviceInfo();
 
-  console.log('🚀 ~ KBD ~ isMac:', isMac);
-
   const key = () => {
     if (modifierKey) {
       if (isMac) return '⌘';

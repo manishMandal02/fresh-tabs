@@ -1,9 +1,10 @@
 import { CheckIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
-import { FC, forwardRef, PropsWithChildren } from 'react';
+import { FC, forwardRef, PropsWithChildren , Dispatch } from 'react';
 
 import { useCommand } from '../command/useCommand';
 import { CommandType } from '@root/src/constants/app';
 import { cn } from '@root/src/utils/cn';
+import { ISearchFilters } from '@root/src/pages/types/global.types';
 
 // show sub command indicator instead of search icon when a sub command is selected
 const SubCommandIndicator: FC<{ subCommandType?: CommandType }> = ({ subCommandType }) => {
@@ -25,10 +26,25 @@ type Props = {
   setSearchQuery: (query: string) => void;
   onClearSearch: () => void;
   handleFocusSearchInput: () => void;
+  searchFilters: ISearchFilters;
+  setSearchFilters: Dispatch<React.SetStateAction<ISearchFilters>>;
 };
 
 const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
-  ({ searchQuery, placeholder, subCommand, setSearchQuery, onClearSearch, handleFocusSearchInput }, ref) => {
+  (
+    {
+      searchQuery,
+      placeholder,
+      subCommand,
+      setSearchQuery,
+      onClearSearch,
+      handleFocusSearchInput,
+      searchFilters,
+      setSearchFilters,
+    },
+    ref,
+  ) => {
+    const { searchBookmarks, searchNotes } = searchFilters;
     return (
       <div
         className={`relative w-full h-[32px] min-h-[32px] md:h-[50px] md:min-h-[50px] flex items-center bg-brand-darkBg rounded-tl-xl rounded-tr-xl
@@ -72,19 +88,28 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
           className={`text-[12px] md:text-[14px] text-slate-300 w-auto flex-grow px-px py-1.5 md:py-2.5  placeholder:text-slate-500/80 placeholder:font-light
                 rounded-tr-xl caret-slate-300 caret rounded-br-xl outline-none border-none bg-transparent`}
         />
+        {/* TODO - animate state transition on click */}
         {/* search filter */}
         <div className="absolute right-2 top-1.5 flex items-end ">
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <span
+            tabIndex={-1}
+            onClick={() => setSearchFilters(prev => ({ ...prev, searchBookmarks: !prev.searchBookmarks }))}
             className={cn(
-              'flex w-fit items-center overflow-hidden text-slate-300/80 font-light bg-brand-darkBgAccent/70 mr-1 text-[10px] border border-brand-darkBgAccent px-1.5 py-px rounded-2xl select-none cursor-pointer',
+              'flex w-fit items-center overflow-hidden text-slate-300/80 font-light mr-1 text-[10.5px] border border-brand-darkBgAccent px-2.5 py-px rounded-2xl select-none cursor-pointer',
+              { 'bg-brand-darkBgAccent/70 px-1.5': searchBookmarks },
             )}>
-            <CheckIcon className="text-slate-200 scale-[0.7] mr-[2px]" /> Bookmarks
+            {searchBookmarks ? <CheckIcon className="text-slate-200 scale-[0.7] mr-[2px]" /> : null} Bookmarks
           </span>
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <span
+            tabIndex={-1}
+            onClick={() => setSearchFilters(prev => ({ ...prev, searchNotes: !prev.searchNotes }))}
             className={cn(
-              'flex w-fit items-center overflow-hidden text-slate-300/80 font-light bg-brand-darkBgAccent/70 text-[10px] border border-brand-darkBgAccent px-1.5 py-px rounded-2xl select-none cursor-pointer',
+              'flex w-fit items-center overflow-hidden text-slate-300/80 font-light text-[10.5px] border border-brand-darkBgAccent px-2.5 py-px rounded-2xl select-none cursor-pointer',
+              { 'bg-brand-darkBgAccent/70 px-1.5': searchNotes },
             )}>
-            <CheckIcon className="text-slate-200 scale-[0.7] mr-[2px]" /> Notes
+            {searchNotes ? <CheckIcon className="text-slate-200 scale-[0.7] mr-[2px]" /> : null} Notes
           </span>
           {/* <span>Bookmarks</span> */}
         </div>

@@ -5,6 +5,7 @@ import Command from './command/Command';
 import { cn } from '@root/src/utils/cn';
 import CaptureNote from '../capture-note';
 import SearchBox from './search-box/SearchBox';
+import KBD from '@root/src/components/kbd/KBD';
 import { getFaviconURL } from '../../../utils/url';
 import CommandDivider from './command/CommandDivider';
 import { CommandType } from '@root/src/constants/app';
@@ -12,14 +13,13 @@ import { useCommandPalette } from './useCommandPalette';
 import { getTime } from '@root/src/utils/date-time/get-time';
 import { publishEvents } from '../../../utils/publish-events';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
-import { ICommand, ISpace, ITab } from '../../types/global.types';
 import { useCustomAnimation } from '../../sidepanel/hooks/useAnimation';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
+import { ICommand, ISearchFilters, ISpace, ITab } from '../../types/global.types';
 import { staticCommands, useCommand, webSearchCommand } from './command/useCommand';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
-import KBD from '@root/src/components/kbd/KBD';
 
 export const COMMAND_PALETTE_SIZE = {
   HEIGHT: 500,
@@ -36,6 +36,7 @@ type Props = {
   activeSpace: ISpace;
   recentSites: ITab[];
   onClose?: () => void;
+  searchFiltersPreference: ISearchFilters;
   userSelectedText?: string;
 };
 
@@ -45,14 +46,21 @@ type Props = {
 // its' because of the multi useEffect  updating the commands/search
 // 👆 this is also causing another bug where the search box is empty but the suggestion box assumes that there's still some part of the erase text
 
-const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }: Props) => {
+const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPreference, userSelectedText }: Props) => {
   // loading search result
   const [isLoadingResults, setIsLoadingResults] = useState(false);
+
+  const [searchFilters, setSearchFilters] = useState<ISearchFilters>({ searchBookmarks: false, searchNotes: false });
 
   // elements ref
   const modalRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleClose = useCallback(() => {
+    modalRef.current?.close();
+    onClose();
+  }, [onClose]);
 
   const {
     subCommand,
@@ -69,7 +77,10 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
     setSearchQueryPlaceholder,
     suggestedCommandsForSubCommand,
     setSuggestedCommandsForSubCommand,
-  } = useCommandPalette({ activeSpace, modalRef, onClose });
+  } = useCommandPalette({
+    activeSpace,
+    onClose: handleClose,
+  });
 
   const { isStaticCommand, getCommandIcon } = useCommand();
 
@@ -77,6 +88,23 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
   const handleFocusSearchInput = () => {
     inputRef.current?.focus();
   };
+
+  // initialize component
+  useEffect(() => {
+    modalRef.current?.showModal();
+    handleFocusSearchInput();
+
+    if (searchFiltersPreference) {
+      setSearchFilters(searchFiltersPreference);
+    }
+
+    if (!userSelectedText) {
+      setDefaultSuggestedCommands();
+    } else {
+      setSubCommand(CommandType.NewNote);
+    }
+    // run when component mounts
+  }, []);
 
   // check if the focused command is visible
   useEffect(() => {
@@ -93,7 +121,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
   const setDefaultSuggestedCommands = useCallback(() => {
     const recentSitesCommands = recentSites.map<ICommand>((site, idx) => ({
       index: 1 + idx + staticCommands.length,
-      type: CommandType.RecentSite,
+      type: CommandType.Link,
       label: site.title,
       icon: getFaviconURL(site.url, false),
       metadata: site.url,
@@ -103,20 +131,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
     setFocusedCommandIndex(1);
   }, [recentSites, setSuggestedCommands, setFocusedCommandIndex]);
 
-  // initialize component
-  useEffect(() => {
-    modalRef.current?.showModal();
-    handleFocusSearchInput();
-
-    if (!userSelectedText) {
-      setDefaultSuggestedCommands();
-    } else {
-      setSubCommand(CommandType.NewNote);
-    }
-    // run when component mounts
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userSelectedText]);
-
   // search commands
   const handleGlobalSearch = useCallback(async () => {
     const matchedCommands: ICommand[] = [];
@@ -125,7 +139,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
 
     // TODO:
     // use regex to match search words
-    // search bookmarks if enabled
     // search notes if enabled
 
     // query static matchedCommands label
@@ -139,73 +152,64 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
         matchedCommands.push({ ...cmd, index: idx + 1 });
       });
 
-    // query current tab url/title (words match)
-    let tabs = await getTabsInSpace(activeSpace.id);
+    {
+      // query current tab url/title (words match)
+      let tabs = await getTabsInSpace(activeSpace.id);
 
-    if (tabs?.length > 0) {
-      if (
-        searchQueryLowerCase === 'tabs' ||
-        searchQueryLowerCase === 'all tabs' ||
-        searchQueryLowerCase === 'switch' ||
-        searchQueryLowerCase === 'switch tabs' ||
-        searchQueryLowerCase === 'opened tabs'
-      ) {
-        //  show all opened tabs
-        tabs.forEach(tab => {
-          matchedCommands.push({
-            index: matchedCommands.length + 1,
-            type: CommandType.SwitchTab,
-            label: tab.title,
-            icon: getFaviconURL(tab.url, false),
-            metadata: tab.id,
-            alias: 'Opened tabs',
+      if (tabs?.length > 0) {
+        const allTabsMatchWords = ['tabs', 'all tabs', 'all tab', 'switch', 'switch tabs', 'opened tabs'];
+
+        if (allTabsMatchWords.includes(searchQueryLowerCase)) {
+          //  show all opened tabs
+          tabs.forEach(tab => {
+            matchedCommands.push({
+              index: matchedCommands.length + 1,
+              type: CommandType.SwitchTab,
+              label: tab.title,
+              icon: getFaviconURL(tab.url, false),
+              metadata: tab.id,
+              alias: 'Opened tabs',
+            });
           });
-        });
-      } else {
-        // filter matched tabs
+        } else {
+          // filter matched tabs
+          tabs = tabs.filter(tab => tab.title.toLowerCase().includes(searchQueryLowerCase));
 
-        tabs = tabs.filter(tab => tab.title.toLowerCase().includes(searchQueryLowerCase));
-
-        tabs.forEach(tab => {
-          matchedCommands.push({
-            index: matchedCommands.length + 1,
-            type: CommandType.SwitchTab,
-            label: tab.title,
-            icon: getFaviconURL(tab.url, false),
-            metadata: tab.id,
-            alias: 'Opened tabs',
+          tabs.forEach(tab => {
+            matchedCommands.push({
+              index: matchedCommands.length + 1,
+              type: CommandType.SwitchTab,
+              label: tab.title,
+              icon: getFaviconURL(tab.url, false),
+              metadata: tab.id,
+              alias: 'Opened tabs',
+            });
           });
-        });
+        }
       }
     }
 
-    // query space title
-    let spaces = await getAllSpaces();
+    {
+      // query space title
+      let spaces = await getAllSpaces();
 
-    spaces = spaces.filter(s => s.id !== activeSpace.id);
+      console.log('🚀 ~ handleGlobalSearch ~ spaces:', spaces);
 
-    if (
-      searchQueryLowerCase.startsWith('space') ||
-      searchQueryLowerCase.includes('all space') ||
-      searchQueryLowerCase === 'switch' ||
-      searchQueryLowerCase === 'switch space'
-    ) {
-      // show all spaces
-      spaces.forEach(space => {
-        matchedCommands.push({
-          index: matchedCommands.length + 1,
-          type: CommandType.SwitchSpace,
-          label: space.title,
-          icon: space.emoji,
-          metadata: space.id,
-          alias: 'Space',
-        });
-      });
-    } else {
-      // filtered matched spaces
-      spaces
-        .filter(s => s.title.toLowerCase().includes(searchQueryLowerCase))
-        .forEach(space => {
+      spaces = spaces?.filter(s => s.id !== activeSpace.id) || [];
+
+      const allSpacesMatchWords = [
+        'space',
+        'spaces',
+        'all space',
+        'all spaces',
+        'switch',
+        'switch space',
+        'switch spaces',
+      ];
+
+      if (allSpacesMatchWords.includes(searchQueryLowerCase)) {
+        // show all spaces
+        spaces.forEach(space => {
           matchedCommands.push({
             index: matchedCommands.length + 1,
             type: CommandType.SwitchSpace,
@@ -215,19 +219,36 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
             alias: 'Space',
           });
         });
+      } else {
+        // filtered matched spaces
+        spaces
+          .filter(s => s.title.toLowerCase().includes(searchQueryLowerCase))
+          .forEach(space => {
+            matchedCommands.push({
+              index: matchedCommands.length + 1,
+              type: CommandType.SwitchSpace,
+              label: space.title,
+              icon: space.emoji,
+              metadata: space.id,
+              alias: 'Space',
+            });
+          });
+      }
     }
 
     if (matchedCommands.length < 6) {
       matchedCommands.push(webSearchCommand(searchQuery, matchedCommands.length + 1));
     }
 
-    //
     setSuggestedCommands(matchedCommands);
 
     setFocusedCommandIndex(1);
 
-    if (matchedCommands.length < 6) {
-      const res = await publishEvents<ICommand[]>({ event: 'SEARCH', payload: { searchQuery } });
+    if (matchedCommands.length < 5) {
+      const res = await publishEvents<ICommand[]>({
+        event: 'SEARCH',
+        payload: { searchQuery, searchFilterPreferences: searchFilters },
+      });
 
       if (res?.length > 0) {
         const resMatchedCommands: ICommand[] = [];
@@ -244,7 +265,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
     setIsLoadingResults(false);
 
     setFocusedCommandIndex(1);
-  }, [setSuggestedCommands, setFocusedCommandIndex, activeSpace, searchQuery]);
+  }, [setSuggestedCommands, setFocusedCommandIndex, activeSpace, searchQuery, searchFilters]);
 
   // on global search
   useEffect(() => {
@@ -365,7 +386,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
           maxWidth: COMMAND_PALETTE_SIZE.MAX_WIDTH + 'px',
         }}
         className={cn(`flex items-center h-fit max-h-full outline-none flex-col justify-center m-0 p-0 overflow-hidden
-                       mx-auto backdrop:bg-transparent  bg-transparent rounded-lg shadow-2xl shadow-brand-darkBgAccent`)}>
+                       mx-auto backdrop:bg-transparent  bg-transparent rounded-lg shadow-2xl shadow-brand-darkBgAccent/80`)}>
         <div className="size-full relative overflow-hidden rounded-lg ">
           {subCommand !== CommandType.NewNote ? (
             // search box
@@ -376,6 +397,8 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, userSelectedText }:
               placeholder={searchQueryPlaceholder}
               setSearchQuery={setSearchQuery}
               subCommand={subCommand}
+              searchFilters={searchFilters}
+              setSearchFilters={setSearchFilters}
               onClearSearch={() => {
                 setSubCommand(null);
                 setDefaultSuggestedCommands();
