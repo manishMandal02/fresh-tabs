@@ -47,6 +47,8 @@ type Props = {
 // 👆 this is also causing another bug where the search box is empty but the suggestion box assumes that there's still some part of the erase text
 
 const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPreference, userSelectedText }: Props) => {
+  console.log('CommandPalette ~ 🔁 rendered');
+
   // loading search result
   const [isLoadingResults, setIsLoadingResults] = useState(false);
 
@@ -301,7 +303,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPrefer
 
   // on search during sub command
   useEffect(() => {
-    //
+    // TODO - fix snooze tab sub command infinite re-rendering
     // filter the suggested sub commands based on search query, also update the index
     if (subCommand && searchQuery.trim() && suggestedCommandsForSubCommand.length > 0) {
       // handle snooze sub command, generate date & time based on user input
@@ -329,24 +331,26 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPrefer
         setSuggestedCommands(filteredSubCommands);
 
         //  only updated focused index if out of range
-        (focusedCommandIndex < 1 || focusedCommandIndex > filteredSubCommands.length) && setFocusedCommandIndex(1);
+        setFocusedCommandIndex(prev => {
+          if (prev < 1 || prev > filteredSubCommands.length) return 1;
+
+          return prev;
+        });
       }
     } else if (subCommand && !searchQuery && suggestedCommandsForSubCommand.length > 0) {
       setSuggestedCommands(suggestedCommandsForSubCommand);
 
       //  only updated focused index if out of range
-      (focusedCommandIndex < 1 || focusedCommandIndex > suggestedCommandsForSubCommand.length) &&
-        setFocusedCommandIndex(1);
+
+      setFocusedCommandIndex(prev => {
+        if (prev < 1 || prev > suggestedCommandsForSubCommand.length) return 1;
+
+        return prev;
+      });
     }
-  }, [
-    searchQuery,
-    subCommand,
-    focusedCommandIndex,
-    suggestedCommandsForSubCommand,
-    setFocusedCommandIndex,
-    setSuggestedCommands,
-    getCommandIcon,
-  ]);
+    // re-render only when the below dependency change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, subCommand, suggestedCommandsForSubCommand]);
 
   // on command select/click
   const onCommandClick = async (index: number) => {

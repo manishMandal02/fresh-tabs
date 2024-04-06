@@ -25,13 +25,13 @@ type CommandIcon = RadixIconType | string;
 type Props = {
   index: number;
   label: string;
-  searchTerm: string;
+  alias?: string;
   type: CommandType;
   Icon: CommandIcon;
+  searchTerm: string;
   isFocused: boolean;
-  isStaticCommand: boolean;
-  alias?: string;
   isSubCommand: boolean;
+  isStaticCommand: boolean;
   onClick: () => void;
 };
 
@@ -47,9 +47,7 @@ const Command = ({
   isSubCommand,
   isStaticCommand,
 }: Props) => {
-  console.log('🚀 ~ searchTerm:', searchTerm);
-
-  console.log('🚀 ~ type:', type);
+  console.log('Command ~ 🔁 rendered');
 
   const { document: iFrameDoc } = useFrame();
 

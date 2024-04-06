@@ -1,5 +1,5 @@
 import { CheckIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
-import { FC, forwardRef, PropsWithChildren, Dispatch } from 'react';
+import { FC, forwardRef, PropsWithChildren, Dispatch , memo } from 'react';
 
 import { useCommand } from '../command/useCommand';
 import { CommandType } from '@root/src/constants/app';
@@ -44,6 +44,8 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
     },
     ref,
   ) => {
+    console.log('SearchBox ~ 🔁 rendered');
+
     const { searchBookmarks, searchNotes } = searchFilters;
     return (
       <div
@@ -126,4 +128,4 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
 
 SearchBox.displayName = 'SearchBox';
 
-export default SearchBox;
+export default memo(SearchBox);

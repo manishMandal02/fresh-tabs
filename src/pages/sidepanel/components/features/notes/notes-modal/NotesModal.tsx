@@ -15,6 +15,8 @@ import RichTextEditor, { EDITOR_EMPTY_STATE } from '../../../../../../components
 import { parseStringForDateTimeHint } from '@root/src/utils/date-time/naturalLanguageToDate';
 
 const NotesModal = () => {
+  console.log('NotesModal ~ 🔁 rendered');
+
   // global state
   const [showModal, setShowModal] = useAtom(showAddNewNoteModalAtom);
 
