@@ -35,7 +35,7 @@ const KBD = ({ children, modifierKey, enterKey, upArrowKey, downArrowKey, classe
     <kbd
       className={cn(
         `inline-flex justify-center items-center px-[7px] bg-brand-darkBgAccent/60 text-[12px] rounded-md h-[20px]
-         select-none border border-brand-darkBg/70 text-slate-400/80 shadow-[0px_2px_0px_0px_#ffffff1c]`,
+         select-none border border-brand-darkBg/70 text-slate-400/80 shadow-[0px_2px_0px_0px_#ffffff17]`,
         { 'text-[16px]': modifierKey || enterKey },
         { 'text-[10px]': upArrowKey || downArrowKey },
         classes,

@@ -110,6 +110,7 @@ type MessageEventsContentScript =
   | 'SWITCH_SPACE'
   | 'NEW_SPACE'
   | 'NEW_NOTE'
+  | 'EDIT_NOTE'
   | 'MOVE_TAB_TO_SPACE'
   | 'GO_TO_URL'
   | 'WEB_SEARCH'
@@ -119,20 +120,22 @@ type MessageEventsContentScript =
   | 'SEARCH';
 
 interface IEventPayloadContentScript {
-  recentSites?: ITab[];
-  snackbarMsg?: string;
   url?: string;
-  spaceId?: string;
-  tabId?: number;
-  spaceTitle?: string;
-  searchQuery?: string;
-  noteRemainder?: string;
-  searchFilterPreferences?: ISearchFilters;
-  shouldCloseCurrentTab?: boolean;
-  activeSpace?: ISpace;
-  shouldOpenInNewTab?: boolean;
-  snoozedUntil?: number;
   note?: string;
+  tabId?: number;
+  spaceId?: string;
+  noteId?: string;
+  spaceTitle?: string;
+  snackbarMsg?: string;
+  searchQuery?: string;
+  snoozedUntil?: number;
+  recentSites?: ITab[];
+  activeSpace?: ISpace;
+  noteRemainder?: string;
+  shouldOpenInNewTab?: boolean;
+  shouldCloseCurrentTab?: boolean;
+  shouldOpenInNewWindow?: boolean;
+  searchFilterPreferences?: ISearchFilters;
 }
 
 export interface IMessageEventContentScript {

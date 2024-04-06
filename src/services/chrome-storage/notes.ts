@@ -11,13 +11,6 @@ export const setNotesToStorage = async (notes: INote[]) => {
   return true;
 };
 
-export const getNotesBySpace = async (spaceId: string) => {
-  const allNotes = await getAllNotes();
-  const spaceNotes = allNotes.filter(note => note.spaceId === spaceId);
-
-  return spaceNotes;
-};
-
 export const addNewNote = async (note: INote) => {
   try {
     const allNotes = await getAllNotes();
@@ -32,6 +25,20 @@ export const addNewNote = async (note: INote) => {
     });
     return false;
   }
+};
+
+export const getNotesBySpace = async (spaceId: string) => {
+  const allNotes = await getAllNotes();
+  const spaceNotes = allNotes.filter(note => note.spaceId === spaceId);
+
+  return spaceNotes;
+};
+
+export const getNote = async (id: string) => {
+  const allNotes = await getAllNotes();
+  const note = allNotes.find(note => note.id === id);
+
+  return note;
 };
 
 // update note

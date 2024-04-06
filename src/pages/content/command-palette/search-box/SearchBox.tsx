@@ -1,5 +1,5 @@
 import { CheckIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
-import { FC, forwardRef, PropsWithChildren , Dispatch } from 'react';
+import { FC, forwardRef, PropsWithChildren, Dispatch } from 'react';
 
 import { useCommand } from '../command/useCommand';
 import { CommandType } from '@root/src/constants/app';
@@ -33,14 +33,14 @@ type Props = {
 const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
   (
     {
-      searchQuery,
-      placeholder,
       subCommand,
-      setSearchQuery,
+      placeholder,
+      searchQuery,
       onClearSearch,
-      handleFocusSearchInput,
       searchFilters,
+      setSearchQuery,
       setSearchFilters,
+      handleFocusSearchInput,
     },
     ref,
   ) => {
@@ -94,9 +94,12 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
           {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <span
             tabIndex={-1}
-            onClick={() => setSearchFilters(prev => ({ ...prev, searchBookmarks: !prev.searchBookmarks }))}
+            onClick={() => {
+              setSearchFilters(prev => ({ ...prev, searchBookmarks: !prev.searchBookmarks }));
+              handleFocusSearchInput();
+            }}
             className={cn(
-              'flex w-fit items-center overflow-hidden text-slate-300/80 font-light mr-1 text-[10.5px] border border-brand-darkBgAccent px-2.5 py-px rounded-2xl select-none cursor-pointer',
+              'flex w-fit items-center overflow-hidden text-slate-300/70 font-light mr-1 text-[10.5px] border border-brand-darkBgAccent/90 px-2.5 py-px rounded-2xl select-none cursor-pointer',
               { 'bg-brand-darkBgAccent/70 px-1.5': searchBookmarks },
             )}>
             {searchBookmarks ? <CheckIcon className="text-slate-200 scale-[0.7] mr-[2px]" /> : null} Bookmarks
@@ -104,9 +107,12 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
           {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <span
             tabIndex={-1}
-            onClick={() => setSearchFilters(prev => ({ ...prev, searchNotes: !prev.searchNotes }))}
+            onClick={() => {
+              setSearchFilters(prev => ({ ...prev, searchNotes: !prev.searchNotes }));
+              handleFocusSearchInput();
+            }}
             className={cn(
-              'flex w-fit items-center overflow-hidden text-slate-300/80 font-light text-[10.5px] border border-brand-darkBgAccent px-2.5 py-px rounded-2xl select-none cursor-pointer',
+              'flex w-fit items-center overflow-hidden text-slate-300/70 font-light text-[10.5px] border border-brand-darkBgAccent/90 px-2.5 py-px rounded-2xl select-none cursor-pointer',
               { 'bg-brand-darkBgAccent/70 px-1.5': searchNotes },
             )}>
             {searchNotes ? <CheckIcon className="text-slate-200 scale-[0.7] mr-[2px]" /> : null} Notes

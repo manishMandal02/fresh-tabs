@@ -4,7 +4,7 @@ export const CommandPaletteContainerId = 'fresh-tabs-command-palette-container';
 
 export const FRESH_TABS_BOOKMARK_TITLE = '#Fresh Tabs ~ ⚠️ Do not delete this, managed by extension.';
 // TODO - update to
-export const FALLBACK_ICON = '🌐';
+export const FALLBACK_ICON = 'https://upload.wikimedia.org/wikipedia/commons/c/c4/Globe_icon.svg';
 export const DISCARD_TAB_URL_PREFIX = 'data:text/html,';
 
 export const SNOOZED_TAB_GROUP_TITLE = '⏰ Snoozed';
@@ -24,16 +24,18 @@ export enum ThemeColor {
 }
 
 export enum CommandType {
+  Link = 'link',
+  // show note in search
+  Note = 'note',
   NewSpace = 'new-space',
   NewNote = 'new-note',
-  SwitchSpace = 'switch-space',
-  AddToSpace = 'add-to-space',
+  CloseTab = 'close-tab',
   SwitchTab = 'switch-tab',
   WebSearch = 'web-search',
-  Link = 'link',
-  DiscardTabs = 'discard-tabs',
   SnoozeTab = 'snooze-tab',
-  CloseTab = 'close-tab',
+  AddToSpace = 'add-to-space',
+  SwitchSpace = 'switch-space',
+  DiscardTabs = 'discard-tabs',
 }
 
 export const ALARM_NAME_PREFiX = {

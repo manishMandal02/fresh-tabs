@@ -104,6 +104,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPrefer
       setSubCommand(CommandType.NewNote);
     }
     // run when component mounts
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // check if the focused command is visible
@@ -125,6 +126,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPrefer
       label: site.title,
       icon: getFaviconURL(site.url, false),
       metadata: site.url,
+      alias: 'History',
     }));
 
     setSuggestedCommands([...staticCommands, ...(recentSitesCommands || [])]);
@@ -236,10 +238,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPrefer
       }
     }
 
-    if (matchedCommands.length < 6) {
-      matchedCommands.push(webSearchCommand(searchQuery, matchedCommands.length + 1));
-    }
-
     setSuggestedCommands(matchedCommands);
 
     setFocusedCommandIndex(1);
@@ -249,6 +247,8 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPrefer
         event: 'SEARCH',
         payload: { searchQuery, searchFilterPreferences: searchFilters },
       });
+
+      console.log('🚀 ~ handleGlobalSearch:255 ~ res:', res);
 
       if (res?.length > 0) {
         const resMatchedCommands: ICommand[] = [];
@@ -260,6 +260,10 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPrefer
         });
         setSuggestedCommands(prev => [...prev, ...resMatchedCommands]);
       }
+    }
+
+    if (matchedCommands.length < 7) {
+      setSuggestedCommands(prev => [...prev, webSearchCommand(searchQuery, prev.length + 1)]);
     }
 
     setIsLoadingResults(false);
@@ -392,13 +396,13 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPrefer
             // search box
             <SearchBox
               ref={inputRef}
-              handleFocusSearchInput={handleFocusSearchInput}
-              searchQuery={searchQuery}
-              placeholder={searchQueryPlaceholder}
-              setSearchQuery={setSearchQuery}
               subCommand={subCommand}
+              searchQuery={searchQuery}
               searchFilters={searchFilters}
+              setSearchQuery={setSearchQuery}
               setSearchFilters={setSearchFilters}
+              placeholder={searchQueryPlaceholder}
+              handleFocusSearchInput={handleFocusSearchInput}
               onClearSearch={() => {
                 setSubCommand(null);
                 setDefaultSuggestedCommands();
@@ -409,6 +413,8 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPrefer
           ) : (
             // create note
             <CaptureNote
+              selectedNote={suggestedCommands.length > 0 ? (suggestedCommands[0].metadata as string) : ''}
+              resetSuggestedCommand={() => setSuggestedCommands([])}
               userSelectedText={userSelectedText}
               activeSpace={activeSpace}
               onClose={() => handleCloseCommandPalette()}
@@ -431,7 +437,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPrefer
               {suggestedCommands.length > 0 &&
                 suggestedCommands?.map(cmd => {
                   const renderCommands: JSX.Element[] = [];
-
                   // section label
                   // do not render  for sub commands
                   !subCommand &&
@@ -443,7 +448,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPrefer
                         suggestedCommands={suggestedCommands}
                       />,
                     );
-
                   //  command
                   renderCommands.push(
                     <Command
@@ -464,7 +468,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPrefer
                   // render commands & labels
                   return <>{renderCommands.map(cmd1 => cmd1)}</>;
                 })}
-
               {/* lading commands ui (skeleton) */}
               {isLoadingResults
                 ? [1, 2].map(v => (
@@ -476,7 +479,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPrefer
                     </div>
                   ))
                 : null}
-
               {/* no commands found */}
               {suggestedCommands.length === 0 ? (
                 <div

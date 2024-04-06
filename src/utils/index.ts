@@ -6,7 +6,7 @@ export * from './debounce';
 
 export * from './generateId';
 
-export * from './limitCharLength';
+export * from './string/limitCharLength';
 
 export * from './logger';
 

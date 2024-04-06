@@ -16,16 +16,25 @@ import { asyncMessageHandler } from '../../utils/asyncMessageHandler';
 import { handleSnoozedTabAlarm } from './handler/alarm/snoozed-tab';
 import { getFaviconURL, isChromeUrl, parseUrl } from '../../utils/url';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
+import { matchWordsInText } from '@root/src/utils/string/matchWordsInText';
 import { publishEvents, publishEventsTab } from '../../utils/publish-events';
 import { handleMergeSpaceHistoryAlarm } from './handler/alarm/mergeSpaceHistory';
 import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers';
+import { addNewNote, getAllNotes, getNote, updateNote } from '@root/src/services/chrome-storage/notes';
+import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';
 import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
 import { getCurrentTab, goToTab, openSpace } from '@root/src/services/chrome-tabs/tabs';
+import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
 import { addSnoozedTab, getTabToUnSnooze } from '@root/src/services/chrome-storage/snooze-tabs';
 import { handleMergeDailySpaceTimeChunksAlarm } from './handler/alarm/mergeDailySpaceTimeChunks';
 import { getSpaceHistory, setSpaceHistory } from '@root/src/services/chrome-storage/space-history';
 import { getDailySpaceTime, setDailySpaceTime } from '@root/src/services/chrome-storage/space-analytics';
+import {
+  checkParentBMFolder,
+  syncSpacesFromBookmarks,
+  syncSpacesToBookmark,
+} from '@root/src/services/chrome-bookmarks/bookmarks';
 import {
   ICommand,
   IDailySpaceTimeChunks,
@@ -34,6 +43,14 @@ import {
   ISiteVisit,
   ITab,
 } from './../types/global.types';
+import {
+  getTabsInSpace,
+  removeTabFromSpace,
+  saveGlobalPinnedTabs,
+  setTabsForSpace,
+  updateTab,
+  updateTabIndex,
+} from '@root/src/services/chrome-storage/tabs';
 import {
   checkNewWindowTabs,
   createNewSpace,
@@ -45,19 +62,6 @@ import {
   updateActiveTabInSpace,
 } from '@root/src/services/chrome-storage/spaces';
 import {
-  getTabsInSpace,
-  removeTabFromSpace,
-  saveGlobalPinnedTabs,
-  setTabsForSpace,
-  updateTab,
-  updateTabIndex,
-} from '@root/src/services/chrome-storage/tabs';
-import {
-  checkParentBMFolder,
-  syncSpacesFromBookmarks,
-  syncSpacesToBookmark,
-} from '@root/src/services/chrome-bookmarks/bookmarks';
-import {
   CommandType,
   ThemeColor,
   DISCARD_TAB_URL_PREFIX,
@@ -67,9 +71,6 @@ import {
   AlarmName,
   ALARM_NAME_PREFiX,
 } from '@root/src/constants/app';
-import { addNewNote } from '@root/src/services/chrome-storage/notes';
-import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';
-import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
 
 logger.info('🏁 background loaded');
 
@@ -120,6 +121,10 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 // TODO - Use UTC date & time stamp for server (save user timezone)
 
 // TODO - reset day at 3am at default
+
+// TODO - tab thumbnail views and also grid views
+
+// TODO - change extension icon in toolbar based on space (other actions like notes saving, tab moved, etc.)
 
 // TODO - DnD checks (tabs, spaces, merge, delete, create)
 
@@ -286,7 +291,7 @@ chrome.runtime.onMessage.addListener(
   asyncMessageHandler<IMessageEventContentScript, boolean | ICommand[]>(async request => {
     const { event, payload } = request;
 
-    logger.info(`Event received at background: ${event}`);
+    logger.info(`Event received at background:: ${event}`);
 
     switch (event) {
       case 'SWITCH_TAB': {
@@ -303,13 +308,13 @@ chrome.runtime.onMessage.addListener(
         return true;
       }
       case 'SWITCH_SPACE': {
-        const { spaceId } = payload;
+        const { spaceId, shouldOpenInNewWindow } = payload;
 
         const space = await getSpace(spaceId);
 
         const tabs = await getTabsInSpace(spaceId);
 
-        await openSpace({ space, tabs, shouldOpenInNewWindow: false });
+        await openSpace({ space, tabs, shouldOpenInNewWindow });
 
         return true;
       }
@@ -368,6 +373,29 @@ chrome.runtime.onMessage.addListener(
 
         return true;
       }
+
+      case 'EDIT_NOTE': {
+        const { note, url, noteRemainder, noteId } = payload;
+
+        const noteToEdit = await getNote(noteId);
+
+        await updateNote(noteId, {
+          ...noteToEdit,
+          text: note,
+          ...(url && { domain: url }),
+          ...(noteRemainder && { remainderAt: naturalLanguageToDate(noteRemainder) }),
+        });
+
+        const currentTab = await getCurrentTab();
+
+        await publishEventsTab(currentTab.id, {
+          event: 'SHOW_SNACKBAR',
+          payload: { snackbarMsg: 'Note Saved' },
+        });
+
+        return true;
+      }
+
       case 'GO_TO_URL': {
         const { url, shouldOpenInNewTab } = payload;
 
@@ -406,8 +434,47 @@ chrome.runtime.onMessage.addListener(
 
         const matchedCommands: ICommand[] = [];
 
+        if (searchFilterPreferences.searchNotes) {
+          let notes = await getAllNotes();
+
+          notes = notes?.filter(note => {
+            // match query with  domain
+            if (note.domain.includes(searchQuery)) return true;
+            // match query with title
+            if (matchWordsInText(searchQuery, note.title)) return true;
+            // match query with note text
+            if (matchWordsInText(searchQuery, note.text)) return true;
+
+            return false;
+          });
+
+          console.log('🚀 ~ index.ts:429 ~ SEARCH ~  notes:', notes);
+
+          notes?.forEach((note, idx) => {
+            if (!note?.text || !note?.title) return;
+
+            matchedCommands.push({
+              index: idx,
+              type: CommandType.Note,
+              label: note.title,
+              // icon will be added in Command component
+              icon: null,
+              metadata: note.id,
+              alias: 'Note',
+            });
+          });
+        }
+
         if (searchFilterPreferences.searchBookmarks) {
-          const bookmarks = await chrome.bookmarks.search({ query: searchQuery });
+          let bookmarks = await chrome.bookmarks.search({ query: searchQuery });
+
+          // remove duplicate
+          bookmarks = bookmarks.filter((bm, idx) => {
+            const index = bookmarks.findIndex(b => b.url === bm.url);
+            if (index === -1 || index === idx) return true;
+
+            return false;
+          });
 
           // do not show more than 10 bookmarks results
           bookmarks.length > 10 && bookmarks.splice(10);
@@ -415,7 +482,6 @@ chrome.runtime.onMessage.addListener(
           if (bookmarks?.length > 0) {
             bookmarks.forEach((item, idx) => {
               if (!item.url) return;
-
               matchedCommands.push({
                 index: idx,
                 type: CommandType.Link,
@@ -427,6 +493,7 @@ chrome.runtime.onMessage.addListener(
             });
           }
         }
+
         // return the matched results if more than 6 (won't search history)
         if (matchedCommands.length > 6) return matchedCommands;
 
@@ -435,6 +502,7 @@ chrome.runtime.onMessage.addListener(
 
         if (history?.length > 0) {
           history.forEach((item, idx) => {
+            if (!item.url) return;
             matchedCommands.push({
               index: idx,
               type: CommandType.Link,

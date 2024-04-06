@@ -97,6 +97,8 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
 
       const focusedCommand = suggestedCommands.find(cmd => cmd.index === activeIndex);
 
+      console.log('🚀 ~ useCommandPalette ~ focusedCommand:100', focusedCommand);
+
       if (!focusedCommand?.type) return;
 
       switch (focusedCommand.type) {
@@ -111,7 +113,13 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
         }
 
         case CommandType.SwitchSpace: {
-          await publishEvents({ event: 'SWITCH_SPACE', payload: { spaceId: focusedCommand.metadata as string } });
+          await publishEvents({
+            event: 'SWITCH_SPACE',
+            payload: {
+              spaceId: focusedCommand.metadata as string,
+              shouldOpenInNewWindow: isModifierKeyPressed,
+            },
+          });
           handleCloseCommandPalette();
 
           break;
@@ -173,6 +181,13 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
           setSubCommand(CommandType.NewNote);
           break;
         }
+        case CommandType.Note: {
+          // open note
+          setSubCommand(CommandType.NewNote);
+          setSuggestedCommands([focusedCommand]);
+          break;
+        }
+
         case CommandType.WebSearch: {
           await publishEvents({
             event: 'WEB_SEARCH',

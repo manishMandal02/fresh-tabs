@@ -8,6 +8,8 @@ import {
   OpenInNewWindowIcon,
   PinRightIcon,
   StarFilledIcon,
+  FileTextIcon,
+  Link2Icon,
 } from '@radix-ui/react-icons';
 
 import { cn } from '@root/src/utils/cn';
@@ -45,6 +47,10 @@ const Command = ({
   isSubCommand,
   isStaticCommand,
 }: Props) => {
+  console.log('🚀 ~ searchTerm:', searchTerm);
+
+  console.log('🚀 ~ type:', type);
+
   const { document: iFrameDoc } = useFrame();
 
   // listen to cmd/ctrl key press
@@ -88,11 +94,29 @@ const Command = ({
       );
     }
 
-    if (type === CommandType.SwitchSpace)
+    if (type === CommandType.SwitchSpace) {
+      if (isModifierKeyPressed) {
+        return (
+          <>
+            {'Open Space in New Window'}
+            <OpenInNewWindowIcon className={classes} />
+          </>
+        );
+      }
+
       return (
         <>
           {type.replaceAll('-', ' ')}
           <EnterIcon className={classes} />
+        </>
+      );
+    }
+
+    if (type === CommandType.Note)
+      return (
+        <>
+          {'Note'}
+          <FileTextIcon className={classes} />
         </>
       );
 
@@ -107,14 +131,14 @@ const Command = ({
     return (
       <>
         {'Open here'}
-        <OpenInNewWindowIcon className={classes} />
+        <Link2Icon className={classes} />
       </>
     );
   };
 
   // show link indicator for link type before title
   const LinkTypeIndicatorIcon: FC = () => {
-    const classes = ' text-slate-400/80 scale-[.6] mr-[0.5px]';
+    const classes = 'text-slate-400/80 scale-[.7] mr-[0.75px]';
     if (alias === 'Bookmark') return <StarFilledIcon className={cn(classes, 'scale-[.7] mr-[0.75px]')} />;
     if (alias === 'History') return <CounterClockwiseClockIcon className={classes} />;
   };
@@ -130,7 +154,7 @@ const Command = ({
       style={{ height: COMMAND_HEIGHT + 'px' }}>
       {/* icon */}
       <div className="w-[22px]">
-        <CommandIcon isFocused={isFocused} Icon={Icon} type={type} />
+        <CommandIcon isFocused={isFocused} Icon={type !== CommandType.Note ? Icon : FileTextIcon} type={type} />
       </div>
       {/* label */}
       <div
@@ -141,14 +165,14 @@ const Command = ({
         <LinkTypeIndicatorIcon />
 
         <Highlighter
-          searchWords={type !== CommandType.SnoozeTab ? [escapedSearchTerm] : []}
+          searchWords={[escapedSearchTerm]}
           textToHighlight={label}
           highlightClassName="bg-transparent text-slate-300/90 font-semibold"
           unhighlightClassName="bg-transparent"
         />
         {commandAlias ? (
           <Highlighter
-            searchWords={type !== CommandType.SnoozeTab ? [escapedSearchTerm] : []}
+            searchWords={[escapedSearchTerm]}
             textToHighlight={type !== CommandType.WebSearch ? `(${commandAlias})` : commandAlias}
             highlightClassName="bg-transparent font-semibold text-slate-400"
             className="ml-1.5 text-[11px] text-slate-500/90"
@@ -174,6 +198,8 @@ type CommandIconProps = {
 };
 
 const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
+  if (type === CommandType.Note) Icon = FileTextIcon;
+
   // handle fallback image for favicon icons
   const handleImageLoadError: ReactEventHandler<HTMLImageElement> = ev => {
     ev.stopPropagation();
@@ -181,8 +207,10 @@ const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
   };
 
   if (typeof Icon === 'string' && !isValidURL(Icon as string)) {
+    // emoji
     return <span className="w-[16px] mr-2.5 h-fit text-start">{Icon}</span>;
   } else if (typeof Icon === 'string') {
+    // favicon
     return (
       <img
         alt="icon"
@@ -193,6 +221,7 @@ const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
     );
   }
 
+  // icon
   return (
     <Icon
       className={cn(

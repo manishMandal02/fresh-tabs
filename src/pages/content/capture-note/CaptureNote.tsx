@@ -7,9 +7,11 @@ import { ClockIcon, GlobeIcon } from '@radix-ui/react-icons';
 import KBD from '@root/src/components/kbd/KBD';
 import { publishEvents } from '@root/src/utils';
 import { ISpace } from '@root/src/pages/types/global.types';
+import { getNote } from '@root/src/services/chrome-storage/notes';
 import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
 import { COMMAND_PALETTE_SIZE } from '../command-palette/CommandPalette';
 import { useCustomAnimation } from '@root/src/pages/sidepanel/hooks/useAnimation';
+import { parseStringForDateTimeHint } from '@root/src/utils/date-time/naturalLanguageToDate';
 import RichTextEditor, { EDITOR_EMPTY_STATE } from '@root/src/components/rich-text-editor/RichTextEditor';
 
 type Props = {
@@ -17,36 +19,84 @@ type Props = {
   userSelectedText: string;
   onClose?: () => void;
   handleGoBack: () => void;
+  selectedNote?: string;
+  resetSuggestedCommand?: () => void;
 };
 
-const CreateNote = ({ userSelectedText, onClose, activeSpace, handleGoBack }: Props) => {
+const CreateNote = ({
+  selectedNote,
+  userSelectedText,
+  onClose,
+  activeSpace,
+  handleGoBack,
+  resetSuggestedCommand,
+}: Props) => {
   const { document: iFrameDoc } = useFrame();
 
   // local state
+  const [noteId, setNoteId] = useState('');
   const [note, setNote] = useState('');
+  const [domain, setDomain] = useState('');
   const [remainder, setRemainder] = useState('');
 
+  // init component
   useEffect(() => {
-    setNote(EDITOR_EMPTY_STATE);
-  }, [userSelectedText]);
+    if (selectedNote) {
+      // edit note
+      (async () => {
+        setNoteId(selectedNote);
+        // reset suggested commands
+        resetSuggestedCommand();
+
+        const noteToEdit = await getNote(selectedNote);
+
+        setNote(noteToEdit.text);
+
+        noteToEdit?.domain && setDomain(noteToEdit.domain);
+
+        if (noteToEdit.remainderAt) {
+          const dateHintString = parseStringForDateTimeHint(noteToEdit.text);
+
+          if (dateHintString?.dateString) {
+            // TODO - highlight style for date hint
+            setRemainder(dateHintString.dateString);
+          }
+        }
+      })();
+    } else {
+      //  new note
+      setNote(EDITOR_EMPTY_STATE);
+      setDomain(cleanDomainName(document.location.hostname));
+    }
+    // run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { bounce } = useCustomAnimation();
 
   const handleSaveNote = useCallback(async () => {
-    await publishEvents({
-      event: 'NEW_NOTE',
-      payload: { note, url: document.location.href, activeSpace, noteRemainder: remainder },
-    });
-    // TODO - show note captured/save snackbar
+    console.log('🚀 ~ handleSaveNote ~ noteId:', noteId);
+    if (noteId) {
+      await publishEvents({
+        event: 'EDIT_NOTE',
+        payload: { note, noteId, url: domain, noteRemainder: remainder },
+      });
+    } else {
+      await publishEvents({
+        event: 'NEW_NOTE',
+        payload: { note, activeSpace, url: domain, noteRemainder: remainder },
+      });
+    }
+
     onClose();
-  }, [note, activeSpace, onClose, remainder]);
+  }, [note, activeSpace, onClose, remainder, domain, noteId]);
 
   useHotkeys(
     'mod+enter',
     async () => {
       await handleSaveNote();
     },
-    [note, remainder],
+    [note, remainder, noteId],
     {
       document: iFrameDoc,
       enableOnContentEditable: true,
@@ -94,12 +144,12 @@ const CreateNote = ({ userSelectedText, onClose, activeSpace, handleGoBack }: Pr
         {/* left container */}
         <div className="flex items-center justify-center space-x-2">
           {/* site domain */}
-          {document.location.href ? (
+          {domain ? (
             <motion.div
               {...bounce}
               className="flex items-center px-2 py-1 rounded-lg bg-brand-darkBgAccent/50 text-slate-300/80 text-[12px] font-medium mt-1.5">
               <GlobeIcon className="text-slate-500 scale-[1] mr-1.5" />
-              <span className="">{cleanDomainName(document.location.hostname)}</span>
+              <span className="">{domain}</span>
             </motion.div>
           ) : null}
 
