@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 /* custom scroll bar */
 .cc-scrollbar::-webkit-scrollbar {
   width: 8px;

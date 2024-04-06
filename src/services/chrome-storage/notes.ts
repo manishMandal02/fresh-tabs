@@ -41,6 +41,13 @@ export const getNote = async (id: string) => {
   return note;
 };
 
+export const getNoteByDomain = async (domain: string) => {
+  const allNotes = await getAllNotes();
+  const note = allNotes.filter(note => note.domain === domain);
+
+  return note;
+};
+
 // update note
 export const updateNote = async (id: string, note: Omit<INote, 'id'>) => {
   try {

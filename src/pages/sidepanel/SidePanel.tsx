@@ -186,6 +186,7 @@ const SidePanel = () => {
               </DragDropContext>
             )}
           </div>
+
           {/* add new space */}
           <CreateSpace />
 

@@ -1,7 +1,7 @@
 import { ReactNode, memo } from 'react';
 import { Cross1Icon } from '@radix-ui/react-icons';
 import { motion } from 'framer-motion';
-import { useCustomAnimation } from '../../pages/sidepanel/hooks/useAnimation';
+import { useCustomAnimation } from '../../pages/sidepanel/hooks/useCustomAnimation';
 import { useKeyShortcuts } from '../../pages/sidepanel/hooks/useKeyShortcuts';
 
 type Props = {

@@ -20,7 +20,6 @@ import { matchWordsInText } from '@root/src/utils/string/matchWordsInText';
 import { publishEvents, publishEventsTab } from '../../utils/publish-events';
 import { handleMergeSpaceHistoryAlarm } from './handler/alarm/mergeSpaceHistory';
 import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers';
-import { addNewNote, getAllNotes, getNote, updateNote } from '@root/src/services/chrome-storage/notes';
 import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';
 import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
 import { getCurrentTab, goToTab, openSpace } from '@root/src/services/chrome-tabs/tabs';
@@ -30,6 +29,7 @@ import { addSnoozedTab, getTabToUnSnooze } from '@root/src/services/chrome-stora
 import { handleMergeDailySpaceTimeChunksAlarm } from './handler/alarm/mergeDailySpaceTimeChunks';
 import { getSpaceHistory, setSpaceHistory } from '@root/src/services/chrome-storage/space-history';
 import { getDailySpaceTime, setDailySpaceTime } from '@root/src/services/chrome-storage/space-analytics';
+import { addNewNote, getAllNotes, getNote, getNoteByDomain, updateNote } from '@root/src/services/chrome-storage/notes';
 import {
   checkParentBMFolder,
   syncSpacesFromBookmarks,
@@ -256,6 +256,28 @@ const recordDailySpaceTime = async (windowId: number) => {
   logger.info('👍 Recorded daily space time chunk.');
 };
 
+// find notes for this site
+const embedNotesOnSite = async (url: string, tabId) => {
+  if (!url) return;
+
+  const domain = cleanDomainName(getUrlDomain(url));
+  const notes = await getNoteByDomain(domain);
+  if (notes?.length < 1) return;
+  // if yes, send a event to context script with notes data
+
+  // send msg/event to content scr
+  await retryAtIntervals({
+    interval: 1000,
+    retries: 3,
+    callback: async () => {
+      return await publishEventsTab(tabId, {
+        event: 'SHOW_DOMAIN_NOTES',
+        payload: { noteIds: notes.map(n => n.id) },
+      });
+    },
+  });
+};
+
 //  show command palette
 export const showCommandPaletteContentScript = async (tabId: number, windowId: number) => {
   const recentSites = await getRecentlyVisitedSites();
@@ -347,7 +369,7 @@ chrome.runtime.onMessage.addListener(
 
         const currentTab = await getCurrentTab();
 
-        const domain = cleanDomainName(getUrlDomain(url)) || '';
+        const domain = cleanDomainName(url) || '';
 
         // TODO - create note title
         const title = currentTab.title || '';
@@ -818,8 +840,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
     // add/update tab
     await updateTabHandler(tabId);
-    // TODO - find notes for this site
-    // if yes, send a event to context script with notes data
+
+    embedNotesOnSite(tab?.url, tabId);
   }
 });
 

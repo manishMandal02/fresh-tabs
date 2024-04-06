@@ -1,6 +1,6 @@
 import { getFaviconURL } from '@root/src/utils/url';
 import { motion } from 'framer-motion';
-import { useCustomAnimation } from '../../../../hooks/useAnimation';
+import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
 
 type Props = {
   tabURL: string;

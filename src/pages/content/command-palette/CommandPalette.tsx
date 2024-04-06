@@ -13,7 +13,7 @@ import { useCommandPalette } from './useCommandPalette';
 import { getTime } from '@root/src/utils/date-time/get-time';
 import { publishEvents } from '../../../utils/publish-events';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
-import { useCustomAnimation } from '../../sidepanel/hooks/useAnimation';
+import { useCustomAnimation } from '../../sidepanel/hooks/useCustomAnimation';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';

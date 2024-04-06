@@ -105,6 +105,7 @@ export interface IMessageEventSidePanel {
 type MessageEventsContentScript =
   | 'CHECK_CONTENT_SCRIPT_LOADED'
   | 'SHOW_COMMAND_PALETTE'
+  | 'SHOW_DOMAIN_NOTES'
   | 'SHOW_SNACKBAR'
   | 'SWITCH_TAB'
   | 'SWITCH_SPACE'
@@ -123,8 +124,9 @@ interface IEventPayloadContentScript {
   url?: string;
   note?: string;
   tabId?: number;
-  spaceId?: string;
   noteId?: string;
+  spaceId?: string;
+  noteIds?: string[];
   spaceTitle?: string;
   snackbarMsg?: string;
   searchQuery?: string;

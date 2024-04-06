@@ -1,0 +1,10 @@
+.notes-container {
+  background-color: #01070fd5;
+  color: #dddddd;
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  border-radius: 12px;
+  width: 200px;
+  height: fit-content;
+}

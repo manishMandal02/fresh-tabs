@@ -10,6 +10,7 @@ import {
   StarFilledIcon,
   FileTextIcon,
   Link2Icon,
+  GlobeIcon,
 } from '@radix-ui/react-icons';
 
 import { cn } from '@root/src/utils/cn';
@@ -17,7 +18,7 @@ import { isValidURL } from '@root/src/utils/url';
 import { useFrame } from 'react-frame-component';
 import { COMMAND_HEIGHT } from '../CommandPalette';
 import { RadixIconType } from '@root/src/pages/types/global.types';
-import { CommandType, FALLBACK_ICON } from '@root/src/constants/app';
+import { CommandType } from '@root/src/constants/app';
 import { useKeyShortcuts } from '@root/src/pages/sidepanel/hooks/useKeyShortcuts';
 
 type CommandIcon = RadixIconType | string;
@@ -201,7 +202,9 @@ const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
   // handle fallback image for favicon icons
   const handleImageLoadError: ReactEventHandler<HTMLImageElement> = ev => {
     ev.stopPropagation();
-    ev.currentTarget.src = FALLBACK_ICON;
+    // ev.currentTarget.src = FALLBACK_ICON;
+    ev.currentTarget.style.display = 'none';
+    (ev.currentTarget.nextElementSibling as SVGAElement).style.display = 'block';
   };
 
   if (typeof Icon === 'string' && !isValidURL(Icon as string)) {
@@ -210,12 +213,16 @@ const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
   } else if (typeof Icon === 'string') {
     // favicon
     return (
-      <img
-        alt="icon"
-        src={Icon as string}
-        onError={handleImageLoadError}
-        className="w-[14px] h-fit rounded-md opacity-95 object-scale-down object-center"
-      />
+      <>
+        <img
+          alt="icon"
+          src={Icon as string}
+          onError={handleImageLoadError}
+          className="w-[14px] h-fit rounded-md opacity-95 object-scale-down object-center"
+        />
+        {/* show fallback icon */}
+        <GlobeIcon className="hidden text-slate-400 scale-[0.9]" />
+      </>
     );
   }
 

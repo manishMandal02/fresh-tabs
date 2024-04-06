@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import * as PopoverRadix from '@radix-ui/react-popover';
-import { useCustomAnimation } from '../../pages/sidepanel/hooks/useAnimation';
+import { useCustomAnimation } from '../../pages/sidepanel/hooks/useCustomAnimation';
 
 type Props = {
   children: ReactNode;

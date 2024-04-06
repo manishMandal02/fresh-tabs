@@ -5,10 +5,12 @@ import injectedStyle from './injected.css?inline';
 import { SnackbarContentScript } from '../snackbar';
 import refreshOnUpdate from 'virtual:reload-on-update-in-view';
 import { getSpace } from '@root/src/services/chrome-storage/spaces';
-import { CommandPaletteContainerId } from '@root/src/constants/app';
+import { CommandPaletteContainerId, DomainNotesContainerId } from '@root/src/constants/app';
 import CommandPalette, { COMMAND_PALETTE_SIZE } from './CommandPalette';
 import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
 import { IMessageEventContentScript, ISearchFilters, ISpace, ITab } from '../../types/global.types';
+import { getAllNotes } from '@root/src/services/chrome-storage/notes';
+import DomainNotes from '../domain-notes';
 
 // development: refresh content page on update
 refreshOnUpdate('pages/content');
@@ -129,10 +131,56 @@ const handleShowSnackbar = (title: string) => {
   createRoot(rootIntoShadow).render(<SnackbarContentScript title={title} />);
 };
 
-// TODO - testing - loads command palette on site load
+const showNotes = async (noteIds: string[]) => {
+  // do nothing if component already rendered
+  if (document.getElementById(DomainNotesContainerId)) return;
 
+  const allNotes = await getAllNotes();
+  //
+  const siteNotes = allNotes.filter(note => noteIds.includes(note.id));
+
+  // render notes components
+  const notesContainer = document.createElement('div');
+
+  notesContainer.id = CommandPaletteContainerId;
+
+  notesContainer.style.width = '80px';
+  notesContainer.style.height = '80px';
+  notesContainer.style.zIndex = '2147483647';
+  notesContainer.style.position = 'fixed';
+  notesContainer.style.bottom = '16px';
+  notesContainer.style.right = '20px';
+
+  document.body.appendChild(notesContainer);
+
+  createRoot(notesContainer).render(
+    <Frame
+      style={{
+        border: 'none',
+        colorScheme: 'none',
+        background: 'none',
+        width: '80px',
+        height: '80px',
+      }}
+      id="fresh-tabs-site-notes"
+      title="fresh-tabs-iframe-notes"
+      allowTransparency={true}>
+      <FrameContextConsumer>
+        {context => {
+          const style = context.document.createElement('style');
+          style.innerHTML = injectedStyle;
+          !context.document.head.appendChild(style);
+          context.document.body.style.background = 'none';
+          return <DomainNotes notes={siteNotes} />;
+        }}
+      </FrameContextConsumer>
+    </Frame>,
+  );
+};
+
+// TODO - testing - loads command palette on site load
 (async () => {
-  // return;
+  return;
   const activeSpace = await getSpace('61e549a192');
 
   console.log('🚀 ~ activeSpace:', activeSpace);
@@ -148,7 +196,7 @@ const handleShowSnackbar = (title: string) => {
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   const event = msg as IMessageEventContentScript;
 
-  const { recentSites, activeSpace, snackbarMsg, searchFilterPreferences } = event.payload;
+  const { recentSites, activeSpace, snackbarMsg, searchFilterPreferences, noteIds } = event.payload;
 
   const msgEvent = event.event;
 
@@ -159,8 +207,14 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       searchFilterPreferences,
     });
   }
+
+  if (msgEvent === 'SHOW_DOMAIN_NOTES') {
+    showNotes(noteIds);
+  }
+
   if (msgEvent === 'SHOW_SNACKBAR') {
     handleShowSnackbar(snackbarMsg);
   }
+
   sendResponse(true);
 });

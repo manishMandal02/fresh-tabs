@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useCustomAnimation } from '../../pages/sidepanel/hooks/useAnimation';
+import { useCustomAnimation } from '../../pages/sidepanel/hooks/useCustomAnimation';
 
 type Props = {
   msg: string;

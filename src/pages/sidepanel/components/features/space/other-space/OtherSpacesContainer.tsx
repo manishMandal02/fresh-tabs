@@ -6,7 +6,7 @@ import { Droppable, Draggable } from 'react-beautiful-dnd';
 import { NonActiveSpace } from './non-active-space';
 import { nonActiveSpacesAtom } from '@root/src/stores/app';
 import DraggingOverNudge from '../active-space/DraggingOverNudge';
-import { useCustomAnimation } from '../../../../hooks/useAnimation';
+import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
 
 type Props = {
   isDraggingSpace: boolean;

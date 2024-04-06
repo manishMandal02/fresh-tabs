@@ -8,7 +8,7 @@ import { activeSpaceIdAtom } from '@root/src/stores/app';
 import Accordion from '../../../../../../components/accordion/Accordion';
 import { ISiteVisit } from '@root/src/pages/types/global.types';
 import { getTime } from '@root/src/utils/date-time/get-time';
-import { useCustomAnimation } from '../../../../hooks/useAnimation';
+import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
 import { getUrlDomain } from '@root/src/utils/url/get-url-domain';
 import { getISODate } from '@root/src/utils/date-time/getISODate';
 import { getWeekday } from '@root/src/utils/date-time/get-weekday';

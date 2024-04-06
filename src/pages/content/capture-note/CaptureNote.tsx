@@ -10,7 +10,7 @@ import { ISpace } from '@root/src/pages/types/global.types';
 import { getNote } from '@root/src/services/chrome-storage/notes';
 import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
 import { COMMAND_PALETTE_SIZE } from '../command-palette/CommandPalette';
-import { useCustomAnimation } from '@root/src/pages/sidepanel/hooks/useAnimation';
+import { useCustomAnimation } from '@root/src/pages/sidepanel/hooks/useCustomAnimation';
 import { parseStringForDateTimeHint } from '@root/src/utils/date-time/naturalLanguageToDate';
 import RichTextEditor, { EDITOR_EMPTY_STATE } from '@root/src/components/rich-text-editor/RichTextEditor';
 

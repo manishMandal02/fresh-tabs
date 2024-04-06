@@ -7,7 +7,7 @@ import { Tab } from '../tab';
 import { logger } from '@root/src/utils';
 import { goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { useKeyShortcuts } from '../../../../hooks/useKeyShortcuts';
-import { useCustomAnimation } from '../../../../hooks/useAnimation';
+import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
 import TabDraggedOutsideActiveSpace from './TabDraggedOutsideActiveSpace';
 import { ISpaceWithTabs, ITabWithIndex } from '@root/src/pages/types/global.types';
 import { activeSpaceAtom, dragStateAtom, selectedTabsAtom } from '@root/src/stores/app';

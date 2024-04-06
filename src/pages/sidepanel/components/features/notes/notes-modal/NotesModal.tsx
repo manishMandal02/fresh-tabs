@@ -10,7 +10,7 @@ import { InfoCircledIcon } from '@radix-ui/react-icons';
 import TextField from '../../../../../../components/form/text-field';
 import Checkbox from '../../../../../../components/checkbox/Checkbox';
 import { showAddNewNoteModalAtom } from '@root/src/stores/app';
-import { useCustomAnimation } from '../../../../hooks/useAnimation';
+import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
 import RichTextEditor, { EDITOR_EMPTY_STATE } from '../../../../../../components/rich-text-editor/RichTextEditor';
 import { parseStringForDateTimeHint } from '@root/src/utils/date-time/naturalLanguageToDate';
 

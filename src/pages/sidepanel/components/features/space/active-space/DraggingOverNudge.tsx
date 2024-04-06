@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { TriangleDownIcon } from '@radix-ui/react-icons';
 
 import { nonActiveSpacesAtom } from '@root/src/stores/app';
-import { useCustomAnimation } from '@root/src/pages/sidepanel/hooks/useAnimation';
+import { useCustomAnimation } from '@root/src/pages/sidepanel/hooks/useCustomAnimation';
 
 type Props = {
   droppableId: string;

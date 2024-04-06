@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Form, Field, Label, Control as RadixControl } from '@radix-ui/react-form';
 import { Control, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
-import { useCustomAnimation } from '@root/src/pages/sidepanel/hooks/useAnimation';
+import { useCustomAnimation } from '@root/src/pages/sidepanel/hooks/useCustomAnimation';
 import { ClipboardEventHandler } from 'react';
 
 type Props = {
