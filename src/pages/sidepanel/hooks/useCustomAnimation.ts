@@ -17,7 +17,7 @@ export const useCustomAnimation = () => {
       y: 0,
     },
     exit: { opacity: 0, y: 100 },
-    transition: { type: 'spring', stiffness: 800, damping: 40, duration: 0.2 },
+    transition: { type: 'spring', stiffness: 400, damping: 25, duration: 0.2 },
   };
 
   const fade = {
@@ -26,7 +26,7 @@ export const useCustomAnimation = () => {
       opacity: 1,
     },
     exit: { opacity: 0 },
-    transition: { type: 'tween', duration: 0.2 },
+    transition: { type: 'spring', stiffness: 400, damping: 25, duration: 0.2 },
   };
 
   return { bounce, slide, fade };

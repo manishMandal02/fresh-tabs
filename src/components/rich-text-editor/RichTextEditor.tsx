@@ -1,5 +1,5 @@
 import { CodeNode } from '@lexical/code';
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, memo } from 'react';
 import { ListNode, ListItemNode } from '@lexical/list';
 import { AutoLinkNode, LinkNode } from '@lexical/link';
 import { $createQuoteNode, HeadingNode, QuoteNode } from '@lexical/rich-text';
@@ -191,4 +191,4 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
   );
 };
 
-export default RichTextEditor;
+export default memo(RichTextEditor);

@@ -241,9 +241,6 @@ devDependencies:
   tailwindcss:
     specifier: ^3.4.0
     version: 3.4.0
-  tailwindcss-all:
-    specifier: ^0.0.2
-    version: 0.0.2
   ts-loader:
     specifier: 9.5.0
     version: 9.5.0(typescript@5.2.2)(webpack@5.89.0)
@@ -6911,10 +6908,6 @@ packages:
     resolution: {integrity: sha512-tWANXsnmJzgw6mQ07nE3aCDkCK4QdT3ThPMCzawoYA2Pws7vSTCvz3Vrjg61jVUGfFZPJzxEP+NimbcW+EdaDw==}
     dependencies:
       '@babel/runtime': 7.24.1
-    dev: true
-
-  /tailwindcss-all@0.0.2:
-    resolution: {integrity: sha512-TVcYjtVn/y9mCxxN6RhaONyvD23HantNLtq7wuEZV9xDgZ4K9tCJ4RJNeKH7d6jSwQMuNHDJVV0WOFBNVuSyjw==}
     dev: true
 
   /tailwindcss@3.4.0:

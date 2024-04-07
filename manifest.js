@@ -65,6 +65,7 @@ const manifest = {
     {
       matches: ['http://*/*', 'https://*/*', '<all_urls>'],
       js: ['src/pages/content/index.js'],
+      world: 'ISOLATED',
     },
   ],
   icons: {

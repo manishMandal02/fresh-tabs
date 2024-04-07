@@ -51,12 +51,13 @@ const Placeholder = ({ text }: { text: string }) => (
   <div className="absolute top-[0.5rem] left-[1.15rem] opacity-50">{text}</div>
 );
 
+// add checklist (checkbox) markdown support
 const CHECKLIST_RULE: ElementTransformer = {
   dependencies: [ListNode],
   export: (node: LexicalNode) => {
     return $isListNode(node) ? '[]' : null;
   },
-  // regExp: /^(---|\*\*\*|___)\s?$/,
+
   regExp: /\[([x ])?\](.+?)(?=\n|$)/g,
   replace: parentNode => {
     const checkList = $createListNode('check');

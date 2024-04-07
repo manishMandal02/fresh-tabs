@@ -39,7 +39,7 @@ export const useKeyShortcuts = ({
     ev => {
       const keyEv = ev as KeyboardEvent;
 
-      // console.log('🚀 ~ content script ⚠️ ~ keyEv.code:', keyEv.metaKey);
+      console.log('🚀 ~ useKeyShortcuts keyEv.code:', keyEv.metaKey);
 
       if (onEnterPressed && keyEv.code === 'Enter') {
         onEnterPressed();
@@ -108,18 +108,20 @@ export const useKeyShortcuts = ({
     };
   }, [isSidePanel, parentConTainerEl, handleKeyUp, handleKeydown, monitorModifierKeys]);
 
-  // side panel
-  useEffect(() => {
-    if (!isSidePanel) return;
-    document.body.addEventListener('keydown', handleKeydown);
-    monitorModifierKeys && document.body.addEventListener('keyup', handleKeyUp);
+  // // side panel
+  // useEffect(() => {
+  //   if (!isSidePanel) return;
+  //   document.body.addEventListener('keydown', handleKeydown);
+  //   monitorModifierKeys && document.body.addEventListener('keyup', handleKeyUp);
 
-    return () => {
-      document.body.removeEventListener('keydown', handleKeydown);
-      monitorModifierKeys && document.body.removeEventListener('keyup', handleKeyUp);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  //   return () => {
+  //     if (!isSidePanel) return;
+
+  //     document.body.removeEventListener('keydown', handleKeydown);
+  //     monitorModifierKeys && document.body.removeEventListener('keyup', handleKeyUp);
+  //   };
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, []);
 
   return {
     isModifierKeyPressed,

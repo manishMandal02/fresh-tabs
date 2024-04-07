@@ -77,6 +77,7 @@ const NotesModal = () => {
 
   const { bounce } = useCustomAnimation();
 
+  //
   const buttonText = showModal.note?.id ? 'Update Note' : 'Add Note';
 
   return note ? (
@@ -87,14 +88,16 @@ const NotesModal = () => {
           className="w-full px-2.5 mb-1.5 mt-2 h-[90%] overflow-hidden relative flex flex-col "
           ref={editorContainerRef}>
           {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
-          <div className="mb-1.5">
-            <TextField
-              name="note-title"
-              placeholder="Title..."
-              registerHook={inputFrom.register('title')}
-              error={inputFrom.formState.errors.title?.message || ''}
-            />
-          </div>
+          <form>
+            <div className="mb-1.5">
+              <TextField
+                name="note-title"
+                placeholder="Title..."
+                registerHook={inputFrom.register('title')}
+                error={inputFrom.formState.errors.title?.message || ''}
+              />
+            </div>
+          </form>
           <div className="w-full h-[300px] max-h-full">
             {/* editor */}
             <RichTextEditor content={note} onChange={setNote} setRemainder={setRemainder} />

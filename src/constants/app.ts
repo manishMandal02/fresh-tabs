@@ -2,7 +2,7 @@ import { IAppSettings, IPinnedTab, ISpaceWithTabs } from '../pages/types/global.
 // if changing this then make sure to update the injected.css for command palette
 export const CommandPaletteContainerId = 'fresh-tabs-command-palette-container';
 
-export const DomainNotesContainerId = 'fresh-tabs-command-palette-container';
+export const DomainNotesContainerId = 'fresh-tabs-domain-notes-container';
 
 export const FRESH_TABS_BOOKMARK_TITLE = '#Fresh Tabs ~ ⚠️ Do not delete this, managed by extension.';
 export const DISCARD_TAB_URL_PREFIX = 'data:text/html,';

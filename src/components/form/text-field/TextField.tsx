@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
-import { Form, Field, Label, Control as RadixControl } from '@radix-ui/react-form';
+import { ClipboardEventHandler, KeyboardEventHandler } from 'react';
 import { Control, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
+import { Form, Field, Label, Control as RadixControl } from '@radix-ui/react-form';
+
 import { useCustomAnimation } from '@root/src/pages/sidepanel/hooks/useCustomAnimation';
-import { ClipboardEventHandler } from 'react';
 
 type Props = {
   name: string;
@@ -15,9 +16,14 @@ type Props = {
 };
 
 const TextField = ({ name, label, placeholder, registerHook, error, onPasteHandler }: Props) => {
-  console.log('🚀 ~ TextField ~ errors:', error);
-
   const { bounce } = useCustomAnimation();
+
+  //
+  const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = ev => {
+    if (ev.code === 'Enter') {
+      ev.preventDefault();
+    }
+  };
 
   return (
     <Form>
@@ -32,17 +38,15 @@ const TextField = ({ name, label, placeholder, registerHook, error, onPasteHandl
           <input
             {...(registerHook ? { ...registerHook } : {})}
             onPaste={onPasteHandler ? onPasteHandler : null}
-            onKeyDown={ev => {
-              if (ev.code === 'Enter') {
-                ev.preventDefault();
-              }
-            }}
+            onKeyDown={handleKeyDown}
             type="text"
             placeholder={placeholder}
             className={`bg-brand-darkBgAccent/40 text-slate-300/80 text-[14px] px-2 py-1 border border-transparent
-            focus-within:border-brand-darkBgAccent/90 outline-none rounded placeholder:text-slate-500 ${
-              error ? 'bg-rose-400/10 border-rose-400/40' : ''
-            }`}
+
+
+                      focus-within:border-brand-darkBgAccent/90 outline-none rounded placeholder:text-slate-500 ${
+                        error ? 'bg-rose-400/10 border-rose-400/40' : ''
+                      }`}
           />
         </RadixControl>
         {error ? (

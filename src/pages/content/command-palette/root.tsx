@@ -1,16 +1,16 @@
+import refreshOnUpdate from 'virtual:reload-on-update-in-view';
+
 import { createRoot } from 'react-dom/client';
 import Frame, { FrameContextConsumer } from 'react-frame-component';
 
+import DomainNotes from '../domain-notes';
 import injectedStyle from './injected.css?inline';
 import { SnackbarContentScript } from '../snackbar';
-import refreshOnUpdate from 'virtual:reload-on-update-in-view';
-import { getSpace } from '@root/src/services/chrome-storage/spaces';
-import { CommandPaletteContainerId, DomainNotesContainerId } from '@root/src/constants/app';
+import { getAllNotes } from '@root/src/services/chrome-storage/notes';
 import CommandPalette, { COMMAND_PALETTE_SIZE } from './CommandPalette';
 import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
+import { CommandPaletteContainerId, DomainNotesContainerId } from '@root/src/constants/app';
 import { IMessageEventContentScript, ISearchFilters, ISpace, ITab } from '../../types/global.types';
-import { getAllNotes } from '@root/src/services/chrome-storage/notes';
-import DomainNotes from '../domain-notes';
 
 // development: refresh content page on update
 refreshOnUpdate('pages/content');
@@ -142,7 +142,7 @@ const showNotes = async (noteIds: string[]) => {
   // render notes components
   const notesContainer = document.createElement('div');
 
-  notesContainer.id = CommandPaletteContainerId;
+  notesContainer.id = DomainNotesContainerId;
 
   notesContainer.style.width = '80px';
   notesContainer.style.height = '80px';
@@ -179,19 +179,19 @@ const showNotes = async (noteIds: string[]) => {
 };
 
 // TODO - testing - loads command palette on site load
-(async () => {
-  return;
-  const activeSpace = await getSpace('61e549a192');
+// (async () => {
+//   return;
+//   const activeSpace = await getSpace('61e549a192');
 
-  console.log('🚀 ~ activeSpace:', activeSpace);
+//   console.log('🚀 ~ activeSpace:', activeSpace);
 
-  // const selectedText = 'Transform your Gmail experience—say goodbye to clutter effortlessly';
-  appendCommandPaletteContainer({
-    activeSpace,
-    recentSites: [],
-    searchFilterPreferences: { searchBookmarks: false, searchNotes: false },
-  });
-})();
+//   // const selectedText = 'Transform your Gmail experience—say goodbye to clutter effortlessly';
+//   appendCommandPaletteContainer({
+//     activeSpace,
+//     recentSites: [],
+//     searchFilterPreferences: { searchBookmarks: false, searchNotes: false },
+//   });
+// })();
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   const event = msg as IMessageEventContentScript;
@@ -199,6 +199,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   const { recentSites, activeSpace, snackbarMsg, searchFilterPreferences, noteIds } = event.payload;
 
   const msgEvent = event.event;
+
+  console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ msgEvent:', msgEvent);
 
   if (msgEvent === 'SHOW_COMMAND_PALETTE') {
     appendCommandPaletteContainer({
