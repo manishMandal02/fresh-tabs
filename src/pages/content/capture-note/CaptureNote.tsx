@@ -35,6 +35,7 @@ const CreateNote = ({
 
   // local state
   const [noteId, setNoteId] = useState('');
+  const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
   const [domain, setDomain] = useState('');
   const [remainder, setRemainder] = useState('');
@@ -50,6 +51,7 @@ const CreateNote = ({
 
         const noteToEdit = await getNote(selectedNote);
 
+        setTitle(noteToEdit.title);
         setNote(noteToEdit.text);
 
         noteToEdit?.domain && setDomain(noteToEdit.domain);
@@ -65,6 +67,7 @@ const CreateNote = ({
       })();
     } else {
       //  new note
+      setTitle(document.title);
       setNote(EDITOR_EMPTY_STATE);
       setDomain(cleanDomainName(document.location.hostname));
     }
@@ -75,28 +78,28 @@ const CreateNote = ({
   const { bounce } = useCustomAnimation();
 
   const handleSaveNote = useCallback(async () => {
-    console.log('🚀 ~ handleSaveNote ~ noteId:', noteId);
+    if (!title || !note) return;
     if (noteId) {
       await publishEvents({
         event: 'EDIT_NOTE',
-        payload: { note, noteId, url: domain, noteRemainder: remainder },
+        payload: { note, noteId, noteTitle: title, url: domain, noteRemainder: remainder },
       });
     } else {
       await publishEvents({
         event: 'NEW_NOTE',
-        payload: { note, activeSpace, url: domain, noteRemainder: remainder },
+        payload: { note, activeSpace, noteTitle: title, url: domain, noteRemainder: remainder },
       });
     }
 
     onClose();
-  }, [note, activeSpace, onClose, remainder, domain, noteId]);
+  }, [note, title, activeSpace, onClose, remainder, domain, noteId]);
 
   useHotkeys(
     'mod+enter',
     async () => {
       await handleSaveNote();
     },
-    [note, remainder, noteId],
+    [note, title, remainder, noteId],
     {
       document: iFrameDoc,
       enableOnContentEditable: true,
@@ -121,6 +124,28 @@ const CreateNote = ({
 
   return note ? (
     <div className="h-fit w-fit p-3.5 border border-brand-darkBg/50 rounded-lg glassmorphism-bg">
+      <div className="mb-1.5 bg-brand-darkBg rounded-lg">
+        <input
+          value={title}
+          onKeyDown={ev => {
+            if (ev.code === 'Tab') {
+              const editorContainer = ev.currentTarget.parentElement?.nextElementSibling as HTMLDivElement;
+              console.log('🚀 ~ editorContainer:', editorContainer);
+
+              const editor = editorContainer.querySelector('div[contenteditable="true"]') as HTMLDivElement;
+
+              console.log('🚀 ~ editor:', editor);
+
+              editor?.focus({ preventScroll: true });
+            }
+          }}
+          onChange={ev => setTitle(ev.target.value)}
+          placeholder="Title"
+          className={`bg-brand-darkBgAccent/20 rounded-lg w-full py-1.5 px-3  text-slate-300 placeholder:text-slate-400 text-[14.5px] 
+                        transition-colors duration-300 border-2 border-transparent outline-none focus-within:border-slate-600`}
+        />
+      </div>
+
       {/* editor container  */}
       <div
         style={{
@@ -128,7 +153,7 @@ const CreateNote = ({
           maxHeight: COMMAND_PALETTE_SIZE.MAX_HEIGHT + 'px',
           width: COMMAND_PALETTE_SIZE.MAX_WIDTH - 100 + 'px',
         }}
-        className="relative bg-brand-darkBg rounded-lg cc-scroll-bar">
+        className="relative bg-brand-darkBg rounded-lg">
         {/* editor */}
         <RichTextEditor
           placeholder={`Note... \n\n press {cmd + backspace} to go back`}
@@ -140,14 +165,23 @@ const CreateNote = ({
         />
       </div>
       {/* options container */}
-      <div className="w-full bg-brand-darkBg/95 rounded-b-lg -mt-1.5 px-3 py-2 flex items-center justify-between ">
+      <div className="w-full mt-1 px-1.5 py-1 flex items-start justify-between ">
         {/* left container */}
-        <div className="flex items-center justify-center space-x-2">
+        <div className="flex items-start justify-center space-x-2">
+          {/* space */}
+          {activeSpace ? (
+            <motion.div
+              {...bounce}
+              className="flex items-center px-2 py-1 rounded-md bg-brand-darkBg/85 text-slate-300/80 text-[12px] font-medium mt-1.5 cursor-not-allowed">
+              <span className="mr-1">{activeSpace.emoji}</span>
+              <span className="">{activeSpace.title}</span>
+            </motion.div>
+          ) : null}
           {/* site domain */}
           {domain ? (
             <motion.div
               {...bounce}
-              className="flex items-center px-2 py-1 rounded-lg bg-brand-darkBgAccent/50 text-slate-300/80 text-[12px] font-medium mt-1.5">
+              className="flex items-center px-2 py-1 rounded-md bg-brand-darkBg/85 text-slate-300/80 text-[12px] font-medium mt-1.5">
               <GlobeIcon className="text-slate-500 scale-[1] mr-1.5" />
               <span className="">{domain}</span>
             </motion.div>
@@ -157,7 +191,7 @@ const CreateNote = ({
           {remainder ? (
             <motion.div
               {...bounce}
-              className="flex items-center px-2 py-1 rounded-lg bg-brand-darkBgAccent/50 text-slate-300/80 text-[12px] font-medium mt-1.5">
+              className="flex items-center px-2 py-1 rounded-md bg-brand-darkBg/85 text-slate-300/80 text-[12px] font-medium mt-1.5">
               <ClockIcon className="text-slate-500 scale-[1] mr-1.5" />
               <span className="capitalize">{remainder}</span>
             </motion.div>
@@ -165,18 +199,16 @@ const CreateNote = ({
         </div>
 
         {/*  save note shortcut */}
-        <div className="flex items-center mt-1.5">
-          <button
-            className="text-slate-400 text-[13.5px]  px-4 py-1 rounded-md bg-brand-darkBgAccent/50 select-none hover:bg-brand-darkBgAccent/50 duration-300 transition-colors"
-            onClick={handleSaveNote}>
-            Save
-          </button>
-          <span className="ml-2 flex items-center">
+        <button
+          onClick={handleSaveNote}
+          className="flex items-center px-3.5 py-2 rounded-md bg-brand-darkBg/85 select-none hover:bg-brand-darkBg duration-300 transition-colors">
+          <span className="text-slate-400 text-[13.5px] ">Save</span>
+          <span className="ml-3.5 flex items-center">
             <KBD modifierKey classes="text-slate-300/90" />
             <span className="font-bold text-slate-400/70 text-[13px] mx-[5px] select-none">+</span>
             <KBD classes="text-slate-300/90">Enter</KBD>
           </span>
-        </div>
+        </button>
       </div>
     </div>
   ) : (

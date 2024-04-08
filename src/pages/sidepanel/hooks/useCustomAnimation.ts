@@ -7,7 +7,7 @@ export const useCustomAnimation = () => {
       opacity: 1,
     },
     exit: { scale: 0, opacity: 0 },
-    transition: { type: 'spring', stiffness: 400, damping: 25, duration: 0.2 },
+    transition: { type: 'spring', stiffness: 300, damping: 25, duration: 0.2 },
   };
 
   const slide = {

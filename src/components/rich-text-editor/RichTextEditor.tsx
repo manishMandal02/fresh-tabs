@@ -138,10 +138,13 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
                 const root = $getRoot();
 
                 const quote = $createQuoteNode();
-                const quoteParagraphs = userSelectedText
-                  .trim()
-                  .split('\n')
-                  .filter(line => line);
+                const quoteParagraphs = userSelectedText.trim().split('\n');
+
+                console.log('🚀 ~ RichTextEditor ~ userSelectedText:', userSelectedText);
+
+                console.log('🚀 ~ RichTextEditor ~ quoteParagraphs:', quoteParagraphs);
+
+                // .filter(line => line);
 
                 quoteParagraphs.forEach((para, idx) => {
                   const textNode = $createTextNode(para);
@@ -163,7 +166,7 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
               },
 
           theme: {
-            root: 'px-4 py-2 border-transparent bg-brand-darkBgAccent/20 border-2 cc-scrollbar overflow-y-auto rounded-md w-full h-full focus:outline-none focus-within:border-brand-darkBgAccent',
+            root: 'px-4 py-2 border-transparent bg-brand-darkBgAccent/20 border-2 cc-scrollbar overflow-y-auto rounded-md w-full h-full focus:outline-none focus-within:border-slate-600',
             link: 'cursor-pointer',
             text: {
               bold: 'font-semibold',

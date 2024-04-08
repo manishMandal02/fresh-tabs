@@ -109,19 +109,19 @@ export const useKeyShortcuts = ({
   }, [isSidePanel, parentConTainerEl, handleKeyUp, handleKeydown, monitorModifierKeys]);
 
   // // side panel
-  // useEffect(() => {
-  //   if (!isSidePanel) return;
-  //   document.body.addEventListener('keydown', handleKeydown);
-  //   monitorModifierKeys && document.body.addEventListener('keyup', handleKeyUp);
+  useEffect(() => {
+    if (!isSidePanel) return;
+    document.body.addEventListener('keydown', handleKeydown);
+    monitorModifierKeys && document.body.addEventListener('keyup', handleKeyUp);
 
-  //   return () => {
-  //     if (!isSidePanel) return;
+    return () => {
+      if (!isSidePanel) return;
 
-  //     document.body.removeEventListener('keydown', handleKeydown);
-  //     monitorModifierKeys && document.body.removeEventListener('keyup', handleKeyUp);
-  //   };
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, []);
+      document.body.removeEventListener('keydown', handleKeydown);
+      monitorModifierKeys && document.body.removeEventListener('keyup', handleKeyUp);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     isModifierKeyPressed,

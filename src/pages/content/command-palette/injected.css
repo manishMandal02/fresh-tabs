@@ -16,18 +16,19 @@ body {
 
 /* Track */
 .cc-scrollbar::-webkit-scrollbar-track {
-  background: #111a26a7;
+  background: #021326a6;
 }
 
 /* Handle */
 .cc-scrollbar::-webkit-scrollbar-thumb {
-  background: #010406b1;
+  background: #293240cd;
   border-radius: 16px;
+  cursor: default;
 }
 
 /* Handle on hover */
 .cc-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #232323bb;
+  background: #212936cd;
 }
 
 /* glassmorphism bg */

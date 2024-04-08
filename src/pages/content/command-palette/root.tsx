@@ -163,6 +163,9 @@ const showNotes = async (noteIds: string[], spaceId: string) => {
   // open selected note
   const handleOpenSelectedNote = async (noteId: string) => {
     const activeSpace = await getSpace(spaceId);
+
+    console.log('🚀 ~ handleOpenSelectedNote ~ activeSpace:', activeSpace);
+
     appendCommandPaletteContainer({ activeSpace, selectedNoteId: noteId });
   };
 
@@ -208,7 +211,7 @@ const showNotes = async (noteIds: string[], spaceId: string) => {
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   const event = msg as IMessageEventContentScript;
 
-  const { recentSites, activeSpace, snackbarMsg, searchFilterPreferences, noteIds, spaceId } = event.payload;
+  const { recentSites, activeSpace, snackbarMsg, searchFilterPreferences, noteIds } = event.payload;
 
   const msgEvent = event.event;
 
@@ -223,7 +226,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
 
   if (msgEvent === 'SHOW_DOMAIN_NOTES') {
-    showNotes(noteIds, spaceId);
+    showNotes(noteIds, activeSpace.id);
   }
 
   if (msgEvent === 'SHOW_SNACKBAR') {
@@ -235,15 +238,14 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
 // TODO - testing - loads command palette on site load
 // (async () => {
-//   return;
 //   const activeSpace = await getSpace('61e549a192');
 
 //   console.log('🚀 ~ activeSpace:', activeSpace);
 
-//   // const selectedText = 'Transform your Gmail experience—say goodbye to clutter effortlessly';
+//   const selectedText = 'Transform your Gmail experience—say goodbye to clutter effortlessly';
 //   appendCommandPaletteContainer({
 //     activeSpace,
-//     recentSites: [],
+//     selectedText,
 //     searchFilterPreferences: { searchBookmarks: false, searchNotes: false },
 //   });
 // })();

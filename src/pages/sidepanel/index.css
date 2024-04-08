@@ -27,12 +27,12 @@ body {
 
 /* Track */
 .cc-scrollbar::-webkit-scrollbar-track {
-  background: #172a3fa7;
+  background: #021326a6;
 }
 
 /* Handle */
 .cc-scrollbar::-webkit-scrollbar-thumb {
-  background: #2c4165b1;
+  background: #041738af;
   border-radius: 16px;
 }
 

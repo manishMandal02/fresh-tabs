@@ -367,14 +367,13 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'NEW_NOTE': {
-        const { activeSpace, note, url, noteRemainder } = payload;
+        const { activeSpace, note, url, noteRemainder, noteTitle } = payload;
 
         const currentTab = await getCurrentTab();
 
         const domain = cleanDomainName(url) || '';
 
-        // TODO - create note title
-        const title = currentTab.title || '';
+        const title = noteTitle || currentTab.title;
 
         // new note data
         const newNote: INote = {

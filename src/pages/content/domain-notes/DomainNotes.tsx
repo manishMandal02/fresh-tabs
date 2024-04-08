@@ -19,7 +19,7 @@ type Props = {
 
 const DomainNotes = ({ notes, onNoteClick, onNewNoteClick }: Props) => {
   // local state
-  const [showNotes, setShowNotes] = useState(true);
+  const [showNotes, setShowNotes] = useState(false);
 
   const hideAllNotes = () => {
     setShowNotes(false);
