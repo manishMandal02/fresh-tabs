@@ -38,6 +38,7 @@ type Props = {
   onClose?: () => void;
   searchFiltersPreference: ISearchFilters;
   userSelectedText?: string;
+  selectedNoteId?: string;
 };
 
 // TODO - add group helpers commands
@@ -46,7 +47,14 @@ type Props = {
 // its' because of the multi useEffect  updating the commands/search
 // 👆 this is also causing another bug where the search box is empty but the suggestion box assumes that there's still some part of the erase text
 
-const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPreference, userSelectedText }: Props) => {
+const CommandPalette = ({
+  activeSpace,
+  recentSites,
+  onClose,
+  searchFiltersPreference,
+  userSelectedText,
+  selectedNoteId,
+}: Props) => {
   console.log('CommandPalette ~ 🔁 rendered');
 
   // loading search result
@@ -100,7 +108,7 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPrefer
       setSearchFilters(searchFiltersPreference);
     }
 
-    if (!userSelectedText) {
+    if (!userSelectedText && !selectedNoteId) {
       setDefaultSuggestedCommands();
     } else {
       setSubCommand(CommandType.NewNote);
@@ -303,7 +311,6 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPrefer
 
   // on search during sub command
   useEffect(() => {
-    // TODO - fix snooze tab sub command infinite re-rendering
     // filter the suggested sub commands based on search query, also update the index
     if (subCommand && searchQuery.trim() && suggestedCommandsForSubCommand.length > 0) {
       // handle snooze sub command, generate date & time based on user input
@@ -417,7 +424,9 @@ const CommandPalette = ({ activeSpace, recentSites, onClose, searchFiltersPrefer
           ) : (
             // create note
             <CaptureNote
-              selectedNote={suggestedCommands.length > 0 ? (suggestedCommands[0].metadata as string) : ''}
+              selectedNote={
+                selectedNoteId || (suggestedCommands.length > 0 ? (suggestedCommands[0].metadata as string) : '')
+              }
               resetSuggestedCommand={() => setSuggestedCommands([])}
               userSelectedText={userSelectedText}
               activeSpace={activeSpace}

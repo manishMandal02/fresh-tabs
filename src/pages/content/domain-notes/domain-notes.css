@@ -3,44 +3,86 @@
   bottom: 90px;
   right: 24px;
   width: 350px;
-  padding: 6px 6px;
+  padding: 12px 12px;
   height: fit-content;
   z-index: 2147483647;
   border-radius: 12px;
-  background-color: #020b17e9;
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  box-shadow: #00000059 0px 5px 15px;
+  /* glassmorphism bg */
+  background: #020b1ebd;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
 }
 
 .note {
-  padding: 4px 8px;
-  background-color: #11161b82;
+  width: 96%;
+  padding: 8px 10px;
+  background-color: #08101fce;
+  border-radius: 8px;
   margin-bottom: 6px;
+  cursor: pointer;
+  transition: all;
+  transition-duration: 300ms;
+  &:last-child {
+    margin-bottom: 0px;
+  }
+  &:hover {
+    transform: scale(0.96);
+  }
   /* title */
   > p {
-    font-size: '13px';
-    color: #cbd5e1;
-    font-weight: 400;
+    font-size: 15px;
+    color: #f1f1f1e7;
+    font-weight: 200;
     margin: 0;
+    text-overflow: ellipsis;
+    max-width: 95%;
+    text-align: start;
+    overflow: hidden;
+    white-space: nowrap;
   }
+  /* metadata */
   .bottom-container {
-    margin-top: 6px;
+    margin-top: 8px;
     margin-right: 2px;
     display: flex;
     align-items: center;
     justify-content: end;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 300;
-    color: #94a3b8;
+    color: #767f8b;
     > span {
       display: flex;
       align-items: center;
       > svg {
         margin-right: 2px;
-        transform: scale(0.85);
+        transform: scale(0.75);
       }
     }
     > span:first-child {
       margin-right: 8px;
     }
+  }
+}
+
+.new-note {
+  width: 96%;
+  padding: 10px 10px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all;
+  transition-duration: 300ms;
+  color: #56616c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #08101fb7;
+  &:hover {
+    transform: scale(0.97);
+  }
+  > svg {
+    transform: scale(0.9);
   }
 }

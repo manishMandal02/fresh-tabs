@@ -6,9 +6,13 @@ import Frame, { FrameContextConsumer } from 'react-frame-component';
 import DomainNotes from '../domain-notes';
 import injectedStyle from './injected.css?inline';
 import { SnackbarContentScript } from '../snackbar';
+import { getTime } from '@root/src/utils/date-time/get-time';
+import { getWeekday } from '@root/src/utils/date-time/get-weekday';
+import { getSpace } from '@root/src/services/chrome-storage/spaces';
 import { getAllNotes } from '@root/src/services/chrome-storage/notes';
 import CommandPalette, { COMMAND_PALETTE_SIZE } from './CommandPalette';
 import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
+import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { CommandPaletteContainerId, DomainNotesContainerId } from '@root/src/constants/app';
 import { IMessageEventContentScript, ISearchFilters, ISpace, ITab } from '../../types/global.types';
 
@@ -37,9 +41,10 @@ const handleClose = () => {
 };
 
 type AppendContainerProps = {
-  recentSites: ITab[];
   activeSpace: ISpace;
+  recentSites?: ITab[];
   selectedText?: string;
+  selectedNoteId?: string;
   searchFilterPreferences?: ISearchFilters;
 };
 
@@ -47,6 +52,7 @@ const appendCommandPaletteContainer = ({
   recentSites,
   activeSpace,
   selectedText,
+  selectedNoteId,
   searchFilterPreferences,
 }: AppendContainerProps) => {
   if (document.getElementById(CommandPaletteContainerId)) return;
@@ -100,10 +106,11 @@ const appendCommandPaletteContainer = ({
           context.document.body.style.background = 'none';
           return (
             <CommandPalette
-              recentSites={recentSites}
+              recentSites={recentSites || []}
               activeSpace={activeSpace}
               onClose={handleClose}
               userSelectedText={userSelectedText}
+              selectedNoteId={selectedNoteId}
               searchFiltersPreference={searchFilterPreferences}
             />
           );
@@ -131,7 +138,7 @@ const handleShowSnackbar = (title: string) => {
   createRoot(rootIntoShadow).render(<SnackbarContentScript title={title} />);
 };
 
-const showNotes = async (noteIds: string[]) => {
+const showNotes = async (noteIds: string[], spaceId: string) => {
   // do nothing if component already rendered
   if (document.getElementById(DomainNotesContainerId)) return;
 
@@ -153,6 +160,23 @@ const showNotes = async (noteIds: string[]) => {
 
   document.body.appendChild(notesContainer);
 
+  // open selected note
+  const handleOpenSelectedNote = async (noteId: string) => {
+    const activeSpace = await getSpace(spaceId);
+    appendCommandPaletteContainer({ activeSpace, selectedNoteId: noteId });
+  };
+
+  // capture new note
+  const handleCaptureNewNote = async () => {
+    const activeSpace = await getSpace(spaceId);
+
+    // set current date & time as quoted text for new note from note bubble
+    const today = new Date();
+
+    const selectedText = `${getWeekday(today)}  ${getReadableDate(today)} @ ${getTime(today)}`;
+
+    appendCommandPaletteContainer({ activeSpace, selectedText });
+  };
   createRoot(notesContainer).render(
     <Frame
       style={{
@@ -171,12 +195,43 @@ const showNotes = async (noteIds: string[]) => {
           style.innerHTML = injectedStyle;
           !context.document.head.appendChild(style);
           context.document.body.style.background = 'none';
-          return <DomainNotes notes={siteNotes} />;
+          return (
+            <DomainNotes notes={siteNotes} onNoteClick={handleOpenSelectedNote} onNewNoteClick={handleCaptureNewNote} />
+          );
         }}
       </FrameContextConsumer>
     </Frame>,
   );
 };
+
+//  listen to events form background script
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  const event = msg as IMessageEventContentScript;
+
+  const { recentSites, activeSpace, snackbarMsg, searchFilterPreferences, noteIds, spaceId } = event.payload;
+
+  const msgEvent = event.event;
+
+  console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ msgEvent:', msgEvent);
+
+  if (msgEvent === 'SHOW_COMMAND_PALETTE') {
+    appendCommandPaletteContainer({
+      recentSites,
+      activeSpace,
+      searchFilterPreferences,
+    });
+  }
+
+  if (msgEvent === 'SHOW_DOMAIN_NOTES') {
+    showNotes(noteIds, spaceId);
+  }
+
+  if (msgEvent === 'SHOW_SNACKBAR') {
+    handleShowSnackbar(snackbarMsg);
+  }
+
+  sendResponse(true);
+});
 
 // TODO - testing - loads command palette on site load
 // (async () => {
@@ -192,31 +247,3 @@ const showNotes = async (noteIds: string[]) => {
 //     searchFilterPreferences: { searchBookmarks: false, searchNotes: false },
 //   });
 // })();
-
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  const event = msg as IMessageEventContentScript;
-
-  const { recentSites, activeSpace, snackbarMsg, searchFilterPreferences, noteIds } = event.payload;
-
-  const msgEvent = event.event;
-
-  console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ msgEvent:', msgEvent);
-
-  if (msgEvent === 'SHOW_COMMAND_PALETTE') {
-    appendCommandPaletteContainer({
-      recentSites,
-      activeSpace,
-      searchFilterPreferences,
-    });
-  }
-
-  if (msgEvent === 'SHOW_DOMAIN_NOTES') {
-    showNotes(noteIds);
-  }
-
-  if (msgEvent === 'SHOW_SNACKBAR') {
-    handleShowSnackbar(snackbarMsg);
-  }
-
-  sendResponse(true);
-});

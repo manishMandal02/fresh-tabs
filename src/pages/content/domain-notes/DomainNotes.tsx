@@ -1,21 +1,23 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
-import { CounterClockwiseClockIcon, FileTextIcon, LapTimerIcon } from '@radix-ui/react-icons';
+import { CounterClockwiseClockIcon, FileTextIcon, LapTimerIcon, PlusIcon } from '@radix-ui/react-icons';
 
-import injectedStyle from './domain-notes.css?inline';
 import { INote } from '../../types/global.types';
+import injectedStyle from './domain-notes.css?inline';
+import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
 import { DomainNotesContainerId } from '@root/src/constants/app';
 import { useCustomAnimation } from '../../sidepanel/hooks/useCustomAnimation';
-import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
 
 const AllNotesContainerId = 'all-notes-container';
 
 type Props = {
   notes: INote[];
+  onNoteClick: (noteId: string) => void;
+  onNewNoteClick: () => void;
 };
 
-const DomainNotes = ({ notes }: Props) => {
+const DomainNotes = ({ notes, onNoteClick, onNewNoteClick }: Props) => {
   // local state
   const [showNotes, setShowNotes] = useState(true);
 
@@ -34,37 +36,9 @@ const DomainNotes = ({ notes }: Props) => {
     allNotesContainer.remove();
   };
 
+  // on click outside all notes container
   const handleClickOutsideNotesContainer = () => {
     hideAllNotes();
-  };
-
-  const createShadowRoot = () => {
-    // notes container
-    const notesContainer = document.getElementById(DomainNotesContainerId);
-    const host = document.createElement('div');
-    host.id = AllNotesContainerId;
-    host.style.height = '100vh';
-    host.style.width = '100vw';
-    // 10 less than notes list container (highest z-index)
-    host.style.zIndex = '2147483637';
-
-    host.style.position = 'fixed';
-    host.style.top = '0';
-    host.style.left = '0';
-
-    notesContainer.appendChild(host);
-
-    host.addEventListener('click', handleClickOutsideNotesContainer);
-
-    const shadowRoot = host.attachShadow({ mode: 'open' });
-
-    const styles = document.createElement('style');
-
-    styles.innerHTML = injectedStyle;
-
-    shadowRoot.appendChild(styles);
-
-    return shadowRoot;
   };
 
   const { bounce } = useCustomAnimation();
@@ -76,7 +50,7 @@ const DomainNotes = ({ notes }: Props) => {
         onClick={() => setShowNotes(prev => !prev)}
         className={`relative bg-gradient-to-br from-brand-darkBgAccent/90 to-brand-darkBg/95  flex items-center justify-center size-[55px] rounded-full select-none
                   border border-brand-darkBgAccent  shadow-md shadow-brand-darkBgAccent/80 cursor-pointer group`}>
-        <div className="">
+        <div>
           <FileTextIcon className="text-slate-500 scale-[1.8] opacity-70 group-hover:opacity-80 duration-300 transition-opacity" />
           {!showNotes ? (
             <motion.span
@@ -93,21 +67,38 @@ const DomainNotes = ({ notes }: Props) => {
         ? createPortal(
             <motion.div {...bounce} className="notes-container">
               {notes.map(note => (
-                <div key={note.id} className="note">
+                // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+                <div
+                  key={note.id}
+                  className="note"
+                  onClick={() => {
+                    onNoteClick(note.id);
+                  }}>
                   <p>{note.title}</p>
 
                   <div className="bottom-container">
-                    <span>
-                      <LapTimerIcon /> {getTimeAgo(note.remainderAt)}
-                    </span>
+                    {note.remainderAt ? (
+                      <span>
+                        <LapTimerIcon /> {getTimeAgo(note.remainderAt)}
+                      </span>
+                    ) : null}
                     <span>
                       <CounterClockwiseClockIcon /> {getTimeAgo(note.createdAt)}
                     </span>
                   </div>
                 </div>
               ))}
+              {/* new note button */}
+              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+              <div
+                className="new-note"
+                onClick={() => {
+                  onNewNoteClick();
+                }}>
+                <PlusIcon />
+              </div>
             </motion.div>,
-            createShadowRoot(),
+            createShadowRoot(handleClickOutsideNotesContainer),
           )
         : null}
     </>
@@ -115,3 +106,32 @@ const DomainNotes = ({ notes }: Props) => {
 };
 
 export default DomainNotes;
+
+const createShadowRoot = (onCLose: () => void) => {
+  // notes container
+  const notesContainer = document.getElementById(DomainNotesContainerId);
+  const host = document.createElement('div');
+  host.id = AllNotesContainerId;
+  host.style.height = '100vh';
+  host.style.width = '100vw';
+  // 10 less than notes list container (highest z-index)
+  host.style.zIndex = '2147483637';
+
+  host.style.position = 'fixed';
+  host.style.top = '0';
+  host.style.left = '0';
+
+  notesContainer.appendChild(host);
+
+  host.addEventListener('click', onCLose);
+
+  const shadowRoot = host.attachShadow({ mode: 'open' });
+
+  const styles = document.createElement('style');
+
+  styles.innerHTML = injectedStyle;
+
+  shadowRoot.appendChild(styles);
+
+  return shadowRoot;
+};

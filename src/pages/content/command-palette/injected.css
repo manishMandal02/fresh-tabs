@@ -33,10 +33,10 @@ body {
 /* glassmorphism bg */
 
 .glassmorphism-bg {
-  background: #2e2d2d2b;
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  backdrop-filter: blur(7.5px);
-  -webkit-backdrop-filter: blur(7.5px);
+  background: #020b1ebd;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-radius: 8px;
   border: 1px solid #ffffff2e;
 }

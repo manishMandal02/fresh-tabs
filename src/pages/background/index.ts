@@ -257,14 +257,16 @@ const recordDailySpaceTime = async (windowId: number) => {
 };
 
 // find notes for this site
-const embedNotesOnSite = async (url: string, tabId) => {
+const showNotesBubbleContentScript = async (url: string, tabId: number, windowId: number) => {
   if (!url) return;
 
   const domain = cleanDomainName(getUrlDomain(url));
   const notes = await getNoteByDomain(domain);
+
   if (notes?.length < 1) return;
   // if yes, send a event to context script with notes data
 
+  const activeSpace = await getSpaceByWindow(windowId);
   // send msg/event to content scr
   await retryAtIntervals({
     interval: 1000,
@@ -272,7 +274,7 @@ const embedNotesOnSite = async (url: string, tabId) => {
     callback: async () => {
       return await publishEventsTab(tabId, {
         event: 'SHOW_DOMAIN_NOTES',
-        payload: { noteIds: notes.map(n => n.id) },
+        payload: { activeSpace, noteIds: notes.map(n => n.id) },
       });
     },
   });
@@ -841,7 +843,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     // add/update tab
     await updateTabHandler(tabId);
 
-    embedNotesOnSite(tab?.url, tabId);
+    showNotesBubbleContentScript(tab?.url, tabId, tab.windowId);
   }
 });
 
