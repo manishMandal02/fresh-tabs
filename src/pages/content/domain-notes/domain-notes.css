@@ -1,3 +1,25 @@
+/* custom scroll bar */
+.cc-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* Track */
+.cc-scrollbar::-webkit-scrollbar-track {
+  background: #021326a6;
+}
+
+/* Handle */
+.cc-scrollbar::-webkit-scrollbar-thumb {
+  background: #293240cd;
+  border-radius: 16px;
+  cursor: default;
+}
+
+/* Handle on hover */
+.cc-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #212936cd;
+}
+
 .notes-container {
   position: fixed;
   bottom: 90px;
@@ -5,20 +27,24 @@
   width: 350px;
   padding: 12px 12px;
   height: fit-content;
+  max-height: 70vh;
+  overflow-x: hidden;
+  overflow-y: auto;
   z-index: 2147483647;
   border-radius: 12px;
   box-shadow: #00000059 0px 5px 15px;
   /* glassmorphism bg */
+  box-shadow: 0 8px 32px 0 #2443625e;
   background: #020b1ebd;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 8px;
 }
-
+/* TODO - FIX - glassmorphism bg is not consistent with ux in dark/light themes  */
 .note {
   width: 96%;
-  padding: 8px 10px;
-  background-color: #08101fce;
+  padding: 12px 12px;
+  background-color: #262b4968;
   border-radius: 8px;
   margin-bottom: 6px;
   cursor: pointer;
@@ -28,7 +54,7 @@
     margin-bottom: 0px;
   }
   &:hover {
-    transform: scale(0.96);
+    transform: scale(0.97);
   }
   /* title */
   > p {
@@ -78,7 +104,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #08101fb7;
+  background-color: #262b4968;
   &:hover {
     transform: scale(0.97);
   }

@@ -82,7 +82,7 @@ const CreateNote = ({
     if (noteId) {
       await publishEvents({
         event: 'EDIT_NOTE',
-        payload: { note, noteId, noteTitle: title, url: domain, noteRemainder: remainder },
+        payload: { note, noteId, activeSpace, noteTitle: title, url: domain, noteRemainder: remainder },
       });
     } else {
       await publishEvents({

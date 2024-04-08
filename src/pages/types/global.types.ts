@@ -126,7 +126,6 @@ interface IEventPayloadContentScript {
   tabId?: number;
   noteId?: string;
   spaceId?: string;
-  noteIds?: string[];
   spaceTitle?: string;
   noteTitle?: string;
   snackbarMsg?: string;

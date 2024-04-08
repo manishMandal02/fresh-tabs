@@ -13,7 +13,7 @@ const AllNotesContainerId = 'all-notes-container';
 
 type Props = {
   notes: INote[];
-  onNoteClick: (noteId: string) => void;
+  onNoteClick: (noteId: string, spaceId: string) => void;
   onNewNoteClick: () => void;
 };
 
@@ -49,7 +49,7 @@ const DomainNotes = ({ notes, onNoteClick, onNewNoteClick }: Props) => {
         {...bounce}
         onClick={() => setShowNotes(prev => !prev)}
         className={`relative bg-gradient-to-br from-brand-darkBgAccent/90 to-brand-darkBg/95  flex items-center justify-center size-[55px] rounded-full select-none
-                  border border-brand-darkBgAccent  shadow-md shadow-brand-darkBgAccent/80 cursor-pointer group`}>
+                  border border-brand-darkBgAccent  shadow-md shadow-brand-darkBgAccent/70 cursor-pointer group`}>
         <div>
           <FileTextIcon className="text-slate-500 scale-[1.8] opacity-70 group-hover:opacity-80 duration-300 transition-opacity" />
           {!showNotes ? (
@@ -65,14 +65,14 @@ const DomainNotes = ({ notes, onNoteClick, onNewNoteClick }: Props) => {
       {/* notes list view */}
       {showNotes
         ? createPortal(
-            <motion.div {...bounce} className="notes-container">
+            <motion.div {...bounce} className="notes-container cc-scrollbar">
               {notes.map(note => (
                 // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
                 <div
                   key={note.id}
                   className="note"
                   onClick={() => {
-                    onNoteClick(note.id);
+                    onNoteClick(note.id, note.spaceId);
                   }}>
                   <p>{note.title}</p>
 

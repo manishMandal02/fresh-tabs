@@ -138,13 +138,10 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
                 const root = $getRoot();
 
                 const quote = $createQuoteNode();
-                const quoteParagraphs = userSelectedText.trim().split('\n');
 
-                console.log('🚀 ~ RichTextEditor ~ userSelectedText:', userSelectedText);
+                const cleanedSelectedText = userSelectedText.replace(/(\n{3,})/gm, '\n\n');
 
-                console.log('🚀 ~ RichTextEditor ~ quoteParagraphs:', quoteParagraphs);
-
-                // .filter(line => line);
+                const quoteParagraphs = cleanedSelectedText.trim().split('\n');
 
                 quoteParagraphs.forEach((para, idx) => {
                   const textNode = $createTextNode(para);

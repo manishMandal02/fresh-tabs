@@ -9,8 +9,9 @@ import { SnackbarContentScript } from '../snackbar';
 import { getTime } from '@root/src/utils/date-time/get-time';
 import { getWeekday } from '@root/src/utils/date-time/get-weekday';
 import { getSpace } from '@root/src/services/chrome-storage/spaces';
-import { getAllNotes } from '@root/src/services/chrome-storage/notes';
+import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
 import CommandPalette, { COMMAND_PALETTE_SIZE } from './CommandPalette';
+import { getNoteByDomain } from '@root/src/services/chrome-storage/notes';
 import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { CommandPaletteContainerId, DomainNotesContainerId } from '@root/src/constants/app';
@@ -138,13 +139,24 @@ const handleShowSnackbar = (title: string) => {
   createRoot(rootIntoShadow).render(<SnackbarContentScript title={title} />);
 };
 
-const showNotes = async (noteIds: string[], spaceId: string) => {
+const showNotes = async (spaceId: string, reRender = false) => {
   // do nothing if component already rendered
-  if (document.getElementById(DomainNotesContainerId)) return;
+  if (document.getElementById(DomainNotesContainerId) && !reRender) return;
 
-  const allNotes = await getAllNotes();
-  //
-  const siteNotes = allNotes.filter(note => noteIds.includes(note.id));
+  if (reRender) {
+    const notesRootContainer = document.getElementById(DomainNotesContainerId);
+    if (notesRootContainer) {
+      notesRootContainer.replaceChildren();
+      notesRootContainer.remove();
+    }
+  }
+  const siteDomain = cleanDomainName(location.hostname);
+
+  console.log('🚀 ~ showNotes ~ siteDomain:', siteDomain);
+
+  const siteNotes = await getNoteByDomain(siteDomain);
+
+  console.log('🚀 ~ showNotes ~ siteNotes:', siteNotes);
 
   // render notes components
   const notesContainer = document.createElement('div');
@@ -161,10 +173,8 @@ const showNotes = async (noteIds: string[], spaceId: string) => {
   document.body.appendChild(notesContainer);
 
   // open selected note
-  const handleOpenSelectedNote = async (noteId: string) => {
-    const activeSpace = await getSpace(spaceId);
-
-    console.log('🚀 ~ handleOpenSelectedNote ~ activeSpace:', activeSpace);
+  const handleOpenSelectedNote = async (noteId: string, noteSpaceId: string) => {
+    const activeSpace = await getSpace(noteSpaceId);
 
     appendCommandPaletteContainer({ activeSpace, selectedNoteId: noteId });
   };
@@ -211,7 +221,7 @@ const showNotes = async (noteIds: string[], spaceId: string) => {
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   const event = msg as IMessageEventContentScript;
 
-  const { recentSites, activeSpace, snackbarMsg, searchFilterPreferences, noteIds } = event.payload;
+  const { recentSites, activeSpace, snackbarMsg, searchFilterPreferences } = event.payload;
 
   const msgEvent = event.event;
 
@@ -226,11 +236,14 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
 
   if (msgEvent === 'SHOW_DOMAIN_NOTES') {
-    showNotes(noteIds, activeSpace.id);
+    showNotes(activeSpace.id);
   }
 
   if (msgEvent === 'SHOW_SNACKBAR') {
     handleShowSnackbar(snackbarMsg);
+    if (snackbarMsg.toLowerCase().startsWith('note')) {
+      showNotes(activeSpace.id, true);
+    }
   }
 
   sendResponse(true);

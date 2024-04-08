@@ -274,7 +274,7 @@ const showNotesBubbleContentScript = async (url: string, tabId: number, windowId
     callback: async () => {
       return await publishEventsTab(tabId, {
         event: 'SHOW_DOMAIN_NOTES',
-        payload: { activeSpace, noteIds: notes.map(n => n.id) },
+        payload: { activeSpace },
       });
     },
   });
@@ -391,20 +391,21 @@ chrome.runtime.onMessage.addListener(
 
         await publishEventsTab(currentTab.id, {
           event: 'SHOW_SNACKBAR',
-          payload: { snackbarMsg: 'Note Captured' },
+          payload: { activeSpace, snackbarMsg: 'Note Captured' },
         });
 
         return true;
       }
 
       case 'EDIT_NOTE': {
-        const { note, url, noteRemainder, noteId } = payload;
+        const { note, url, activeSpace, noteRemainder, noteId, noteTitle } = payload;
 
         const noteToEdit = await getNote(noteId);
 
         await updateNote(noteId, {
           ...noteToEdit,
           text: note,
+          ...(noteTitle && { title: noteTitle }),
           ...(url && { domain: url }),
           ...(noteRemainder && { remainderAt: naturalLanguageToDate(noteRemainder) }),
         });
@@ -413,7 +414,7 @@ chrome.runtime.onMessage.addListener(
 
         await publishEventsTab(currentTab.id, {
           event: 'SHOW_SNACKBAR',
-          payload: { snackbarMsg: 'Note Saved' },
+          payload: { activeSpace, snackbarMsg: 'Note Saved' },
         });
 
         return true;
