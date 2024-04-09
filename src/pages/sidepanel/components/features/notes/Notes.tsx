@@ -44,7 +44,7 @@ const Notes = ({ space }: Props) => {
     <>
       <div className="py-1.5 px-1 w-full">
         {notes.length > 0 ? (
-          notes.map(note => (
+          notes.toReversed().map(note => (
             <button
               tabIndex={-1}
               key={note.id}

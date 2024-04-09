@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
-import { CounterClockwiseClockIcon, FileTextIcon, LapTimerIcon, PlusIcon } from '@radix-ui/react-icons';
+import { CounterClockwiseClockIcon, FileTextIcon, LapTimerIcon, PlusIcon, TrashIcon } from '@radix-ui/react-icons';
 
 import { INote } from '../../types/global.types';
 import injectedStyle from './domain-notes.css?inline';
@@ -12,14 +12,22 @@ import { useCustomAnimation } from '../../sidepanel/hooks/useCustomAnimation';
 const AllNotesContainerId = 'all-notes-container';
 
 type Props = {
-  notes: INote[];
+  domainNotes: INote[];
   onNoteClick: (noteId: string, spaceId: string) => void;
   onNewNoteClick: () => void;
+  onDeleteNoteClick: (noteId: string) => void;
 };
 
-const DomainNotes = ({ notes, onNoteClick, onNewNoteClick }: Props) => {
+const DomainNotes = ({ domainNotes, onNoteClick, onNewNoteClick, onDeleteNoteClick }: Props) => {
   // local state
-  const [showNotes, setShowNotes] = useState(false);
+  const [notes, setNotes] = useState<INote[]>([]);
+  const [showNotes, setShowNotes] = useState(true);
+
+  useEffect(() => {
+    if (!domainNotes) return;
+
+    setNotes(domainNotes);
+  }, [domainNotes]);
 
   const hideAllNotes = () => {
     setShowNotes(false);
@@ -39,6 +47,12 @@ const DomainNotes = ({ notes, onNoteClick, onNewNoteClick }: Props) => {
   // on click outside all notes container
   const handleClickOutsideNotesContainer = () => {
     hideAllNotes();
+  };
+
+  // delete note
+  const handleDeleteNote = (noteId: string) => {
+    setNotes(prev => prev.filter(note => note.id !== noteId));
+    onDeleteNoteClick(noteId);
   };
 
   const { bounce } = useCustomAnimation();
@@ -65,39 +79,51 @@ const DomainNotes = ({ notes, onNoteClick, onNewNoteClick }: Props) => {
       {/* notes list view */}
       {showNotes
         ? createPortal(
-            <motion.div {...bounce} className="notes-container cc-scrollbar">
-              {notes.map(note => (
-                // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+            <>
+              <motion.div {...bounce} className="notes-container cc-scrollbar">
+                {/* new note button */}
+                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                 <div
-                  key={note.id}
-                  className="note"
+                  className="new-note"
                   onClick={() => {
-                    onNoteClick(note.id, note.spaceId);
+                    onNewNoteClick();
                   }}>
-                  <p>{note.title}</p>
-
-                  <div className="bottom-container">
-                    {note.remainderAt ? (
-                      <span>
-                        <LapTimerIcon /> {getTimeAgo(note.remainderAt)}
-                      </span>
-                    ) : null}
-                    <span>
-                      <CounterClockwiseClockIcon /> {getTimeAgo(note.createdAt)}
-                    </span>
-                  </div>
+                  <PlusIcon />
                 </div>
-              ))}
-              {/* new note button */}
-              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-              <div
-                className="new-note"
-                onClick={() => {
-                  onNewNoteClick();
-                }}>
-                <PlusIcon />
-              </div>
-            </motion.div>,
+                {notes.map(note => (
+                  // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+                  <div
+                    key={note.id}
+                    className="note"
+                    onClick={() => {
+                      onNoteClick(note.id, note.spaceId);
+                    }}>
+                    <p>{note.title}</p>
+
+                    <div className="bottom-container">
+                      {note.remainderAt ? (
+                        <span>
+                          <LapTimerIcon /> {getTimeAgo(note.remainderAt)}
+                        </span>
+                      ) : null}
+                      <span>
+                        <CounterClockwiseClockIcon /> {getTimeAgo(note.createdAt)}
+                      </span>
+                    </div>
+                    {/* delete */}
+                    {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+                    <div
+                      className="delete"
+                      onClick={ev => {
+                        ev.stopPropagation();
+                        handleDeleteNote(note.id);
+                      }}>
+                      <TrashIcon />
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
+            </>,
             createShadowRoot(handleClickOutsideNotesContainer),
           )
         : null}

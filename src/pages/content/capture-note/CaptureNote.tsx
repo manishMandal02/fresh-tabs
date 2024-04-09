@@ -51,7 +51,7 @@ const CreateNote = ({
 
         const noteToEdit = await getNote(selectedNote);
 
-        setTitle(noteToEdit.title);
+        setTitle(noteToEdit?.title || '');
         setNote(noteToEdit.text);
 
         noteToEdit?.domain && setDomain(noteToEdit.domain);

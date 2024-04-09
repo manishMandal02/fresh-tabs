@@ -29,7 +29,14 @@ import { addSnoozedTab, getTabToUnSnooze } from '@root/src/services/chrome-stora
 import { handleMergeDailySpaceTimeChunksAlarm } from './handler/alarm/mergeDailySpaceTimeChunks';
 import { getSpaceHistory, setSpaceHistory } from '@root/src/services/chrome-storage/space-history';
 import { getDailySpaceTime, setDailySpaceTime } from '@root/src/services/chrome-storage/space-analytics';
-import { addNewNote, getAllNotes, getNote, getNoteByDomain, updateNote } from '@root/src/services/chrome-storage/notes';
+import {
+  addNewNote,
+  deleteNote,
+  getAllNotes,
+  getNote,
+  getNoteByDomain,
+  updateNote,
+} from '@root/src/services/chrome-storage/notes';
 import {
   checkParentBMFolder,
   syncSpacesFromBookmarks,
@@ -416,6 +423,12 @@ chrome.runtime.onMessage.addListener(
           event: 'SHOW_SNACKBAR',
           payload: { activeSpace, snackbarMsg: 'Note Saved' },
         });
+
+        return true;
+      }
+      case 'DELETE_NOTE': {
+        const { noteId } = payload;
+        await deleteNote(noteId);
 
         return true;
       }

@@ -16,6 +16,7 @@ import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { CommandPaletteContainerId, DomainNotesContainerId } from '@root/src/constants/app';
 import { IMessageEventContentScript, ISearchFilters, ISpace, ITab } from '../../types/global.types';
+import { publishEvents } from '@root/src/utils';
 
 // development: refresh content page on update
 refreshOnUpdate('pages/content');
@@ -190,6 +191,12 @@ const showNotes = async (spaceId: string, reRender = false) => {
 
     appendCommandPaletteContainer({ activeSpace, selectedText });
   };
+
+  // send delete note event to background
+
+  const handleDeleteEvent = async (noteId: string) => {
+    await publishEvents({ event: 'DELETE_NOTE', payload: { noteId } });
+  };
   createRoot(notesContainer).render(
     <Frame
       style={{
@@ -209,7 +216,12 @@ const showNotes = async (spaceId: string, reRender = false) => {
           !context.document.head.appendChild(style);
           context.document.body.style.background = 'none';
           return (
-            <DomainNotes notes={siteNotes} onNoteClick={handleOpenSelectedNote} onNewNoteClick={handleCaptureNewNote} />
+            <DomainNotes
+              domainNotes={siteNotes}
+              onNoteClick={handleOpenSelectedNote}
+              onNewNoteClick={handleCaptureNewNote}
+              onDeleteNoteClick={handleDeleteEvent}
+            />
           );
         }}
       </FrameContextConsumer>

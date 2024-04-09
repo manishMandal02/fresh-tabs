@@ -112,6 +112,7 @@ type MessageEventsContentScript =
   | 'NEW_SPACE'
   | 'NEW_NOTE'
   | 'EDIT_NOTE'
+  | 'DELETE_NOTE'
   | 'MOVE_TAB_TO_SPACE'
   | 'GO_TO_URL'
   | 'WEB_SEARCH'

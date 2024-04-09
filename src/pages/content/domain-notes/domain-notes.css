@@ -5,7 +5,7 @@
 
 /* Track */
 .cc-scrollbar::-webkit-scrollbar-track {
-  background: #021326a6;
+  /* background: #021326a6; */
 }
 
 /* Handle */
@@ -22,39 +22,42 @@
 
 .notes-container {
   position: fixed;
-  bottom: 90px;
+  bottom: 100px;
   right: 24px;
   width: 350px;
   padding: 12px 12px;
-  height: fit-content;
-  max-height: 70vh;
+  min-height: fit-content;
+  max-height: 65vh;
   overflow-x: hidden;
   overflow-y: auto;
   z-index: 2147483647;
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: #00000059 0px 5px 15px;
   /* glassmorphism bg */
-  box-shadow: 0 8px 32px 0 #2443625e;
-  background: #020b1ebd;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border-radius: 8px;
+  box-shadow: 0 8px 32px 0 #1f26873e;
+  background: #020b1ebe;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
-/* TODO - FIX - glassmorphism bg is not consistent with ux in dark/light themes  */
+
 .note {
-  width: 96%;
+  width: 95%;
+  max-width: 95%;
+  margin-top: 6px;
   padding: 12px 12px;
-  background-color: #262b4968;
   border-radius: 8px;
-  margin-bottom: 6px;
+  background-color: #181c32b8;
   cursor: pointer;
-  transition: all;
   transition-duration: 300ms;
-  &:last-child {
-    margin-bottom: 0px;
-  }
+  transition: all;
+  overflow: hidden;
+  position: relative;
   &:hover {
     transform: scale(0.97);
+  }
+
+  &:hover .delete {
+    transform: translateX(0%);
   }
   /* title */
   > p {
@@ -90,13 +93,38 @@
       margin-right: 8px;
     }
   }
+  .delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    transform: translateX(28px);
+    right: 0px;
+    top: 0px;
+    height: 100%;
+    max-height: 100%;
+    width: 26px;
+    background-color: #fc8570c5;
+    transition-duration: 300ms;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    &:hover {
+      background-color: #fc8570cf;
+    }
+    > svg {
+      color: #11161bc7;
+      transform: scale(1.25);
+    }
+  }
 }
 
 .new-note {
+  position: sticky;
+  top: 0px;
+  left: auto;
   width: 96%;
   padding: 10px 10px;
   border-radius: 8px;
-  margin-bottom: 6px;
   cursor: pointer;
   transition: all;
   transition-duration: 300ms;
@@ -104,7 +132,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #262b4968;
+  border: 1px solid #2a3039be;
+  background-color: #181c32e6;
   &:hover {
     transform: scale(0.97);
   }
