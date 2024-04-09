@@ -33,13 +33,13 @@ const manifest = {
       global: true,
     },
     // TODO - new tab shortcut
-    // newTab: {
-    //   suggested_key: {
-    //     default: 'Ctrl+T',
-    //     mac: 'Command+T',
-    //   },
-    //   description: 'New Tab',
-    // },
+    newTab: {
+      suggested_key: {
+        default: 'Ctrl+T',
+        mac: 'Command+T',
+      },
+      description: 'New Tab',
+    },
     cmdPalette: {
       suggested_key: {
         default: 'Ctrl+Period',

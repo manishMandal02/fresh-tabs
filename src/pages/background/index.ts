@@ -575,9 +575,16 @@ chrome.runtime.onMessage.addListener(
       case 'WEB_SEARCH': {
         const { searchQuery, shouldOpenInNewTab } = payload;
 
-        // TODO - new tab search opens a tab in the end (open a new next tab and search)
+        if (!shouldOpenInNewTab) {
+          // search in current tab
+          await chrome.search.query({ text: searchQuery, disposition: 'CURRENT_TAB' });
+        } else {
+          // create new tab to search (as the default new tab search opens a new tab at the end to search)
+          const currentTab = await getCurrentTab();
+          const newTab = await chrome.tabs.create({ url: 'chrome://newtab', index: currentTab.index + 1 });
+          await chrome.search.query({ text: searchQuery, tabId: newTab.id });
+        }
 
-        await chrome.search.query({ text: searchQuery, disposition: shouldOpenInNewTab ? 'NEW_TAB' : 'CURRENT_TAB' });
         return true;
       }
 
@@ -686,7 +693,14 @@ chrome.runtime.onInstalled.addListener(async info => {
 
 // shortcut commands
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  // TODO - handle new tab
+  console.log('🚀 ~ chrome.commands.onCommand.addListener ~ command:', command);
+
+  if (command === 'newTab') {
+    await chrome.tabs.create({ url: 'chrome://newtab', index: tab.index + 1 });
+    return;
+  }
+
+  // handle open command palette
   if (command === 'cmdPalette') {
     let currentTab = tab;
 
