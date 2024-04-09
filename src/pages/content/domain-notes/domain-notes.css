@@ -49,6 +49,7 @@
   background-color: #181c32b8;
   cursor: pointer;
   transition-duration: 300ms;
+  border: 1px solid #2a3039a6;
   transition: all;
   overflow: hidden;
   position: relative;
@@ -104,15 +105,19 @@
     height: 100%;
     max-height: 100%;
     width: 26px;
-    background-color: #fc8570c5;
+    background-color: #181f32b8;
+    border-left: 1px solid #181f32c1;
     transition-duration: 300ms;
     transition-property: all;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     &:hover {
-      background-color: #fc8570cf;
+      background-color: #fc8570d5;
+      > svg {
+        color: #212a35c5;
+      }
     }
     > svg {
-      color: #11161bc7;
+      color: #fc8570d6;
       transform: scale(1.25);
     }
   }

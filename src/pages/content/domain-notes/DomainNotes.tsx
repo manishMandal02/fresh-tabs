@@ -21,7 +21,7 @@ type Props = {
 const DomainNotes = ({ domainNotes, onNoteClick, onNewNoteClick, onDeleteNoteClick }: Props) => {
   // local state
   const [notes, setNotes] = useState<INote[]>([]);
-  const [showNotes, setShowNotes] = useState(true);
+  const [showNotes, setShowNotes] = useState(false);
 
   useEffect(() => {
     if (!domainNotes) return;

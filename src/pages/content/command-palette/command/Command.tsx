@@ -146,7 +146,7 @@ const Command = ({
     <button
       id={`fresh-tabs-command-${index}`}
       className={cn(
-        'w-full flex items-center relative justify-start pl-[13px] pr-[8px] md:py-[6px] outline-none first:pt-[6px] md:first:pt-[7.5px] transition-all duration-100 ease-in',
+        'w-full flex items-center relative justify-start pl-[13px] pr-[8px] py-[4px] outline-none first:pt-[6px] md:first:pt-[7.5px] transition-all duration-100 ease-in',
         { 'bg-brand-darkBgAccent/60': isFocused },
       )}
       onClick={onClick}
@@ -164,14 +164,14 @@ const Command = ({
         <LinkTypeIndicatorIcon />
 
         <Highlighter
-          searchWords={[escapedSearchTerm]}
+          searchWords={[...escapedSearchTerm.split(' ')]}
           textToHighlight={label}
           highlightClassName="bg-transparent text-slate-300/90 font-semibold"
           unhighlightClassName="bg-transparent"
         />
         {commandAlias ? (
           <Highlighter
-            searchWords={[escapedSearchTerm]}
+            searchWords={[...escapedSearchTerm.split(' ')]}
             textToHighlight={type !== CommandType.WebSearch ? `(${commandAlias})` : commandAlias}
             highlightClassName="bg-transparent font-semibold text-slate-400"
             className="ml-1.5 text-[11px] text-slate-500/90"

@@ -338,6 +338,7 @@ chrome.runtime.onMessage.addListener(
 
         return true;
       }
+
       case 'SWITCH_SPACE': {
         const { spaceId, shouldOpenInNewWindow } = payload;
 
@@ -349,6 +350,7 @@ chrome.runtime.onMessage.addListener(
 
         return true;
       }
+
       case 'NEW_SPACE': {
         const { spaceTitle } = payload;
 
@@ -426,6 +428,7 @@ chrome.runtime.onMessage.addListener(
 
         return true;
       }
+
       case 'DELETE_NOTE': {
         const { noteId } = payload;
         await deleteNote(noteId);
@@ -453,6 +456,7 @@ chrome.runtime.onMessage.addListener(
 
         return true;
       }
+
       case 'MOVE_TAB_TO_SPACE': {
         const { spaceId } = payload;
         const tabsInSpace = await getTabsInSpace(spaceId);
@@ -466,6 +470,7 @@ chrome.runtime.onMessage.addListener(
 
         return true;
       }
+
       case 'SEARCH': {
         const { searchQuery, searchFilterPreferences } = payload;
 
@@ -485,7 +490,8 @@ chrome.runtime.onMessage.addListener(
             return false;
           });
 
-          console.log('🚀 ~ index.ts:429 ~ SEARCH ~  notes:', notes);
+          // do not show more than 6 notes results
+          notes.length > 8 && notes.splice(8);
 
           notes?.forEach((note, idx) => {
             if (!note?.text || !note?.title) return;
@@ -502,6 +508,9 @@ chrome.runtime.onMessage.addListener(
           });
         }
 
+        // return the matched results if more than 6 (won't search bookmark & history)
+        if (matchedCommands.length > 7) return matchedCommands;
+
         if (searchFilterPreferences.searchBookmarks) {
           let bookmarks = await chrome.bookmarks.search({ query: searchQuery });
 
@@ -513,8 +522,8 @@ chrome.runtime.onMessage.addListener(
             return false;
           });
 
-          // do not show more than 10 bookmarks results
-          bookmarks.length > 10 && bookmarks.splice(10);
+          // limit search results
+          bookmarks.length + matchedCommands.length > 8 && bookmarks.splice(8 - matchedCommands.length);
 
           if (bookmarks?.length > 0) {
             bookmarks.forEach((item, idx) => {
@@ -532,10 +541,19 @@ chrome.runtime.onMessage.addListener(
         }
 
         // return the matched results if more than 6 (won't search history)
-        if (matchedCommands.length > 6) return matchedCommands;
+        if (matchedCommands.length > 7) return matchedCommands;
+
+        // get 1 month before date to find history before that
+        const oneMonthBefore = new Date();
+
+        oneMonthBefore.setMonth(oneMonthBefore.getMonth() - 1);
 
         // query history (words match)
-        const history = await chrome.history.search({ text: searchQuery, maxResults: 4 });
+        const history = await chrome.history.search({
+          text: searchQuery,
+          startTime: oneMonthBefore.getTime(),
+          maxResults: Math.max(8 - matchedCommands.length, 4),
+        });
 
         if (history?.length > 0) {
           history.forEach((item, idx) => {
@@ -553,6 +571,7 @@ chrome.runtime.onMessage.addListener(
 
         return matchedCommands;
       }
+
       case 'WEB_SEARCH': {
         const { searchQuery, shouldOpenInNewTab } = payload;
 
@@ -561,9 +580,11 @@ chrome.runtime.onMessage.addListener(
         await chrome.search.query({ text: searchQuery, disposition: shouldOpenInNewTab ? 'NEW_TAB' : 'CURRENT_TAB' });
         return true;
       }
+
       case 'DISCARD_TABS': {
         return await discardTabs();
       }
+
       case 'SNOOZE_TAB': {
         const { snoozedUntil, spaceId } = payload;
 
@@ -597,6 +618,7 @@ chrome.runtime.onMessage.addListener(
 
         return true;
       }
+
       default: {
         return true;
       }
@@ -682,8 +704,6 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
       //  TODO - use space history
       // get last visited url
       const recentlyVisitedURL = await getRecentlyVisitedSites(1);
-
-      console.log('🚀 ~ chrome.commands.onCommand.addListener ~ recentlyVisitedURL:', recentlyVisitedURL);
 
       const tabs = await chrome.tabs.query({ currentWindow: true });
 
@@ -812,8 +832,6 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   // get tab info
   const tab = await chrome.tabs.get(tabId);
 
-  console.log('🚀 ~ chrome.tabs.onActivated.addListener ~ tab:', tab);
-
   if (tab.url.startsWith(DISCARD_TAB_URL_PREFIX)) {
     // update tab with original url
     await chrome.tabs.update(tabId, {
@@ -828,8 +846,6 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
 
   // update spaces' active tab
   const updateSpace = await updateActiveTabInSpace(windowId, tab.index);
-
-  console.log('🚀 ~ chrome.tabs.onActivated.addListener ~ updateSpace:', updateSpace);
 
   // send send to side panel
   await publishEvents({

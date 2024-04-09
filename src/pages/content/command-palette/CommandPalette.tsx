@@ -28,7 +28,7 @@ export const COMMAND_PALETTE_SIZE = {
   MAX_WIDTH: 600 + 200,
 } as const;
 
-export const COMMAND_HEIGHT = 36;
+export const COMMAND_HEIGHT = 38;
 
 const SUGGESTED_COMMANDS_MAX_HEIGHT = 400;
 
@@ -149,10 +149,6 @@ const CommandPalette = ({
 
     const searchQueryLowerCase = searchQuery.toLowerCase().trim();
 
-    // TODO:
-    // use regex to match search words
-    // search notes if enabled
-
     // query static matchedCommands label
     staticCommands
       .filter(
@@ -204,8 +200,6 @@ const CommandPalette = ({
     {
       // query space title
       let spaces = await getAllSpaces();
-
-      console.log('🚀 ~ handleGlobalSearch ~ spaces:', spaces);
 
       spaces = spaces?.filter(s => s.id !== activeSpace.id) || [];
 
