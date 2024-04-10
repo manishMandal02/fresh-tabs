@@ -187,17 +187,8 @@ const SidePanel = () => {
             )}
           </div>
 
-          {/* add new space */}
-          <CreateSpace />
-
-          {/* add new note */}
-          <AddNewNote />
-
           {/* Edit/view space modal */}
           <UpdateSpace />
-
-          {/* delete space alert modal */}
-          <DeleteSpaceModal />
 
           {/* settings modal */}
           <Settings />
@@ -207,6 +198,15 @@ const SidePanel = () => {
 
           {/* user account modal */}
           <UserAccount />
+
+          {/* add new space */}
+          <CreateSpace />
+
+          {/* add new note */}
+          <AddNewNote />
+
+          {/* delete space alert modal */}
+          <DeleteSpaceModal />
 
           {/* snackbar */}
           <Snackbar />

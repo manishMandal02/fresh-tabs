@@ -3,16 +3,17 @@ import { motion } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 
 import { useNewNote } from './useNewNote';
-import Spinner from '../../../../../../components/spinner';
-import Tooltip from '../../../../../../components/tooltip';
-import { SlideModal } from '../../../../../../components/modal';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
+import Tooltip from '../../../../../../components/tooltip';
+import Spinner from '../../../../../../components/spinner';
+import { showAddNewNoteModalAtom } from '@root/src/stores/app';
+import { SlideModal } from '../../../../../../components/modal';
 import TextField from '../../../../../../components/form/text-field';
 import Checkbox from '../../../../../../components/checkbox/Checkbox';
-import { showAddNewNoteModalAtom } from '@root/src/stores/app';
 import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
-import RichTextEditor, { EDITOR_EMPTY_STATE } from '../../../../../../components/rich-text-editor/RichTextEditor';
+import { useKeyShortcuts } from '@root/src/pages/sidepanel/hooks/useKeyShortcuts';
 import { parseStringForDateTimeHint } from '@root/src/utils/date-time/naturalLanguageToDate';
+import RichTextEditor, { EDITOR_EMPTY_STATE } from '../../../../../../components/rich-text-editor/RichTextEditor';
 
 const NotesModal = () => {
   console.log('NotesModal ~ 🔁 rendered');
@@ -79,8 +80,17 @@ const NotesModal = () => {
 
   const { bounce } = useCustomAnimation();
 
-  //
   const buttonText = showModal.note?.id ? 'Update Note' : 'Add Note';
+
+  useKeyShortcuts({
+    comboKey: {
+      primary: 'shift',
+      secondary: 'n',
+      callback: () => {
+        setShowModal({ show: true, note: { text: '' } });
+      },
+    },
+  });
 
   return note ? (
     <SlideModal title={showModal.note?.id ? 'Edit Note' : 'New Note'} isOpen={showModal.show} onClose={handleClose}>

@@ -2,16 +2,25 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useDeviceInfo } from './useDeviceInfo';
 
+type ComboPrimaryKey = 'mod' | 'shift' | 'alt';
+
+type Callback = () => void;
+
 type useKeyShortcutsProps = {
   monitorModifierKeys?: boolean;
-  onDeletePressed?: () => void;
-  onEscapePressed?: () => void;
-  onEnterPressed?: () => void;
-  onTabPressed?: () => void;
-  onArrowUpPressed?: () => void;
-  onArrowDownPressed?: () => void;
+  onDeletePressed?: Callback;
+  onEscapePressed?: Callback;
+  onEnterPressed?: Callback;
+  onTabPressed?: Callback;
+  onArrowUpPressed?: Callback;
+  onArrowDownPressed?: Callback;
   parentConTainerEl?: HTMLElement;
   isSidePanel?: boolean;
+  comboKey?: {
+    primary: ComboPrimaryKey;
+    secondary: string;
+    callback: Callback;
+  };
 };
 
 export const useKeyShortcuts = ({
@@ -24,6 +33,7 @@ export const useKeyShortcuts = ({
   onTabPressed,
   onArrowUpPressed,
   onArrowDownPressed,
+  comboKey,
 }: useKeyShortcutsProps) => {
   // TODO - keep track if the event listener is added already or not
   //  ctrl/cmd key press status
@@ -39,7 +49,16 @@ export const useKeyShortcuts = ({
     ev => {
       const keyEv = ev as KeyboardEvent;
 
-      console.log('🚀 ~ useKeyShortcuts keyEv.code:', keyEv.metaKey);
+      // console.log('🚀 ~ useKeyShortcuts keyEv:', keyEv);
+
+      if (comboKey && comboKey.primary && comboKey.secondary && !!comboKey.callback) {
+        if (
+          keyEv[mapComboPrimaryKeyToEvObjKey(comboKey.primary)] &&
+          keyEv.key.toLowerCase() === comboKey.secondary.toLowerCase()
+        ) {
+          comboKey.callback();
+        }
+      }
 
       if (onEnterPressed && keyEv.code === 'Enter') {
         onEnterPressed();
@@ -85,6 +104,7 @@ export const useKeyShortcuts = ({
       onArrowUpPressed,
       monitorModifierKeys,
       onTabPressed,
+      comboKey,
     ],
   );
 
@@ -127,4 +147,11 @@ export const useKeyShortcuts = ({
     isModifierKeyPressed,
     isShiftKeyPressed,
   };
+};
+
+const mapComboPrimaryKeyToEvObjKey = (primaryKey: ComboPrimaryKey) => {
+  if (primaryKey === 'shift') return 'shiftKey';
+  if (primaryKey === 'alt') return 'altKey';
+  if (primaryKey === 'mod') return 'metaKey';
+  return null;
 };

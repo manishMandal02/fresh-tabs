@@ -1,12 +1,12 @@
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
-import { useState, useCallback, useEffect } from 'react';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 
 import { NonActiveSpace } from './non-active-space';
 import { nonActiveSpacesAtom } from '@root/src/stores/app';
 import DraggingOverNudge from '../active-space/DraggingOverNudge';
 import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
+import { useKeyShortcuts } from '@root/src/pages/sidepanel/hooks/useKeyShortcuts';
 
 type Props = {
   isDraggingSpace: boolean;
@@ -14,32 +14,12 @@ type Props = {
 };
 
 const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
+  console.log(' OtherSpacesContainer ~ 🔁 rendered');
+
   // non active spaces  (global state)
   const [spaces] = useAtom(nonActiveSpacesAtom);
 
-  const [isModifierKeyPressed, setIsModifierKeyPressed] = useState(false);
-
-  const handleKeyDown = useCallback(ev => {
-    const keyEv = ev as KeyboardEvent;
-    ev.stopPropagation();
-    if (keyEv.ctrlKey || keyEv.metaKey) {
-      setIsModifierKeyPressed(true);
-    }
-  }, []);
-
-  const handleKeyUp = useCallback(() => {
-    setIsModifierKeyPressed(false);
-  }, []);
-
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('keyup', handleKeyUp);
-    };
-  }, [handleKeyDown, handleKeyUp]);
+  const { isModifierKeyPressed } = useKeyShortcuts({ monitorModifierKeys: true });
 
   // bounce div animation
   const { bounce } = useCustomAnimation();

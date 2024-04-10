@@ -1,5 +1,5 @@
 import { useAtom } from 'jotai';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Tab } from '..';
 import { ThemeColor } from '@root/src/constants/app';
@@ -12,6 +12,7 @@ import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import TextInput from '../../../../../../components/TextInput/TextInput';
 import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
+import { useKeyShortcuts } from '@root/src/pages/sidepanel/hooks/useKeyShortcuts';
 import ErrorMessage from '../../../../../../components/alert-message/ErrorMessage';
 import { snackbarAtom, nonActiveSpacesAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
 
@@ -24,7 +25,7 @@ const defaultSpaceData: DefaultSpaceFields = {
 };
 
 const CreateSpace = () => {
-  console.log('🚀 ~ CreateSpace ~ 🔁 rendered');
+  console.log('CreateSpace ~ 🔁 rendered');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentTabs, setCurrentTabs] = useState<ITab[]>([]);
@@ -124,11 +125,11 @@ const CreateSpace = () => {
     }
   };
 
-  const handleShortcut = useCallback(
-    ev => {
-      const keyEv = ev as KeyboardEvent;
-
-      if (keyEv.shiftKey && keyEv.code === 'KeyS') {
+  useKeyShortcuts({
+    comboKey: {
+      primary: 'shift',
+      secondary: 's',
+      callback: () => {
         setNewSpaceModal({ show: true, tabs: [] });
 
         //  remove letter s from tile that is trigged after new space shortcut (shift+s)
@@ -139,22 +140,15 @@ const CreateSpace = () => {
             return prev;
           });
         }, 50);
-      }
+      },
     },
-    [setNewSpaceModal],
-  );
+  });
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setNewSpaceModal({ show: false, tabs: [] });
     // add the
   };
-
-  useEffect(() => {
-    document.addEventListener('keydown', handleShortcut);
-
-    return () => document.removeEventListener('keydown', handleShortcut);
-  }, [handleShortcut]);
 
   return (
     <SlideModal title="Add New Space" isOpen={newSpaceModal.show} onClose={handleCloseModal}>
