@@ -1,6 +1,6 @@
 import { DefaultAppSettings } from './../constants/app';
 import { atom } from 'jotai';
-import { IAppSettings, INote, ISpace, ISpaceWithTabs, ITab, ITabWithIndex } from '../pages/types/global.types';
+import { IAppSettings, INote, ISpace, ISpaceWithTabs, ITab, ITabWithIndex } from '../types/global.types';
 
 type SnackbarAtom = {
   show: boolean;
@@ -24,12 +24,6 @@ export const activeSpaceIdAtom = atom(get => get(activeSpaceAtom).id);
 // selected tabs for dragging
 export const selectedTabsAtom = atom<ITabWithIndex[]>([]);
 
-//  settings
-export const appSettingsAtom = atom<IAppSettings>({ ...DefaultAppSettings });
-
-//  snackbar
-export const snackbarAtom = atom<SnackbarAtom>({ msg: '', show: false, isLoading: false, isSuccess: false });
-
 // global dragging state
 export const dragStateAtom = atom<{ isDragging: boolean; type: 'space' | 'tabs' }>({
   isDragging: false,
@@ -37,6 +31,17 @@ export const dragStateAtom = atom<{ isDragging: boolean; type: 'space' | 'tabs' 
 });
 
 //- modal atoms
+
+//  snackbar
+export const snackbarAtom = atom<SnackbarAtom>({
+  msg: 'Space deleted',
+  show: true,
+  isLoading: false,
+  isSuccess: true,
+});
+
+//  settings
+export const appSettingsAtom = atom<IAppSettings>({ ...DefaultAppSettings });
 
 // settings modal
 export const showSettingsModalAtom = atom(false);

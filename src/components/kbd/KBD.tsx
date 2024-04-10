@@ -1,5 +1,5 @@
 import { useDeviceInfo } from '@root/src/pages/sidepanel/hooks/useDeviceInfo';
-import { CSSClasses } from '@root/src/pages/types/global.types';
+import { CSSClasses } from '@root/src/types/global.types';
 import { cn } from '@root/src/utils/cn';
 import { memo, ReactNode } from 'react';
 

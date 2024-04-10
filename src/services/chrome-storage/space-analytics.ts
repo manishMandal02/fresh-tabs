@@ -3,7 +3,7 @@
 import { StorageKey } from '@root/src/constants/app';
 import { logger } from '@root/src/utils';
 import { getStorage, setStorage } from './helpers';
-import { IDailySpaceTime, IDailySpaceTimeChunks } from '@root/src/pages/types/global.types';
+import { IDailySpaceTime, IDailySpaceTimeChunks } from '@root/src/types/global.types';
 
 // get full space history (past 30d)
 export const getDailySpaceTime = async <T = IDailySpaceTime[]>(spaceId: string | null): Promise<T> => {

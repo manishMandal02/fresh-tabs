@@ -6,7 +6,7 @@ import { ClockIcon, GlobeIcon } from '@radix-ui/react-icons';
 
 import KBD from '@root/src/components/kbd/KBD';
 import { publishEvents } from '@root/src/utils';
-import { ISpace } from '@root/src/pages/types/global.types';
+import { ISpace } from '@root/src/types/global.types';
 import { getNote } from '@root/src/services/chrome-storage/notes';
 import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
 import { COMMAND_PALETTE_SIZE } from '../command-palette/CommandPalette';

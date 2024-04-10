@@ -1,10 +1,14 @@
-import { IAppSettings, IPinnedTab, ISpaceWithTabs } from '../pages/types/global.types';
-// if changing this then make sure to update the injected.css for command palette
-export const CommandPaletteContainerId = 'fresh-tabs-command-palette-container';
+import { IAppSettings, IPinnedTab, ISpaceWithTabs } from '../types/global.types';
+// if changing this then make sure to update the injected.css for command palette\
 
-export const DomainNotesContainerId = 'fresh-tabs-domain-notes-container';
+export const ContentScriptContainerIds = {
+  COMMAND_PALETTE: 'fresh-tabs-command-palette-container',
+  DOMAIN_NOTES: 'fresh-tabs-domain-notes-container',
+  SNACKBAR: 'fresh-tabs-snackbar-container',
+} as const;
 
 export const FRESH_TABS_BOOKMARK_TITLE = '#Fresh Tabs ~ ⚠️ Do not delete this, managed by extension.';
+
 export const DISCARD_TAB_URL_PREFIX = 'data:text/html,';
 
 export const SNOOZED_TAB_GROUP_TITLE = '⏰ Snoozed';

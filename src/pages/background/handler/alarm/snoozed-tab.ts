@@ -1,5 +1,5 @@
 import { SNOOZED_TAB_GROUP_TITLE } from '@root/src/constants/app';
-import { ISpace } from '@root/src/pages/types/global.types';
+import { ISpace } from '@root/src/types/global.types';
 import { logger } from '@root/src/utils';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
 import { showUnSnoozedNotification } from '@root/src/services/chrome-notification/notification';

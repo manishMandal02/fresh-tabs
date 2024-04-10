@@ -1,4 +1,4 @@
-import { ISpaceWithoutId } from '@root/src/pages/types/global.types';
+import { ISpaceWithoutId } from '@root/src/types/global.types';
 import { snackbarAtom, nonActiveSpacesAtom, activeSpaceAtom } from '@root/src/stores/app';
 import { useAtom } from 'jotai';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';

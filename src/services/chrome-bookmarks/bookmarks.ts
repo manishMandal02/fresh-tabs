@@ -2,7 +2,7 @@
 
 import { FRESH_TABS_BOOKMARK_TITLE, StorageKey } from '@root/src/constants/app';
 import { generateBMTitle, getSpaceInfoFromBMTitle } from './bookmark-title';
-import { ISpace, ITab } from '@root/src/pages/types/global.types';
+import { ISpace, ITab } from '@root/src/types/global.types';
 import { logger } from '@root/src/utils/logger';
 import { getStorage } from '../chrome-storage/helpers';
 import { getAllSpaces, setSpacesToStorage } from '../chrome-storage/spaces';

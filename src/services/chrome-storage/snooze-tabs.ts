@@ -2,7 +2,7 @@
 
 import { logger } from '@root/src/utils/logger';
 import { getStorage, setStorage } from './helpers';
-import { ISnoozedTab } from '@root/src/pages/types/global.types';
+import { ISnoozedTab } from '@root/src/types/global.types';
 import { StorageKey } from '@root/src/constants/app';
 
 export const getSnoozedTabs = async (spaceId: string) => {

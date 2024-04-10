@@ -5,7 +5,7 @@ import { CounterClockwiseClockIcon, GlobeIcon, TrashIcon } from '@radix-ui/react
 import DeleteNote from './DeleteNote';
 import Tooltip from '../../../../../components/tooltip';
 import { showAddNewNoteModalAtom } from '@root/src/stores/app';
-import { INote, ISpace } from '@root/src/pages/types/global.types';
+import { INote, ISpace } from '@root/src/types/global.types';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
 import { getNotesBySpace } from '@root/src/services/chrome-storage/notes';
 import { limitCharLength } from '@root/src/utils';

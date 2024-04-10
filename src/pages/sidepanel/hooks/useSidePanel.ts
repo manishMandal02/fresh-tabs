@@ -5,7 +5,7 @@ import { useTabsDnd } from './useTabsDnd';
 import { logger } from '../../../utils/logger';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
-import { IMessageEventSidePanel, ISpaceWithTabs } from '../../types/global.types';
+import { IMessageEventSidePanel, ISpaceWithTabs } from '../../../types/global.types';
 import { getAllSpaces, getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
 import type { OnDragEndResponder, OnBeforeDragStartResponder } from 'react-beautiful-dnd';
 import { activeSpaceAtom, dragStateAtom, nonActiveSpacesAtom } from '@root/src/stores/app';

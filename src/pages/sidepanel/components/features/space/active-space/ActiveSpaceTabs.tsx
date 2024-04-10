@@ -9,7 +9,7 @@ import { goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { useKeyShortcuts } from '../../../../hooks/useKeyShortcuts';
 import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
 import TabDraggedOutsideActiveSpace from './TabDraggedOutsideActiveSpace';
-import { ISpaceWithTabs, ITabWithIndex } from '@root/src/pages/types/global.types';
+import { ISpaceWithTabs, ITabWithIndex } from '@root/src/types/global.types';
 import { activeSpaceAtom, dragStateAtom, selectedTabsAtom } from '@root/src/stores/app';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import DraggingOverNudge from './DraggingOverNudge';

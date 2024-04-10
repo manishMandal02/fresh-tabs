@@ -9,7 +9,7 @@ import {
 } from '@radix-ui/react-icons';
 
 import { CommandType } from '@root/src/constants/app';
-import { ICommand } from '@root/src/pages/types/global.types';
+import { ICommand } from '@root/src/types/global.types';
 
 // default static commands
 export const staticCommands: ICommand[] = [

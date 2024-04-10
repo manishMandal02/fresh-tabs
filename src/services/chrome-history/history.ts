@@ -1,4 +1,4 @@
-import { ITab } from '@root/src/pages/types/global.types';
+import { ITab } from '@root/src/types/global.types';
 import { getCurrentTab } from '../chrome-tabs/tabs';
 import { logger } from '@root/src/utils/logger';
 import { isChromeUrl } from '@root/src/utils/url';

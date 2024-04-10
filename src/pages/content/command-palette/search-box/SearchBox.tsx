@@ -1,10 +1,10 @@
 import { CheckIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
-import { FC, forwardRef, PropsWithChildren, Dispatch , memo } from 'react';
+import { FC, forwardRef, PropsWithChildren, Dispatch, memo } from 'react';
 
 import { useCommand } from '../command/useCommand';
 import { CommandType } from '@root/src/constants/app';
 import { cn } from '@root/src/utils/cn';
-import { ISearchFilters } from '@root/src/pages/types/global.types';
+import { ISearchFilters } from '@root/src/types/global.types';
 
 // show sub command indicator instead of search icon when a sub command is selected
 const SubCommandIndicator: FC<{ subCommandType?: CommandType }> = ({ subCommandType }) => {

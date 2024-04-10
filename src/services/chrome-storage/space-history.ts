@@ -1,7 +1,7 @@
 import { logger } from '@root/src/utils';
 import { getStorage, setStorage } from './helpers';
 import { StorageKey } from '@root/src/constants/app';
-import { ISiteVisit } from '@root/src/pages/types/global.types';
+import { ISiteVisit } from '@root/src/types/global.types';
 
 // get full space history (past 30d)
 export const getSpaceHistory = async (spaceId: string, shouldGetFullHistory = false) => {

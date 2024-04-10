@@ -9,7 +9,7 @@ import MoreOptions from '../more-options';
 import Tabs from '../../../../../../components/tabs/Tabs';
 import ActiveSpaceTabs from './ActiveSpaceTabs';
 import SpaceHistory from '../history/SpaceHistory';
-import { ISpaceWithTabs } from '@root/src/pages/types/global.types';
+import { ISpaceWithTabs } from '@root/src/types/global.types';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { deleteSpaceModalAtom, snackbarAtom } from '@root/src/stores/app';

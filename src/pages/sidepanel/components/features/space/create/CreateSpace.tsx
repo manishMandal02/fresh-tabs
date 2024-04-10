@@ -8,7 +8,7 @@ import { ThemeColor } from '@root/src/constants/app';
 import ColorPicker from '../../../../../../components/color-picker';
 import EmojiPicker from '../../../../../../components/emoji-picker';
 import TextInput from '../../../../../../components/TextInput/TextInput';
-import { ISpace, ITab } from '@root/src/pages/types/global.types';
+import { ISpace, ITab } from '@root/src/types/global.types';
 import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
 import ErrorMessage from '../../../../../../components/alert-message/ErrorMessage';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';

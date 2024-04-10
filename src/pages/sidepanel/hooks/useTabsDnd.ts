@@ -1,5 +1,5 @@
 import { SetStateAction, useAtom } from 'jotai';
-import { ISpaceWithTabs, ITab } from '../../types/global.types';
+import { ISpaceWithTabs, ITab } from '../../../types/global.types';
 import {
   activeSpaceAtom,
   deleteSpaceModalAtom,

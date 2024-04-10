@@ -9,8 +9,8 @@ import {
   ISnoozedTab,
   ISpace,
   ITab,
-} from '@root/src/pages/types/global.types';
-import { UnionTypeFromObjectValues } from '@root/src/pages/types/utility.types';
+} from '@root/src/types/global.types';
+import { UnionTypeFromObjectValues } from '@root/src/types/utility.types';
 import { logger } from '@root/src/utils/logger';
 
 type StorageValue =

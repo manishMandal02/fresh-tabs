@@ -17,7 +17,7 @@ import { useCustomAnimation } from '../../sidepanel/hooks/useCustomAnimation';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
-import { ICommand, ISearchFilters, ISpace, ITab } from '../../types/global.types';
+import { ICommand, ISearchFilters, ISpace, ITab } from '../../../types/global.types';
 import { staticCommands, useCommand, webSearchCommand } from './command/useCommand';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
 

@@ -1,4 +1,4 @@
-import { ICommand } from '@root/src/pages/types/global.types';
+import { ICommand } from '@root/src/types/global.types';
 
 type Props = {
   index: number;

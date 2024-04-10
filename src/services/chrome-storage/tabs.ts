@@ -1,6 +1,6 @@
 import { logger } from '@root/src/utils/logger';
 import { getStorage } from './helpers/get';
-import { IPinnedTab, ISpace, ITab } from '@root/src/pages/types/global.types';
+import { IPinnedTab, ISpace, ITab } from '@root/src/types/global.types';
 import { setStorage } from './helpers/set';
 import { updateActiveTabInSpace } from './spaces';
 import { StorageKey } from '@root/src/constants/app';

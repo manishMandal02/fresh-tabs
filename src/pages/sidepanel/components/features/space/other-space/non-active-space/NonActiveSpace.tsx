@@ -4,7 +4,7 @@ import { ExitIcon, ExternalLinkIcon, Pencil1Icon, TrashIcon } from '@radix-ui/re
 
 import Popover from '../../../../../../../components/popover';
 import Tooltip from '../../../../../../../components/tooltip';
-import { ISpace } from '@root/src/pages/types/global.types';
+import { ISpace } from '@root/src/types/global.types';
 import { openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import {

@@ -11,7 +11,7 @@ import EmojiPicker from '../../../../../../components/emoji-picker';
 import { showUpdateSpaceModalAtom } from '@root/src/stores/app';
 import TextInput from '../../../../../../components/TextInput/TextInput';
 import ErrorMessage from '../../../../../../components/alert-message/ErrorMessage';
-import { ISpaceWithoutId, ITab } from '@root/src/pages/types/global.types';
+import { ISpaceWithoutId, ITab } from '@root/src/types/global.types';
 
 const UpdateSpace = () => {
   console.log('UpdateSpace ~ 🔁 rendered');

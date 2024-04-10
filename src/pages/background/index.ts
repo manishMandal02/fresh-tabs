@@ -49,7 +49,7 @@ import {
   INote,
   ISiteVisit,
   ITab,
-} from './../types/global.types';
+} from '../../types/global.types';
 import {
   getTabsInSpace,
   removeTabFromSpace,

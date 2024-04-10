@@ -1,7 +1,7 @@
 import { logger } from '@root/src/utils';
 import { getStorage, setStorage } from './helpers';
 import { StorageKey } from '@root/src/constants/app';
-import { INote } from '@root/src/pages/types/global.types';
+import { INote } from '@root/src/types/global.types';
 
 // get all spaces
 export const getAllNotes = async () => await getStorage<INote[]>({ key: StorageKey.NOTES, type: 'local' });

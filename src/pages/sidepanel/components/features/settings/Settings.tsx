@@ -6,7 +6,7 @@ import Spinner from '../../../../../components/spinner';
 import { SlideModal } from '../../../../../components/modal';
 import Switch from '../../../../../components/switch/Switch';
 import Accordion from '../../../../../components/accordion/Accordion';
-import { IAppSettings } from '@root/src/pages/types/global.types';
+import { IAppSettings } from '@root/src/types/global.types';
 import { AlarmName, DefaultAppSettings } from '@root/src/constants/app';
 import { saveSettings } from '@root/src/services/chrome-storage/settings';
 import RadioGroup, { RadioOptions } from '../../../../../components/radio-group/RadioGroup';

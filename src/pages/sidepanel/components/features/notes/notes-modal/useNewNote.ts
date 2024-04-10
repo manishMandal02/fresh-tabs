@@ -6,7 +6,7 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 
 import { generateId } from '@root/src/utils';
 import { isValidURL } from '@root/src/utils/url';
-import { INote } from '@root/src/pages/types/global.types';
+import { INote } from '@root/src/types/global.types';
 import { snackbarAtom, activeSpaceAtom } from '@root/src/stores/app';
 import { addNewNote, updateNote } from '@root/src/services/chrome-storage/notes';
 import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';

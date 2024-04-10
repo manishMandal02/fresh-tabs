@@ -1,4 +1,4 @@
-import { ISpace, ITab } from '@root/src/pages/types/global.types';
+import { ISpace, ITab } from '@root/src/types/global.types';
 import { getSpaceByWindow, updateSpace } from '../chrome-storage/spaces';
 import { getFaviconURL } from '@root/src/utils/url';
 import { getTabsInSpace, setTabsForSpace } from '../chrome-storage/tabs';

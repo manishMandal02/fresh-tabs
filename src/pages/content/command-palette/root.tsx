@@ -4,19 +4,19 @@ import { createRoot } from 'react-dom/client';
 import Frame, { FrameContextConsumer } from 'react-frame-component';
 
 import DomainNotes from '../domain-notes';
+import { publishEvents } from '@root/src/utils';
 import injectedStyle from './injected.css?inline';
 import { SnackbarContentScript } from '../snackbar';
 import { getTime } from '@root/src/utils/date-time/get-time';
 import { getWeekday } from '@root/src/utils/date-time/get-weekday';
 import { getSpace } from '@root/src/services/chrome-storage/spaces';
+import { ContentScriptContainerIds } from '@root/src/constants/app';
 import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
 import CommandPalette, { COMMAND_PALETTE_SIZE } from './CommandPalette';
 import { getNoteByDomain } from '@root/src/services/chrome-storage/notes';
 import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
-import { CommandPaletteContainerId, DomainNotesContainerId } from '@root/src/constants/app';
-import { IMessageEventContentScript, ISearchFilters, ISpace, ITab } from '../../types/global.types';
-import { publishEvents } from '@root/src/utils';
+import { IMessageEventContentScript, ISearchFilters, ISpace, ITab } from '../../../types/global.types';
 
 // development: refresh content page on update
 refreshOnUpdate('pages/content');
@@ -24,15 +24,9 @@ refreshOnUpdate('pages/content');
 // host page position to reset after closing command palette
 let hostBackgroundPosition = 'auto';
 
-// handles click for backdrop of command palette container iframe
-const handleBackgroundCLick = () => {
-  // close command palette
-  handleClose();
-};
-
 // close command palette
-const handleClose = () => {
-  const commandPaletteContainerEl = document.getElementById(CommandPaletteContainerId);
+const handleCloseCommandPalette = () => {
+  const commandPaletteContainerEl = document.getElementById(ContentScriptContainerIds.COMMAND_PALETTE);
 
   if (!commandPaletteContainerEl) return;
 
@@ -57,13 +51,13 @@ const appendCommandPaletteContainer = ({
   selectedNoteId,
   searchFilterPreferences,
 }: AppendContainerProps) => {
-  if (document.getElementById(CommandPaletteContainerId)) return;
+  if (document.getElementById(ContentScriptContainerIds.COMMAND_PALETTE)) return;
 
   const userSelectedText = selectedText || getUserSelectionText();
 
   const commandPaletteContainer = document.createElement('div');
 
-  commandPaletteContainer.id = CommandPaletteContainerId;
+  commandPaletteContainer.id = ContentScriptContainerIds.COMMAND_PALETTE;
 
   commandPaletteContainer.style.height = '100vh';
   commandPaletteContainer.style.width = '100vw';
@@ -84,7 +78,9 @@ const appendCommandPaletteContainer = ({
   // append root react component for command palette
   document.body.append(commandPaletteContainer);
 
-  commandPaletteContainer.addEventListener('click', handleBackgroundCLick);
+  commandPaletteContainer.addEventListener('click', () => {
+    handleCloseCommandPalette();
+  });
 
   createRoot(commandPaletteContainer).render(
     <Frame
@@ -110,8 +106,8 @@ const appendCommandPaletteContainer = ({
             <CommandPalette
               recentSites={recentSites || []}
               activeSpace={activeSpace}
-              onClose={handleClose}
-              userSelectedText={userSelectedText}
+              onClose={handleCloseCommandPalette}
+              userSelectedText={userSelectedText?.trim() || ''}
               selectedNoteId={selectedNoteId}
               searchFiltersPreference={searchFilterPreferences}
             />
@@ -123,9 +119,9 @@ const appendCommandPaletteContainer = ({
 };
 
 const handleShowSnackbar = (title: string) => {
-  console.log('🚀 ~ handleShowSnackbar ~ title:', title);
-
   const root = document.createElement('div');
+
+  root.id = ContentScriptContainerIds.SNACKBAR;
 
   document.body.appendChild(root);
 
@@ -142,10 +138,10 @@ const handleShowSnackbar = (title: string) => {
 
 const showNotes = async (spaceId: string, reRender = false) => {
   // do nothing if component already rendered
-  if (document.getElementById(DomainNotesContainerId) && !reRender) return;
+  if (document.getElementById(ContentScriptContainerIds.DOMAIN_NOTES) && !reRender) return;
 
   if (reRender) {
-    const notesRootContainer = document.getElementById(DomainNotesContainerId);
+    const notesRootContainer = document.getElementById(ContentScriptContainerIds.DOMAIN_NOTES);
     if (notesRootContainer) {
       notesRootContainer.replaceChildren();
       notesRootContainer.remove();
@@ -162,7 +158,7 @@ const showNotes = async (spaceId: string, reRender = false) => {
   // render notes components
   const notesContainer = document.createElement('div');
 
-  notesContainer.id = DomainNotesContainerId;
+  notesContainer.id = ContentScriptContainerIds.DOMAIN_NOTES;
 
   notesContainer.style.width = '80px';
   notesContainer.style.height = '80px';

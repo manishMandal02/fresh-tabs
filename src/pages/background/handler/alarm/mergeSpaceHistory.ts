@@ -1,4 +1,4 @@
-import { ISiteVisit } from '@root/src/pages/types/global.types';
+import { ISiteVisit } from '@root/src/types/global.types';
 import { logger } from '@root/src/utils';
 import { getSpaceHistory, setSpaceHistory } from '@root/src/services/chrome-storage/space-history';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';

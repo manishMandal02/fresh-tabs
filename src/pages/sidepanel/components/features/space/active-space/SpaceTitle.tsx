@@ -3,7 +3,7 @@ import { useRef, Dispatch, useCallback, useState, useEffect } from 'react';
 
 import EmojiPicker from '../../../../../../components/emoji-picker';
 import { nonActiveSpacesAtom } from '@root/src/stores/app';
-import { ISpace, ISpaceWithTabs } from '@root/src/pages/types/global.types';
+import { ISpace, ISpaceWithTabs } from '@root/src/types/global.types';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 
 type Props = {

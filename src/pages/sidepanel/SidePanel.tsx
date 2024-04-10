@@ -10,7 +10,7 @@ import Snackbar from '../../components/snackbar';
 import Footer from './components/features/footer';
 import { useSidePanel } from './hooks/useSidePanel';
 import Settings from './components/features/settings/Settings';
-import { IMessageEventSidePanel } from '../types/global.types';
+import { IMessageEventSidePanel } from '../../types/global.types';
 import { showCommandPaletteContentScript } from '../background';
 import UserAccount from './components/features/user/UserAccount';
 import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
@@ -21,15 +21,13 @@ import ErrorBoundaryUI from '../../components/error-boundary/ErrorBoundaryUI';
 import DeleteSpaceModal from './components/features/space/delete/DeleteSpaceModal';
 import { ActiveSpace, CreateSpace, UpdateSpace } from './components/features/space';
 import { TAB_HEIGHT } from './components/features/space/active-space/ActiveSpaceTabs';
-import { appSettingsAtom, dragStateAtom, showNotificationModalAtom, snackbarAtom } from '@root/src/stores/app';
+import { appSettingsAtom, dragStateAtom, showNotificationModalAtom } from '@root/src/stores/app';
 
 // event ids of processed events
 const processedEvents: string[] = [];
 
 const SidePanel = () => {
-  // global state - snackbar
-  const [snackbar] = useAtom(snackbarAtom);
-
+  // global state
   // dragging state
   const [{ isDragging: isDraggingGlobal, type: draggingType }] = useAtom(dragStateAtom);
 
@@ -209,12 +207,7 @@ const SidePanel = () => {
           <UserAccount />
 
           {/* snackbar */}
-          <Snackbar
-            show={snackbar.show}
-            msg={snackbar.msg}
-            isSuccess={snackbar.isSuccess}
-            isLoading={snackbar.isLoading}
-          />
+          <Snackbar />
         </ErrorBoundary>
       </main>
     </Geiger>

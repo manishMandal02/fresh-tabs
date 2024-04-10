@@ -17,7 +17,7 @@ import { cn } from '@root/src/utils/cn';
 import { isValidURL } from '@root/src/utils/url';
 import { useFrame } from 'react-frame-component';
 import { COMMAND_HEIGHT } from '../CommandPalette';
-import { RadixIconType } from '@root/src/pages/types/global.types';
+import { RadixIconType } from '@root/src/types/global.types';
 import { CommandType } from '@root/src/constants/app';
 import { useKeyShortcuts } from '@root/src/pages/sidepanel/hooks/useKeyShortcuts';
 

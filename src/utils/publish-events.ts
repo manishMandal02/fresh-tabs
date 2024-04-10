@@ -1,4 +1,4 @@
-import { IMessageEventSidePanel, IMessageEventContentScript } from '../pages/types/global.types';
+import { IMessageEventSidePanel, IMessageEventContentScript } from '../types/global.types';
 import { logger } from './logger';
 
 // used to send message to side panel to update ui, if side panel is open

@@ -1,8 +1,10 @@
 import { CSSProperties, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useAnimate } from 'framer-motion';
-import { wait } from '@root/src/utils';
+import { motion } from 'framer-motion';
 import { CheckCircledIcon } from '@radix-ui/react-icons';
+import { useCustomAnimation } from '../../sidepanel/hooks/useCustomAnimation';
+import { ContentScriptContainerIds } from '@root/src/constants/app';
+import { wait } from '@root/src/utils';
 
 type Props = {
   title: string;
@@ -10,19 +12,20 @@ type Props = {
 
 const containerStyles: CSSProperties = {
   position: 'fixed',
-  top: '-50px',
-  left: '48%',
+  top: '28px',
+  left: '45.5%',
   zIndex: 2147483647,
   display: 'flex',
+  padding: '2px 10px',
   alignItems: 'center',
   justifyContent: 'center',
   fontSize: '14px',
   letterSpacing: '0.45px',
   fontWeight: 300,
   height: '40px',
-  width: '40px',
+  width: 'fit-content',
   color: '#d3d3d3',
-  borderRadius: '100%',
+  borderRadius: '8px',
   backgroundColor: '#191919',
   border: '1.5px solid #7878784e',
   boxShadow: '#6262883f 0px 2px 5px -1px, #7070704c 0px 1px 3px -1px;',
@@ -31,56 +34,47 @@ const containerStyles: CSSProperties = {
 const textStyles: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  opacity: 0,
 };
 
 const SnackbarContentScript = ({ title }: Props) => {
-  const [scope, animate] = useAnimate();
-
-  const animateSnackbar = async () => {
-    // wait 0.1s
-    // await wait(100);
-    //  round div drop
-    animate(scope.current, { y: '60px' }, { duration: 0.1, type: 'spring', damping: 20, stiffness: 80 });
-    // expand width
-    animate(
-      scope.current,
-      { width: '170px', borderRadius: '20px', x: '-50px' },
-      { delay: 0.1, duration: 0.1, type: 'spring', damping: 16, stiffness: 80 },
-    );
-
-    // show text
-    animate('span', { opacity: 1 }, { delay: 0.35, duration: 0.3, type: 'spring' });
-
-    // wait 2.5s
-    await wait(3000);
-
-    // collapse to width to make round again
-    animate(
-      scope.current,
-      { width: '40px', borderRadius: '28px', x: '0px' },
-      { duration: 0.4, type: 'spring', damping: 16, stiffness: 50 },
-    );
-
-    // hide text
-    animate('span', { opacity: 0 }, { duration: 0.35, type: 'spring' });
-
-    // move out of the screen
-    animate(scope.current, { y: '-50px' }, { delay: 0.05, duration: 0.6, type: 'spring', damping: 18, stiffness: 50 });
+  const handleRemoveSnackbar = () => {
+    // outer container (react root)
+    const snackbarContainer = document.getElementById(ContentScriptContainerIds.SNACKBAR);
+    // inner wrapper
+    const snackbarWrapper = document.getElementById(ContentScriptContainerIds.SNACKBAR + '-wrapper');
+    if (!snackbarContainer || !snackbarWrapper) return;
+    // remove children
+    snackbarContainer?.replaceChildren();
+    snackbarWrapper?.replaceChildren();
+    // remove main container
+    snackbarContainer?.remove();
+    snackbarWrapper?.remove();
   };
 
   useEffect(() => {
-    animateSnackbar();
+    setTimeout(async () => {
+      const snackbarWrapper = document.getElementById(ContentScriptContainerIds.SNACKBAR + '-wrapper');
+      if (snackbarWrapper) {
+        snackbarWrapper.style.transitionDuration = '500ms';
+        snackbarWrapper.style.transitionProperty = 'all';
+        snackbarWrapper.style.transform = 'scale(0)';
+        snackbarWrapper.style.opacity = '0';
+      }
+      await wait(400);
+      handleRemoveSnackbar();
+    }, 3000);
   }, []);
+
+  const { bounce } = useCustomAnimation();
 
   return title ? (
     createPortal(
-      <div style={containerStyles} ref={scope}>
+      <motion.div {...bounce} style={containerStyles} id={ContentScriptContainerIds.SNACKBAR + '-wrapper'}>
         <span style={textStyles}>
           <CheckCircledIcon style={{ color: '#dedede9f', marginRight: '6px', scale: '1.1' }} />
           {title}
         </span>
-      </div>,
+      </motion.div>,
       document.body,
     )
   ) : (

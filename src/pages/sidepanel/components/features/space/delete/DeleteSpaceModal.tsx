@@ -5,7 +5,7 @@ import { useEffect, useCallback, useState } from 'react';
 import Spinner from '../../../../../../components/spinner';
 import { AlertModal } from '../../../../../../components/modal';
 import { AlarmName } from '@root/src/constants/app';
-import { ISpace } from '@root/src/pages/types/global.types';
+import { ISpace } from '@root/src/types/global.types';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
 import { deleteAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers';
 import { deleteSpace, getSpace } from '@root/src/services/chrome-storage/spaces';

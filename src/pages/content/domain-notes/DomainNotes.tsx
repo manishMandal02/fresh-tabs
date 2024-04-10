@@ -3,10 +3,10 @@ import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { CounterClockwiseClockIcon, FileTextIcon, LapTimerIcon, PlusIcon, TrashIcon } from '@radix-ui/react-icons';
 
-import { INote } from '../../types/global.types';
+import { INote } from '../../../types/global.types';
 import injectedStyle from './domain-notes.css?inline';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
-import { DomainNotesContainerId } from '@root/src/constants/app';
+import { ContentScriptContainerIds } from '@root/src/constants/app';
 import { useCustomAnimation } from '../../sidepanel/hooks/useCustomAnimation';
 
 const AllNotesContainerId = 'all-notes-container';
@@ -31,7 +31,7 @@ const DomainNotes = ({ domainNotes, onNoteClick, onNewNoteClick, onDeleteNoteCli
 
   const hideAllNotes = () => {
     setShowNotes(false);
-    const domainNotesContainer = document.getElementById(DomainNotesContainerId);
+    const domainNotesContainer = document.getElementById(ContentScriptContainerIds.DOMAIN_NOTES);
 
     if (!domainNotesContainer) return;
 
@@ -135,7 +135,7 @@ export default DomainNotes;
 
 const createShadowRoot = (onCLose: () => void) => {
   // notes container
-  const notesContainer = document.getElementById(DomainNotesContainerId);
+  const notesContainer = document.getElementById(ContentScriptContainerIds.DOMAIN_NOTES);
   const host = document.createElement('div');
   host.id = AllNotesContainerId;
   host.style.height = '100vh';

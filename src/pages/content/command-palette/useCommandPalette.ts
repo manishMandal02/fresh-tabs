@@ -4,7 +4,7 @@ import { useFrame } from 'react-frame-component';
 
 import { useCommand } from './command/useCommand';
 import { CommandType } from '@root/src/constants/app';
-import { ICommand, ISpace } from '../../types/global.types';
+import { ICommand, ISpace } from '../../../types/global.types';
 import { getTime } from '@root/src/utils/date-time/get-time';
 import { publishEvents } from '../../../utils/publish-events';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';

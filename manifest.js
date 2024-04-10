@@ -32,13 +32,13 @@ const manifest = {
       description: 'Set above ☝️',
       global: true,
     },
-    // TODO - new tab shortcut
+    // new tab shortcut
     newTab: {
       suggested_key: {
         default: 'Ctrl+T',
         mac: 'Command+T',
       },
-      description: 'New Tab',
+      description: 'New Tab to Right',
     },
     cmdPalette: {
       suggested_key: {
