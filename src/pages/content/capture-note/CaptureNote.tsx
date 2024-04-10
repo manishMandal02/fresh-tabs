@@ -130,11 +130,8 @@ const CreateNote = ({
           onKeyDown={ev => {
             if (ev.code === 'Tab') {
               const editorContainer = ev.currentTarget.parentElement?.nextElementSibling as HTMLDivElement;
-              console.log('🚀 ~ editorContainer:', editorContainer);
 
               const editor = editorContainer.querySelector('div[contenteditable="true"]') as HTMLDivElement;
-
-              console.log('🚀 ~ editor:', editor);
 
               editor?.focus({ preventScroll: true });
             }

@@ -1,5 +1,5 @@
 import { CodeNode } from '@lexical/code';
-import { useCallback, useRef, memo } from 'react';
+import { useCallback, useRef, memo , useEffect } from 'react';
 import { ListNode, ListItemNode } from '@lexical/list';
 import { AutoLinkNode, LinkNode } from '@lexical/link';
 import { $createQuoteNode, HeadingNode, QuoteNode } from '@lexical/rich-text';
@@ -39,7 +39,7 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
   // remove date highlight class from other spans if applied
-  const removeDateHighlightStyle = (spanElNode?: Node) => {
+  const removeDateHighlightStyle = useCallback((spanElNode?: Node) => {
     const allSpanWithClass = editorContainerRef.current?.querySelectorAll(`span.${DATE_HIGHLIGHT_CLASS_NAME}`);
 
     if (allSpanWithClass?.length < 1) return;
@@ -59,8 +59,50 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
         }
       }
     }
-  };
+  }, []);
 
+  // add date highlight class
+  const addDateHighlightStyle = useCallback(
+    (dateString: string) => {
+      const rootDocumentToSearch = rootDocument || document;
+
+      // find the date hint el and style it
+      const span = rootDocumentToSearch.evaluate(
+        `//span[contains(., '${dateString}')]`,
+        rootDocumentToSearch,
+
+        null,
+        XPathResult.ANY_TYPE,
+        null,
+      );
+      const spanEl = span.iterateNext() as HTMLSpanElement;
+
+      if (!spanEl) return;
+
+      // check if the "remind" keyword exists in the span text
+
+      const text = spanEl.textContent?.toLowerCase() || '';
+
+      const dateStringIndex = text.indexOf(dateString.toLowerCase());
+
+      if (
+        text.includes('remind') &&
+        text.indexOf('remind') < dateStringIndex - 1 &&
+        text.indexOf('remind') > dateStringIndex - 20
+      ) {
+        // set the last occurrence of the date hint
+        setRemainder(dateString);
+        // add date highlight class
+        spanEl.classList.add('add-note-date-highlight');
+
+        removeDateHighlightStyle(spanEl);
+      } else {
+        removeDateHighlightStyle();
+        setRemainder('');
+      }
+    },
+    [rootDocument, setRemainder],
+  );
   // check for data hint string for remainders
   const debouncedChangeHandler = useCallback(
     debounce((note: string) => {
@@ -80,45 +122,20 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
         return;
       }
 
-      const rootDocumentToSearch = rootDocument || document;
-
-      // find the date hint el and style it
-      const span = rootDocumentToSearch.evaluate(
-        `//span[contains(., '${res.dateString}')]`,
-        rootDocumentToSearch,
-
-        null,
-        XPathResult.ANY_TYPE,
-        null,
-      );
-      const spanEl = span.iterateNext() as HTMLSpanElement;
-
-      if (!spanEl) return;
-
-      // check if the "remind" keyword exists in the span text
-
-      const text = spanEl.textContent?.toLowerCase() || '';
-
-      const dateStringIndex = text.indexOf(res.dateString.toLowerCase());
-
-      if (
-        text.includes('remind') &&
-        text.indexOf('remind') < dateStringIndex - 1 &&
-        text.indexOf('remind') > dateStringIndex - 20
-      ) {
-        // set the last occurrence of the date hint
-        setRemainder(res.dateString);
-        // add date highlight class
-        spanEl.classList.add('add-note-date-highlight');
-
-        removeDateHighlightStyle(spanEl);
-      } else {
-        removeDateHighlightStyle();
-        setRemainder('');
-      }
+      addDateHighlightStyle(res.dateString);
     }, 300),
-    [onChange, setRemainder, rootDocument],
+    [onChange, setRemainder, rootDocument, removeDateHighlightStyle, addDateHighlightStyle],
   );
+
+  // add date highlight class for initial note content (edit/view note)
+  useEffect(() => {
+    if (!content) return;
+    const res = parseStringForDateTimeHint(content);
+
+    if (!res?.dateString) return;
+
+    addDateHighlightStyle(res.dateString);
+  }, []);
 
   return (
     <div

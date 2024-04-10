@@ -34,10 +34,10 @@ export const dragStateAtom = atom<{ isDragging: boolean; type: 'space' | 'tabs' 
 
 //  snackbar
 export const snackbarAtom = atom<SnackbarAtom>({
-  msg: 'Space deleted',
-  show: true,
+  msg: '',
+  show: false,
   isLoading: false,
-  isSuccess: true,
+  isSuccess: false,
 });
 
 //  settings

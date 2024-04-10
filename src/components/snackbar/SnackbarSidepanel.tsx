@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircledIcon, CrossCircledIcon } from '@radix-ui/react-icons';
 
 import Spinner from '../spinner';
-import { snackbarAtom } from '@root/src/stores/app';
 import { cn } from '@root/src/utils/cn';
+import { snackbarAtom } from '@root/src/stores/app';
 import { useCustomAnimation } from '@root/src/pages/sidepanel/hooks/useCustomAnimation';
 
 const Snackbar = () => {
