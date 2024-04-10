@@ -50,6 +50,9 @@ const NotesModal = () => {
     if (!showModal.note?.id) {
       // new note
       showModal.note.text?.length > 0 ? setNote(showModal.note.text) : setNote(EDITOR_EMPTY_STATE);
+      setTimeout(() => {
+        (editorContainerRef.current?.querySelector('div[contenteditable="true"]') as HTMLDivElement)?.focus();
+      }, 100);
     } else {
       // editing note
       const noteToEdit = showModal.note;

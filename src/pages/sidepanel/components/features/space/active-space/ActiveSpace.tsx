@@ -52,8 +52,6 @@ const ActiveSpace = ({ space, setActiveSpace, onSearchClick, onNotificationClick
 
     setActiveSpace({ ...space, activeTabIndex: activeTab.index, tabs: [...tabsInWindow] });
 
-    setSnackbar({ msg: '', show: false, isLoading: false });
-
     setSnackbar({ msg: 'Tabs synced', show: true, isLoading: false, isSuccess: true });
   };
 

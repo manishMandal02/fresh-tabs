@@ -1,18 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
 import { useAtom } from 'jotai';
+import { useState, useEffect, useCallback } from 'react';
 
 import { Tab } from '..';
-import Spinner from '../../../../../../components/spinner';
-import { SlideModal } from '../../../../../../components/modal';
 import { ThemeColor } from '@root/src/constants/app';
+import Spinner from '../../../../../../components/spinner';
+import { ISpace, ITab } from '@root/src/types/global.types';
+import { SlideModal } from '../../../../../../components/modal';
 import ColorPicker from '../../../../../../components/color-picker';
 import EmojiPicker from '../../../../../../components/emoji-picker';
-import TextInput from '../../../../../../components/TextInput/TextInput';
-import { ISpace, ITab } from '@root/src/types/global.types';
 import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
-import ErrorMessage from '../../../../../../components/alert-message/ErrorMessage';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
+import TextInput from '../../../../../../components/TextInput/TextInput';
 import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
+import ErrorMessage from '../../../../../../components/alert-message/ErrorMessage';
 import { snackbarAtom, nonActiveSpacesAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
 
 type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;
@@ -128,8 +128,17 @@ const CreateSpace = () => {
     ev => {
       const keyEv = ev as KeyboardEvent;
 
-      if (keyEv.ctrlKey && keyEv.code === 'KeyA') {
+      if (keyEv.shiftKey && keyEv.code === 'KeyS') {
         setNewSpaceModal({ show: true, tabs: [] });
+
+        //  remove letter s from tile that is trigged after new space shortcut (shift+s)
+        setTimeout(() => {
+          setNewSpaceData(prev => {
+            if (prev.title) return { ...prev, title: '' };
+
+            return prev;
+          });
+        }, 50);
       }
     },
     [setNewSpaceModal],

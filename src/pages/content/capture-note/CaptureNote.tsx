@@ -60,7 +60,6 @@ const CreateNote = ({
           const dateHintString = parseStringForDateTimeHint(noteToEdit.text);
 
           if (dateHintString?.dateString) {
-            // TODO - highlight style for date hint
             setRemainder(dateHintString.dateString);
           }
         }

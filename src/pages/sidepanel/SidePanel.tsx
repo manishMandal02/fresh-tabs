@@ -120,6 +120,8 @@ const SidePanel = () => {
     setShowNotification(true);
   }, [setShowNotification]);
 
+  //TODO -  organize and control all global shortcuts and modals from one component
+
   return (
     <Geiger>
       <main className="w-screen h-screen overflow-hidden bg-brand-darkBg">

@@ -1,9 +1,10 @@
+import { motion } from 'framer-motion';
 import { CheckIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
 import { FC, forwardRef, PropsWithChildren, Dispatch, memo } from 'react';
 
+import { cn } from '@root/src/utils/cn';
 import { useCommand } from '../command/useCommand';
 import { CommandType } from '@root/src/constants/app';
-import { cn } from '@root/src/utils/cn';
 import { ISearchFilters } from '@root/src/types/global.types';
 
 // show sub command indicator instead of search icon when a sub command is selected
@@ -47,6 +48,7 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
     console.log('SearchBox ~ 🔁 rendered');
 
     const { searchBookmarks, searchNotes } = searchFilters;
+
     return (
       <div
         className={`relative w-full h-[32px] min-h-[32px] md:h-[50px] md:min-h-[50px] flex items-center bg-brand-darkBg rounded-tl-xl rounded-tr-xl
@@ -90,35 +92,46 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
           className={`text-[12px] md:text-[14px] text-slate-300 w-auto flex-grow px-px py-1.5 md:py-2.5  placeholder:text-slate-500/80 placeholder:font-light
                 rounded-tr-xl caret-slate-300 caret rounded-br-xl outline-none border-none bg-transparent`}
         />
-        {/* TODO - animate state transition on click */}
         {/* search filter */}
-        <div className="absolute right-2 top-1.5 flex items-end ">
+        <div className="absolute right-2 top-1.5 flex items-end">
+          {/* bookmark */}
           {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-          <span
+          <motion.div
+            whileTap={{ scale: '1.1', width: '100%' }}
+            transition={{ type: 'spring', duration: '0.1', damping: 20, stiffness: 200 }}
             tabIndex={-1}
             onClick={() => {
               setSearchFilters(prev => ({ ...prev, searchBookmarks: !prev.searchBookmarks }));
               handleFocusSearchInput();
             }}
             className={cn(
-              'flex w-fit items-center overflow-hidden text-slate-300/70 font-light mr-1 text-[10.5px] border border-brand-darkBgAccent/90 px-2.5 py-px rounded-2xl select-none cursor-pointer',
+              'flex w-[84px] items-center justify-center overflow-hidden text-slate-300/70 font-light mr-1 text-[10.5px] border border-brand-darkBgAccent/90 px-2.5 py-px rounded-2xl select-none cursor-pointer',
               { 'bg-brand-darkBgAccent/70 px-1.5': searchBookmarks },
             )}>
-            {searchBookmarks ? <CheckIcon className="text-slate-200 scale-[0.7] mr-[2px]" /> : null} Bookmarks
-          </span>
+            <span className="mr-[2px]">
+              {searchBookmarks ? <CheckIcon className="text-slate-200 scale-[0.7] " /> : null}
+            </span>
+            Bookmarks
+          </motion.div>
+          {/* notes */}
           {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-          <span
+          <motion.span
+            whileTap={{ scale: '1.1', width: '100%' }}
+            transition={{ type: 'spring', duration: '0.1', damping: 20, stiffness: 200 }}
             tabIndex={-1}
             onClick={() => {
               setSearchFilters(prev => ({ ...prev, searchNotes: !prev.searchNotes }));
               handleFocusSearchInput();
             }}
             className={cn(
-              'flex w-fit items-center overflow-hidden text-slate-300/70 font-light text-[10.5px] border border-brand-darkBgAccent/90 px-2.5 py-px rounded-2xl select-none cursor-pointer',
+              'flex w-[60px] items-center justify-center overflow-hidden text-slate-300/70 font-light text-[10.5px] border border-brand-darkBgAccent/90 px-2.5 py-px rounded-2xl select-none cursor-pointer',
               { 'bg-brand-darkBgAccent/70 px-1.5': searchNotes },
             )}>
-            {searchNotes ? <CheckIcon className="text-slate-200 scale-[0.7] mr-[2px]" /> : null} Notes
-          </span>
+            <span className="mr-[2px]">
+              {searchNotes ? <CheckIcon className="text-slate-200 scale-[0.7]" /> : null}
+            </span>
+            Notes
+          </motion.span>
           {/* <span>Bookmarks</span> */}
         </div>
       </div>

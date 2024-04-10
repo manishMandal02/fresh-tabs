@@ -43,9 +43,10 @@ type Props = {
 
 // TODO - add group helpers commands
 
-// TODO - Fix - when typing fast and selecting command that opens sub commands, the sub command assumes that theres text in the input box while there isn't any.
+// ANCHOR - Working Currently
+// when typing fast and selecting command that opens sub commands, the sub command assumes that theres text in the input box while there isn't any.
 // its' because of the multi useEffect  updating the commands/search
-// 👆 this is also causing another bug where the search box is empty but the suggestion box assumes that there's still some part of the erase text
+// this is also causing another bug where the search box is empty but the suggestion box assumes that there's still some part of the erase text
 
 const CommandPalette = ({
   activeSpace,

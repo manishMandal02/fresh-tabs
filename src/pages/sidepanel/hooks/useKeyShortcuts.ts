@@ -108,7 +108,7 @@ export const useKeyShortcuts = ({
     };
   }, [isSidePanel, parentConTainerEl, handleKeyUp, handleKeydown, monitorModifierKeys]);
 
-  // // side panel
+  // side panel
   useEffect(() => {
     if (!isSidePanel) return;
     document.body.addEventListener('keydown', handleKeydown);

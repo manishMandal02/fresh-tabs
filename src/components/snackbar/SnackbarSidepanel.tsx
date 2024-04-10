@@ -25,10 +25,16 @@ const Snackbar = () => {
 
   //  set timer to remove snackbar after 3s
   useEffect(() => {
-    setTimeout(() => {
-      setSnackbarState({ show: false, isLoading: false, isSuccess: false, msg: '' });
-    }, 3000);
-  }, []);
+    let timer: NodeJS.Timeout = null;
+    if (show) {
+      timer = setTimeout(() => {
+        setSnackbarState({ show: false, isLoading: false, isSuccess: false, msg: '' });
+      }, 3000);
+    }
+    return () => {
+      timer && clearTimeout(timer);
+    };
+  }, [show]);
 
   const { bounceWithTranslateXFull } = useCustomAnimation();
 
