@@ -7,13 +7,13 @@ import Tooltip from '../../../../../../../components/tooltip';
 import { ISpace } from '@root/src/types/global.types';
 import { openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
+import { useMetaKeyPressed } from '@root/src/pages/sidepanel/hooks/use-key-shortcuts';
 import {
   activeSpaceAtom,
   deleteSpaceModalAtom,
   nonActiveSpacesAtom,
   showUpdateSpaceModalAtom,
 } from '@root/src/stores/app';
-import { useKeyShortcuts } from '@root/src/pages/sidepanel/hooks/useKeyShortcuts';
 
 type Props = {
   space: ISpace;
@@ -60,7 +60,7 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
     }
   };
 
-  const { isModifierKeyPressed } = useKeyShortcuts({ monitorModifierKeys: true });
+  const { isMetaKeyPressed } = useMetaKeyPressed({});
 
   return (
     <>
@@ -110,7 +110,7 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
           </>
         }>
         <div className="!size-full">
-          <Tooltip label={!isDraggedOver ? `${isModifierKeyPressed ? 'Open' : ''} ${space.title}` : ''} delay={1500}>
+          <Tooltip label={!isDraggedOver ? `${isMetaKeyPressed ? 'Open' : ''} ${space.title}` : ''} delay={1500}>
             {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
             <div
               // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
@@ -120,7 +120,7 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
                 ev.preventDefault();
                 ev.stopPropagation();
 
-                if (isModifierKeyPressed) {
+                if (isMetaKeyPressed) {
                   await handleOpenSpace(true);
                   return;
                 }
@@ -147,7 +147,7 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
                     }
                   : {}),
                 backgroundColor: space.theme,
-                cursor: !isModifierKeyPressed ? 'default' : 'pointer',
+                cursor: !isMetaKeyPressed ? 'default' : 'pointer',
                 borderColor: activeSpace.id === space.id ? space.theme : '',
               }}>
               <span className="opacity-90 text-[3vw]">{space.emoji}</span>

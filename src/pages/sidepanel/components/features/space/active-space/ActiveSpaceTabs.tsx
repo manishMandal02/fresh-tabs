@@ -1,20 +1,20 @@
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
+import { isHotkeyPressed, useHotkeys } from 'react-hotkeys-hook';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 import { MouseEventHandler, useState, useCallback, useEffect, useRef, useMemo, memo } from 'react';
 
 import { Tab } from '../tab';
 import { logger } from '@root/src/utils';
+import { PlusIcon } from '@radix-ui/react-icons';
+import DraggingOverNudge from './DraggingOverNudge';
+import Tooltip from '../../../../../../components/tooltip';
 import { goToTab } from '@root/src/services/chrome-tabs/tabs';
-import { useKeyShortcuts } from '../../../../hooks/useKeyShortcuts';
 import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
 import TabDraggedOutsideActiveSpace from './TabDraggedOutsideActiveSpace';
 import { ISpaceWithTabs, ITabWithIndex } from '@root/src/types/global.types';
 import { activeSpaceAtom, dragStateAtom, selectedTabsAtom } from '@root/src/stores/app';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
-import DraggingOverNudge from './DraggingOverNudge';
-import { PlusIcon } from '@radix-ui/react-icons';
-import Tooltip from '../../../../../../components/tooltip';
 
 type Props = {
   space: ISpaceWithTabs;
@@ -36,8 +36,8 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
   // mouse pos on drag start
   const [mouseXOnDrag, setMouseXOnDrag] = useState(0);
 
-  // used ref to store value as the useKeyShortcuts hook
-  // didn't get the updated state in the callback
+  // used ref to store the value to access in a hook outside
+  // that didn't get the updated state in the callback
   const selectedTabsRef = useRef<ITabWithIndex[]>([]);
 
   useEffect(() => {
@@ -93,15 +93,27 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
 
   const { bounce } = useCustomAnimation();
 
-  const { isModifierKeyPressed, isShiftKeyPressed } = useKeyShortcuts({
-    monitorModifierKeys: true,
-    onDeletePressed: () => {
-      (async () => await handleRemoveTabs())();
-    },
-    onEscapePressed: () => {
+  // on escape key presses
+  useHotkeys(
+    'escape',
+    () => {
       selectedTabsRef.current?.length > 0 && setSelectedTabs([]);
     },
-  });
+    [],
+  );
+
+  // on delete key presses
+  useHotkeys(
+    'delete',
+    () => {
+      (async () => await handleRemoveTabs())();
+    },
+    [],
+  );
+
+  const isShiftKeyPressed = isHotkeyPressed('shift');
+
+  const isMetaKeyPressed = isHotkeyPressed('meta');
 
   const isTabSelected = useCallback((id: number) => !!selectedTabs.find(t => t.id === id), [selectedTabs]);
 
@@ -109,7 +121,7 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
     async (tab: ITabWithIndex) => {
       // TODO - fix - sometimes the modifier key pressed is not updated (the main hook itself doesn't record change)
       // clt/cmd is pressed
-      if (isModifierKeyPressed) {
+      if (isMetaKeyPressed) {
         await handleGoToTab(tab.id, tab.index);
         return;
       }
@@ -152,7 +164,7 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
     },
     [
       activeSpace.activeTabIndex,
-      isModifierKeyPressed,
+      isMetaKeyPressed,
       isShiftKeyPressed,
       handleGoToTab,
       isTabSelected,
@@ -164,7 +176,7 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
 
   const onTabDoubleClickHandler = async (id: number, index: number) => {
     // do nothing if ctl/cmd is pressed
-    if (isModifierKeyPressed) return;
+    if (isMetaKeyPressed) return;
     await handleGoToTab(id, index);
   };
 
@@ -235,7 +247,7 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
                       className={`relative w-[96vw] min-w-[96vw] bg-transparent`}
                       tabIndex={-1}
                       style={{
-                        cursor: isModifierKeyPressed ? 'pointer' : 'default',
+                        cursor: isMetaKeyPressed ? 'pointer' : 'default',
                       }}>
                       <Tab
                         tabData={tab}

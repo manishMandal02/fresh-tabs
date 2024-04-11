@@ -77,9 +77,6 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
           type="text"
           spellCheck={false}
           onKeyDown={ev => {
-            ev.stopPropagation();
-            ev.nativeEvent.stopImmediatePropagation();
-
             if (ev.key === 'Backspace' && !searchQuery) {
               onClearSearch();
             }

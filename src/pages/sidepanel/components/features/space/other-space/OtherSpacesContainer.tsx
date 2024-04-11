@@ -6,7 +6,7 @@ import { NonActiveSpace } from './non-active-space';
 import { nonActiveSpacesAtom } from '@root/src/stores/app';
 import DraggingOverNudge from '../active-space/DraggingOverNudge';
 import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
-import { useKeyShortcuts } from '@root/src/pages/sidepanel/hooks/useKeyShortcuts';
+import { useMetaKeyPressed } from '@root/src/pages/sidepanel/hooks/use-key-shortcuts';
 
 type Props = {
   isDraggingSpace: boolean;
@@ -19,7 +19,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
   // non active spaces  (global state)
   const [spaces] = useAtom(nonActiveSpacesAtom);
 
-  const { isModifierKeyPressed } = useKeyShortcuts({ monitorModifierKeys: true });
+  const { isMetaKeyPressed } = useMetaKeyPressed({ monitorModifierKeys: true });
 
   // bounce div animation
   const { bounce } = useCustomAnimation();
@@ -33,7 +33,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
         direction="horizontal"
         isDropDisabled={isDraggingTabs}
         type="SPACE"
-        isCombineEnabled={isModifierKeyPressed}>
+        isCombineEnabled={isMetaKeyPressed}>
         {(provided1, { isDraggingOver: isDraggingOverOtherSpaces }) => (
           <motion.div
             {...provided1.droppableProps}

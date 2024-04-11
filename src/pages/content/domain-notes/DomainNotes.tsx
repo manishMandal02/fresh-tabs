@@ -59,11 +59,12 @@ const DomainNotes = ({ domainNotes, onNoteClick, onNewNoteClick, onDeleteNoteCli
 
   return (
     <>
+      {/* note bubble */}
       <motion.div
         {...bounce}
         onClick={() => setShowNotes(prev => !prev)}
         className={`relative bg-gradient-to-br from-brand-darkBgAccent/90 to-brand-darkBg/95  flex items-center justify-center size-[55px] rounded-full select-none
-                  border border-brand-darkBgAccent  shadow-md shadow-brand-darkBgAccent/70 cursor-pointer group`}>
+                  border border-brand-darkBgAccent  shadow-md shadow-brand-darkBgAccent/50 cursor-pointer group`}>
         <div>
           <FileTextIcon className="text-slate-500 scale-[1.8] opacity-70 group-hover:opacity-80 duration-300 transition-opacity" />
           {!showNotes ? (

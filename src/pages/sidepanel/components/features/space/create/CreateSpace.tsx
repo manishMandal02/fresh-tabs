@@ -1,5 +1,6 @@
 import { useAtom } from 'jotai';
 import { useState, useEffect } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 import { Tab } from '..';
 import { ThemeColor } from '@root/src/constants/app';
@@ -12,7 +13,6 @@ import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import TextInput from '../../../../../../components/TextInput/TextInput';
 import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
-import { useKeyShortcuts } from '@root/src/pages/sidepanel/hooks/useKeyShortcuts';
 import ErrorMessage from '../../../../../../components/alert-message/ErrorMessage';
 import { snackbarAtom, nonActiveSpacesAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
 
@@ -27,7 +27,6 @@ const defaultSpaceData: DefaultSpaceFields = {
 const CreateSpace = () => {
   console.log('CreateSpace ~ 🔁 rendered');
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentTabs, setCurrentTabs] = useState<ITab[]>([]);
   const [errorMsg, setErrorMsg] = useState('Enter all the fields');
 
@@ -44,7 +43,7 @@ const CreateSpace = () => {
   const [snackbar, setSnackbar] = useAtom(snackbarAtom);
 
   useEffect(() => {
-    if (isModalOpen && currentTabs?.length < 1) {
+    if (newSpaceModal.show && currentTabs?.length < 1) {
       (async () => {
         // get current tab, and set to state
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -58,7 +57,7 @@ const CreateSpace = () => {
         setCurrentTabs([currentTabOpened]);
       })();
     }
-  }, [isModalOpen, currentTabs]);
+  }, [newSpaceModal, currentTabs]);
 
   // on title change
   const onTitleChange = (title: string) => {
@@ -77,7 +76,6 @@ const CreateSpace = () => {
   };
 
   useEffect(() => {
-    setIsModalOpen(newSpaceModal.show);
     setNewSpaceData(defaultSpaceData);
     setErrorMsg('');
     if (newSpaceModal.tabs?.length > 0) {
@@ -125,27 +123,24 @@ const CreateSpace = () => {
     }
   };
 
-  useKeyShortcuts({
-    comboKey: {
-      primary: 'shift',
-      secondary: 's',
-      callback: () => {
-        setNewSpaceModal({ show: true, tabs: [] });
+  useHotkeys(
+    'shift+S',
+    () => {
+      setNewSpaceModal({ show: true, tabs: [] });
 
-        //  remove letter s from tile that is trigged after new space shortcut (shift+s)
-        setTimeout(() => {
-          setNewSpaceData(prev => {
-            if (prev.title) return { ...prev, title: '' };
+      //  remove letter s from tile that is trigged after new space shortcut (shift+s)
+      setTimeout(() => {
+        setNewSpaceData(prev => {
+          if (prev.title) return { ...prev, title: '' };
 
-            return prev;
-          });
-        }, 50);
-      },
+          return prev;
+        });
+      }, 50);
     },
-  });
+    [],
+  );
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
     setNewSpaceModal({ show: false, tabs: [] });
     // add the
   };

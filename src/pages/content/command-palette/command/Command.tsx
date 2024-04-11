@@ -19,7 +19,7 @@ import { useFrame } from 'react-frame-component';
 import { COMMAND_HEIGHT } from '../CommandPalette';
 import { RadixIconType } from '@root/src/types/global.types';
 import { CommandType } from '@root/src/constants/app';
-import { useKeyShortcuts } from '@root/src/pages/sidepanel/hooks/useKeyShortcuts';
+import { useMetaKeyPressed } from '@root/src/pages/sidepanel/hooks/use-key-shortcuts';
 
 type CommandIcon = RadixIconType | string;
 
@@ -53,9 +53,8 @@ const Command = ({
   const { document: iFrameDoc } = useFrame();
 
   // listen to cmd/ctrl key press
-  const { isModifierKeyPressed } = useKeyShortcuts({
+  const { isMetaKeyPressed } = useMetaKeyPressed({
     isSidePanel: false,
-    monitorModifierKeys: true,
     parentConTainerEl: iFrameDoc.body.querySelector('dialog'),
   });
 
@@ -78,7 +77,7 @@ const Command = ({
     if (isStaticCommand && isSubCommand) return null;
 
     if (type === CommandType.SwitchTab) {
-      if (isModifierKeyPressed)
+      if (isMetaKeyPressed)
         return (
           <>
             {'Close & Switch Tab'}
@@ -94,7 +93,7 @@ const Command = ({
     }
 
     if (type === CommandType.SwitchSpace) {
-      if (isModifierKeyPressed) {
+      if (isMetaKeyPressed) {
         return (
           <>
             {'Open Space in New Window'}
@@ -119,7 +118,7 @@ const Command = ({
         </>
       );
 
-    if (isModifierKeyPressed)
+    if (isMetaKeyPressed)
       return (
         <>
           {'New tab'}

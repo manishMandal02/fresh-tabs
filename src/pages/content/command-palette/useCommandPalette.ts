@@ -4,13 +4,13 @@ import { useFrame } from 'react-frame-component';
 
 import { useCommand } from './command/useCommand';
 import { CommandType } from '@root/src/constants/app';
-import { ICommand, ISpace } from '../../../types/global.types';
 import { getTime } from '@root/src/utils/date-time/get-time';
 import { publishEvents } from '../../../utils/publish-events';
+import { ICommand, ISpace } from '../../../types/global.types';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
-import { useKeyShortcuts } from '../../sidepanel/hooks/useKeyShortcuts';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 // default suggested time for snooze tab command
 const defaultSuggestedSnoozeTimeLabels = [
@@ -55,49 +55,12 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
     onClose();
   }, [onClose]);
 
-  // handle key press
-  const { isModifierKeyPressed } = useKeyShortcuts({
-    isSidePanel: false,
-    monitorModifierKeys: true,
-    parentConTainerEl: iFrameDoc.body.querySelector('dialog'),
-    onEscapePressed: () => {
-      handleCloseCommandPalette();
-    },
-    onTabPressed: () => {
-      (async () => {
-        await handleSelectCommand();
-      })();
-    },
-    onEnterPressed: () => {
-      (async () => {
-        await handleSelectCommand();
-      })();
-    },
-    onArrowDownPressed: () => {
-      if (focusedCommandIndex >= suggestedCommands.length) {
-        setFocusedCommandIndex(1);
-        return;
-      }
-      setFocusedCommandIndex(prev => prev + 1);
-    },
-    onArrowUpPressed: () => {
-      if (focusedCommandIndex < 2) {
-        setFocusedCommandIndex(suggestedCommands.length);
-        return;
-      }
-
-      setFocusedCommandIndex(prev => prev - 1);
-    },
-  });
-
   // handle select command
   const handleSelectCommand = useCallback(
-    async (index?: number) => {
+    async (index?: number, isMetaKeyPressed = false) => {
       const activeIndex = index || focusedCommandIndex;
 
       const focusedCommand = suggestedCommands.find(cmd => cmd.index === activeIndex);
-
-      console.log('🚀 ~ useCommandPalette ~ focusedCommand:100', focusedCommand);
 
       if (!focusedCommand?.type) return;
 
@@ -105,7 +68,7 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
         case CommandType.SwitchTab: {
           await publishEvents({
             event: 'SWITCH_TAB',
-            payload: { shouldCloseCurrentTab: isModifierKeyPressed, tabId: focusedCommand.metadata as number },
+            payload: { shouldCloseCurrentTab: isMetaKeyPressed, tabId: focusedCommand.metadata as number },
           });
 
           handleCloseCommandPalette();
@@ -117,7 +80,7 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
             event: 'SWITCH_SPACE',
             payload: {
               spaceId: focusedCommand.metadata as string,
-              shouldOpenInNewWindow: isModifierKeyPressed,
+              shouldOpenInNewWindow: isMetaKeyPressed,
             },
           });
           handleCloseCommandPalette();
@@ -191,7 +154,7 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
         case CommandType.WebSearch: {
           await publishEvents({
             event: 'WEB_SEARCH',
-            payload: { searchQuery, shouldOpenInNewTab: isModifierKeyPressed },
+            payload: { searchQuery, shouldOpenInNewTab: isMetaKeyPressed },
           });
           handleCloseCommandPalette();
           break;
@@ -200,7 +163,7 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
         case CommandType.Link: {
           await publishEvents({
             event: 'GO_TO_URL',
-            payload: { url: focusedCommand.metadata as string, shouldOpenInNewTab: isModifierKeyPressed },
+            payload: { url: focusedCommand.metadata as string, shouldOpenInNewTab: isMetaKeyPressed },
           });
           handleCloseCommandPalette();
           break;
@@ -248,13 +211,90 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
     [
       activeSpace,
       focusedCommandIndex,
-      isModifierKeyPressed,
       suggestedCommands,
       handleCloseCommandPalette,
       searchQuery,
       subCommand,
       getCommandIcon,
     ],
+  );
+
+  // on escape pressed
+  useHotkeys(
+    'escape',
+    () => {
+      handleCloseCommandPalette();
+    },
+    [handleCloseCommandPalette],
+    { enableOnFormTags: true, document: iFrameDoc, preventDefault: true },
+  );
+
+  // on tab pressed
+  useHotkeys(
+    'tab',
+    async () => {
+      await handleSelectCommand(null);
+    },
+    [handleSelectCommand],
+    { enableOnFormTags: true, document: iFrameDoc, preventDefault: true },
+  );
+  // on tab + enter pressed
+  useHotkeys(
+    'tab+enter',
+    async () => {
+      await handleSelectCommand(null);
+    },
+    [handleSelectCommand],
+    { enableOnFormTags: true, document: iFrameDoc, preventDefault: true },
+  );
+
+  // enter pressed
+  useHotkeys(
+    'enter',
+    async () => {
+      await handleSelectCommand(null);
+    },
+    [handleSelectCommand],
+    { enableOnFormTags: true, document: iFrameDoc },
+  );
+
+  // cmd + enter pressed
+  useHotkeys(
+    'mod+enter',
+    async () => {
+      await handleSelectCommand(null, true);
+    },
+    [handleSelectCommand],
+    { enableOnFormTags: true, document: iFrameDoc },
+  );
+
+  // arrow up pressed
+  useHotkeys(
+    'ArrowUp',
+    () => {
+      if (focusedCommandIndex < 2) {
+        setFocusedCommandIndex(suggestedCommands.length);
+        return;
+      }
+
+      setFocusedCommandIndex(prev => prev - 1);
+    },
+    [suggestedCommands, focusedCommandIndex],
+    { enableOnFormTags: true, document: iFrameDoc },
+  );
+
+  // arrow down pressed
+  useHotkeys(
+    'ArrowDown',
+    () => {
+      if (focusedCommandIndex >= suggestedCommands.length) {
+        setFocusedCommandIndex(1);
+        return;
+      }
+      setFocusedCommandIndex(prev => prev + 1);
+    },
+    [suggestedCommands, focusedCommandIndex],
+    { enableOnFormTags: true, document: iFrameDoc },
   );
 
   return {
