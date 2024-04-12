@@ -1,6 +1,7 @@
 import { DefaultAppSettings } from './../constants/app';
 import { atom } from 'jotai';
 import { IAppSettings, INote, ISpace, ISpaceWithTabs, ITab, ITabWithIndex } from '../types/global.types';
+import { getTabsInSpace } from '../services/chrome-storage/tabs';
 
 type SnackbarAtom = {
   show: boolean;
@@ -9,17 +10,56 @@ type SnackbarAtom = {
   isSuccess?: boolean;
 };
 
-// global states/atoms
+// base atom - spaces (holds the base state which is then derived to form other atoms)
+const spacesAtom = atom<ISpace[]>([]);
 
-// non active spaces
-export const nonActiveSpacesAtom = atom<ISpace[]>([]);
+// spaces - crud operations
+export const getAllSpacesAtom = atom(get => get(spacesAtom));
 
-// TODO - derive this atom from the space id atom top-down approach
-// active space
-export const activeSpaceAtom = atom<ISpaceWithTabs>(null as ISpaceWithTabs);
+export const setSpacesAtom = atom(null, (_get, set, spaces: ISpace[]) => {
+  set(spacesAtom, spaces);
+});
 
-// active space id
-export const activeSpaceIdAtom = atom(get => get(activeSpaceAtom).id);
+export const addSpaceAtom = atom(null, (_get, set, space: ISpace) => {
+  set(spacesAtom, spaces => [...spaces, space]);
+});
+
+export const updateSpaceAtom = atom(null, (_get, set, space: ISpace) => {
+  set(spacesAtom, spaces => spaces.map(s => (s.id === space.id ? space : s)));
+});
+
+export const reOrderSpacesAtom = atom(null, (_get, set, space: ISpace) => {
+  set(spacesAtom, spaces => spaces.map(s => (s.id === space.id ? space : s)));
+});
+
+export const removeSpaceAtom = atom(null, (_get, set, spaceId: string) => {
+  set(spacesAtom, spaces => spaces.filter(space => space.id !== spaceId));
+});
+
+// hold the active space id, used internally to set other atoms
+const activeSpaceIdAtom = atom('');
+
+export const getActiveSpaceIdAtom = atom(get => get(activeSpaceIdAtom));
+
+// readonly atom - non active spaces
+export const nonActiveSpacesAtom = atom<ISpace[]>(get =>
+  get(spacesAtom).filter(space => space.id !== get(activeSpaceIdAtom)),
+);
+
+// readonly atom - active space
+export const activeSpaceAtom = atom<ISpace>(get => get(spacesAtom).find(s => s.id === get(activeSpaceIdAtom)));
+
+// readonly atom - active space tabs
+export const activeSpaceTabsAtom = atom<ITab[]>([]);
+
+// write only atom - update active space
+export const setActiveSpaceAtom = atom(null, async (_get, set, spaceId: string) => {
+  // set active space id
+  set(activeSpaceIdAtom, spaceId);
+  //  set tabs for active space
+  const activeSpaceTabs = await getTabsInSpace(spaceId);
+  set(activeSpaceTabsAtom, activeSpaceTabs);
+});
 
 // selected tabs for dragging
 export const selectedTabsAtom = atom<ITabWithIndex[]>([]);

@@ -1,6 +1,6 @@
 import { ISpaceWithoutId } from '@root/src/types/global.types';
-import { snackbarAtom, nonActiveSpacesAtom, activeSpaceAtom } from '@root/src/stores/app';
-import { useAtom } from 'jotai';
+import { snackbarAtom, updateSpaceAtom } from '@root/src/stores/app';
+import { useAtom, useSetAtom } from 'jotai';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { useState } from 'react';
 
@@ -13,9 +13,8 @@ type UseUpdateSpaceProps = {
 export const useUpdateSpace = ({ updateSpaceData, spaceId, onClose }: UseUpdateSpaceProps) => {
   // global state
   // spaces atom
-  const [, setSpaces] = useAtom(nonActiveSpacesAtom);
-  // active space atom
-  const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);
+  const updateSpaceState = useSetAtom(updateSpaceAtom);
+
   // snackbar atom
   const [snackbar, setSnackbar] = useAtom(snackbarAtom);
 
@@ -39,14 +38,8 @@ export const useUpdateSpace = ({ updateSpaceData, spaceId, onClose }: UseUpdateS
     setSnackbar({ show: false, msg: '', isLoading: false });
 
     if (res) {
-      if (spaceId === activeSpace.id) {
-        // update active space
-        setActiveSpace(prev => ({ ...prev, ...updateSpaceData }));
-      }
-
       // update spaces list ui with same order
-      setSpaces(prev => prev.map(s => (s.id === spaceId ? { ...updateSpaceData, id: spaceId } : s)));
-
+      updateSpaceState({ ...updateSpaceData, id: spaceId });
       // close modal
       onClose();
       setSnackbar({ show: true, msg: 'Space updated', isSuccess: true });

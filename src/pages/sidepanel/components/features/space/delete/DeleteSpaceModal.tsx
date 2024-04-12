@@ -1,51 +1,33 @@
-import { useAtom } from 'jotai';
 import { createPortal } from 'react-dom';
+import { useAtom, useSetAtom } from 'jotai';
 import { useEffect, useCallback, useState } from 'react';
 
-import Spinner from '../../../../../../components/spinner';
-import { AlertModal } from '../../../../../../components/modal';
 import { AlarmName } from '@root/src/constants/app';
 import { ISpace } from '@root/src/types/global.types';
-import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
+import Spinner from '../../../../../../components/spinner';
+import { AlertModal } from '../../../../../../components/modal';
 import { deleteAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers';
 import { deleteSpace, getSpace } from '@root/src/services/chrome-storage/spaces';
-import { snackbarAtom, nonActiveSpacesAtom, deleteSpaceModalAtom } from '@root/src/stores/app';
+import { snackbarAtom, deleteSpaceModalAtom, removeSpaceAtom } from '@root/src/stores/app';
 
 const DeleteSpaceModal = () => {
   // delete space modal  global state
   const [deleteSpaceModal, setDeleteSpaceModal] = useAtom(deleteSpaceModalAtom);
 
-  const [spaceToDelete, setSpaceToDelete] = useState<(ISpace & { index: number }) | undefined>(undefined);
+  const [spaceToDelete, setSpaceToDelete] = useState<ISpace | undefined>(undefined);
 
-  // snackbar atom
-  const [nonActiveSpaces, setNonActiveSpaces] = useAtom(nonActiveSpacesAtom);
+  // global state
+  const removeSpaceState = useSetAtom(removeSpaceAtom);
   // snackbar atom
   const [snackbar, setSnackbar] = useAtom(snackbarAtom);
 
   // get details of space to delete
-  const deleteInit = useCallback(
-    async (spaceId: string) => {
-      // get space from storage
-      const spaceToDelete = await getSpace(deleteSpaceModal.spaceId);
+  const deleteInit = useCallback(async (spaceId: string) => {
+    // get space from storage
+    const spaceToDelete = await getSpace(spaceId);
 
-      const currentWindowId = await getCurrentWindowId();
-
-      const isSpaceActive = Number(spaceToDelete?.windowId) === currentWindowId;
-
-      // current index of the space to delete
-      const spaceToDeleteIndex = isSpaceActive
-        ? 0
-        : nonActiveSpaces.findIndex(space => space.id === deleteSpaceModal.spaceId);
-
-      setSpaceToDelete({ ...spaceToDelete, index: spaceToDeleteIndex });
-
-      if (!isSpaceActive) {
-        // if space not active
-        setNonActiveSpaces(prev => [...prev.filter(s => s.id !== spaceId)]);
-      }
-    },
-    [deleteSpaceModal, setNonActiveSpaces, nonActiveSpaces],
-  );
+    setSpaceToDelete({ ...spaceToDelete });
+  }, []);
 
   useEffect(() => {
     if (deleteSpaceModal.show) {
@@ -56,20 +38,8 @@ const DeleteSpaceModal = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deleteSpaceModal]);
 
-  const onClose = (deleteSuccess = false) => {
+  const onClose = () => {
     setDeleteSpaceModal({ show: false, spaceId: '' });
-
-    if (!deleteSuccess) {
-      // revert UI state
-      // add the space that was removed for delete action
-      (async () => {
-        if (spaceToDelete && !nonActiveSpaces.find(s => s.id === spaceToDelete.id)) {
-          // add the space back to list
-          const { index, ...space } = spaceToDelete;
-          setNonActiveSpaces(prev => [...prev.toSpliced(index, 0, space)]);
-        }
-      })();
-    }
   };
 
   //  delete space handler
@@ -86,16 +56,15 @@ const DeleteSpaceModal = () => {
     setSnackbar({ show: false, msg: '', isLoading: false });
 
     // close modal
-    onClose(res);
+    onClose();
 
     // space deleted
     if (res) {
       // re-render spaces
-      setNonActiveSpaces(prev => [...prev.filter(s => s.id !== spaceToDeleteId)]);
+      removeSpaceState(spaceToDelete.id);
       setSnackbar({ show: true, msg: 'Space deleted', isSuccess: true });
 
       // if the space was unsaved, check if it had any delete trigger scheduled
-
       const schedule = await getAlarm(AlarmName.deleteSpace(spaceToDelete.id));
 
       if (schedule?.name) {

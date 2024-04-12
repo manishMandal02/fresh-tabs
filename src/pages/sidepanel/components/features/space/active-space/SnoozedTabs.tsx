@@ -1,10 +1,9 @@
-import { useAtom } from 'jotai';
+import { useAtomValue } from 'jotai';
 import { motion } from 'framer-motion';
 import { TrashIcon } from '@radix-ui/react-icons';
 import { useState, useEffect, memo } from 'react';
 
 import { cn } from '@root/src/utils/cn';
-import { activeSpaceIdAtom } from '@root/src/stores/app';
 import Tooltip from '../../../../../../components/tooltip';
 import { ISnoozedTab } from '@root/src/types/global.types';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
@@ -16,6 +15,7 @@ import {
   getSnoozedTabs,
   removeSnoozedTab,
 } from '@root/src/services/chrome-storage/snooze-tabs';
+import { getActiveSpaceIdAtom } from '@root/src/stores/app';
 
 const createFilterOptions = async () => {
   const allSpaces = await getAllSpaces();
@@ -32,7 +32,7 @@ type Props = {
 const SnoozedTabs = ({ show, onClose }: Props) => {
   // global state
   // active space id
-  const [spaceId] = useAtom(activeSpaceIdAtom);
+  const spaceId = useAtomValue(getActiveSpaceIdAtom);
 
   const [snoozedTabs, setSnoozedTabs] = useState<ISnoozedTab[]>([]);
 

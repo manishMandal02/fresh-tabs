@@ -19,7 +19,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
   // non active spaces  (global state)
   const [spaces] = useAtom(nonActiveSpacesAtom);
 
-  const { isMetaKeyPressed } = useMetaKeyPressed({ monitorModifierKeys: true });
+  const { isMetaKeyPressed } = useMetaKeyPressed({});
 
   // bounce div animation
   const { bounce } = useCustomAnimation();

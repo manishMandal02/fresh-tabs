@@ -1,21 +1,29 @@
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { MutableRefObject, useCallback } from 'react';
 
 import { useTabsDnd } from './useTabsDnd';
 import { logger } from '../../../utils/logger';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
-import { IMessageEventSidePanel, ISpaceWithTabs } from '../../../types/global.types';
+import {
+  activeSpaceAtom,
+  activeSpaceTabsAtom,
+  addSpaceAtom,
+  dragStateAtom,
+  removeSpaceAtom,
+  updateSpaceAtom,
+} from '@root/src/stores/app';
+import { IMessageEventSidePanel, ISpace } from '../../../types/global.types';
 import { getAllSpaces, getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
 import type { OnDragEndResponder, OnBeforeDragStartResponder } from 'react-beautiful-dnd';
-import { activeSpaceAtom, dragStateAtom, nonActiveSpacesAtom } from '@root/src/stores/app';
 
 export const useSidePanel = () => {
-  // non active spaces  (global state)
-  const [, setNonActiveSpaces] = useAtom(nonActiveSpacesAtom);
-
   // active space atom (global state)
-  const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);
+  const activeSpace = useAtomValue(activeSpaceAtom);
+  const updateSpace = useSetAtom(updateSpaceAtom);
+  const addSpace = useSetAtom(addSpaceAtom);
+  const removeSpace = useSetAtom(removeSpaceAtom);
+  const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
 
   // dragging state
   const [, setDragging] = useAtom(dragStateAtom);
@@ -30,11 +38,7 @@ export const useSidePanel = () => {
     // get currentSpace
     const currentSpace = await getSpaceByWindow(windowId);
 
-    const tabsFroCurrentSpace = await getTabsInSpace(currentSpace?.id);
-
-    const activeSpaceWithTabs = { ...currentSpace, tabs: tabsFroCurrentSpace };
-
-    return { activeSpaceWithTabs, otherSpaces: allSpaces };
+    return { currentSpace, allSpaces };
   };
 
   const { dropHandler, getDroppedLocation } = useTabsDnd();
@@ -85,17 +89,17 @@ export const useSidePanel = () => {
 
   // handle background events
   const handleEvents = useCallback(
-    async ({ event, payload }: IMessageEventSidePanel, activeSpaceRef: MutableRefObject<ISpaceWithTabs>) => {
+    async ({ event, payload }: IMessageEventSidePanel, activeSpaceRef: MutableRefObject<ISpace>) => {
       switch (event) {
         case 'ADD_SPACE': {
           // add new space
-          setNonActiveSpaces(prev => [...prev, payload.space]);
+          addSpace(payload.space);
           break;
         }
 
         case 'REMOVE_SPACE': {
           // remove space
-          setNonActiveSpaces(prev => [...prev.filter(s => s.id !== payload.spaceId)]);
+          removeSpace(payload.spaceId);
           break;
         }
 
@@ -110,10 +114,10 @@ export const useSidePanel = () => {
 
             if (activeTab?.index === activeSpaceRef.current.activeTabIndex) break;
 
-            setActiveSpace({ ...activeSpaceRef.current, activeTabIndex: activeTab?.index });
+            updateSpace({ ...activeSpaceRef.current, activeTabIndex: activeTab?.index });
           } catch (err) {
             logger.info(`Tab not found: ${err}`);
-            setActiveSpace({ ...activeSpaceRef.current, activeTabIndex: payload?.newActiveIndex });
+            updateSpace({ ...activeSpaceRef.current, activeTabIndex: payload?.newActiveIndex });
           }
           break;
         }
@@ -124,7 +128,7 @@ export const useSidePanel = () => {
 
           const updatedTabs = await getTabsInSpace(payload.spaceId);
 
-          setActiveSpace({ ...activeSpaceRef.current, tabs: updatedTabs });
+          setActiveSpaceTabs(updatedTabs);
           break;
         }
 
@@ -133,16 +137,15 @@ export const useSidePanel = () => {
         }
       }
     },
-    [setActiveSpace, setNonActiveSpaces],
+    [addSpace, removeSpace, updateSpace, setActiveSpaceTabs],
   );
 
   return {
-    setNonActiveSpaces,
     getAllSpacesStorage,
     handleEvents,
     onTabsDragEnd,
     onTabsDragStart,
     activeSpace,
-    setActiveSpace,
+    activeSpaceTabs,
   };
 };

@@ -1,4 +1,4 @@
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import { useState, useEffect } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
@@ -14,7 +14,7 @@ import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import TextInput from '../../../../../../components/TextInput/TextInput';
 import { createNewSpace } from '@root/src/services/chrome-storage/spaces';
 import ErrorMessage from '../../../../../../components/alert-message/ErrorMessage';
-import { snackbarAtom, nonActiveSpacesAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
+import { snackbarAtom, showNewSpaceModalAtom, addSpaceAtom } from '@root/src/stores/app';
 
 type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;
 
@@ -31,7 +31,7 @@ const CreateSpace = () => {
   const [errorMsg, setErrorMsg] = useState('Enter all the fields');
 
   // spaces atom (global state)
-  const [, setSpaces] = useAtom(nonActiveSpacesAtom);
+  const addSpace = useSetAtom(addSpaceAtom);
 
   // spaces atom (global state)
   const [newSpaceModal, setNewSpaceModal] = useAtom(showNewSpaceModalAtom);
@@ -112,7 +112,8 @@ const CreateSpace = () => {
       // close modal
       handleCloseModal();
       // re-render updated spaces
-      setSpaces(prev => [...prev, { ...createdSpace }]);
+
+      addSpace(createdSpace);
 
       await setTabsForSpace(createdSpace.id, [...currentTabs]);
 

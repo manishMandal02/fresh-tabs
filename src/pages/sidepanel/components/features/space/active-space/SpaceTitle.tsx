@@ -1,19 +1,18 @@
-import { SetStateAction, useAtom } from 'jotai';
-import { useRef, Dispatch, useCallback, useState, useEffect } from 'react';
+import { useSetAtom } from 'jotai';
+import { useRef, useCallback, useState, useEffect } from 'react';
 
 import EmojiPicker from '../../../../../../components/emoji-picker';
-import { nonActiveSpacesAtom } from '@root/src/stores/app';
-import { ISpace, ISpaceWithTabs } from '@root/src/types/global.types';
-import { updateSpace } from '@root/src/services/chrome-storage/spaces';
+import { updateSpaceAtom } from '@root/src/stores/app';
+import { ISpace } from '@root/src/types/global.types';
+import { getSpace, updateSpace } from '@root/src/services/chrome-storage/spaces';
 
 type Props = {
   space: ISpace;
-  setActiveSpace: Dispatch<SetStateAction<ISpaceWithTabs>>;
 };
 
-const SpaceTitle = ({ space, setActiveSpace }: Props) => {
+const SpaceTitle = ({ space }: Props) => {
   // spaces atom
-  const [spaces, setSpaces] = useAtom(nonActiveSpacesAtom);
+  const updateSpaceState = useSetAtom(updateSpaceAtom);
   // title edit enable
   const [isTitleEditable, setIsTitleEditable] = useState(false);
   // space title (can be edited after click)
@@ -21,14 +20,14 @@ const SpaceTitle = ({ space, setActiveSpace }: Props) => {
 
   const spaceTitleRef = useRef<HTMLDivElement>(null);
 
-  const handleSpaceTitleUpdate = useCallback(() => {
+  const handleSpaceTitleUpdate = useCallback(async () => {
     if (!spaceTitle || spaceTitle?.length < 3 || spaceTitle === space.title) return;
 
-    setActiveSpace(prev => ({ ...prev, title: spaceTitle }));
-    setSpaces(spaces => [...spaces.map(s => (s.id === space.id ? { ...s, title: spaceTitle } : s))]);
-    const activeSpace = spaces.find(s => s.id === space.id);
+    const activeSpace = await getSpace(space.id);
+
+    updateSpaceState({ ...activeSpace, title: spaceTitle });
     updateSpace(space.id, { ...activeSpace, title: spaceTitle });
-  }, [setSpaces, setActiveSpace, space, spaceTitle, spaces]);
+  }, [space, spaceTitle, updateSpaceState]);
 
   // set space title from props
   useEffect(() => {
@@ -52,13 +51,17 @@ const SpaceTitle = ({ space, setActiveSpace }: Props) => {
     };
   }, [handleSpaceTitleUpdate, spaceTitle, isTitleEditable]);
 
-  const handleEmojiUpdate = async (emoji: string) => {
-    if (emoji === space.emoji) return;
-    setActiveSpace(prev => ({ ...prev, emoji }));
-    setSpaces(spaces => [...spaces.map(s => (s.id === space.id ? { ...s, emoji } : s))]);
-    const activeSpace = spaces.find(s => s.id === space.id);
-    updateSpace(space.id, { ...activeSpace, emoji });
-  };
+  const handleEmojiUpdate = useCallback(
+    async (emoji: string) => {
+      if (emoji === space.emoji) return;
+
+      const activeSpace = await getSpace(space.id);
+
+      updateSpaceState({ ...activeSpace, emoji });
+      updateSpace(space.id, { ...activeSpace, emoji });
+    },
+    [space, updateSpaceState],
+  );
 
   return (
     <div>

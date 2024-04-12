@@ -1,5 +1,5 @@
-import { SetStateAction, useAtom } from 'jotai';
-import { Dispatch, useState, memo } from 'react';
+import { useAtom, useSetAtom } from 'jotai';
+import { useState, memo } from 'react';
 import { BellIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
 
 import { Notes } from '../../notes';
@@ -9,24 +9,27 @@ import MoreOptions from '../more-options';
 import Tabs from '../../../../../../components/tabs/Tabs';
 import ActiveSpaceTabs from './ActiveSpaceTabs';
 import SpaceHistory from '../history/SpaceHistory';
-import { ISpaceWithTabs } from '@root/src/types/global.types';
+import { ISpace, ITab } from '@root/src/types/global.types';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
-import { deleteSpaceModalAtom, snackbarAtom } from '@root/src/stores/app';
+import { activeSpaceTabsAtom, deleteSpaceModalAtom, snackbarAtom, updateSpaceAtom } from '@root/src/stores/app';
 
 type Props = {
-  space: ISpaceWithTabs;
-  setActiveSpace: Dispatch<SetStateAction<ISpaceWithTabs>>;
+  space: ISpace;
+  tab: ITab[];
   onSearchClick: () => void;
   onNotificationClick: () => void;
 };
 
-const ActiveSpace = ({ space, setActiveSpace, onSearchClick, onNotificationClick }: Props) => {
+const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
   console.log('ActiveSpace ~ 🔁 rendered');
 
   // global state
   const [, setSnackbar] = useAtom(snackbarAtom);
   const [, setDeleteSpaceModal] = useAtom(deleteSpaceModalAtom);
+
+  const updateSpaceState = useSetAtom(updateSpaceAtom);
+  const setActSpaceTabs = useSetAtom(activeSpaceTabsAtom);
 
   // local state
   const [showSpaceHistory, setShowSpaceHistory] = useState(false);
@@ -50,7 +53,8 @@ const ActiveSpace = ({ space, setActiveSpace, onSearchClick, onNotificationClick
     // update tabs in space
     await setTabsForSpace(space.id, tabsInWindow);
 
-    setActiveSpace({ ...space, activeTabIndex: activeTab.index, tabs: [...tabsInWindow] });
+    setActSpaceTabs(tabsInWindow);
+    updateSpaceState({ ...space, activeTabIndex: activeTab.index });
 
     setSnackbar({ msg: 'Tabs synced', show: true, isLoading: false, isSuccess: true });
   };
@@ -58,7 +62,7 @@ const ActiveSpace = ({ space, setActiveSpace, onSearchClick, onNotificationClick
   return space?.id ? (
     <div className="h-full mt-4 ">
       <div className="flex items-center h-[6.5%] justify-between px-1">
-        <SpaceTitle space={space} setActiveSpace={setActiveSpace} />
+        <SpaceTitle space={space} />
 
         <div className="flex item-center">
           {/* search */}

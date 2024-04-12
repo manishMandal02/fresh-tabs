@@ -1,4 +1,4 @@
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
@@ -12,25 +12,34 @@ import Tooltip from '../../../../../../components/tooltip';
 import { goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
 import TabDraggedOutsideActiveSpace from './TabDraggedOutsideActiveSpace';
-import { ISpaceWithTabs, ITabWithIndex } from '@root/src/types/global.types';
+import { ISpace, ITabWithIndex } from '@root/src/types/global.types';
 import { useMetaKeyPressed } from '@root/src/pages/sidepanel/hooks/use-key-shortcuts';
-import { activeSpaceAtom, dragStateAtom, selectedTabsAtom } from '@root/src/stores/app';
+import {
+  activeSpaceAtom,
+  activeSpaceTabsAtom,
+  dragStateAtom,
+  selectedTabsAtom,
+  updateSpaceAtom,
+} from '@root/src/stores/app';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 
 type Props = {
-  space: ISpaceWithTabs;
+  space: ISpace;
 };
 
 export const TAB_HEIGHT = 32;
 
-const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
+const ActiveSpaceTabs = ({ space }: Props) => {
   console.log('ActiveSpaceTabs ~ 🔁 rendered');
 
   // global state
   // selected tabs
   const [selectedTabs, setSelectedTabs] = useAtom(selectedTabsAtom);
   // active space
-  const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);
+  const activeSpace = useAtomValue(activeSpaceAtom);
+  const updateSpaceState = useSetAtom(updateSpaceAtom);
+  const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
+
   // dragging state
   const [dragSate] = useAtom(dragStateAtom);
 
@@ -58,9 +67,9 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
 
       setSelectedTabs([]);
 
-      setActiveSpace(prev => ({ ...prev, tabs, activeTabIndex: index }));
+      updateSpaceState({ ...space, activeTabIndex: index });
     },
-    [setActiveSpace, tabs, setSelectedTabs],
+    [space, setSelectedTabs, updateSpaceState],
   );
 
   // remove multiple tabs
@@ -68,7 +77,7 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
     // tab ids to remove
     const ids = selectedTabsRef.current?.map(t => t.id);
 
-    const updatedTabs = tabs?.filter(t => !ids.includes(t.id));
+    const updatedTabs = activeSpaceTabs?.filter(t => !ids.includes(t.id));
 
     await setTabsForSpace(space.id, updatedTabs);
 
@@ -89,8 +98,9 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
     // get the current active tab
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    setActiveSpace({ ...space, activeTabIndex: tab.index, tabs: updatedTabs });
-  }, [selectedTabsRef, setActiveSpace, tabs, space]);
+    setActiveSpaceTabs(updatedTabs);
+    updateSpaceState({ ...space, activeTabIndex: tab.index });
+  }, [selectedTabsRef, space, activeSpaceTabs, updateSpaceState, setActiveSpaceTabs]);
 
   const { bounce } = useCustomAnimation();
 
@@ -134,7 +144,7 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
 
         const tabIsBeforeLastSelectedTab = tab.index < lastSelectedTabIndex;
 
-        const tabsInRange: ITabWithIndex[] = tabs
+        const tabsInRange: ITabWithIndex[] = activeSpaceTabs
           .map((t, idx) => ({ ...t, index: idx }))
           .filter((_t, idx) => {
             //
@@ -170,7 +180,7 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
       isTabSelected,
       selectedTabs,
       setSelectedTabs,
-      tabs,
+      activeSpaceTabs,
     ],
   );
 
@@ -182,11 +192,9 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
 
   const handleCreateNewTab = async () => {
     const { id, index } = await chrome.tabs.create({ url: 'chrome://newtab', active: true });
-    setActiveSpace(prev => ({
-      ...prev,
-      tabs: [...tabs.toSpliced(index, 0, { id, title: 'New Tab', url: 'chrome://newtab' })],
-      activeTabIndex: index,
-    }));
+    updateSpaceState({ ...space, activeTabIndex: index });
+    const updatedTabs = [...activeSpaceTabs.toSpliced(index, 0, { id, title: 'New Tab', url: 'chrome://newtab' })];
+    setActiveSpaceTabs(updatedTabs);
   };
 
   // handle remove a single tab
@@ -195,7 +203,7 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
     await removeTabFromSpace(activeSpace, null, index, true);
 
     // update ui
-    setActiveSpace(prev => ({ ...prev, tabs: [...tabs.filter((_t, idx) => idx !== index)] }));
+    setActiveSpaceTabs(prev => [...prev.filter((_t, idx) => idx !== index)]);
   };
 
   return (
@@ -206,7 +214,7 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
           ref={provided1.innerRef}
           className="h-full w-full px-px"
           style={{
-            minHeight: `${tabs?.length * TAB_HEIGHT}px`,
+            minHeight: `${activeSpaceTabs?.length * TAB_HEIGHT}px`,
           }}>
           {/* add new tab button  */}
           <Tooltip label="Add new tab" delay={1500}>
@@ -219,7 +227,7 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
           </Tooltip>
 
           {/* render draggable  tabs */}
-          {tabs?.map((tab, idx) => (
+          {activeSpaceTabs?.map((tab, idx) => (
             <Draggable draggableId={'tab-' + tab.id} index={idx} key={tab.id}>
               {(provided2, { isDragging, draggingOver }) => (
                 // eslint-disable-next-line jsx-a11y/no-static-element-interactions

@@ -1,10 +1,10 @@
-import { useAtom } from 'jotai';
+import { useAtomValue } from 'jotai';
 import { motion } from 'framer-motion';
 import { useState, useEffect, useRef, memo } from 'react';
 
 import { Tab } from '../tab';
 import { SlideModal } from '../../../../../../components/modal';
-import { activeSpaceIdAtom } from '@root/src/stores/app';
+import { getActiveSpaceIdAtom } from '@root/src/stores/app';
 import Accordion from '../../../../../../components/accordion/Accordion';
 import { ISiteVisit } from '@root/src/types/global.types';
 import { getTime } from '@root/src/utils/date-time/get-time';
@@ -63,7 +63,7 @@ type Props = { show: boolean; onClose: () => void };
 const SpaceHistory = ({ show, onClose }: Props) => {
   // global state
   // active space id
-  const [spaceId] = useAtom(activeSpaceIdAtom);
+  const spaceId = useAtomValue(getActiveSpaceIdAtom);
 
   const [spaceHistory, setSpaceHistory] = useState<Sessions[]>([]);
 

@@ -1,12 +1,16 @@
-import { SetStateAction, useAtom } from 'jotai';
-import { ISpaceWithTabs, ITab } from '../../../types/global.types';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { ISpace, ITab } from '../../../types/global.types';
 import {
   activeSpaceAtom,
   deleteSpaceModalAtom,
   showNewSpaceModalAtom,
-  nonActiveSpacesAtom,
   selectedTabsAtom,
   snackbarAtom,
+  getAllSpacesAtom,
+  removeSpaceAtom,
+  updateSpaceAtom,
+  setSpacesAtom,
+  activeSpaceTabsAtom,
 } from '@root/src/stores/app';
 import { deleteSpace, setSpacesToStorage, updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
@@ -49,7 +53,17 @@ type DropHandlerProps = {
 
 export const useTabsDnd = () => {
   // non active spaces  (global state)
-  const [nonActiveSpaces, setNonActiveSpaces] = useAtom(nonActiveSpacesAtom);
+
+  const alLSpacesState = useAtomValue(getAllSpacesAtom);
+
+  const activeSpace = useAtomValue(activeSpaceAtom);
+
+  const setSpaces = useSetAtom(setSpacesAtom);
+
+  const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
+
+  const removeSpaceState = useSetAtom(removeSpaceAtom);
+  const updateSpaceState = useSetAtom(updateSpaceAtom);
 
   const [, setSnackbar] = useAtom(snackbarAtom);
 
@@ -57,7 +71,6 @@ export const useTabsDnd = () => {
   const [, setNewSpaceModal] = useAtom(showNewSpaceModalAtom);
 
   // active space atom (global state)
-  const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);
   // active space atom (global state)
   const [, setDeleteSpaceModal] = useAtom(deleteSpaceModalAtom);
 
@@ -105,9 +118,9 @@ export const useTabsDnd = () => {
     destinationIndex,
     sourceIndex,
   }: Pick<DropHandlerProps, 'sourceIndex' | 'destinationIndex'>) => {
-    const activeTab = activeSpace?.tabs[activeSpace.activeTabIndex];
+    const activeTab = activeSpaceTabs[activeSpace.activeTabIndex];
 
-    let reOrderedTabs = [...activeSpace.tabs];
+    let reOrderedTabs = [...activeSpaceTabs];
 
     if (selectedTabs?.length > 0) {
       // multi tab drop
@@ -133,8 +146,8 @@ export const useTabsDnd = () => {
       // find new active tab index
       const newActiveTabIndex = reOrderedTabs.findIndex(el => el.url === activeTab.url);
 
-      setActiveSpace(prev => ({ ...prev, tabs: reOrderedTabs, activeTabIndex: newActiveTabIndex }));
-
+      updateSpaceState({ ...activeSpace, activeTabIndex: newActiveTabIndex });
+      setActiveSpaceTabs(reOrderedTabs);
       if (!didTabsMoveDownward) {
         sortedSelectedTabs.reverse();
       }
@@ -168,11 +181,8 @@ export const useTabsDnd = () => {
       await chrome.tabs.move(tabToMove.id, { index: destinationIndex });
 
       // update ui
-      setActiveSpace({
-        ...activeSpace,
-        activeTabIndex: newActiveTabIndex,
-        tabs: reOrderedTabs,
-      });
+      updateSpaceState({ ...activeSpace, activeTabIndex: newActiveTabIndex });
+      setActiveSpaceTabs(reOrderedTabs);
 
       // update tabs storage
       await setTabsForSpace(activeSpace.id, reOrderedTabs);
@@ -193,14 +203,16 @@ export const useTabsDnd = () => {
     const droppedSpaceId = droppableId.split('space-')[1];
 
     // active tab in current active space
-    const activeTab = activeSpace?.tabs[activeSpace.activeTabIndex];
+    const activeTab = activeSpaceTabs[activeSpace.activeTabIndex];
 
     // remove tabs
     const tabsToRemove = await removeTabsFromActiveSpace({
       activeSpace,
+      tabs: activeSpaceTabs,
       activeTab,
       selectedTabs,
-      setActiveSpace,
+      updateSpaceState: space => updateSpaceState(space),
+      updateTabs: tabs => setActiveSpaceTabs(tabs),
       sourceIndex,
     });
 
@@ -215,13 +227,16 @@ export const useTabsDnd = () => {
   // dropped in new space zone
   const newSpaceDropHandler = async ({ sourceIndex }: Pick<DropHandlerProps, 'sourceIndex'>) => {
     // active tab in current active space
-    const activeTab = activeSpace?.tabs[activeSpace.activeTabIndex];
+    const activeTab = activeSpaceTabs[activeSpace.activeTabIndex];
     // remove tabs
+
     const tabsToRemove = await removeTabsFromActiveSpace({
       activeSpace,
+      tabs: activeSpaceTabs,
       activeTab,
       selectedTabs,
-      setActiveSpace,
+      updateSpaceState: space => updateSpaceState(space),
+      updateTabs: tabs => setActiveSpaceTabs(tabs),
       sourceIndex,
     });
 
@@ -257,14 +272,14 @@ export const useTabsDnd = () => {
 
       // delete space that is merged (dragged space)
       await deleteSpace(spaceIdToMerge);
-
-      setNonActiveSpaces(prev => [...prev.filter(s => s.id !== spaceIdToMerge)]);
+      // update ui state
+      removeSpaceState(spaceIdToMerge);
 
       // show success snackbar
       setSnackbar({ show: true, msg: 'Space merged', isSuccess: true, isLoading: false });
     } else {
       // re-arrange spaces
-      const reOrderedSpaces = [...nonActiveSpaces];
+      const reOrderedSpaces = [...alLSpacesState];
 
       const [spaceToMove] = reOrderedSpaces.splice(sourceIndex, 1);
 
@@ -272,7 +287,7 @@ export const useTabsDnd = () => {
 
       await setSpacesToStorage([...reOrderedSpaces]);
 
-      setNonActiveSpaces([...reOrderedSpaces]);
+      setSpaces([...reOrderedSpaces]);
     }
   };
 
@@ -285,7 +300,8 @@ export const useTabsDnd = () => {
     await createDiscardedTabs(tabsInSpace);
 
     // add tabs to active space
-    setActiveSpace(prev => ({ ...prev, tabs: [...prev.tabs, ...tabsInSpace] }));
+
+    setActiveSpaceTabs(prev => [...prev, ...tabsInSpace]);
 
     await wait(100);
 
@@ -349,8 +365,10 @@ export const useTabsDnd = () => {
 
 type RemoveTabsFromActiveSpaceProps = {
   selectedTabs: ITab[];
-  activeSpace: ISpaceWithTabs;
-  setActiveSpace: (args_0: SetStateAction<ISpaceWithTabs>) => void;
+  activeSpace: ISpace;
+  tabs: ITab[];
+  updateSpaceState: (space: ISpace) => void;
+  updateTabs: (tabs: ITab[]) => void;
   sourceIndex: number;
   activeTab: ITab;
 };
@@ -359,7 +377,9 @@ type RemoveTabsFromActiveSpaceProps = {
 const removeTabsFromActiveSpace = async ({
   selectedTabs,
   activeSpace,
-  setActiveSpace,
+  tabs,
+  updateSpaceState,
+  updateTabs,
   sourceIndex,
   activeTab,
 }: RemoveTabsFromActiveSpaceProps): Promise<ITab[]> => {
@@ -370,11 +390,11 @@ const removeTabsFromActiveSpace = async ({
     tabsToRemove = selectedTabs.map(t => ({ id: t.id, url: t.url, title: t.title }));
   } else {
     // single tab
-    const tabToRemove = activeSpace.tabs[sourceIndex];
+    const tabToRemove = tabs[sourceIndex];
     tabsToRemove.push(tabToRemove);
   }
   // update tabs
-  const activeSpaceUpdatedTabs = activeSpace.tabs.filter(tab => tabsToRemove.find(t => t.id !== tab.id));
+  const activeSpaceUpdatedTabs = tabs.filter(tab => tabsToRemove.find(t => t.id !== tab.id));
 
   const newActiveTabIndex = activeSpaceUpdatedTabs.findIndex(t => t.id === activeTab.id);
 
@@ -382,7 +402,9 @@ const removeTabsFromActiveSpace = async ({
   await Promise.allSettled(tabsToRemove.map(tab => chrome.tabs.remove(tab.id)));
 
   // update ui state
-  setActiveSpace(prev => ({ ...prev, tabs: activeSpaceUpdatedTabs, activeTabIndex: newActiveTabIndex }));
+  updateSpaceState({ ...activeSpace, activeTabIndex: newActiveTabIndex });
+  updateTabs(activeSpaceUpdatedTabs);
+
   // update  storage
   await setTabsForSpace(activeSpace.id, activeSpaceUpdatedTabs);
 

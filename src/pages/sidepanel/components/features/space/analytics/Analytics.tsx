@@ -32,7 +32,7 @@ const Analytics = ({ show, onClose }: Props) => {
     (async () => {
       const spaces = await getAllSpaces();
 
-      // TODO - get usage data
+      // TODO - api - get usage data
 
       setSpaceUsageData([
         ...spaces.map(s => ({

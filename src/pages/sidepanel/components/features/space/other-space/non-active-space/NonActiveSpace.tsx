@@ -1,19 +1,21 @@
 import { useState } from 'react';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { ExitIcon, ExternalLinkIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 
 import Popover from '../../../../../../../components/popover';
 import Tooltip from '../../../../../../../components/tooltip';
 import { ISpace } from '@root/src/types/global.types';
-import { openSpace } from '@root/src/services/chrome-tabs/tabs';
+import { getCurrentWindowId, openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { useMetaKeyPressed } from '@root/src/pages/sidepanel/hooks/use-key-shortcuts';
 import {
   activeSpaceAtom,
   deleteSpaceModalAtom,
-  nonActiveSpacesAtom,
+  setActiveSpaceAtom,
   showUpdateSpaceModalAtom,
+  updateSpaceAtom,
 } from '@root/src/stores/app';
+import { getSpace } from '@root/src/services/chrome-storage/spaces';
 
 type Props = {
   space: ISpace;
@@ -26,8 +28,9 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
   // global state/atom
   const [, setUpdateModal] = useAtom(showUpdateSpaceModalAtom);
   const [, setDeleteModal] = useAtom(deleteSpaceModalAtom);
-  const [, setNonActiveSpace] = useAtom(nonActiveSpacesAtom);
-  const [activeSpace, setActiveSpace] = useAtom(activeSpaceAtom);
+  const activeSpace = useAtomValue(activeSpaceAtom);
+  const setActiveSpace = useSetAtom(setActiveSpaceAtom);
+  const updateSpaceState = useSetAtom(updateSpaceAtom);
 
   // local state
   const [showContextMenu, setShowContextMenu] = useState(false);
@@ -50,13 +53,14 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
     if (!shouldOpenInNewWindow) {
       // update ui state
       // remove current window id from the previous space
-      setNonActiveSpace(spaces => [
-        ...spaces.map(space => (space.id !== activeSpace.id ? space : { ...space, windowId: 0 })),
-      ]);
+      const previousActiveSpace = await getSpace(activeSpace.id);
+      updateSpaceState({ ...previousActiveSpace, windowId: 0 });
+
+      const windowId = await getCurrentWindowId();
 
       // update new active space
-      const tabsInSpace = await getTabsInSpace(space.id);
-      setActiveSpace({ ...space, tabs: tabsInSpace });
+      setActiveSpace(space.id);
+      updateSpaceState({ ...space, windowId });
     }
   };
 

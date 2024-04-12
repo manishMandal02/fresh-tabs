@@ -1,4 +1,4 @@
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import { Geiger } from 'react-geiger';
 import { motion } from 'framer-motion';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -21,7 +21,13 @@ import ErrorBoundaryUI from '../../components/error-boundary/ErrorBoundaryUI';
 import DeleteSpaceModal from './components/features/space/delete/DeleteSpaceModal';
 import { ActiveSpace, CreateSpace, UpdateSpace } from './components/features/space';
 import { TAB_HEIGHT } from './components/features/space/active-space/ActiveSpaceTabs';
-import { appSettingsAtom, dragStateAtom, showNotificationModalAtom } from '@root/src/stores/app';
+import {
+  appSettingsAtom,
+  dragStateAtom,
+  setActiveSpaceAtom,
+  setSpacesAtom,
+  showNotificationModalAtom,
+} from '@root/src/stores/app';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -34,6 +40,10 @@ const SidePanel = () => {
   // global state - app settings
   const [, setAppSetting] = useAtom(appSettingsAtom);
 
+  const setSpaces = useSetAtom(setSpacesAtom);
+
+  const setActiveSpaceId = useSetAtom(setActiveSpaceAtom);
+
   //  notification modal atom
   const [, setShowNotification] = useAtom(showNotificationModalAtom);
 
@@ -44,15 +54,8 @@ const SidePanel = () => {
   // const [globalPinnedTabs, setGlobalPinnedTabs] = useState<IPinnedTab[]>([]);
 
   // logics hook
-  const {
-    activeSpace,
-    setActiveSpace,
-    setNonActiveSpaces,
-    getAllSpacesStorage,
-    handleEvents,
-    onTabsDragEnd,
-    onTabsDragStart,
-  } = useSidePanel();
+  const { activeSpace, activeSpaceTabs, getAllSpacesStorage, handleEvents, onTabsDragEnd, onTabsDragStart } =
+    useSidePanel();
 
   const activeSpaceRef = useRef(activeSpace);
 
@@ -61,11 +64,12 @@ const SidePanel = () => {
     (async () => {
       setIsLoadingSpaces(true);
 
-      const { activeSpaceWithTabs, otherSpaces } = await getAllSpacesStorage();
+      const { currentSpace, allSpaces } = await getAllSpacesStorage();
 
-      setActiveSpace({ ...activeSpaceWithTabs });
+      setSpaces(allSpaces);
 
-      setNonActiveSpaces(otherSpaces);
+      setActiveSpaceId(currentSpace.id);
+
       // set app settings
       const settings = await getAppSettings();
 
@@ -142,7 +146,7 @@ const SidePanel = () => {
                 <div className="h-[95%] relative px-1.5 ">
                   <ActiveSpace
                     space={activeSpace}
-                    setActiveSpace={setActiveSpace}
+                    tab={activeSpaceTabs}
                     onSearchClick={handleShowCommandPalette}
                     onNotificationClick={handleShowNotification}
                   />
@@ -155,7 +159,7 @@ const SidePanel = () => {
                         className="flex-grow w-full absolute top-[70px] left-0 rounded-lg transition-all duration-300 ease-in-out "
                         style={{
                           border: isDraggingOver ? '2px solid #05957f' : '#082545',
-                          height: `${activeSpace?.tabs?.length * (TAB_HEIGHT * 1.15)}px`,
+                          height: `${activeSpaceTabs?.length * (TAB_HEIGHT * 1.15)}px`,
                           visibility: isDraggingGlobal && draggingType === 'space' ? 'visible' : 'hidden',
                           zIndex: isDraggingGlobal && draggingType === 'space' ? 200 : 1,
                         }}>
