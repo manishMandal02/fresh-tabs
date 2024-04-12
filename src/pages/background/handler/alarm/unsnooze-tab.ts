@@ -35,7 +35,7 @@ export const handleSnoozedTabAlarm = async (alarmName: string) => {
     await newTabGroup(SNOOZED_TAB_GROUP_TITLE, url, currentSpace.windowId);
 
     // remove the tab from the snoozed storage
-    await removeSnoozedTab(spaceId, url);
+    await removeSnoozedTab(spaceId, snoozedAt);
 
     // show notification with show tab button
     showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed ${getTimeAgo(snoozedAt)}`, title, faviconUrl, true);

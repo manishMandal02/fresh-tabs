@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
-import { isHotkeyPressed, useHotkeys } from 'react-hotkeys-hook';
+import { useHotkeys } from 'react-hotkeys-hook';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 import { MouseEventHandler, useState, useCallback, useEffect, useRef, useMemo, memo } from 'react';
 
@@ -13,6 +13,7 @@ import { goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
 import TabDraggedOutsideActiveSpace from './TabDraggedOutsideActiveSpace';
 import { ISpaceWithTabs, ITabWithIndex } from '@root/src/types/global.types';
+import { useMetaKeyPressed } from '@root/src/pages/sidepanel/hooks/use-key-shortcuts';
 import { activeSpaceAtom, dragStateAtom, selectedTabsAtom } from '@root/src/stores/app';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 
@@ -111,15 +112,14 @@ const ActiveSpaceTabs = ({ space: { tabs, ...space } }: Props) => {
     [],
   );
 
-  const isShiftKeyPressed = isHotkeyPressed('shift');
+  const { isShiftKeyPressed, isMetaKeyPressed } = useMetaKeyPressed({});
 
-  const isMetaKeyPressed = isHotkeyPressed('meta');
+  console.log('🚀 ~ isMetaKeyPressed:', isMetaKeyPressed);
 
   const isTabSelected = useCallback((id: number) => !!selectedTabs.find(t => t.id === id), [selectedTabs]);
 
   const onTabClick = useCallback(
     async (tab: ITabWithIndex) => {
-      // TODO - fix - sometimes the modifier key pressed is not updated (the main hook itself doesn't record change)
       // clt/cmd is pressed
       if (isMetaKeyPressed) {
         await handleGoToTab(tab.id, tab.index);

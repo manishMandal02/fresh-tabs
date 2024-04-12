@@ -53,9 +53,8 @@ export const getRecentlyVisitedSites = async (maxResults = 4): Promise<ITab[]> =
   }
 };
 
-// TODO - not used currently
 // get top sites for chrome
-export const getMostVisitedSites = async (): Promise<ITab[]> => {
-  const topSites = await chrome.topSites.get();
-  return topSites as ITab[];
-};
+// const getMostVisitedSites = async (): Promise<ITab[]> => {
+//   const topSites = await chrome.topSites.get();
+//   return topSites as ITab[];
+// };

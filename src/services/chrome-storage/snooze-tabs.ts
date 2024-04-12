@@ -1,9 +1,40 @@
 // get all tabs in space
 
+import { getAllSpaces } from './spaces';
 import { logger } from '@root/src/utils/logger';
 import { getStorage, setStorage } from './helpers';
-import { ISnoozedTab } from '@root/src/types/global.types';
 import { StorageKey } from '@root/src/constants/app';
+import { ISnoozedTab } from '@root/src/types/global.types';
+
+export const getAllSpacesSnoozedTabs = async () => {
+  try {
+    const allSpaces = await getAllSpaces();
+
+    const allSnoozedTabsPromises = allSpaces.map(s => getSnoozedTabs(s.id));
+
+    const promiseRes = await Promise.allSettled(allSnoozedTabsPromises);
+
+    const allSnoozedTabs: ISnoozedTab[] = [];
+
+    for (const res of promiseRes) {
+      if (res.status !== 'fulfilled') continue;
+
+      const snoozedTabs = res.value;
+
+      if (!snoozedTabs || snoozedTabs?.length < 1) continue;
+
+      allSnoozedTabs.push(...snoozedTabs);
+    }
+    return allSnoozedTabs;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: 'Error getting all spaces snoozed tabs',
+      fileTrace: 'src/services/chrome-storage/snoozed-tabs.ts:29 ~ getAllSpacesSnoozedTabs() ~ catch block',
+    });
+    return [];
+  }
+};
 
 export const getSnoozedTabs = async (spaceId: string) => {
   try {
@@ -12,7 +43,7 @@ export const getSnoozedTabs = async (spaceId: string) => {
     logger.error({
       error,
       msg: 'Error getting all snoozed tabs',
-      fileTrace: 'src/services/chrome-storage/snoozed-tabs.ts:14 ~ getSnoozedTabs() ~ catch block',
+      fileTrace: 'src/services/chrome-storage/snoozed-tabs.ts:42 ~ getSnoozedTabs() ~ catch block',
     });
     return [];
   }
@@ -25,7 +56,7 @@ const setSnoozedTabs = async (spaceId: string, snoozedTabs: ISnoozedTab[]) => {
     logger.error({
       error,
       msg: 'Error setting snoozed tabs',
-      fileTrace: 'src/services/chrome-storage/snoozed-tabs.ts:13 ~ setSnoozedTabs() ~ catch block',
+      fileTrace: 'src/services/chrome-storage/snoozed-tabs.ts:55 ~ setSnoozedTabs() ~ catch block',
     });
     return false;
   }
@@ -52,8 +83,10 @@ export const getTabToUnSnooze = async (spaceId: string) => {
 };
 
 // remove a single snoozed tab
-export const removeSnoozedTab = async (spaceId: string, url: string) => {
+export const removeSnoozedTab = async (spaceId: string, snoozedAt: number) => {
   const snoozedTabs = await getSnoozedTabs(spaceId);
-  const updatedSnoozedTabs = snoozedTabs.filter(tab => tab.url !== url && tab.snoozedUntil > new Date().getTime());
+  const updatedSnoozedTabs = snoozedTabs.filter(
+    tab => tab.snoozedAt !== snoozedAt && tab.snoozedUntil > new Date().getTime(),
+  );
   return setSnoozedTabs(spaceId, updatedSnoozedTabs);
 };

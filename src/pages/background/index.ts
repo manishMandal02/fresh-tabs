@@ -13,7 +13,7 @@ import { logger } from '../../utils/logger';
 import { debounceWithEvents, generateId, wait } from '../../utils';
 import { retryAtIntervals } from '../../utils/retryAtIntervals';
 import { asyncMessageHandler } from '../../utils/asyncMessageHandler';
-import { handleSnoozedTabAlarm } from './handler/alarm/snoozed-tab';
+import { handleSnoozedTabAlarm } from './handler/alarm/unsnooze-tab';
 import { getFaviconURL, isChromeUrl, parseUrl } from '../../utils/url';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
 import { matchWordsInText } from '@root/src/utils/string/matchWordsInText';
