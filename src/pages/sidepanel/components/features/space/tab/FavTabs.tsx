@@ -6,6 +6,8 @@ import { KeyboardEventHandler, useState } from 'react';
 import Popover from '../../../../../../components/popover';
 import { saveGlobalPinnedTabs } from '@root/src/services/chrome-storage/tabs';
 
+// TODO - not used currently
+
 type Props = {
   tabs: IPinnedTab[];
   isGlobal: boolean;
@@ -20,7 +22,6 @@ const FavTab = ({ tabs, isGlobal, setGlobalPinnedTabs }: Props) => {
 
   const [newPinTab, setNewPinTab] = useState<IPinnedTab>({ url: '', title: '' });
 
-  //  TODO - fix url format check, and only then enable add btn
   // add new pinned tabs
   const handleAddNewPin = async () => {
     if (!newPinTab.url) return;

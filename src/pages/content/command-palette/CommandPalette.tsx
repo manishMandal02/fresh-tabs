@@ -135,7 +135,7 @@ const CommandPalette = ({
       index: 1 + idx + staticCommands.length,
       type: CommandType.Link,
       label: site.title,
-      icon: getFaviconURL(site.url, false),
+      icon: getFaviconURL(site.url),
       metadata: site.url,
       alias: 'History',
     }));
@@ -175,7 +175,7 @@ const CommandPalette = ({
               index: matchedCommands.length + 1,
               type: CommandType.SwitchTab,
               label: tab.title,
-              icon: getFaviconURL(tab.url, false),
+              icon: getFaviconURL(tab.url),
               metadata: tab.id,
               alias: 'Opened tabs',
             });
@@ -189,7 +189,7 @@ const CommandPalette = ({
               index: matchedCommands.length + 1,
               type: CommandType.SwitchTab,
               label: tab.title,
-              icon: getFaviconURL(tab.url, false),
+              icon: getFaviconURL(tab.url),
               metadata: tab.id,
               alias: 'Opened tabs',
             });

@@ -64,7 +64,6 @@ export interface ITabWithIndex extends ITab {
 export interface ISiteVisit {
   url: string;
   title: string;
-  faviconUrl: string;
   timestamp: number;
 }
 

@@ -1,10 +1,10 @@
-import { ISpace, ITab } from '@root/src/types/global.types';
-import { getSpaceByWindow, updateSpace } from '../chrome-storage/spaces';
 import { getFaviconURL } from '@root/src/utils/url';
-import { getTabsInSpace, setTabsForSpace } from '../chrome-storage/tabs';
-import { DISCARD_TAB_URL_PREFIX, SNOOZED_TAB_GROUP_TITLE } from '@root/src/constants/app';
 import { parseUrl } from '@root/src/utils/url/parse-url';
+import { ISpace, ITab } from '@root/src/types/global.types';
 import { getTabToUnSnooze } from '../chrome-storage/snooze-tabs';
+import { getTabsInSpace, setTabsForSpace } from '../chrome-storage/tabs';
+import { getSpaceByWindow, updateSpace } from '../chrome-storage/spaces';
+import { DISCARD_TAB_URL_PREFIX, SNOOZED_TAB_GROUP_TITLE } from '@root/src/constants/app';
 
 type OpenSpaceProps = {
   space: ISpace;

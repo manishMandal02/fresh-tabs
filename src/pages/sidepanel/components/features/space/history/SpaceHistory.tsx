@@ -14,6 +14,7 @@ import { getISODate } from '@root/src/utils/date-time/getISODate';
 import { getWeekday } from '@root/src/utils/date-time/get-weekday';
 import { getSpaceHistory } from '@root/src/services/chrome-storage/space-history';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
+import SiteIcon from '@root/src/components/site-icon/SiteIcon';
 
 type Sessions = {
   date: string;
@@ -24,13 +25,18 @@ type Sessions = {
 const mapVisitsByDays = (siteVisits: ISiteVisit[]) => {
   // Map site visits to an object with date keys
   const visitsByDate = siteVisits.reduce(
-    (acc, visit) => {
+    (acc, visit, idx) => {
       // convert date to ISO format
       const dateKey = getISODate(visit.timestamp);
       if (!acc[dateKey]) {
         acc[dateKey] = [];
       }
+
+      // check duplicate url
+      if (siteVisits[Math.max(idx - 1, 0)]?.url === visit?.url) return acc;
+
       acc[dateKey].push(visit);
+
       return acc;
     },
     {} as Record<string, ISiteVisit[]>,
@@ -40,11 +46,14 @@ const mapVisitsByDays = (siteVisits: ISiteVisit[]) => {
   const groupedSessions = Object.entries(visitsByDate).map(([date, visits]) => {
     const groupedVisitsMap = visits.reduce(
       (acc, visit) => {
+        if (!visit?.url) return acc;
+
         const domain = getUrlDomain(visit.url);
 
         if (!acc[domain]) {
           acc[domain] = [];
         }
+
         acc[domain].push(visit);
         return acc;
       },
@@ -53,7 +62,6 @@ const mapVisitsByDays = (siteVisits: ISiteVisit[]) => {
     return { date, sessions: Object.entries(groupedVisitsMap) };
   });
 
-  console.log('🚀 ~ mapVisitsByDays ~ groupedVisits:', groupedSessions);
   return groupedSessions;
 };
 
@@ -71,8 +79,6 @@ const SpaceHistory = ({ show, onClose }: Props) => {
   const [floatingDate, setFloatingDate] = useState('');
 
   const dateHeadingsRefs = useRef<Array<HTMLDivElement | null>>([]);
-
-  // TODO - FIX - the grouping of sites visits some sites are grouped in groups of 2-4 multiple in rows, they should all be grouped together
 
   // init component
   useEffect(() => {
@@ -97,7 +103,7 @@ const SpaceHistory = ({ show, onClose }: Props) => {
     dateHeadingsRefs.current?.forEach(dateHeading => {
       const dateHeadingTop = dateHeading.getBoundingClientRect().top;
 
-      if (dateHeadingTop < 160 && scrollTop !== 0) {
+      if (dateHeadingTop < 20 && scrollTop !== 0) {
         const date = dateHeading?.getAttribute('data-date-heading');
         if (!date) return;
         lastDateHeadingHidden = date;
@@ -119,8 +125,6 @@ const SpaceHistory = ({ show, onClose }: Props) => {
 
   const { bounce } = useCustomAnimation();
 
-  // TODO - use a virtualized container to render list as it may contain a large amount of data
-
   return show ? (
     <SlideModal isOpen={show} onClose={onClose} title={'History'}>
       <div id="space-history-container" className="max-h-[95%] cc-scrollbar min-h-fit overflow-x-hidden py-2">
@@ -139,7 +143,7 @@ const SpaceHistory = ({ show, onClose }: Props) => {
             <Accordion
               id={date}
               classes={{
-                triggerContainer: 'bg-brand-darkBgAccent/30 rounded-md mb-1 mx-[2px]',
+                triggerContainer: 'bg-brand-darkBgAccent/30 rounded mb-1 mx-[2px]',
                 triggerIcon: 'text-slate-600',
               }}
               trigger={
@@ -176,12 +180,9 @@ const SpaceHistory = ({ show, onClose }: Props) => {
                               {getTime(visits[0]?.timestamp)}
                             </span>
 
-                            {/* icon & title */}
-                            <img
-                              alt="icon"
-                              src={visits[0].faviconUrl}
-                              className="size-[13.5px]  mr-[6px] opacity-90 rounded-full border-[0.5px] border-slate-700 object-center object-scale-down"
-                            />
+                            {/*  icon */}
+                            <SiteIcon siteURl={visits[0].url} classes="" />
+                            {/*  group  domain */}
                             <div className="flex items-center w-[80%] max-w-[85%]">
                               <span className="select-text text-start text-slate-300/70 text-[11px] font-light text-ellipsis w-fit max-w-[96%] overflow-hidden whitespace-nowrap">
                                 {sessionDomain}
@@ -192,9 +193,13 @@ const SpaceHistory = ({ show, onClose }: Props) => {
                         }>
                         <div className="bg-brand-darkBgAccent/10 py-1 pl-px pr-1">
                           {visits.map(v => (
-                            <div key={v.timestamp}>
+                            <div key={v.timestamp} className="flex items-center justify-start">
                               <Tab
-                                tabData={{ url: v.url, title: v.title, faviconUrl: v.faviconUrl, id: 0 }}
+                                size="sm"
+                                hideIcon
+                                showVisitTime={getTime(v.timestamp)}
+                                showURL
+                                tabData={{ url: v.url, title: v.title, id: 0 }}
                                 isSpaceActive={false}
                                 showHoverOption={true}
                                 showDeleteOption={false}

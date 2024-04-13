@@ -118,25 +118,20 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 
 // TODO - don't switch space in same window if meeting is in place
 
-// TODO - remove the concept of unsaved spaces, make the necessary changes
-// all spaces will be saved by default
-
-// TODO - store favicon url in ITab
+// TODO - feat improvement - make necessary changes to unsaved spaces feature
 
 // TODO - track num of times user switch spaces
 
-// TODO - Use UTC date & time stamp for server (save user timezone)
-
-// TODO - reset day at 3am at default
-
-// TODO - tab thumbnail views and also grid views
+// TODO - DnD checks (tabs, spaces, merge, delete, create)
 
 // TODO - change extension icon in toolbar based on space (other actions like notes saving, tab moved, etc.)
 
-// TODO - DnD checks (tabs, spaces, merge, delete, create)
+// TODO - new feat - tab thumbnail views and also grid views
 
-// TODO - attach a root container for command palette on site load complete,
-//-- and then append the react component on command palette shortcut
+// TODO - remove space history older than 30 days
+
+// TODO - backend - Use UTC date & time stamp for server (save user timezone)
+// TODO - backend - reset day at 3am at default
 
 // helpers for chrome event handlers
 const createUnsavedSpacesOnInstall = async () => {
@@ -232,10 +227,11 @@ const recordSiteVisit = async (windowId: number, tabId: number) => {
 
   const updatedTab = tabsInSpace.find(t => t.id === tabId);
 
-  if (!updatedTab?.url || isChromeUrl(updatedTab.url)) return;
+  if (!updatedTab?.url || !updatedTab.url.startsWith('http')) return;
+
   const { url, title } = updatedTab;
   const spaceHistoryToday = await getSpaceHistory(space.id);
-  const newSiteVisitRecord: ISiteVisit = { url, title, faviconUrl: getFaviconURL(url), timestamp: Date.now() };
+  const newSiteVisitRecord: ISiteVisit = { url, title, timestamp: Date.now() };
   await setSpaceHistory(space.id, [newSiteVisitRecord, ...(spaceHistoryToday || [])]);
 
   logger.info('👍 Recorded site visit.');
@@ -532,7 +528,7 @@ chrome.runtime.onMessage.addListener(
                 index: idx,
                 type: CommandType.Link,
                 label: item.title,
-                icon: getFaviconURL(item.url, false),
+                icon: getFaviconURL(item.url),
                 metadata: item.url,
                 alias: 'Bookmark',
               });
@@ -562,7 +558,7 @@ chrome.runtime.onMessage.addListener(
               index: idx,
               type: CommandType.Link,
               label: item.title,
-              icon: getFaviconURL(item.url, false),
+              icon: getFaviconURL(item.url),
               metadata: item.url,
               alias: 'History',
             });
@@ -693,8 +689,6 @@ chrome.runtime.onInstalled.addListener(async info => {
 
 // shortcut commands
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  console.log('🚀 ~ chrome.commands.onCommand.addListener ~ command:', command);
-
   if (command === 'newTab') {
     await chrome.tabs.create({ url: 'chrome://newtab', index: tab.index + 1 });
     return;

@@ -1,18 +1,18 @@
-import { useAtom, useSetAtom } from 'jotai';
 import { Geiger } from 'react-geiger';
 import { motion } from 'framer-motion';
+import { useAtom, useSetAtom } from 'jotai';
 import { ErrorBoundary } from 'react-error-boundary';
-import { useState, useEffect, useCallback, useRef } from 'react';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 import Spinner from '../../components/spinner';
 import Snackbar from '../../components/snackbar';
 import Footer from './components/features/footer';
 import { useSidePanel } from './hooks/useSidePanel';
 import Settings from './components/features/settings/Settings';
-import { IMessageEventSidePanel } from '../../types/global.types';
 import { showCommandPaletteContentScript } from '../background';
 import UserAccount from './components/features/user/UserAccount';
+import { IMessageEventSidePanel } from '../../types/global.types';
 import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
 import Notification from './components/features/notification/Notification';
 import AddNewNote from './components/features/notes/notes-modal/NotesModal';
@@ -123,8 +123,6 @@ const SidePanel = () => {
   const handleShowNotification = useCallback(() => {
     setShowNotification(true);
   }, [setShowNotification]);
-
-  //TODO -  organize and control all global shortcuts and modals from one component
 
   return (
     <Geiger>

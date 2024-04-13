@@ -5,16 +5,21 @@ import { memo } from 'react';
 import { Cross1Icon, CopyIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
 
 import { ITab } from '@root/src/types/global.types';
-import { getFaviconURL } from '@root/src/utils/url';
 import { TAB_HEIGHT } from '../active-space/ActiveSpaceTabs';
 import { createTab, goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { copyToClipboard } from '@root/src/utils/copy-to-clipboard';
+import SiteIcon from '@root/src/components/site-icon/SiteIcon';
+import { cn } from '@root/src/utils/cn';
 
 type Props = {
-  tabData: ITab & { faviconUrl?: string };
+  tabData: ITab;
   showHoverOption?: boolean;
   isSpaceActive?: boolean;
   showDeleteOption?: boolean;
+  hideIcon?: boolean;
+  showVisitTime?: string;
+  size?: 'sm' | 'md';
+  showURL?: boolean;
   onClick?: () => void;
   onTabDelete?: () => Promise<void>;
   onTabDoubleClick?: (id: number) => void;
@@ -26,8 +31,12 @@ const Tab = ({
   onClick,
   isSpaceActive,
   onTabDoubleClick,
+  showVisitTime,
   showDeleteOption = true,
   showHoverOption = true,
+  showURL = false,
+  hideIcon = false,
+  size = 'md',
 }: Props) => {
   console.log('🚀 ~ Tab ~ 🔁 rendered');
 
@@ -49,22 +58,47 @@ const Tab = ({
   return (
     <div
       tabIndex={-1}
-      className={`w-[99%] max-w-[99%] select-none z-[20] px-[10px] py-[12px] flex items-center justify-between outline-none
-                   relative shadow-sm rounded-lg overflow-hidden group hover:bg-brand-darkBgAccent/50 transition-all duration-200`}
+      className={cn(
+        `w-[99%] max-w-[99%] select-none z-[20] px-[10px] py-[12px] flex items-center justify-between outline-none
+                   relative shadow-sm rounded-lg overflow-hidden group hover:bg-brand-darkBgAccent/50 transition-all duration-200`,
+        { 'py-[6px]': size === 'sm' },
+      )}
       onClick={onClick}
       style={{
-        height: TAB_HEIGHT + 'px',
+        height: (size !== 'sm' ? TAB_HEIGHT : TAB_HEIGHT - 4) + 'px',
       }}
       onDoubleClick={() => onTabDoubleClick(tabData.id)}>
       <div className="flex items-center w-full">
-        <img
-          className="mr-[8px] opacity-90  size-[17px] max-w-[17px] z-10 rounded-sm object-contain object-center"
-          src={tabData.faviconUrl || getFaviconURL(tabData.url)}
-          alt="icon"
-        />
-        <span className="text-[13px] text-slate-300/80 min-w-[80%] max-w-[95%] text-start whitespace-nowrap overflow-hidden text-ellipsis">
-          {tabData.title?.trim() || 'No title'}
-        </span>
+        {!hideIcon ? (
+          <SiteIcon
+            siteURl={tabData.url}
+            classes={cn('size-[17px] max-w-[17px] z-10 rounded', { 'size-[14px]': size === 'sm' })}
+          />
+        ) : null}
+        {/* site visit time (show in history) */}
+        {showVisitTime ? (
+          <span className="text-slate-500/70 font-light text-[8.5px] mr-[5px] -ml-1">{showVisitTime}</span>
+        ) : null}
+        <div className="flex items-center justify-start w-full max-w-full overflow-hidden ">
+          <div className={cn({ 'w-full': !showURL }, { '!max-w-[50%]': showURL })}>
+            <p
+              className={cn(
+                'text-[13px] text-slate-300/80 max-w-full whitespace-nowrap overflow-hidden text-ellipsis text-start',
+                {
+                  'text-[10px]': size === 'sm',
+                },
+              )}>
+              {tabData.title?.trim() || 'No title'}
+            </p>
+          </div>
+          {showURL ? (
+            <div className="ml-1 w-full  overflow-hidden">
+              <p className="text-[10px] text-slate-500/90 max-w-full text-ellipsis overflow-hidden whitespace-nowrap ">
+                {tabData.url}
+              </p>
+            </div>
+          ) : null}
+        </div>
       </div>
       {showHoverOption ? (
         <span
