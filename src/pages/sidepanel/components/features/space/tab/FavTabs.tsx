@@ -6,7 +6,7 @@ import { KeyboardEventHandler, useState } from 'react';
 import Popover from '../../../../../../components/popover';
 import { saveGlobalPinnedTabs } from '@root/src/services/chrome-storage/tabs';
 
-// TODO - not used currently
+// TODO - remove - not used currently
 
 type Props = {
   tabs: IPinnedTab[];

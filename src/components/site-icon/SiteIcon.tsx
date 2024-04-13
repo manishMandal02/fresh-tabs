@@ -1,7 +1,7 @@
 import { GlobeIcon } from '@radix-ui/react-icons';
 import { CSSClasses } from '@root/src/types/global.types';
 import { cn } from '@root/src/utils/cn';
-import { getFaviconURL, isChromeUrl } from '@root/src/utils/url';
+import { getFaviconURL } from '@root/src/utils/url';
 import { ReactEventHandler } from 'react';
 
 type Props = {
@@ -10,8 +10,6 @@ type Props = {
 };
 
 const getSrcUrl = (url: string) => {
-  if (isChromeUrl(url)) return './chrome.svg';
-
   return getFaviconURL(url);
 };
 
@@ -31,7 +29,7 @@ const SiteIcon = ({ siteURl, classes }: Props) => {
         onError={handleImageLoadError}
         src={getSrcUrl(siteURl)}
         className={cn(
-          'size-[14px] mr-[6px] opacity-90 rounded-md border-[0.5px] border-slate-700 object-center object-scale-down',
+          'size-[14px] mr-[6px] rounded-md border-[0.5px] border-slate-700 object-center object-scale-down',
           classes,
         )}
       />

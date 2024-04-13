@@ -6,7 +6,7 @@ export const getFaviconURL = (siteUrl: string, size = 32) => {
 
   const url = new URL(parsedUrl) || new URL(siteUrl);
 
-  if (!url || isChromeUrl(siteUrl)) return createChromeFaviconURL(url);
+  if (!url.hostname || isChromeUrl(siteUrl)) return createChromeFaviconURL(url);
 
   return `https://api.faviconkit.com/${url.hostname}/${size}`;
 };
@@ -31,7 +31,6 @@ const createChromeFaviconURL = (url: URL) => `${chrome.runtime.getURL('/_favicon
 //   let faviconUrl = '';
 
 //   if (!isSidePanel) {
-//     //  TODO - some sub domains like google products don't work,
 //     // need to check if the image was loaded if not then try diff method
 
 //     // return url.origin + '/favicon.ico';

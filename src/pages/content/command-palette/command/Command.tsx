@@ -30,6 +30,7 @@ type Props = {
   type: CommandType;
   Icon: CommandIcon;
   searchTerm: string;
+  metadata?: string;
   isFocused: boolean;
   isSubCommand: boolean;
   isStaticCommand: boolean;
@@ -45,6 +46,7 @@ const Command = ({
   searchTerm,
   onClick,
   alias,
+  metadata,
   isSubCommand,
   isStaticCommand,
 }: Props) => {
@@ -157,17 +159,20 @@ const Command = ({
       {/* label */}
       <div
         className={cn(
-          'text-[12px] flex items-center text-start text-slate-400/80 min-w-[50%] max-w-[95%] whitespace-nowrap  overflow-hidden text-ellipsis transition-colors duration-150',
-          { 'text-slate-300/90': isFocused },
+          'text-[12px] flex items-center justify-start text-slate-400/80 max-w-[96%] transition-colors duration-150',
+          {
+            'max-w-[60%]': type === CommandType.Link,
+          },
         )}>
         <LinkTypeIndicatorIcon />
-
-        <Highlighter
-          searchWords={[...escapedSearchTerm.split(' ')]}
-          textToHighlight={label}
-          highlightClassName="bg-transparent text-slate-300/90 font-semibold"
-          unhighlightClassName="bg-transparent"
-        />
+        <span className="temax-w-full whitespace-nowrap  overflow-hidden text-ellipsis">
+          <Highlighter
+            searchWords={[...escapedSearchTerm.split(' ')]}
+            textToHighlight={label}
+            highlightClassName="bg-transparent text-slate-300/90 font-semibold"
+            unhighlightClassName="bg-transparent"
+          />
+        </span>
         {commandAlias ? (
           <Highlighter
             searchWords={[...escapedSearchTerm.split(' ')]}
@@ -177,8 +182,17 @@ const Command = ({
           />
         ) : null}
       </div>
+      {/* link command url */}
+      {type === CommandType.Link ? (
+        <div className="ml-1 w-full text-start overflow-hidden">
+          <p className="text-[11px] text-slate-500/90 max-w-full text-ellipsis overflow-hidden whitespace-nowrap ">
+            {metadata}
+          </p>
+        </div>
+      ) : null}
+
       {/* command type label/sticker */}
-      {!isStaticCommand && !isSubCommand ? (
+      {!isStaticCommand && !!isSubCommand ? (
         <div className="flex items-center absolute right-3 top-1 bg-brand-darkBgAccent/90 rounded-[5px] text-[10px]  text-slate-400/80 px-2.5 py-1.5 capitalize select-none">
           <CommandTypeIcon classes="ml-1 text-slate-400/80 scale-[0.9]" />
         </div>
@@ -195,6 +209,7 @@ type CommandIconProps = {
   type: CommandType;
 };
 
+// TODO - fix - some icon appear too small
 const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
   if (type === CommandType.Note) Icon = FileTextIcon;
 
@@ -217,7 +232,7 @@ const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
           alt="icon"
           src={Icon as string}
           onError={handleImageLoadError}
-          className="w-[14px] h-fit rounded-md opacity-95 object-scale-down object-center"
+          className="size-[16px] opacity-95 object-scale-down object-center"
         />
         {/* show fallback icon */}
         <GlobeIcon className="hidden text-slate-400 scale-[0.9]" />

@@ -1,6 +1,6 @@
 import { useEffect, ReactNode, memo, useRef, KeyboardEventHandler, MouseEventHandler } from 'react';
 import { Cross1Icon } from '@radix-ui/react-icons';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import { useCustomAnimation } from '../../pages/sidepanel/hooks/useCustomAnimation';
 // import { MdClose } from 'react-icons/md';
@@ -64,29 +64,31 @@ const AlertModal = ({ children, isOpen, onClose, title, showCloseBtn = true }: P
 
   const { bounce } = useCustomAnimation();
 
-  return isOpen ? (
-    <motion.dialog
-      ref={modalRef}
-      {...bounce}
-      onKeyDown={handleKeyDown}
-      onClick={handleBackdropClick}
-      className="w-screen h-min  bg-brand-darkBg px-1 py-1 border-t border-brand-darkBgAccent/70 backdrop:bg-brand-darkBgAccent/10 fixed top-2 rounded-lg shadow-md shadow-brand-darkBgAccent/70">
-      <div className="overflow-hidden w-full pt-1 z-[99] rounded-lg">
-        {/* header */}
-        <div className="w-full relative mb-2 shadow-sm shadow-brand-darkBgAccent/40">
-          {title ? <p className="text-center text-slate-500 text-[14px] font-light pb-1">{title}</p> : null}
-          {showCloseBtn ? (
-            <Cross1Icon
-              className="absolute  top-px right-2 fill-slate-700/90 cursor-pointer font-thin hover:fill-slate-600/90 transition-all duration-300 ease-in-out"
-              onClick={handleClose}
-            />
-          ) : null}
-        </div>
-        {children}
-      </div>
-    </motion.dialog>
-  ) : (
-    <></>
+  return (
+    <AnimatePresence>
+      {isOpen ? (
+        <motion.dialog
+          ref={modalRef}
+          {...bounce}
+          onKeyDown={handleKeyDown}
+          onClick={handleBackdropClick}
+          className="w-screen h-min  bg-brand-darkBg px-1 py-1 border-t border-brand-darkBgAccent/70 backdrop:bg-brand-darkBgAccent/10 fixed top-2 rounded-lg shadow-md shadow-brand-darkBgAccent/70">
+          <div className="overflow-hidden w-full pt-1 z-[99] rounded-lg">
+            {/* header */}
+            <div className="w-full relative mb-2 shadow-sm shadow-brand-darkBgAccent/40">
+              {title ? <p className="text-center text-slate-500 text-[14px] font-light pb-1">{title}</p> : null}
+              {showCloseBtn ? (
+                <Cross1Icon
+                  className="absolute  top-px right-2 fill-slate-700/90 cursor-pointer font-thin hover:fill-slate-600/90 transition-all duration-300 ease-in-out"
+                  onClick={handleClose}
+                />
+              ) : null}
+            </div>
+            {children}
+          </div>
+        </motion.dialog>
+      ) : null}
+    </AnimatePresence>
   );
 };
 

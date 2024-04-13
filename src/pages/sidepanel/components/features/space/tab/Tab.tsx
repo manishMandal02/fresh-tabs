@@ -72,13 +72,14 @@ const Tab = ({
         {!hideIcon ? (
           <SiteIcon
             siteURl={tabData.url}
-            classes={cn('size-[17px] max-w-[17px] z-10 rounded', { 'size-[14px]': size === 'sm' })}
+            classes={cn('size-[17px] max-w-[17px] z-10 border-none', { 'size-[14px]': size === 'sm' })}
           />
         ) : null}
         {/* site visit time (show in history) */}
         {showVisitTime ? (
           <span className="text-slate-500/70 font-light text-[8.5px] mr-[5px] -ml-1">{showVisitTime}</span>
         ) : null}
+        {/* tab title with url */}
         <div className="flex items-center justify-start w-full max-w-full overflow-hidden ">
           <div className={cn({ 'w-full': !showURL }, { '!max-w-[50%]': showURL })}>
             <p

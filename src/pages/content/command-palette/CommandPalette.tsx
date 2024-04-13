@@ -466,6 +466,7 @@ const CommandPalette = ({
                       Icon={cmd.icon}
                       searchTerm={searchQuery.toLowerCase().trim()}
                       alias={cmd?.alias || ''}
+                      metadata={(cmd?.metadata as string) || ''}
                       isSubCommand={!!subCommand}
                       isStaticCommand={isStaticCommand(cmd.label)}
                       isFocused={focusedCommandIndex === cmd.index}

@@ -84,7 +84,7 @@ export const createSampleSpaces = async () => {
 };
 
 // update a space
-export const updateSpace = async (spaceId: string, space: ISpaceWithoutId): Promise<boolean> => {
+export const updateSpace = async (spaceId: string, space: Partial<ISpaceWithoutId>): Promise<boolean> => {
   try {
     const spaces = await getAllSpaces();
 

@@ -28,7 +28,7 @@ export const publishEventsTab = async (tabId: number, event: IMessageEventConten
     return true;
   } catch (error) {
     if ((error as Error).message.includes('Receiving end does not exist')) {
-      // TODO - reload tab if non chrome url
+      // TODO - open command palette at alternate view (popup, new window frame popup, or something else)
       // await chrome.tabs.reload(tabId);
     } else {
       logger.error({
