@@ -151,7 +151,10 @@ const CreateSpace = () => {
       <div className=" flex flex-col  w-full h-full py-2.5 px-4">
         <div className="mt-4 flex items-center gap-x-3">
           <TextInput placeholder="Space Title..." value={newSpaceData.title} onChange={onTitleChange} />
-          <div className="w-[45px] h-[40px] bg-brand-darkBgAccent/50 hover:bg-brand-darkBgAccent/70 focus-within:bg-brand-darkBgAccent/90 focus-within:outline-brand-darkBgAccent">
+          <div
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+            tabIndex={0}
+            className="size-fit py-1.5 px-3 bg-brand-darkBgAccent/50 outline-none rounded-md hover:bg-brand-darkBgAccent/70 focus-within:bg-brand-darkBgAccent/90 focus-within:outline-brand-darkBgAccent">
             <EmojiPicker emoji={newSpaceData.emoji} onChange={onEmojiChange} />
           </div>
           <ColorPicker color={newSpaceData.theme} onChange={onThemeChange} />

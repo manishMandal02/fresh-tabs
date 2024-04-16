@@ -1,6 +1,8 @@
-import EmojiPickerReact, { Theme } from 'emoji-picker-react';
 import { useState } from 'react';
+import EmojiPickerReact, { Theme } from 'emoji-picker-react';
+
 import Popover from '../popover';
+import { cn } from '@root/src/utils/cn';
 
 type Props = {
   onChange: (emoji: string) => void;
@@ -36,8 +38,11 @@ const EmojiPicker = ({ emoji, onChange, size = 'md' }: Props) => {
         <button
           tabIndex={-1}
           onClick={() => setIsOpen(true)}
-          className={`select-none rounded-md !h-full !w-full  flex items-center justify-center 
-                        transition-all duration-200 ${size === 'md' ? 'text-[18px]' : 'text-[15px]'}  `}>
+          className={cn(
+            'select-none rounded !h-full !w-full text-slate-200 flex items-center justify-center bg-brand-darkBgAccent/60 transition-all duration-200',
+            { 'text-[18px]': size === 'md' },
+            { 'text-[15px]': size === 'sm' },
+          )}>
           <div className="">{emoji}</div>
         </button>
       </Popover>

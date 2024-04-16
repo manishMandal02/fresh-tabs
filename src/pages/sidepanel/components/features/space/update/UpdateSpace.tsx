@@ -84,15 +84,14 @@ const UpdateSpace = () => {
         <div className=" flex flex-col  w-full h-full py-2.5 px-4">
           <form className="mt-4 flex items-center gap-x-3" ref={formRef}>
             <TextInput placeholder="Enter space title..." value={updateSpaceData.title} onChange={onTitleChange} />
-            <div className="w-[45px] h-[40px] bg-brand-darkBgAccent/50 hover:bg-brand-darkBgAccent/70 focus-within:bg-brand-darkBgAccent/90 focus-within:outline-brand-darkBgAccent">
+            <div
+              // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+              tabIndex={0}
+              className="size-fit py-1.5 px-3 bg-brand-darkBgAccent/50 outline-none rounded-md hover:bg-brand-darkBgAccent/70 focus-within:bg-brand-darkBgAccent/90 focus-within:outline-brand-darkBgAccent">
               <EmojiPicker emoji={updateSpaceData.emoji} onChange={onEmojiChange} />
             </div>
             <ColorPicker color={updateSpaceData.theme} onChange={onThemeChange} />
           </form>
-          {/* <hr
-              tabIndex={-1}
-              className="bg-brand-darkBgAccent/40 border-none mt-4 mb-2  h-[0.5px] w-[60%] mx-auto rounded-md"
-            /> */}
 
           {/* numTabs */}
           <p className="text-slate-500 font-extralight mt-4 text-[14px] ml-px mb-px hover:bg-brand-darkBgAccent/70">

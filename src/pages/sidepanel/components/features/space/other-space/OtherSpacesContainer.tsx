@@ -24,6 +24,8 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
   // bounce div animation
   const { bounce } = useCustomAnimation();
 
+  // TODO - separate unsaved spaces
+
   return (
     <div
       className="px-2 py-[2px] flex items-center justify-center overflow-hidden
@@ -44,42 +46,54 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
               width: 100 / spaces.length + '%',
             }}>
             {/* non active spaces */}
-            {spaces.map((space, idx) => {
-              return (
-                <Draggable key={space.id} draggableId={space.id} index={idx} isDragDisabled={isDraggingTabs}>
-                  {(provided3, { combineTargetFor, combineWith, draggingOver }) => (
-                    <div
-                      ref={provided3.innerRef}
-                      {...provided3.draggableProps}
-                      {...provided3.dragHandleProps}
-                      className="z-10  !cursor-default  size-full"
-                      tabIndex={-1}
-                      style={{
-                        ...provided3.draggableProps.style,
-                        opacity: !combineWith || (!isDraggingOverOtherSpaces && isDraggingSpace) ? '1' : '0.75',
-                      }}>
-                      {draggingOver || combineWith ? (
-                        <DraggingOverNudge droppableId={draggingOver} mergeSpaceWith={combineWith} />
-                      ) : null}
-                      {/* tabs drop zone to add tab to a non active space */}
-                      <Droppable
-                        key={space.id}
-                        droppableId={'space-' + space.id}
-                        direction="horizontal"
-                        type="TAB"
-                        isDropDisabled={isDraggingSpace}>
-                        {(provided2, { isDraggingOver }) => (
-                          <div {...provided2.droppableProps} ref={provided2.innerRef}>
-                            <NonActiveSpace space={space} isDraggedOver={isDraggingOver || !!combineTargetFor} />
-                            {provided2.placeholder}
-                          </div>
-                        )}
-                      </Droppable>
-                    </div>
-                  )}
-                </Draggable>
-              );
-            })}
+            {spaces
+              .sort(a => (a.isSaved ? -1 : 1))
+              .map((space, idx) => {
+                return (
+                  <>
+                    <Draggable
+                      key={space.id}
+                      draggableId={space.id}
+                      index={idx}
+                      isDragDisabled={isDraggingTabs || !space.isSaved}>
+                      {(provided3, { combineTargetFor, combineWith, draggingOver }) => (
+                        <div
+                          ref={provided3.innerRef}
+                          {...provided3.draggableProps}
+                          {...provided3.dragHandleProps}
+                          className="z-10  !cursor-default  size-full flex items-center"
+                          tabIndex={-1}
+                          style={{
+                            ...provided3.draggableProps.style,
+                            opacity: !combineWith || (!isDraggingOverOtherSpaces && isDraggingSpace) ? '1' : '0.75',
+                          }}>
+                          {/* unsaved space divider */}
+                          {!space.isSaved ? (
+                            <hr className="h-[16px] w-[0.5px] border-none bg-slate-500/90 rounded-md mr-2.5" />
+                          ) : null}
+                          {draggingOver || combineWith ? (
+                            <DraggingOverNudge droppableId={draggingOver} mergeSpaceWith={combineWith} />
+                          ) : null}
+                          {/* tabs drop zone to add tab to a non active space */}
+                          <Droppable
+                            key={space.id}
+                            droppableId={'space-' + space.id}
+                            direction="horizontal"
+                            type="TAB"
+                            isDropDisabled={isDraggingSpace}>
+                            {(provided2, { isDraggingOver }) => (
+                              <div {...provided2.droppableProps} ref={provided2.innerRef}>
+                                <NonActiveSpace space={space} isDraggedOver={isDraggingOver || !!combineTargetFor} />
+                                {provided2.placeholder}
+                              </div>
+                            )}
+                          </Droppable>
+                        </div>
+                      )}
+                    </Draggable>
+                  </>
+                );
+              })}
             {provided1.placeholder}
           </motion.div>
         )}

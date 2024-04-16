@@ -101,7 +101,7 @@ const DeleteSpaceModal = () => {
       const schedule = await getAlarm(AlarmName.deleteSpace(spaceToDelete.id));
 
       if (schedule?.name) {
-        // delete scheduled trigger
+        // scheduled trigger found - delete it
         await chrome.alarms.clear(schedule.name);
         await deleteAlarm(AlarmName.deleteSpace(spaceToDelete.id));
       }

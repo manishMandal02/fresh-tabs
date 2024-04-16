@@ -32,7 +32,7 @@ export const createNewSpace = async (space: ISpaceWithoutId, tabs: ITab[]): Prom
   } catch (error) {
     logger.error({
       error,
-      msg: `Failed to initialize app space data: ${JSON.stringify(space)}`,
+      msg: `Failed to create space.`,
       fileTrace: 'src/services/chrome-storage/spaces.ts:32 ~ createNewSpace() ~ catch block',
     });
     return null;
@@ -68,7 +68,7 @@ export const createUnsavedSpace = async (windowId: number, tabs: ITab[], activeI
   } catch (error) {
     logger.error({
       error,
-      msg: `Failed to create an unsaved space`,
+      msg: `Failed to create an unsaved space.`,
       fileTrace: 'src/services/chrome-storage/spaces.ts:65 ~ createUnsavedSpace() ~ catch block',
     });
     return null;
@@ -121,14 +121,14 @@ export const deleteSpace = async (spaceId: string) => {
     await setSpacesToStorage(newSpaceArray);
 
     // remove saved tabs for this space
-    await chrome.storage.local.remove(spaceId);
+    await chrome.storage.local.remove(StorageKey.tabs(spaceId));
 
     if (spaceToDelete?.windowId === 0) return true;
 
     // close the space window if opened
     const windows = await chrome.windows.getAll();
 
-    if (windows.findIndex(w => w.id === spaceToDelete.windowId) !== -1) {
+    if (windows.some(w => w.id === spaceToDelete.windowId)) {
       await chrome.windows.remove(spaceToDelete.windowId);
     }
 

@@ -116,11 +116,7 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - don't switch space in same window if meeting is in place
-
-// TODO - feat improvement - make necessary changes to unsaved spaces feature
-
-// TODO - track num of times user switch spaces
+// TODO - feat improvement - make it more obvious (Icons, separation) (test the delete alarm)
 
 // TODO - DnD checks (tabs, spaces, merge, delete, create)
 
@@ -147,10 +143,10 @@ const createUnsavedSpacesOnInstall = async () => {
       // get all tabs in the window
       const tabsInWindow = await chrome.tabs.query({ windowId: window.id });
 
+      if (tabsInWindow?.length < 1) throw new Error('No tabs found in window');
+
       // check if the tabs in windows are associated with saved spaces to not create a duplicate space
       if (await checkNewWindowTabs(window.id, [...tabsInWindow.map(t => t.url)])) continue;
-
-      if (tabsInWindow?.length < 1) throw new Error('No tabs found in window');
 
       const tabs: ITab[] = tabsInWindow.map(tab => ({
         id: tab.id,
@@ -169,9 +165,9 @@ const createUnsavedSpacesOnInstall = async () => {
     return true;
   } catch (error) {
     logger.error({
-      error: new Error('Failed to create unsaved spaces'),
-      msg: 'Failed to initialize app',
-      fileTrace: 'src/pages/background/index.ts:59 ~ createUnsavedSpacesOnInstall() ~ catch block',
+      error: new Error('Failed to initialize app.'),
+      msg: 'Failed to create unsaved spaces during app initialization.',
+      fileTrace: 'src/pages/background/index.ts:170 ~ createUnsavedSpacesOnInstall() ~ catch block',
     });
     return false;
   }
@@ -769,6 +765,7 @@ chrome.alarms.onAlarm.addListener(async alarm => {
     const spaceId = alarm.name.split('-')[1];
     await deleteSpace(spaceId);
     await publishEvents({ id: generateId(), event: 'REMOVE_SPACE', payload: { spaceId } });
+    logger.info(`⏰ Deleted Unsaved space: ${spaceId}`);
     return;
   } else if (alarm.name.startsWith(ALARM_NAME_PREFiX.snoozedTab)) {
     //  handle un-snooze tab
@@ -953,11 +950,13 @@ chrome.tabs.onRemoved.addListener(async (tabId, info) => {
 chrome.windows.onCreated.addListener(window => {
   if (window.incognito) return;
   (async () => {
-    // wait for .750s
-    await wait(750);
+    // wait for 500ms
+    await wait(1000);
 
     // get space by window
     const space = await getSpaceByWindow(window.id);
+
+    console.log('🚀 ~ space:', space);
 
     // if this window is associated with a space then do nothing
     if (space?.id) return;
@@ -965,12 +964,13 @@ chrome.windows.onCreated.addListener(window => {
     // tabs of this window
     let tabs: ITab[] = [];
 
-    // check if the window obj has tabs
+    // check if the chrome window obj  has tabs
     // if not, then query for tabs in this window
     if (window?.tabs?.length > 0) {
       tabs = window.tabs.map(t => ({ url: t.url, faviconUrl: getFaviconURL(t.url), id: t.id, title: t.title }));
     } else {
       const queriedTabs = await chrome.tabs.query({ windowId: window.id });
+
       if (queriedTabs?.length < 1) return;
       tabs = queriedTabs.map(t => ({ url: t.url, faviconUrl: getFaviconURL(t.url), id: t.id, title: t.title }));
     }
@@ -1002,30 +1002,31 @@ chrome.windows.onRemoved.addListener(async windowId => {
   // get space by window
   const space = await getSpaceByWindow(windowId);
 
-  // if the space was not saved, then delete
-  if (!space?.isSaved) {
-    // get user preference
-    const { deleteUnsavedSpace } = await getAppSettings();
+  // if the space is a saved space then do nothing
+  if (!space?.id || space?.isSaved) return;
 
-    // if user preference is to delete unsaved after a week
-    // set an alarm for after a week (1w = 10080m)
-    if (deleteUnsavedSpace === 'week') {
-      await createAlarm({ name: AlarmName.deleteSpace(space.id), triggerAfter: 10080 });
+  // get user preference
+  const { deleteUnsavedSpace } = await getAppSettings();
 
-      return;
-    }
-    // delete space immediately
-    await deleteSpace(space.id);
+  // if user preference is to delete unsaved space after a week
+  // set an alarm for after a week (1w = 10080m)
+  if (deleteUnsavedSpace === 'week') {
+    await createAlarm({ name: AlarmName.deleteSpace(space.id), triggerAfter: 10080 });
 
-    // send send to side panel
-    await publishEvents({
-      id: generateId(),
-      event: 'REMOVE_SPACE',
-      payload: {
-        spaceId: space.id,
-      },
-    });
+    return;
   }
+
+  // delete space immediately
+  await deleteSpace(space.id);
+
+  // send send to side panel
+  await publishEvents({
+    id: generateId(),
+    event: 'REMOVE_SPACE',
+    payload: {
+      spaceId: space.id,
+    },
+  });
 });
 
 // on window focus

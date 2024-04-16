@@ -45,7 +45,7 @@ export enum CommandType {
 export const ALARM_NAME_PREFiX = {
   deleteSpace: 'deleteSpace',
   snoozedTab: 'snoozedTab',
-};
+} as const;
 
 export const AlarmName = {
   autoSaveBM: 'auto-save-to-bm',

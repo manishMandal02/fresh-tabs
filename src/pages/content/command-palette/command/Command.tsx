@@ -138,8 +138,8 @@ const Command = ({
 
   // show link indicator for link type before title
   const LinkTypeIndicatorIcon: FC = () => {
-    const classes = 'text-slate-400/80 scale-[.7] mr-[0.75px]';
-    if (alias === 'Bookmark') return <StarFilledIcon className={cn(classes, 'scale-[.7] mr-[0.75px]')} />;
+    const classes = 'text-slate-400/70 scale-[0.7] mr-[1px] -ml-[1px]';
+    if (alias === 'Bookmark') return <StarFilledIcon className={cn(classes, 'scale-[0.8]')} />;
     if (alias === 'History') return <CounterClockwiseClockIcon className={classes} />;
   };
 
@@ -153,19 +153,19 @@ const Command = ({
       onClick={onClick}
       style={{ height: COMMAND_HEIGHT + 'px' }}>
       {/* icon */}
-      <div className="w-[22px]">
+      <div className="w-fit min-w-[14px] mr-1.5">
         <CommandIcon isFocused={isFocused} Icon={type !== CommandType.Note ? Icon : FileTextIcon} type={type} />
       </div>
       {/* label */}
       <div
         className={cn(
-          'text-[12px] flex items-center justify-start text-slate-400/80 max-w-[96%] transition-colors duration-150',
+          'text-[12px] flex items-center text-start text-slate-400/80 max-w-[95%] transition-colors duration-150',
           {
             'max-w-[60%]': type === CommandType.Link,
           },
         )}>
         <LinkTypeIndicatorIcon />
-        <span className="temax-w-full whitespace-nowrap  overflow-hidden text-ellipsis">
+        <span className="w-full whitespace-nowrap overflow-hidden text-ellipsis">
           <Highlighter
             searchWords={[...escapedSearchTerm.split(' ')]}
             textToHighlight={label}
@@ -178,15 +178,21 @@ const Command = ({
             searchWords={[...escapedSearchTerm.split(' ')]}
             textToHighlight={type !== CommandType.WebSearch ? `(${commandAlias})` : commandAlias}
             highlightClassName="bg-transparent font-semibold text-slate-400"
-            className="ml-1.5 text-[11px] text-slate-500/90"
+            className="ml-1.5 text-[11px] text-slate-500/90 min-w-fit whitespace-nowrap"
           />
         ) : null}
       </div>
       {/* link command url */}
       {type === CommandType.Link ? (
-        <div className="ml-1 w-full text-start overflow-hidden">
-          <p className="text-[11px] text-slate-500/90 max-w-full text-ellipsis overflow-hidden whitespace-nowrap ">
-            {metadata}
+        <div className="w-full text-start overflow-hidden flex items-center">
+          <span className=" mr-[3px] text-slate-600 font-medium text-[12px]">-</span>
+          <p className="text-[11.5px] text-slate-500/90 max-w-full text-ellipsis overflow-hidden whitespace-nowrap ">
+            <Highlighter
+              searchWords={[...escapedSearchTerm.split(' ')]}
+              textToHighlight={metadata}
+              highlightClassName="bg-transparent text-slate-400 font-semibold"
+              unhighlightClassName="bg-transparent"
+            />
           </p>
         </div>
       ) : null}
@@ -232,7 +238,7 @@ const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
           alt="icon"
           src={Icon as string}
           onError={handleImageLoadError}
-          className="size-[16px] opacity-95 object-scale-down object-center"
+          className="size-[14px] opacity-95 object-contain object-center"
         />
         {/* show fallback icon */}
         <GlobeIcon className="hidden text-slate-400 scale-[0.9]" />

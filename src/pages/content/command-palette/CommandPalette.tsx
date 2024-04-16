@@ -13,12 +13,12 @@ import { useCommandPalette } from './useCommandPalette';
 import { getTime } from '@root/src/utils/date-time/get-time';
 import { publishEvents } from '../../../utils/publish-events';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
-import { useCustomAnimation } from '../../sidepanel/hooks/useCustomAnimation';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
-import { ICommand, ISearchFilters, ISpace, ITab } from '../../../types/global.types';
+import { useCustomAnimation } from '../../sidepanel/hooks/useCustomAnimation';
 import { staticCommands, useCommand, webSearchCommand } from './command/useCommand';
+import { ICommand, ISearchFilters, ISpace, ITab } from '../../../types/global.types';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
 
 export const COMMAND_PALETTE_SIZE = {
@@ -146,6 +146,8 @@ const CommandPalette = ({
 
   // search commands
   const handleGlobalSearch = useCallback(async () => {
+    //TODO - Debounce search
+
     const matchedCommands: ICommand[] = [];
 
     const searchQueryLowerCase = searchQuery.toLowerCase().trim();
@@ -243,11 +245,17 @@ const CommandPalette = ({
       }
     }
 
-    setSuggestedCommands(matchedCommands);
+    if (matchedCommands.length > 0) {
+      // set matched static commands
+      setSuggestedCommands(matchedCommands);
+      setFocusedCommandIndex(1);
+    } else {
+      setSuggestedCommands([]);
+    }
 
-    setFocusedCommandIndex(1);
+    console.log('🚀 ~ handleGlobalSearch ~ searchQuery:', searchQuery);
 
-    if (matchedCommands.length < 5) {
+    if (matchedCommands?.length < 5) {
       const res = await publishEvents<ICommand[]>({
         event: 'SEARCH',
         payload: { searchQuery, searchFilterPreferences: searchFilters },
@@ -267,14 +275,23 @@ const CommandPalette = ({
       }
     }
 
+    console.log('🚀 ~ handleGlobalSearch ~ matchedCommands:', matchedCommands);
+    console.log('🚀 ~ handleGlobalSearch ~ suggestedCommands:', suggestedCommands);
+
     if (matchedCommands.length < 7) {
-      setSuggestedCommands(prev => [...prev, webSearchCommand(searchQuery, prev.length + 1)]);
+      setSuggestedCommands(prev => {
+        if (prev.length < 1 || prev.some(c => c?.type !== CommandType.WebSearch)) {
+          return [...prev, webSearchCommand(searchQuery, prev.length + 1)];
+        } else {
+          return [...prev];
+        }
+      });
     }
 
     setIsLoadingResults(false);
 
     setFocusedCommandIndex(1);
-  }, [setSuggestedCommands, setFocusedCommandIndex, activeSpace, searchQuery, searchFilters]);
+  }, [setSuggestedCommands, setFocusedCommandIndex, activeSpace, searchQuery, searchFilters, suggestedCommands]);
 
   // on global search
   useEffect(() => {
@@ -287,22 +304,17 @@ const CommandPalette = ({
 
     if (searchQuery.trim() && !subCommand) {
       setIsLoadingResults(true);
-      handleGlobalSearch();
+      (async () => {
+        await handleGlobalSearch();
+      })();
     } else if (!searchQuery.trim() && !subCommand) {
       // reset search
       setDefaultSuggestedCommands();
       setSearchQueryPlaceholder('Switch...');
       setFocusedCommandIndex(1);
     }
-  }, [
-    setSuggestedCommands,
-    searchQuery,
-    handleGlobalSearch,
-    setFocusedCommandIndex,
-    setDefaultSuggestedCommands,
-    subCommand,
-    setSearchQueryPlaceholder,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, subCommand]);
 
   // on search during sub command
   useEffect(() => {
@@ -383,7 +395,7 @@ const CommandPalette = ({
   const { bounce } = useCustomAnimation();
 
   return (
-    <div className=" overflow-hidden">
+    <div className="overflow-hidden">
       <motion.dialog
         aria-modal
         tabIndex={-1}
@@ -477,6 +489,7 @@ const CommandPalette = ({
                   // render commands & labels
                   return <>{renderCommands.map(cmd1 => cmd1)}</>;
                 })}
+
               {/* lading commands ui (skeleton) */}
               {isLoadingResults
                 ? [1, 2].map(v => (
@@ -489,7 +502,7 @@ const CommandPalette = ({
                   ))
                 : null}
               {/* no commands found */}
-              {suggestedCommands.length === 0 ? (
+              {!isLoadingResults && suggestedCommands.length === 0 ? (
                 <div
                   className="w-full flex items-center  justify-center text-slate-500 text-sm font-light py-1"
                   style={{ height: COMMAND_HEIGHT + 'px' }}>

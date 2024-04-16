@@ -10,7 +10,7 @@ const CommandDivider = ({ index, isStaticCommand, suggestedCommands }: Props) =>
   if (index < 2 || isStaticCommand || suggestedCommands.length < 2) return;
 
   // do nothing if render same command type
-  if (suggestedCommands[index - 1].type === suggestedCommands[index - 2].type) return;
+  if (suggestedCommands[index - 1]?.type === suggestedCommands[index - 2]?.type) return;
 
   return (
     <>

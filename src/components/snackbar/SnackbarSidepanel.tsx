@@ -51,7 +51,13 @@ const Snackbar = () => {
           {/* icon/spinner */}
           <div>{isLoading ? <Spinner size="sm" /> : RenderIcon}</div>
           {/* msg */}
-          <div className={cn('text-[12px] -mt-px  flex items-center select-none ml-1.5', textColor)}>{msg}</div>
+          <div
+            className={cn(
+              'text-[12px] -mt-px  flex items-center select-none ml-1.5 w-fit whitespace-nowrap ',
+              textColor,
+            )}>
+            {msg}
+          </div>
         </motion.div>
       ) : null}
     </AnimatePresence>
