@@ -22,7 +22,7 @@ import { handleMergeSpaceHistoryAlarm } from './handler/alarm/mergeSpaceHistory'
 import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers';
 import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';
 import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
-import { getCurrentTab, goToTab, openSpace } from '@root/src/services/chrome-tabs/tabs';
+import { getCurrentTab, getCurrentWindowId, goToTab, openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
 import { addSnoozedTab, getTabToUnSnooze } from '@root/src/services/chrome-storage/snooze-tabs';
@@ -81,8 +81,22 @@ import {
 
 logger.info('🏁 background loaded');
 
+// update extension badge
+const checkExtensionBadgeEmoji = async () => {
+  const currentWindow = await getCurrentWindowId();
+  const activeSpace = await getSpaceByWindow(currentWindow);
+  const currentBadge = await chrome.action.getBadgeText({});
+
+  if (currentBadge.trim() !== activeSpace.emoji) {
+    await chrome.action.setBadgeBackgroundColor({ color: '#1e293b' });
+    await chrome.action.setBadgeText({ text: activeSpace.emoji });
+  }
+};
+
 //* IIFE - checks for alarms, its not guaranteed to persist
 (async () => {
+  await checkExtensionBadgeEmoji();
+
   const autoSaveToBMAlarm = await getAlarm(AlarmName.autoSaveBM);
 
   const autoDiscardTabsAlarm = await getAlarm(AlarmName.autoDiscardTabs);
@@ -116,9 +130,7 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - feat improvement - make it more obvious (Icons, separation) (test the delete alarm)
-
-// TODO - DnD checks (tabs, spaces, merge, delete, create)
+// TODO - DnD checks (tabs, spaces, merge, delete, create) (unsaved space no drag)
 
 // TODO - change extension icon in toolbar based on space (other actions like notes saving, tab moved, etc.)
 
@@ -130,6 +142,7 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 // TODO - backend - reset day at 3am at default
 
 // helpers for chrome event handlers
+
 const createUnsavedSpacesOnInstall = async () => {
   try {
     const windows = await chrome.windows.getAll();

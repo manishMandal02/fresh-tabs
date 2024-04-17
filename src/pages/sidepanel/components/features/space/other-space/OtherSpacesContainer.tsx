@@ -68,8 +68,8 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                             opacity: !combineWith || (!isDraggingOverOtherSpaces && isDraggingSpace) ? '1' : '0.75',
                           }}>
                           {/* unsaved space divider */}
-                          {!space.isSaved ? (
-                            <hr className="h-[16px] w-[0.5px] border-none bg-slate-500/90 rounded-md mr-2.5" />
+                          {!space.isSaved && spaces.findIndex(s => !s.isSaved) === idx ? (
+                            <hr className="h-[10px] w-[0.75px] bg-slate-500/80 rounded-md -ml-px mr-1.5 border-none" />
                           ) : null}
                           {draggingOver || combineWith ? (
                             <DraggingOverNudge droppableId={draggingOver} mergeSpaceWith={combineWith} />
