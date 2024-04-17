@@ -147,6 +147,7 @@ const CommandPalette = ({
   // search commands
   const handleGlobalSearch = useCallback(async () => {
     //TODO - Debounce search
+    setSuggestedCommands([]);
 
     const matchedCommands: ICommand[] = [];
 
@@ -275,9 +276,6 @@ const CommandPalette = ({
       }
     }
 
-    console.log('🚀 ~ handleGlobalSearch ~ matchedCommands:', matchedCommands);
-    console.log('🚀 ~ handleGlobalSearch ~ suggestedCommands:', suggestedCommands);
-
     if (matchedCommands.length < 7) {
       setSuggestedCommands(prev => {
         if (prev.length < 1 || prev.some(c => c?.type !== CommandType.WebSearch)) {
@@ -314,7 +312,7 @@ const CommandPalette = ({
       setFocusedCommandIndex(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, subCommand]);
+  }, [searchQuery, subCommand, searchFilters]);
 
   // on search during sub command
   useEffect(() => {

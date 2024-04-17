@@ -222,7 +222,6 @@ const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
   // handle fallback image for favicon icons
   const handleImageLoadError: ReactEventHandler<HTMLImageElement> = ev => {
     ev.stopPropagation();
-    // ev.currentTarget.src = FALLBACK_ICON;
     ev.currentTarget.style.display = 'none';
     (ev.currentTarget.nextElementSibling as SVGAElement).style.display = 'block';
   };
@@ -238,7 +237,9 @@ const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
           alt="icon"
           src={Icon as string}
           onError={handleImageLoadError}
-          className="size-[14px] opacity-95 object-contain object-center"
+          className={cn('size-[14px] opacity-95 object-contain object-center', {
+            invert: Icon.includes('github.com'),
+          })}
         />
         {/* show fallback icon */}
         <GlobeIcon className="hidden text-slate-400 scale-[0.9]" />

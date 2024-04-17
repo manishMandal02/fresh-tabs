@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
-import { CounterClockwiseClockIcon, FileTextIcon, LapTimerIcon, PlusIcon, TrashIcon } from '@radix-ui/react-icons';
+import {
+  CounterClockwiseClockIcon,
+  Cross1Icon,
+  FileTextIcon,
+  LapTimerIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@radix-ui/react-icons';
 
 import { INote } from '../../../types/global.types';
 import injectedStyle from './domain-notes.css?inline';
@@ -16,9 +23,10 @@ type Props = {
   onNoteClick: (noteId: string, spaceId: string) => void;
   onNewNoteClick: () => void;
   onDeleteNoteClick: (noteId: string) => void;
+  onClose: () => void;
 };
 
-const DomainNotes = ({ domainNotes, onNoteClick, onNewNoteClick, onDeleteNoteClick }: Props) => {
+const DomainNotes = ({ domainNotes, onNoteClick, onNewNoteClick, onDeleteNoteClick, onClose }: Props) => {
   // local state
   const [notes, setNotes] = useState<INote[]>([]);
   const [showNotes, setShowNotes] = useState(false);
@@ -76,6 +84,13 @@ const DomainNotes = ({ domainNotes, onNoteClick, onNewNoteClick, onDeleteNoteCli
             </motion.span>
           ) : null}
         </div>
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+        <motion.span
+          {...bounce}
+          onClick={onClose}
+          className="absolute hidden group-hover:block -top-[7px] -left-[2px] rounded-full bg-brand-darkBgAccent/60 p-[2px] w-fit group hover:bg-brand-darkBgAccent/80 [&>svg]:hover:text-slate-200 transition-colors duration-300 ">
+          <Cross1Icon className="text-slate-300/90 scale-[0.8]  transition-colors duration-300" />
+        </motion.span>
       </motion.div>
       {/* notes list view */}
       {showNotes

@@ -1,6 +1,8 @@
 import { isChromeUrl } from './check-chrome-url';
 import { parseUrl } from './parse-url';
 
+const createChromeFaviconURL = (url: URL) => `${chrome.runtime.getURL('/_favicon/')}?pageUrl=${url.origin}/&size=32`;
+
 export const getFaviconURL = (siteUrl: string, size = 32) => {
   const parsedUrl = parseUrl(siteUrl);
 
@@ -8,15 +10,38 @@ export const getFaviconURL = (siteUrl: string, size = 32) => {
 
   if (!url.hostname || isChromeUrl(siteUrl)) return createChromeFaviconURL(url);
 
+  return `https://www.google.com/s2/favicons?domain=${url.hostname}/${url.pathname.split('/')[1]}&sz=${size}`;
+};
+
+export const getAlternativeFaviconUrl = (siteUrl: string, size = 32) => {
+  const url = new URL(siteUrl);
+
+  //  get favicon url from favicon kit, if couldn't get it from google
   return `https://api.faviconkit.com/${url.hostname}/${size}`;
 };
 
-const createChromeFaviconURL = (url: URL) => `${chrome.runtime.getURL('/_favicon/')}?pageUrl=${url.origin}/&size=32`;
+// validates favicon urls and returns an alternate src url if google favicon url is not correct
+export const getFaviconURLAsync = async (siteUrl: string, size = 32) => {
+  const parsedUrl = parseUrl(siteUrl);
+
+  const url = new URL(parsedUrl) || new URL(siteUrl);
+
+  if (!url.hostname || isChromeUrl(siteUrl)) return createChromeFaviconURL(url);
+
+  const googleFaviconURL = `https://www.google.com/s2/favicons?domain=${url.hostname}/${
+    url.pathname.split('/')[1]
+  }&sz=${size}`;
+
+  const res = await fetch(googleFaviconURL);
+
+  if (res.ok) {
+    return googleFaviconURL;
+  } else {
+    return getAlternativeFaviconUrl(siteUrl);
+  }
+};
 
 // !Note - previous method
-
-// const googleFaviconURL = (url: URL) => `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=${32}`;
-
 // export const getFaviconURL = (siteUrl: string, isSidePanel = true) => {
 //   //  chrome icon as favicon
 

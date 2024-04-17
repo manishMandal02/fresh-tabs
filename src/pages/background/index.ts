@@ -14,7 +14,7 @@ import { debounceWithEvents, generateId, wait } from '../../utils';
 import { retryAtIntervals } from '../../utils/retryAtIntervals';
 import { asyncMessageHandler } from '../../utils/asyncMessageHandler';
 import { handleSnoozedTabAlarm } from './handler/alarm/unsnooze-tab';
-import { getFaviconURL, isChromeUrl, parseUrl } from '../../utils/url';
+import { getFaviconURL, getFaviconURLAsync, isChromeUrl, isValidURL, parseUrl } from '../../utils/url';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
 import { matchWordsInText } from '@root/src/utils/string/matchWordsInText';
 import { publishEvents, publishEventsTab } from '../../utils/publish-events';
@@ -131,8 +131,6 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 });
 
 // TODO - DnD checks (tabs, spaces, merge, delete, create) (unsaved space no drag)
-
-// TODO - change extension icon in toolbar based on space (other actions like notes saving, tab moved, etc.)
 
 // TODO - new feat - tab thumbnail views and also grid views
 
@@ -479,6 +477,10 @@ chrome.runtime.onMessage.addListener(
       case 'SEARCH': {
         const { searchQuery, searchFilterPreferences } = payload;
 
+        console.log('🚀 ~ searchQuery:', searchQuery);
+
+        console.log('🚀 ~ searchFilterPreferences:', searchFilterPreferences);
+
         const matchedCommands: ICommand[] = [];
 
         if (searchFilterPreferences.searchNotes) {
@@ -531,13 +533,15 @@ chrome.runtime.onMessage.addListener(
           bookmarks.length + matchedCommands.length > 8 && bookmarks.splice(8 - matchedCommands.length);
 
           if (bookmarks?.length > 0) {
-            bookmarks.forEach((item, idx) => {
+            bookmarks.forEach(async (item, idx) => {
               if (!item.url) return;
+              const icon = await getFaviconURLAsync(item.url);
+
               matchedCommands.push({
+                icon,
                 index: idx,
                 type: CommandType.Link,
                 label: item.title,
-                icon: getFaviconURL(item.url),
                 metadata: item.url,
                 alias: 'Bookmark',
               });
@@ -545,8 +549,10 @@ chrome.runtime.onMessage.addListener(
           }
         }
 
+        console.log('🚀~ index.ts:550 ~ SEARCH ~ matchedCommands:550', matchedCommands);
+        // TODO - fix - bookmarks and other search res is not sent back tab instead true is being returned
         // return the matched results if more than 6 (won't search history)
-        if (matchedCommands.length > 7) return matchedCommands;
+        if (matchedCommands.length > 6) return matchedCommands;
 
         // get 1 month before date to find history before that
         const oneMonthBefore = new Date();
@@ -561,17 +567,21 @@ chrome.runtime.onMessage.addListener(
         });
 
         if (history?.length > 0) {
-          history.forEach((item, idx) => {
+          for (const item of history) {
             if (!item.url) return;
+            const icon = await getFaviconURLAsync(item.url);
+
+            console.log('🚀 ~ SEARCH ~ history.forEach ~ icon:574', icon);
+
             matchedCommands.push({
-              index: idx,
+              icon,
+              index: 0,
               type: CommandType.Link,
               label: item.title,
-              icon: getFaviconURL(item.url),
-              metadata: item.url,
+              metadata: parseUrl(item.url),
               alias: 'History',
             });
-          });
+          }
         }
 
         return matchedCommands;
@@ -698,6 +708,7 @@ chrome.runtime.onInstalled.addListener(async info => {
 
 // shortcut commands
 chrome.commands.onCommand.addListener(async (command, tab) => {
+  // new tab to right shortcut
   if (command === 'newTab') {
     await chrome.tabs.create({ url: 'chrome://newtab', index: tab.index + 1 });
     return;
@@ -724,7 +735,10 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
       const tabs = await chrome.tabs.query({ currentWindow: true });
 
-      if (tabs?.length < 2 || tabs.filter(t => isChromeUrl(t.url)).length === tabs.length) {
+      if (
+        tabs?.length < 2 ||
+        (tabs.filter(t => isChromeUrl(t.url)).length === tabs.length && isValidURL(recentlyVisitedURL[0].url))
+      ) {
         // create new tab if one 1 tab exists
         const newTab = await chrome.tabs.create({ url: recentlyVisitedURL[0].url, active: true });
         activeTabId = newTab.id;
@@ -752,13 +766,7 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
       }
     }
 
-    // TODO - try using the content script to load command palette
-    // const testScript = await chrome.scripting.executeScript({
-    //   target: { tabId: currentTab.id },
-    //   files: ['./src/pages/content/index.js'],
-    // });
-
-    // TODO - check if tab fully loaded
+    // checks if tab fully loaded
     const res = await publishEventsTab(activeTabId, { event: 'CHECK_CONTENT_SCRIPT_LOADED' });
 
     if (!res) {

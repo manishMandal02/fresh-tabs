@@ -1,7 +1,7 @@
 import { GlobeIcon } from '@radix-ui/react-icons';
 import { CSSClasses } from '@root/src/types/global.types';
 import { cn } from '@root/src/utils/cn';
-import { getFaviconURL } from '@root/src/utils/url';
+import { getAlternativeFaviconUrl, getFaviconURL } from '@root/src/utils/url';
 import { ReactEventHandler } from 'react';
 
 type Props = {
@@ -9,15 +9,10 @@ type Props = {
   classes?: CSSClasses;
 };
 
-const getSrcUrl = (url: string) => {
-  return getFaviconURL(url);
-};
-
 const SiteIcon = ({ siteURl, classes }: Props) => {
   // handle fallback image for favicon icons
   const handleImageLoadError: ReactEventHandler<HTMLImageElement> = ev => {
     ev.stopPropagation();
-    // ev.currentTarget.src = FALLBACK_ICON;
     ev.currentTarget.style.display = 'none';
     (ev.currentTarget.nextElementSibling as SVGAElement).style.display = 'block';
   };
@@ -27,9 +22,23 @@ const SiteIcon = ({ siteURl, classes }: Props) => {
       <img
         alt="icon"
         onError={handleImageLoadError}
-        src={getSrcUrl(siteURl)}
+        src={getFaviconURL(siteURl)}
+        onLoad={async ev => {
+          const res = await fetch(ev.currentTarget.src);
+
+          if (res.ok) return;
+
+          const alternateFaviconUrl = getAlternativeFaviconUrl(siteURl);
+          if (ev.currentTarget?.src) {
+            ev.currentTarget.src = alternateFaviconUrl;
+          } else {
+            // @ts-expect-error - target.src is an img element
+            ev.target.src = alternateFaviconUrl;
+          }
+        }}
         className={cn(
-          'size-[14px] mr-[6px] rounded-md border-[0.5px] border-slate-700 object-center object-scale-down',
+          'size-[14px] mr-[6px] rounded-md border-[0.5px] border-slate-700 object-center object-scale-down ',
+          { invert: siteURl.includes('github.com') },
           classes,
         )}
       />

@@ -149,11 +149,7 @@ const showNotes = async (spaceId: string, reRender = false) => {
   }
   const siteDomain = cleanDomainName(location.hostname);
 
-  console.log('🚀 ~ showNotes ~ siteDomain:', siteDomain);
-
   const siteNotes = await getNoteByDomain(siteDomain);
-
-  console.log('🚀 ~ showNotes ~ siteNotes:', siteNotes);
 
   // render notes components
   const notesContainer = document.createElement('div');
@@ -193,6 +189,14 @@ const showNotes = async (spaceId: string, reRender = false) => {
   const handleDeleteEvent = async (noteId: string) => {
     await publishEvents({ event: 'DELETE_NOTE', payload: { noteId } });
   };
+
+  const handleRemoveDomainNotesBubble = () => {
+    const notesRootContainer = document.getElementById(ContentScriptContainerIds.DOMAIN_NOTES);
+    if (!notesRootContainer) return;
+    notesRootContainer.replaceChildren();
+    notesRootContainer.remove();
+  };
+
   createRoot(notesContainer).render(
     <Frame
       style={{
@@ -217,6 +221,7 @@ const showNotes = async (spaceId: string, reRender = false) => {
               onNoteClick={handleOpenSelectedNote}
               onNewNoteClick={handleCaptureNewNote}
               onDeleteNoteClick={handleDeleteEvent}
+              onClose={handleRemoveDomainNotesBubble}
             />
           );
         }}
@@ -257,7 +262,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   sendResponse(true);
 });
 
-// TODO - testing - loads command palette on site load
+//  - testing - loads command palette on site load
 // (async () => {
 //   const activeSpace = await getSpace('61e549a192');
 
