@@ -14,12 +14,12 @@ type OpenSpaceProps = {
 };
 
 // create new active tab
-const createActiveTab = async (url: string, index: number, windowId) => {
+export const createActiveTab = async (url: string, index: number, windowId?: number) => {
   return await chrome.tabs.create({
-    windowId,
     url,
     index,
     active: true,
+    ...(windowId ? { windowId: windowId } : {}),
   });
 };
 

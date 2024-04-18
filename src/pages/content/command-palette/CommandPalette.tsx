@@ -7,14 +7,14 @@ import CaptureNote from '../capture-note';
 import SearchBox from './search-box/SearchBox';
 import KBD from '@root/src/components/kbd/KBD';
 import { getFaviconURL } from '../../../utils/url';
-import CommandDivider from './command/CommandDivider';
 import { CommandType } from '@root/src/constants/app';
+import CommandDivider from './command/CommandDivider';
 import { useCommandPalette } from './useCommandPalette';
 import { getTime } from '@root/src/utils/date-time/get-time';
 import { publishEvents } from '../../../utils/publish-events';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
-import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
+import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { useCustomAnimation } from '../../sidepanel/hooks/useCustomAnimation';
 import { staticCommands, useCommand, webSearchCommand } from './command/useCommand';
@@ -145,95 +145,79 @@ const CommandPalette = ({
   }, [recentSites, setSuggestedCommands, setFocusedCommandIndex]);
 
   // search commands
-  const handleGlobalSearch = useCallback(async () => {
-    //TODO - Debounce search
-    setSuggestedCommands([]);
+  const handleGlobalSearch = useCallback(
+    async (searchQuery: string) => {
+      let matchedCommands: ICommand[] = [];
 
-    const matchedCommands: ICommand[] = [];
+      const searchQueryLowerCase = searchQuery.toLowerCase().trim();
 
-    const searchQueryLowerCase = searchQuery.toLowerCase().trim();
+      // query static matchedCommands label
+      staticCommands
+        .filter(
+          cmd =>
+            cmd.label.toLowerCase().includes(searchQueryLowerCase) ||
+            cmd?.alias.toLowerCase().includes(searchQueryLowerCase),
+        )
+        .forEach((cmd, idx) => {
+          matchedCommands.push({ ...cmd, index: idx + 1 });
+        });
 
-    // query static matchedCommands label
-    staticCommands
-      .filter(
-        cmd =>
-          cmd.label.toLowerCase().includes(searchQueryLowerCase) ||
-          cmd?.alias.toLowerCase().includes(searchQueryLowerCase),
-      )
-      .forEach((cmd, idx) => {
-        matchedCommands.push({ ...cmd, index: idx + 1 });
-      });
-
-    {
       // query current tab url/title (words match)
-      let tabs = await getTabsInSpace(activeSpace.id);
+      {
+        let tabs = await getTabsInSpace(activeSpace.id);
 
-      if (tabs?.length > 0) {
-        const allTabsMatchWords = ['tabs', 'all tabs', 'all tab', 'switch', 'switch tabs', 'opened tabs'];
+        if (tabs?.length > 0) {
+          const allTabsMatchWords = ['tabs', 'all tabs', 'all tab', 'switch', 'switch tabs', 'opened tabs'];
 
-        if (allTabsMatchWords.includes(searchQueryLowerCase)) {
-          //  show all opened tabs
-          tabs.forEach(tab => {
-            matchedCommands.push({
-              index: matchedCommands.length + 1,
-              type: CommandType.SwitchTab,
-              label: tab.title,
-              icon: getFaviconURL(tab.url),
-              metadata: tab.id,
-              alias: 'Opened tabs',
+          if (allTabsMatchWords.includes(searchQueryLowerCase)) {
+            //  show all opened tabs
+            tabs.forEach(tab => {
+              matchedCommands.push({
+                index: matchedCommands.length + 1,
+                type: CommandType.SwitchTab,
+                label: tab.title,
+                icon: getFaviconURL(tab.url),
+                metadata: tab.id,
+                alias: 'Opened tabs',
+              });
             });
-          });
-        } else {
-          // filter matched tabs
-          tabs = tabs.filter(tab => tab.title.toLowerCase().includes(searchQueryLowerCase));
+          } else {
+            // filter matched tabs
+            tabs = tabs.filter(tab => tab.title.toLowerCase().includes(searchQueryLowerCase));
 
-          tabs.forEach(tab => {
-            matchedCommands.push({
-              index: matchedCommands.length + 1,
-              type: CommandType.SwitchTab,
-              label: tab.title,
-              icon: getFaviconURL(tab.url),
-              metadata: tab.id,
-              alias: 'Opened tabs',
+            tabs.forEach(tab => {
+              matchedCommands.push({
+                index: matchedCommands.length + 1,
+                type: CommandType.SwitchTab,
+                label: tab.title,
+                icon: getFaviconURL(tab.url),
+                metadata: tab.id,
+                alias: 'Opened tabs',
+              });
             });
-          });
+          }
         }
       }
-    }
 
-    {
       // query space title
-      let spaces = await getAllSpaces();
+      {
+        let spaces = await getAllSpaces();
 
-      spaces = spaces?.filter(s => s.id !== activeSpace.id) || [];
+        spaces = spaces?.filter(s => s.id !== activeSpace.id) || [];
 
-      const allSpacesMatchWords = [
-        'space',
-        'spaces',
-        'all space',
-        'all spaces',
-        'switch',
-        'switch space',
-        'switch spaces',
-      ];
+        const allSpacesMatchWords = [
+          'space',
+          'spaces',
+          'all space',
+          'all spaces',
+          'switch',
+          'switch space',
+          'switch spaces',
+        ];
 
-      if (allSpacesMatchWords.includes(searchQueryLowerCase)) {
-        // show all spaces
-        spaces.forEach(space => {
-          matchedCommands.push({
-            index: matchedCommands.length + 1,
-            type: CommandType.SwitchSpace,
-            label: space.title,
-            icon: space.emoji,
-            metadata: space.id,
-            alias: 'Space',
-          });
-        });
-      } else {
-        // filtered matched spaces
-        spaces
-          .filter(s => s.title.toLowerCase().includes(searchQueryLowerCase))
-          .forEach(space => {
+        if (allSpacesMatchWords.includes(searchQueryLowerCase)) {
+          // show all spaces
+          spaces.forEach(space => {
             matchedCommands.push({
               index: matchedCommands.length + 1,
               type: CommandType.SwitchSpace,
@@ -243,53 +227,78 @@ const CommandPalette = ({
               alias: 'Space',
             });
           });
+        } else {
+          // filtered matched spaces
+          spaces
+            .filter(s => s.title.toLowerCase().includes(searchQueryLowerCase))
+            .forEach(space => {
+              matchedCommands.push({
+                index: matchedCommands.length + 1,
+                type: CommandType.SwitchSpace,
+                label: space.title,
+                icon: space.emoji,
+                metadata: space.id,
+                alias: 'Space',
+              });
+            });
+        }
       }
-    }
 
-    if (matchedCommands.length > 0) {
-      // set matched static commands
-      setSuggestedCommands(matchedCommands);
-      setFocusedCommandIndex(1);
-    } else {
-      setSuggestedCommands([]);
-    }
+      if (matchedCommands.length > 5) {
+        // returned  static matched commands
+        return matchedCommands;
+      }
 
-    console.log('🚀 ~ handleGlobalSearch ~ searchQuery:', searchQuery);
+      console.log('🚀 ~ handleGlobalSearch ~ searchQuery:', searchQuery);
 
-    if (matchedCommands?.length < 5) {
+      // search for links, notes and more from background script
       const res = await publishEvents<ICommand[]>({
         event: 'SEARCH',
         payload: { searchQuery, searchFilterPreferences: searchFilters },
       });
 
-      console.log('🚀 ~ handleGlobalSearch:255 ~ res:', res);
-
       if (res?.length > 0) {
-        const resMatchedCommands: ICommand[] = [];
-        res.forEach((cmd, idx) => {
-          resMatchedCommands.push({
-            ...cmd,
-            index: idx + matchedCommands.length + 1,
-          });
-        });
-        setSuggestedCommands(prev => [...prev, ...resMatchedCommands]);
+        // remove duplicates
+        matchedCommands = [...(matchedCommands.length ? [...matchedCommands] : []), ...res].filter(
+          (v, i, a) => a.findIndex(v2 => v2.metadata === v.metadata) === i,
+        );
+        matchedCommands = matchedCommands.map<ICommand>((cmd, idx) => ({
+          ...cmd,
+          index: idx + 1,
+        }));
       }
-    }
 
-    if (matchedCommands.length < 7) {
-      setSuggestedCommands(prev => {
-        if (prev.length < 1 || prev.some(c => c?.type !== CommandType.WebSearch)) {
-          return [...prev, webSearchCommand(searchQuery, prev.length + 1)];
-        } else {
-          return [...prev];
-        }
-      });
-    }
+      if (matchedCommands.length < 6) {
+        matchedCommands.push(webSearchCommand(searchQuery, matchedCommands.length + 1));
+      }
 
-    setIsLoadingResults(false);
+      console.log('🔵 ~ handleGlobalSearch():294 ~ matchedCommands:', matchedCommands);
+      return matchedCommands;
+    },
 
-    setFocusedCommandIndex(1);
-  }, [setSuggestedCommands, setFocusedCommandIndex, activeSpace, searchQuery, searchFilters, suggestedCommands]);
+    [activeSpace, searchFilters],
+  );
+
+  let timeoutId: NodeJS.Timeout;
+
+  const debounceGlobalSearch = (searchTerm: string) => {
+    clearTimeout(timeoutId);
+
+    timeoutId = setTimeout(() => {
+      console.log('⏳ ~ ~ setTimeout called:', setTimeout);
+      (async () => {
+        // Perform the search request here
+        const commands = await handleGlobalSearch(searchTerm);
+
+        console.log('✅ ~ setTimeout: 306 ~ commands:', commands);
+
+        setSuggestedCommands(commands);
+        setIsLoadingResults(false);
+
+        setFocusedCommandIndex(1);
+      })();
+    }, 300);
+  };
 
   // on global search
   useEffect(() => {
@@ -302,9 +311,8 @@ const CommandPalette = ({
 
     if (searchQuery.trim() && !subCommand) {
       setIsLoadingResults(true);
-      (async () => {
-        await handleGlobalSearch();
-      })();
+      setSuggestedCommands([]);
+      debounceGlobalSearch(searchQuery);
     } else if (!searchQuery.trim() && !subCommand) {
       // reset search
       setDefaultSuggestedCommands();
@@ -430,7 +438,7 @@ const CommandPalette = ({
             // create note
             <CaptureNote
               selectedNote={
-                selectedNoteId || (suggestedCommands.length > 0 ? (suggestedCommands[0].metadata as string) : '')
+                selectedNoteId || (suggestedCommands?.length > 0 ? (suggestedCommands[0].metadata as string) : '')
               }
               resetSuggestedCommand={() => setSuggestedCommands([])}
               userSelectedText={userSelectedText}
@@ -450,9 +458,9 @@ const CommandPalette = ({
                 maxHeight: SUGGESTED_COMMANDS_MAX_HEIGHT + 'px',
               }}
               className={`bg-brand-darkBg w-ft max-w-[600px] h-fit max-h-full overflow-hidden overflow-y-auto cc-scrollbar cc-scrollbar mx-auto shadow-md
-                         shadow-slate-800/80 `}>
+                shadow-slate-800/80 `}>
               {/* actions */}
-              {suggestedCommands.length > 0 &&
+              {suggestedCommands?.length > 0 &&
                 suggestedCommands?.map(cmd => {
                   const renderCommands: JSX.Element[] = [];
                   // section label
@@ -500,7 +508,7 @@ const CommandPalette = ({
                   ))
                 : null}
               {/* no commands found */}
-              {!isLoadingResults && suggestedCommands.length === 0 ? (
+              {!isLoadingResults && suggestedCommands?.length < 1 ? (
                 <div
                   className="w-full flex items-center  justify-center text-slate-500 text-sm font-light py-1"
                   style={{ height: COMMAND_HEIGHT + 'px' }}>
@@ -509,6 +517,7 @@ const CommandPalette = ({
               ) : null}
             </div>
           ) : null}
+
           {/* navigation guide */}
           {subCommand !== CommandType.NewNote ? (
             // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions

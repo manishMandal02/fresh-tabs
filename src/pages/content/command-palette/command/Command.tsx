@@ -141,6 +141,7 @@ const Command = ({
     const classes = 'text-slate-400/70 scale-[0.7] mr-[1px] -ml-[1px]';
     if (alias === 'Bookmark') return <StarFilledIcon className={cn(classes, 'scale-[0.8]')} />;
     if (alias === 'History') return <CounterClockwiseClockIcon className={classes} />;
+    return <></>;
   };
 
   return (
@@ -198,7 +199,7 @@ const Command = ({
       ) : null}
 
       {/* command type label/sticker */}
-      {!isStaticCommand && !!isSubCommand ? (
+      {!isStaticCommand && !isSubCommand ? (
         <div className="flex items-center absolute right-3 top-1 bg-brand-darkBgAccent/90 rounded-[5px] text-[10px]  text-slate-400/80 px-2.5 py-1.5 capitalize select-none">
           <CommandTypeIcon classes="ml-1 text-slate-400/80 scale-[0.9]" />
         </div>

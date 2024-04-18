@@ -3,7 +3,7 @@ import { AlertModal } from '../modal';
 const ErrorBoundaryUI = ({ error, resetErrorBoundary }: FallbackProps) => {
   return (
     <AlertModal title="Failed to load app" isOpen onClose={() => {}} showCloseBtn={false}>
-      <div className="py-1 px-2 w-full flex flex-col">
+      <div className="py-1 px-2 w-full max-w-[300px] flex flex-col">
         <p className="text-rose-500 opacity-90 text-center">Something went wrong</p>
         <pre className=" mt-px text-slate-500 text-wrap break-words text-center w-full">{error.message}</pre>
         <button

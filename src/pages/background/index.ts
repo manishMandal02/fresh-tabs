@@ -22,7 +22,13 @@ import { handleMergeSpaceHistoryAlarm } from './handler/alarm/mergeSpaceHistory'
 import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers';
 import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';
 import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
-import { getCurrentTab, getCurrentWindowId, goToTab, openSpace } from '@root/src/services/chrome-tabs/tabs';
+import {
+  createActiveTab,
+  getCurrentTab,
+  getCurrentWindowId,
+  goToTab,
+  openSpace,
+} from '@root/src/services/chrome-tabs/tabs';
 import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
 import { addSnoozedTab, getTabToUnSnooze } from '@root/src/services/chrome-storage/snooze-tabs';
@@ -477,10 +483,6 @@ chrome.runtime.onMessage.addListener(
       case 'SEARCH': {
         const { searchQuery, searchFilterPreferences } = payload;
 
-        console.log('🚀 ~ searchQuery:', searchQuery);
-
-        console.log('🚀 ~ searchFilterPreferences:', searchFilterPreferences);
-
         const matchedCommands: ICommand[] = [];
 
         if (searchFilterPreferences.searchNotes) {
@@ -549,7 +551,6 @@ chrome.runtime.onMessage.addListener(
           }
         }
 
-        console.log('🚀~ index.ts:550 ~ SEARCH ~ matchedCommands:550', matchedCommands);
         // TODO - fix - bookmarks and other search res is not sent back tab instead true is being returned
         // return the matched results if more than 6 (won't search history)
         if (matchedCommands.length > 6) return matchedCommands;
@@ -570,8 +571,6 @@ chrome.runtime.onMessage.addListener(
           for (const item of history) {
             if (!item.url) return;
             const icon = await getFaviconURLAsync(item.url);
-
-            console.log('🚀 ~ SEARCH ~ history.forEach ~ icon:574', icon);
 
             matchedCommands.push({
               icon,
@@ -596,7 +595,9 @@ chrome.runtime.onMessage.addListener(
         } else {
           // create new tab to search (as the default new tab search opens a new tab at the end to search)
           const currentTab = await getCurrentTab();
-          const newTab = await chrome.tabs.create({ url: 'chrome://newtab', index: currentTab.index + 1 });
+
+          const newTab = await createActiveTab('chrome://newtab', currentTab.index + 1);
+
           await chrome.search.query({ text: searchQuery, tabId: newTab.id });
         }
 
@@ -708,9 +709,12 @@ chrome.runtime.onInstalled.addListener(async info => {
 
 // shortcut commands
 chrome.commands.onCommand.addListener(async (command, tab) => {
+  console.log('🚀 ~ chrome.commands.onCommand.addListener ~ command:', command);
+
+  // TODO - Fix - 2 new tabs get created whens sidepanel is opened
   // new tab to right shortcut
   if (command === 'newTab') {
-    await chrome.tabs.create({ url: 'chrome://newtab', index: tab.index + 1 });
+    await createActiveTab('chrome://newtab', tab.index + 1);
     return;
   }
 
@@ -841,7 +845,6 @@ chrome.notifications.onButtonClicked.addListener(async (notificationId, buttonIn
     const spaceId = notificationId.split('-')[3];
     if (buttonIndex === 0) {
       // open tab
-
       const tab = await getTabToUnSnooze(spaceId);
       await chrome.tabs.create({ url: tab.url, active: true });
     } else if (buttonIndex === 1) {

@@ -124,8 +124,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
   const { isShiftKeyPressed, isMetaKeyPressed } = useMetaKeyPressed({});
 
-  console.log('🚀 ~ isMetaKeyPressed:', isMetaKeyPressed);
-
   const isTabSelected = useCallback((id: number) => !!selectedTabs.find(t => t.id === id), [selectedTabs]);
 
   const onTabClick = useCallback(
