@@ -711,10 +711,18 @@ chrome.runtime.onInstalled.addListener(async info => {
 chrome.commands.onCommand.addListener(async (command, tab) => {
   console.log('🚀 ~ chrome.commands.onCommand.addListener ~ command:', command);
 
-  // TODO - Fix - 2 new tabs get created whens sidepanel is opened
   // new tab to right shortcut
   if (command === 'newTab') {
-    await createActiveTab('chrome://newtab', tab.index + 1);
+    const newTab = await createActiveTab('chrome://newtab', tab.index + 1);
+
+    // TODO - temp fix: a additional new tab gets created when side panel is opened
+
+    const [nextTab] = await chrome.tabs.query({ index: newTab.index + 1 });
+
+    if (nextTab && newTab.pendingUrl.startsWith('chrome://newtab')) {
+      await chrome.tabs.remove(nextTab.id);
+    }
+
     return;
   }
 
