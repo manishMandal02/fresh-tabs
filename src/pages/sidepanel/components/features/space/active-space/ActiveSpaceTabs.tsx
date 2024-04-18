@@ -22,6 +22,13 @@ import {
   updateSpaceAtom,
 } from '@root/src/stores/app';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
+import TabContextMenu from './TabContextMenu';
+
+const getDiscardedTabsInWindow = async (windowId: number) => {
+  const tabs = await chrome.tabs.query({ windowId, discarded: true });
+
+  return tabs.length > 0 ? tabs.map(tab => tab.id) : [];
+};
 
 type Props = {
   space: ISpace;
@@ -43,12 +50,24 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   // dragging state
   const [dragSate] = useAtom(dragStateAtom);
 
+  // local state
+
   // mouse pos on drag start
   const [mouseXOnDrag, setMouseXOnDrag] = useState(0);
+
+  const [discardedTabIDs, setDiscardedTabIDs] = useState<number[]>([]);
 
   // used ref to store the value to access in a hook outside
   // that didn't get the updated state in the callback
   const selectedTabsRef = useRef<ITabWithIndex[]>([]);
+
+  // get discarded tabs when component renders
+  useEffect(() => {
+    (async () => {
+      const tabs = await getDiscardedTabsInWindow(space.windowId);
+      setDiscardedTabIDs(tabs);
+    })();
+  }, []);
 
   useEffect(() => {
     selectedTabsRef.current = selectedTabs;
@@ -124,7 +143,9 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
   const { isShiftKeyPressed, isMetaKeyPressed } = useMetaKeyPressed({});
 
-  const isTabSelected = useCallback((id: number) => !!selectedTabs.find(t => t.id === id), [selectedTabs]);
+  const isTabSelected = useCallback((id: number) => selectedTabs.some(t => t.id === id), [selectedTabs]);
+
+  const isTabDiscarded = useCallback((id: number) => discardedTabIDs.some(tabId => tabId === id), [discardedTabIDs]);
 
   const onTabClick = useCallback(
     async (tab: ITabWithIndex) => {
@@ -242,79 +263,99 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                     left: areTabsBeingDragged && isDragging && !isDraggingOver ? `${mouseXOnDrag - 60}px` : '',
                   }}
                   onMouseDown={onTabClickMousePos}>
-                  {areTabsBeingDragged && isDragging && !isDraggingOver ? (
-                    // {/* tabs being dragged  */}
-                    <div className="relative h-fit">
-                      {draggingOver ? <DraggingOverNudge droppableId={draggingOver} /> : null}
-                      <TabDraggedOutsideActiveSpace numSelectedTabs={selectedTabs?.length} tabURL={tab.url} />
-                    </div>
-                  ) : (
-                    <div
-                      className={`relative w-[96vw] min-w-[96vw] bg-transparent`}
-                      tabIndex={-1}
-                      style={{
-                        cursor: isMetaKeyPressed ? 'pointer' : 'default',
-                      }}>
-                      <Tab
-                        tabData={tab}
-                        isSpaceActive={true}
-                        onTabDelete={() => handleRemoveTab(idx)}
-                        onTabDoubleClick={() => onTabDoubleClickHandler(tab.id, idx)}
-                        onClick={() => onTabClick({ ...tab, index: idx })}
-                      />
+                  <>
+                    {areTabsBeingDragged && isDragging && !isDraggingOver ? (
+                      // {/* tabs being dragged  */}
+                      <div className="relative h-fit">
+                        {draggingOver ? <DraggingOverNudge droppableId={draggingOver} /> : null}
+                        <TabDraggedOutsideActiveSpace numSelectedTabs={selectedTabs?.length} tabURL={tab.url} />
+                      </div>
+                    ) : (
+                      <TabContextMenu
+                        tab={tab}
+                        allTabs={activeSpaceTabs}
+                        setActiveSpaceTabs={setActiveSpaceTabs}
+                        space={space}
+                        selectedTabs={selectedTabs}
+                        onRemoveClick={async () => {
+                          if (selectedTabs?.length > 1) {
+                            await handleRemoveTab(tab.id);
+                          } else {
+                            await handleRemoveTabs();
+                          }
+                        }}>
+                        <div
+                          className={`relative w-[96vw] min-w-[96vw] bg-transparent`}
+                          tabIndex={-1}
+                          style={{
+                            cursor: isMetaKeyPressed ? 'pointer' : 'default',
+                          }}>
+                          <Tab
+                            tabData={tab}
+                            isTabDiscarded={isTabDiscarded(tab.id)}
+                            isSpaceActive={true}
+                            onTabDelete={() => handleRemoveTab(idx)}
+                            onTabDoubleClick={() => onTabDoubleClickHandler(tab.id, idx)}
+                            onClick={() => onTabClick({ ...tab, index: idx })}
+                          />
 
-                      {/* dragging multiple tabs indicator */}
-                      {isDraggingOver && isDragging && selectedTabs?.length > 0 ? (
-                        <>
-                          {/* multiple tabs  */}
-                          {selectedTabs.length > 1 ? (
-                            <span
-                              className={`w-6 h-6 rounded-lg px-1 py-1 absolute -top-2.5 -left-2.5 text-[11px] z-[200]
+                          {/* dragging multiple tabs indicator */}
+                          {isDraggingOver && isDragging && selectedTabs?.length > 0 ? (
+                            <>
+                              {/* multiple tabs  */}
+                              {selectedTabs.length > 1 ? (
+                                <span
+                                  className={`w-6 h-6 rounded-lg px-1 py-1 absolute -top-2.5 -left-2.5 text-[11px] z-[200]
                             flex items-center justify-center font-semibold bg-brand-darkBgAccent text-slate-400`}>
-                              +{selectedTabs?.length - 1}
-                            </span>
+                                  +{selectedTabs?.length - 1}
+                                </span>
+                              ) : null}
+                              {/* tabs stacked effect  */}
+                              {['one', 'two', 'three'].map((v, ix) => (
+                                <div
+                                  key={v}
+                                  className="absolute   w-[98%] -z-10 rounded-lg   border border-slate-700/70 bg-brand-darkBgAccent "
+                                  style={{
+                                    height: TAB_HEIGHT + 'px',
+                                    top: `-${(ix + 0.25) * 2}px`,
+                                    left: `-${(ix + 0.25) * 2}px`,
+                                  }}></div>
+                              ))}
+                            </>
                           ) : null}
-                          {/* tabs stacked effect  */}
-                          {['one', 'two', 'three'].map((v, ix) => (
-                            <div
-                              key={v}
-                              className="absolute   w-[98%] -z-10 rounded-lg   border border-slate-700/70 bg-brand-darkBgAccent "
-                              style={{
-                                height: TAB_HEIGHT + 'px',
-                                top: `-${(ix + 0.25) * 2}px`,
-                                left: `-${(ix + 0.25) * 2}px`,
-                              }}></div>
-                          ))}
-                        </>
-                      ) : null}
-                    </div>
-                  )}
-                  {/* active tab indicator */}
-                  {activeSpace.activeTabIndex === idx ? (
-                    <motion.div
-                      {...bounce}
-                      style={{
-                        height: TAB_HEIGHT + 'px',
-                      }}
-                      className="absolute  w-[99%] top-0 left-0 rounded-lg border  border-slate-700/60 bg-brand-darkBgAccent/60 z-10"></motion.div>
-                  ) : null}
-                  {/* selected tab indicator */}
-                  {isTabSelected(tab.id) ? (
-                    <motion.div
-                      {...bounce}
-                      className={`absolute w-[99%] top-0 left-0 rounded-lg border border-brand-darkBgAccent/30 bg-brand-darkBgAccent/80 z-10`}
-                      style={{
-                        height: TAB_HEIGHT + 'px',
-                        borderWidth: areTabsBeingDragged && !isDragging ? '3px' : '1px',
-                      }}></motion.div>
-                  ) : null}
-                  {areTabsBeingDragged && isTabSelected(tab.id) && !isDragging ? (
-                    <div
-                      style={{
-                        height: TAB_HEIGHT + 'px',
-                      }}
-                      className={`absolute w-[99%] top-0 left-0 rounded-lg border border-brand-darkBgAccent/40 bg-brand-darkBgAccent/40 z-[99]`}></div>
-                  ) : null}
+                        </div>
+                      </TabContextMenu>
+                    )}
+
+                    {/* active tab indicator */}
+                    {activeSpace.activeTabIndex === idx ? (
+                      <motion.div
+                        {...bounce}
+                        style={{
+                          height: TAB_HEIGHT + 'px',
+                        }}
+                        className="absolute  w-[99%] top-0 left-0 rounded-lg border  border-slate-700/60 bg-brand-darkBgAccent/60 z-10 pointer-events-none"></motion.div>
+                    ) : null}
+
+                    {/* selected tab indicator */}
+                    {isTabSelected(tab.id) ? (
+                      <motion.div
+                        {...bounce}
+                        className={`absolute w-[99%] top-0 left-0 rounded-lg border border-gray-500/90 bg-brand-darkBgAccent/80 z-10 pointer-events-none`}
+                        style={{
+                          height: TAB_HEIGHT + 'px',
+                          borderWidth: areTabsBeingDragged && !isDragging ? '3px' : '1px',
+                        }}></motion.div>
+                    ) : null}
+
+                    {areTabsBeingDragged && isTabSelected(tab.id) && !isDragging ? (
+                      <div
+                        style={{
+                          height: TAB_HEIGHT + 'px',
+                        }}
+                        className={`absolute w-[99%] top-0 left-0 rounded-lg border border-brand-darkBgAccent/40 bg-brand-darkBgAccent/40 z-[99]`}></div>
+                    ) : null}
+                  </>
                 </div>
               )}
             </Draggable>

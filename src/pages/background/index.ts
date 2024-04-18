@@ -15,7 +15,7 @@ import { retryAtIntervals } from '../../utils/retryAtIntervals';
 import { asyncMessageHandler } from '../../utils/asyncMessageHandler';
 import { handleSnoozedTabAlarm } from './handler/alarm/unsnooze-tab';
 import { getFaviconURL, getFaviconURLAsync, isChromeUrl, isValidURL, parseUrl } from '../../utils/url';
-import { discardTabs } from '@root/src/services/chrome-discard/discard';
+import { discardAllTabs } from '@root/src/services/chrome-discard/discard';
 import { matchWordsInText } from '@root/src/utils/string/matchWordsInText';
 import { publishEvents, publishEventsTab } from '../../utils/publish-events';
 import { handleMergeSpaceHistoryAlarm } from './handler/alarm/mergeSpaceHistory';
@@ -605,7 +605,7 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'DISCARD_TABS': {
-        return await discardTabs();
+        return await discardAllTabs();
       }
 
       case 'SNOOZE_TAB': {
@@ -813,7 +813,7 @@ chrome.alarms.onAlarm.addListener(async alarm => {
       break;
     }
     case AlarmName.autoDiscardTabs: {
-      await discardTabs(true);
+      await discardAllTabs(true);
       logger.info('⏰ 10 mins: Auto discard tabs');
       break;
     }

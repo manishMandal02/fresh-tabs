@@ -4,7 +4,7 @@ import { HamburgerMenuIcon, BarChartIcon, MoonIcon, BookmarkIcon, GearIcon } fro
 
 import Popover from '../../../../../components/popover';
 import Analytics from '../space/analytics/Analytics';
-import { discardTabs } from '@root/src/services/chrome-discard/discard';
+import { discardAllTabs } from '@root/src/services/chrome-discard/discard';
 import { showSettingsModalAtom, showUserAccountModalAtom, snackbarAtom } from '@root/src/stores/app';
 import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
 
@@ -39,7 +39,7 @@ const Menu = () => {
   const handleDiscardTabs = async () => {
     setSnackbar({ show: true, isLoading: true, msg: 'Discarding tabs' });
 
-    await discardTabs();
+    await discardAllTabs();
     setSnackbar({ show: true, isLoading: false, isSuccess: true, msg: 'Discarded non active tabs' });
   };
   return (

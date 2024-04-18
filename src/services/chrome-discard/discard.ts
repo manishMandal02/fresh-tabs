@@ -1,7 +1,7 @@
 import { logger } from '@root/src/utils/logger';
 
 // discard all other tabs (exclude audible tabs)
-export const discardTabs = async (autoDiscard = false) => {
+export const discardAllTabs = async (autoDiscard = false) => {
   try {
     //TODO - take user preferences into consideration (whitelisted sites, etc.)
     let tabs = await chrome.tabs.query({ active: false, audible: false, discarded: false });
@@ -28,8 +28,19 @@ export const discardTabs = async (autoDiscard = false) => {
     logger.error({
       error,
       msg: `Error discarding tabs`,
-      fileTrace: 'src/services/chrome-discard/discard.ts:19 ~ discardTabs() ~ catch block',
+      fileTrace: 'src/services/chrome-discard/discard.ts:19 ~ discardAllTabs() ~ catch block',
     });
     return false;
   }
+};
+
+export const discardTabs = async (tabIDs: number[]) => {
+  if (tabIDs?.length < 2) {
+    await chrome.tabs.discard(tabIDs[0]);
+    return;
+  }
+
+  const tabsDiscardPromises = tabIDs.map(id => chrome.tabs.discard(id));
+
+  await Promise.allSettled(tabsDiscardPromises);
 };

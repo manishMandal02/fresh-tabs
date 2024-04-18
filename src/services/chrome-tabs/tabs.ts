@@ -190,7 +190,7 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
   // set current window in side panel UI
   onNewWindowCreated && onNewWindowCreated(windowId);
 
-  const discardTabs = (await createDiscardedTabs(discardedTabsToCreate, windowId)) as ITab[];
+  const discardAllTabs = (await createDiscardedTabs(discardedTabsToCreate, windowId)) as ITab[];
 
   const activeTabCreated = await createActiveTab(activeTab.url, activeTabIndex, windowId);
 
@@ -198,7 +198,7 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
   activeTab.url = activeTabCreated.pendingUrl || activeTabCreated.url;
 
   // newly created tabs
-  const updatedTabs = [...discardTabs];
+  const updatedTabs = [...discardAllTabs];
 
   // add active tab at its index
   updatedTabs.splice(activeTabIndex, 0, activeTab);

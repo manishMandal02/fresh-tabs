@@ -47,13 +47,13 @@ const MoreOptions = ({
               <>
                 {!shouldOpenInNewWindow ? (
                   <button
-                    className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/15 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
+                    className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/25 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
                     onClick={onOpenSpace}>
                     <OpenInNewWindowIcon className={`text-slate-500/90 mr-[5px] scale-[0.8]`} /> Open in new window
                   </button>
                 ) : (
                   <button
-                    className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/15 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
+                    className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/25 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
                     onClick={onOpenSpace}>
                     <EnterIcon className="text-slate-500/90 mr-[5px] scale-[0.8]" /> Open Space
                   </button>
@@ -61,23 +61,23 @@ const MoreOptions = ({
               </>
             ) : null}
             <button
-              className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/15 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
+              className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/25 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
               onClick={onHistoryClick}>
               <CounterClockwiseClockIcon className="text-slate-500/90 mr-[5px] scale-[0.8]" /> Space history
             </button>
             <button
-              className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/15 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
+              className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/25 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
               onClick={onSnoozedTabsClick}>
               <LapTimerIcon className="text-slate-500/90 mr-[5px] scale-[0.8]" /> Snoozed tabs
             </button>
             <button
-              className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/15 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
+              className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/25 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
               onClick={onSyncClick}>
               <UpdateIcon className="text-slate-500/90 mr-[5px] scale-[0.8]" /> Sync tabs
             </button>
 
             <button
-              className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/15 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
+              className="flex items-center pl-2 py-2.5 hover:bg-brand-darkBgAccent/25 transition-all duration-200 border-none outline-none focus-visible:bg-brand-darkBgAccent/30"
               onClick={onDeleteClick}>
               <TrashIcon className="text-slate-500/90 mr-[5px] scale-[0.85]" /> Delete space
             </button>

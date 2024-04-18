@@ -1,3 +1,3 @@
 export const isChromeUrl = (url: string) => {
-  return url?.startsWith('chrome://') || url.includes('chromewebstore.google.com');
+  return url?.startsWith('chrome://') || url?.startsWith('devtools://') || url.includes('chromewebstore.google.com');
 };

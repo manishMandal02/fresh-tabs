@@ -2,7 +2,7 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import { memo } from 'react';
-import { Cross1Icon, CopyIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
+import { Cross1Icon, CopyIcon, ExternalLinkIcon, MoonIcon } from '@radix-ui/react-icons';
 
 import { ITab } from '@root/src/types/global.types';
 import { TAB_HEIGHT } from '../active-space/ActiveSpaceTabs';
@@ -10,10 +10,12 @@ import { createTab, goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { copyToClipboard } from '@root/src/utils/copy-to-clipboard';
 import SiteIcon from '@root/src/components/site-icon/SiteIcon';
 import { cn } from '@root/src/utils/cn';
+import Tooltip from '@root/src/components/tooltip';
 
 type Props = {
   tabData: ITab;
   showHoverOption?: boolean;
+  isTabDiscarded?: boolean;
   isSpaceActive?: boolean;
   showDeleteOption?: boolean;
   hideIcon?: boolean;
@@ -32,6 +34,7 @@ const Tab = ({
   isSpaceActive,
   onTabDoubleClick,
   showVisitTime,
+  isTabDiscarded = false,
   showDeleteOption = true,
   showHoverOption = true,
   showURL = false,
@@ -68,12 +71,23 @@ const Tab = ({
         height: (size !== 'sm' ? TAB_HEIGHT : TAB_HEIGHT - 4) + 'px',
       }}
       onDoubleClick={() => onTabDoubleClick(tabData.id)}>
-      <div className="flex items-center w-full">
+      <div className={cn(' flex items-center w-full', { 'opacity-75': isTabDiscarded })}>
         {!hideIcon ? (
-          <SiteIcon
-            siteURl={tabData.url}
-            classes={cn('size-[17px] max-w-[17px] z-10 border-none', { 'size-[14px]': size === 'sm' })}
-          />
+          <>
+            <SiteIcon
+              siteURl={tabData.url}
+              classes={cn(
+                'size-[17px] max-w-[17px] z-10 border-none',
+                { 'size-[14px]': size === 'sm' },
+                { grayscale: isTabDiscarded },
+              )}
+            />
+            {isTabDiscarded ? (
+              <Tooltip label="💤  Discarded tab" delay={1000}>
+                <MoonIcon className="z-[99] rounded-full text-slate-600 -ml-[2px] mr-[1.5px] scale-[0.85]" />
+              </Tooltip>
+            ) : null}
+          </>
         ) : null}
         {/* site visit time (show in history) */}
         {showVisitTime ? (
