@@ -27,7 +27,7 @@ const defaultSpaceData: DefaultSpaceFields = {
 const CreateSpace = () => {
   console.log('CreateSpace ~ 🔁 rendered');
 
-  const [currentTabs, setCurrentTabs] = useState<ITab[]>([]);
+  const [tabs, setTabs] = useState<ITab[]>([]);
   const [errorMsg, setErrorMsg] = useState('Enter all the fields');
 
   // spaces atom (global state)
@@ -41,23 +41,6 @@ const CreateSpace = () => {
 
   // snackbar global state/atom
   const [snackbar, setSnackbar] = useAtom(snackbarAtom);
-
-  useEffect(() => {
-    if (newSpaceModal.show && currentTabs?.length < 1) {
-      (async () => {
-        // get current tab, and set to state
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { index, ...currentTabOpened } = await getCurrentTab();
-
-        if (!currentTabOpened) {
-          setErrorMsg('Failed to get current tab, Please try again.');
-          return;
-        }
-
-        setCurrentTabs([currentTabOpened]);
-      })();
-    }
-  }, [newSpaceModal, currentTabs]);
 
   // on title change
   const onTitleChange = (title: string) => {
@@ -75,18 +58,30 @@ const CreateSpace = () => {
     setNewSpaceData(prev => ({ ...prev, theme }));
   };
 
+  // init component
   useEffect(() => {
     setNewSpaceData(defaultSpaceData);
     setErrorMsg('');
+
     if (newSpaceModal.tabs?.length > 0) {
-      setCurrentTabs(newSpaceModal.tabs);
+      // use tabs passed to modal
+      setTabs(newSpaceModal.tabs);
+    } else {
+      (async () => {
+        // set the current tab
+
+        // index is not required here ⬇️
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { index, ...currentTabOpened } = await getCurrentTab();
+        setTabs([currentTabOpened]);
+      })();
     }
   }, [newSpaceModal]);
 
   // create space
   const handleAddSpace = async () => {
     setErrorMsg('');
-    if (!newSpaceData.emoji || !newSpaceData.title || !newSpaceData.theme || currentTabs?.length < 1) {
+    if (!newSpaceData.emoji || !newSpaceData.title || !newSpaceData.theme || tabs?.length < 1) {
       setErrorMsg('Fill all the fields');
       return;
     }
@@ -101,7 +96,7 @@ const CreateSpace = () => {
 
     //  create space
     const createdSpace = await createNewSpace({ ...newSpaceData, isSaved: true, windowId: 0, activeTabIndex: 0 }, [
-      ...currentTabs,
+      ...tabs,
     ]);
 
     // hide loading snackbar
@@ -115,7 +110,7 @@ const CreateSpace = () => {
 
       addSpace(createdSpace);
 
-      await setTabsForSpace(createdSpace.id, [...currentTabs]);
+      await setTabsForSpace(createdSpace.id, [...tabs]);
 
       setSnackbar({ show: true, msg: 'Space created', isSuccess: true });
     } else {
@@ -160,10 +155,16 @@ const CreateSpace = () => {
           <ColorPicker color={newSpaceData.theme} onChange={onThemeChange} />
         </div>
 
+        {/* numTabs */}
+        <p className="text-slate-500 font-extralight mt-5 text-[14px] ml-px mb-px ">
+          {tabs.length} {tabs.length > 1 ? 'Tabs' : 'Tab'}
+        </p>
+
         {/* tabs */}
-        <div className="mt-6">
-          <p className="text-slate-500 font text-sm mb-1.5">Tabs</p>
-          {currentTabs?.map(tab => <Tab key={tab.id} tabData={tab} showHoverOption={false} />)}
+        <div className="w-full h-fit max-h-[16rem] border-y border-brand-darkBgAccent/20 bg-red-30 overflow-x-hidden overflow-y-auto cc-scrollbar">
+          {tabs.map(tab => (
+            <Tab key={tab.id} tabData={tab} showDeleteOption={false} />
+          ))}
         </div>
 
         {/* error msg */}

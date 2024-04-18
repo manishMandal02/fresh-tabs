@@ -71,7 +71,7 @@ const Tab = ({
         height: (size !== 'sm' ? TAB_HEIGHT : TAB_HEIGHT - 4) + 'px',
       }}
       onDoubleClick={() => onTabDoubleClick(tabData.id)}>
-      <div className={cn(' flex items-center w-full', { 'opacity-75': isTabDiscarded })}>
+      <div className={cn(' flex items-center w-full', { 'opacity-85': isTabDiscarded })}>
         {!hideIcon ? (
           <>
             <SiteIcon

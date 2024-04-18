@@ -582,6 +582,7 @@ chrome.runtime.onMessage.addListener(
             });
           }
         }
+        console.log('🚀 ~ SEARCH ~ matchedCommands:585', matchedCommands);
 
         return matchedCommands;
       }
@@ -895,6 +896,7 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   });
 });
 
+// TODO - debounce this event handler
 // event listener for when tabs get updated
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo?.url) {
@@ -910,6 +912,16 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     await updateTabHandler(tabId);
 
     showNotesBubbleContentScript(tab?.url, tabId, tab.windowId);
+  }
+
+  if (changeInfo?.discarded) {
+    const space = await getSpaceByWindow(tab.windowId);
+    // send send to side panel
+    await publishEvents({
+      id: generateId(),
+      event: 'TABS_DISCARDED',
+      payload: { spaceId: space.id },
+    });
   }
 });
 

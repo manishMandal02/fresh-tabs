@@ -12,7 +12,7 @@ import Tooltip from '../../../../../../components/tooltip';
 import { goToTab } from '@root/src/services/chrome-tabs/tabs';
 import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
 import TabDraggedOutsideActiveSpace from './TabDraggedOutsideActiveSpace';
-import { ISpace, ITabWithIndex } from '@root/src/types/global.types';
+import { IMessageEventSidePanel, ISpace, ITabWithIndex } from '@root/src/types/global.types';
 import { useMetaKeyPressed } from '@root/src/pages/sidepanel/hooks/use-key-shortcuts';
 import {
   activeSpaceAtom,
@@ -61,12 +61,24 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   // that didn't get the updated state in the callback
   const selectedTabsRef = useRef<ITabWithIndex[]>([]);
 
+  // update ui state if tabs discarded in background
+  chrome.runtime.onMessage.addListener(async (message, _sender, response) => {
+    const msg = message as IMessageEventSidePanel;
+
+    if (msg.event === 'TABS_DISCARDED' && msg.payload?.spaceId === space.id) {
+      const tabs = await getDiscardedTabsInWindow(space.windowId);
+      setDiscardedTabIDs(tabs);
+      response(true);
+    }
+  });
+
   // get discarded tabs when component renders
   useEffect(() => {
     (async () => {
       const tabs = await getDiscardedTabsInWindow(space.windowId);
       setDiscardedTabIDs(tabs);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -149,7 +161,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
   const onTabClick = useCallback(
     async (tab: ITabWithIndex) => {
-      // clt/cmd is pressed
+      // ctrl/cmd is pressed
       if (isMetaKeyPressed) {
         await handleGoToTab(tab.id, tab.index);
         return;
@@ -165,8 +177,11 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
         const tabsInRange: ITabWithIndex[] = activeSpaceTabs
           .map((t, idx) => ({ ...t, index: idx }))
-          .filter((_t, idx) => {
-            //
+          .filter((t, idx) => {
+            // duplicate tab
+            if (selectedTabs.some(sT => sT.id === t.id)) return false;
+
+            // select range above or below last selected tab
             if (tabIsBeforeLastSelectedTab) {
               return idx <= lastSelectedTabIndex && idx >= tab.index;
             }

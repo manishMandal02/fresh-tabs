@@ -1,13 +1,13 @@
-import { useAtom } from 'jotai';
 import { useState } from 'react';
+import { useSetAtom } from 'jotai';
 import { motion } from 'framer-motion';
 
+import KBD from '@root/src/components/kbd/KBD';
 import { PlusIcon } from '@radix-ui/react-icons';
-import Tooltip from '../../../../../components/tooltip';
 import Popover from '../../../../../components/popover';
+import Tooltip from '../../../../../components/tooltip';
 import { useCustomAnimation } from '../../../hooks/useCustomAnimation';
 import { showAddNewNoteModalAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
-import KBD from '@root/src/components/kbd/KBD';
 
 type Props = {
   isDraggingGlobal: boolean;
@@ -16,8 +16,8 @@ type Props = {
 
 const AddButton = ({ isDraggingGlobal, isDraggingOver }: Props) => {
   // global state
-  const [, setNewSpaceModal] = useAtom(showNewSpaceModalAtom);
-  const [, setNewNoteModal] = useAtom(showAddNewNoteModalAtom);
+  const setNewSpaceModal = useSetAtom(showNewSpaceModalAtom);
+  const setNewNoteModal = useSetAtom(showAddNewNoteModalAtom);
 
   // local state
   const [showAddOption, setShowAddOptions] = useState(false);

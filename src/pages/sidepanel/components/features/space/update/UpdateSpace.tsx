@@ -94,7 +94,7 @@ const UpdateSpace = () => {
           </form>
 
           {/* numTabs */}
-          <p className="text-slate-500 font-extralight mt-4 text-[14px] ml-px mb-px hover:bg-brand-darkBgAccent/70">
+          <p className="text-slate-500 font-extralight mt-5 text-[14px] ml-px mb-px">
             {tabs.length} {tabs.length > 1 ? 'Tabs' : 'Tab'}
           </p>
 

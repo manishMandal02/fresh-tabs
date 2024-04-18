@@ -43,7 +43,7 @@ const SiteIcon = ({ siteURl, classes }: Props) => {
         )}
       />
       {/* show fallback icon */}
-      <GlobeIcon className="hidden text-slate-400 scale-[0.9]" />
+      <GlobeIcon className="hidden text-slate-400 scale-[0.9] mr-1.5" />
     </>
   );
 };

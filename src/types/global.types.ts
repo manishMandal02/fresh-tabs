@@ -87,7 +87,12 @@ export interface ISnoozedTab {
   snoozedAt: number;
 }
 
-type MessageEventsSidePanel = 'UPDATE_SPACE_ACTIVE_TAB' | 'UPDATE_TABS' | 'REMOVE_SPACE' | 'ADD_SPACE';
+type MessageEventsSidePanel =
+  | 'UPDATE_SPACE_ACTIVE_TAB'
+  | 'UPDATE_TABS'
+  | 'REMOVE_SPACE'
+  | 'ADD_SPACE'
+  | 'TABS_DISCARDED';
 
 interface IEventPayloadSidePanel {
   spaceId?: string;
