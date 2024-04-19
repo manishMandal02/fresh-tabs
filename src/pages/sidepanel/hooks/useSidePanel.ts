@@ -76,7 +76,6 @@ export const useSidePanel = () => {
       (async () => {
         await dropHandler({
           droppedLocation,
-          droppableId,
           draggableId: result.draggableId,
           sourceIndex: result.source.index,
           destinationIndex: result.destination?.index || 0,

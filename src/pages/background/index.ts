@@ -717,10 +717,9 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
     const newTab = await createActiveTab('chrome://newtab', tab.index + 1);
 
     // TODO - temp fix: a additional new tab gets created when side panel is opened
-
     const [nextTab] = await chrome.tabs.query({ index: newTab.index + 1 });
 
-    if (nextTab && newTab.pendingUrl.startsWith('chrome://newtab')) {
+    if (nextTab && nextTab.pendingUrl.startsWith('chrome://newtab')) {
       await chrome.tabs.remove(nextTab.id);
     }
 

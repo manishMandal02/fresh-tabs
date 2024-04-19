@@ -1,9 +1,16 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { ISpace, ITab } from '../../../types/global.types';
+
+import { wait } from '../../../utils';
+import { logger } from '../../../utils/logger';
+import { ITab } from '../../../types/global.types';
+import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
+import { setTabsForSpace } from './../../../services/chrome-storage/tabs';
+import { createDiscardedTabs } from '@root/src/services/chrome-tabs/tabs';
+import { scrollActiveSpaceBottom } from '../../../utils/scrollActiveSpaceBottom';
+import { mergeSpace, setSpacesToStorage, updateSpace } from '@root/src/services/chrome-storage/spaces';
 import {
   activeSpaceAtom,
   deleteSpaceModalAtom,
-  showNewSpaceModalAtom,
   selectedTabsAtom,
   snackbarAtom,
   getAllSpacesAtom,
@@ -12,22 +19,13 @@ import {
   setSpacesAtom,
   activeSpaceTabsAtom,
 } from '@root/src/stores/app';
-import { deleteSpace, setSpacesToStorage, updateSpace } from '@root/src/services/chrome-storage/spaces';
-import { getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
-import { logger } from '../../../utils/logger';
-import { createDiscardedTabs } from '@root/src/services/chrome-tabs/tabs';
-import { scrollActiveSpaceBottom } from '../../../utils/scrollActiveSpaceBottom';
-import { wait } from '../../../utils';
 
 //* dropped reasons to handle
 // --draggable -single/multi tab--
 //       same space
-//       other space
-//       create new space
-//
-//       same space
-//       other spaces
-//       create new space
+//! not used now -       other space
+//! not used now -       create new space
+
 // --draggable -space--
 //       re-arrange
 //       merge
@@ -47,35 +45,22 @@ type DropHandlerProps = {
   destinationIndex: number;
   sourceIndex: number;
   draggableId: string;
-  droppableId: string;
   combineDraggableId: string | null;
 };
 
 export const useTabsDnd = () => {
-  // non active spaces  (global state)
-
+  // global states/atoms
+  const activeSpace = useAtomValue(activeSpaceAtom);
+  const selectedTabs = useAtomValue(selectedTabsAtom);
   const alLSpacesState = useAtomValue(getAllSpacesAtom);
 
-  const activeSpace = useAtomValue(activeSpaceAtom);
-
   const setSpaces = useSetAtom(setSpacesAtom);
-
-  const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
-
+  const setSnackbar = useSetAtom(snackbarAtom);
   const removeSpaceState = useSetAtom(removeSpaceAtom);
   const updateSpaceState = useSetAtom(updateSpaceAtom);
+  const setDeleteSpaceModal = useSetAtom(deleteSpaceModalAtom);
 
-  const [, setSnackbar] = useAtom(snackbarAtom);
-
-  // new space modal global state
-  const [, setNewSpaceModal] = useAtom(showNewSpaceModalAtom);
-
-  // active space atom (global state)
-  // active space atom (global state)
-  const [, setDeleteSpaceModal] = useAtom(deleteSpaceModalAtom);
-
-  // selected tabs (global state)
-  const [selectedTabs] = useAtom(selectedTabsAtom);
+  const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
 
   // --droppable ids
   // space-
@@ -88,25 +73,22 @@ export const useTabsDnd = () => {
   const getDroppedLocation = (droppableId: string) => {
     let droppedLocation: DropLocations;
     // determine the drop location
-    if (droppableId.startsWith('space-')) {
-      droppedLocation = 'NON_ACTIVE_SPACE';
-    } else {
-      switch (droppableId) {
-        case 'active-space':
-          droppedLocation = 'ACTIVE_SPACE';
-          break;
-        case 'open-non-active-space-tabs':
-          droppedLocation = 'OPEN_NON_ACTIVE_SPACE_TABS';
-          break;
-        case 'add-new-space':
-          droppedLocation = 'NEW_SPACE_ZONE';
-          break;
-        case 'delete-space':
-          droppedLocation = 'DELETE_SPACE_ZONE';
-          break;
-        default: {
-          droppedLocation = 'SPACES_CONTAINER';
-        }
+
+    switch (droppableId) {
+      case 'active-space':
+        droppedLocation = 'ACTIVE_SPACE';
+        break;
+      case 'open-non-active-space-tabs':
+        droppedLocation = 'OPEN_NON_ACTIVE_SPACE_TABS';
+        break;
+      case 'add-new-space':
+        droppedLocation = 'NEW_SPACE_ZONE';
+        break;
+      case 'delete-space':
+        droppedLocation = 'DELETE_SPACE_ZONE';
+        break;
+      default: {
+        droppedLocation = 'SPACES_CONTAINER';
       }
     }
     return droppedLocation;
@@ -194,56 +176,6 @@ export const useTabsDnd = () => {
     }
   };
 
-  // dropped in non active space
-  const nonActiveSpaceDropHandler = async ({
-    droppableId,
-    sourceIndex,
-  }: Pick<DropHandlerProps, 'droppableId' | 'sourceIndex'>) => {
-    // extract space id from droppable id
-    const droppedSpaceId = droppableId.split('space-')[1];
-
-    // active tab in current active space
-    const activeTab = activeSpaceTabs[activeSpace.activeTabIndex];
-
-    // remove tabs
-    const tabsToRemove = await removeTabsFromActiveSpace({
-      activeSpace,
-      tabs: activeSpaceTabs,
-      activeTab,
-      selectedTabs,
-      updateSpaceState: space => updateSpaceState(space),
-      updateTabs: tabs => setActiveSpaceTabs(tabs),
-      sourceIndex,
-    });
-
-    // add tab to new space
-    // get current tabs for dropped space
-    const droppedSpaceTabs = await getTabsInSpace(droppedSpaceId);
-
-    // set storage
-    await setTabsForSpace(droppedSpaceId, [...droppedSpaceTabs, ...tabsToRemove]);
-  };
-
-  // dropped in new space zone
-  const newSpaceDropHandler = async ({ sourceIndex }: Pick<DropHandlerProps, 'sourceIndex'>) => {
-    // active tab in current active space
-    const activeTab = activeSpaceTabs[activeSpace.activeTabIndex];
-    // remove tabs
-
-    const tabsToRemove = await removeTabsFromActiveSpace({
-      activeSpace,
-      tabs: activeSpaceTabs,
-      activeTab,
-      selectedTabs,
-      updateSpaceState: space => updateSpaceState(space),
-      updateTabs: tabs => setActiveSpaceTabs(tabs),
-      sourceIndex,
-    });
-
-    // show modal to create new space with the dragged tabs
-    setNewSpaceModal({ show: true, tabs: tabsToRemove });
-  };
-
   // dropped in non active space container
   const spaceContainerDropHandler = async ({
     draggableId,
@@ -253,30 +185,17 @@ export const useTabsDnd = () => {
   }: Pick<DropHandlerProps, 'draggableId' | 'combineDraggableId' | 'sourceIndex' | 'destinationIndex'>) => {
     if (combineDraggableId && typeof combineDraggableId === 'string') {
       // merge spaces
+      const res = await mergeSpace(draggableId, combineDraggableId);
 
-      // the space that is to be merged (and then deleted)
-      const spaceIdToMerge = draggableId;
+      if (res) {
+        // update ui state
+        removeSpaceState(draggableId);
 
-      // space to merge the above space
-      const spaceIdToMergeTo = combineDraggableId;
-
-      // tabs of space to be merged
-      const tabsToMerge = await getTabsInSpace(spaceIdToMerge);
-
-      const currentTabsInMergedSpace = await getTabsInSpace(spaceIdToMergeTo);
-
-      const updatedTabsForMergedSpace = [...currentTabsInMergedSpace, ...tabsToMerge];
-
-      // add tabs from the draggable space to dragged on space
-      await setTabsForSpace(spaceIdToMergeTo, updatedTabsForMergedSpace);
-
-      // delete space that is merged (dragged space)
-      await deleteSpace(spaceIdToMerge);
-      // update ui state
-      removeSpaceState(spaceIdToMerge);
-
-      // show success snackbar
-      setSnackbar({ show: true, msg: 'Space merged', isSuccess: true, isLoading: false });
+        // show success snackbar
+        setSnackbar({ show: true, msg: 'Space merged', isSuccess: true, isLoading: false });
+      } else {
+        setSnackbar({ show: true, msg: 'Failed to merge space', isSuccess: false, isLoading: false });
+      }
     } else {
       // re-arrange spaces
       const reOrderedSpaces = [...alLSpacesState];
@@ -294,18 +213,22 @@ export const useTabsDnd = () => {
   //  open non-active space dropped in active space
   const nonActiveSpaceOpenTabsHandler = async ({ draggableId }: Pick<DropHandlerProps, 'draggableId'>) => {
     const spaceId = draggableId;
-    const tabsInSpace = await getTabsInSpace(spaceId);
+    const tabsInDraggedSpace = await getTabsInSpace(spaceId);
 
     // open tabs in active space window
-    await createDiscardedTabs(tabsInSpace);
+    await createDiscardedTabs(tabsInDraggedSpace);
 
     // add tabs to active space
 
-    setActiveSpaceTabs(prev => [...prev, ...tabsInSpace]);
+    setActiveSpaceTabs(prev => [...prev, ...tabsInDraggedSpace]);
 
     await wait(100);
 
     scrollActiveSpaceBottom();
+
+    const tabsInActiveSpace = await getTabsInSpace(activeSpace.id);
+
+    setTabsForSpace(spaceId, [...tabsInActiveSpace, ...tabsInDraggedSpace]);
   };
 
   // dropped in delete space zone
@@ -321,20 +244,11 @@ export const useTabsDnd = () => {
     combineDraggableId,
     destinationIndex,
     draggableId,
-    droppableId,
     sourceIndex,
   }: DropHandlerProps) => {
     switch (droppedLocation) {
       case 'ACTIVE_SPACE': {
         await activeSpaceDropHandler({ destinationIndex, sourceIndex });
-        break;
-      }
-      case 'NON_ACTIVE_SPACE': {
-        await nonActiveSpaceDropHandler({ droppableId, sourceIndex });
-        break;
-      }
-      case 'NEW_SPACE_ZONE': {
-        await newSpaceDropHandler({ sourceIndex });
         break;
       }
       case 'SPACES_CONTAINER': {
@@ -361,55 +275,105 @@ export const useTabsDnd = () => {
   };
 };
 
-//** helpers
+//!not used - dropped in non active space
+// const nonActiveSpaceDropHandler = async ({
+//   droppableId,
+//   sourceIndex,
+// }: Pick<DropHandlerProps, 'droppableId' | 'sourceIndex'>) => {
+//   // extract space id from droppable id
+//   const droppedSpaceId = droppableId.split('space-')[1];
 
-type RemoveTabsFromActiveSpaceProps = {
-  selectedTabs: ITab[];
-  activeSpace: ISpace;
-  tabs: ITab[];
-  updateSpaceState: (space: ISpace) => void;
-  updateTabs: (tabs: ITab[]) => void;
-  sourceIndex: number;
-  activeTab: ITab;
-};
+//   // active tab in current active space
+//   const activeTab = activeSpaceTabs[activeSpace.activeTabIndex];
+
+//   // remove tabs
+//   const tabsToRemove = await removeTabsFromActiveSpace({
+//     activeSpace,
+//     tabs: activeSpaceTabs,
+//     activeTab,
+//     selectedTabs,
+//     updateSpaceState: space => updateSpaceState(space),
+//     updateTabs: tabs => setActiveSpaceTabs(tabs),
+//     sourceIndex,
+//   });
+
+//   // add tab to new space
+//   // get current tabs for dropped space
+//   const droppedSpaceTabs = await getTabsInSpace(droppedSpaceId);
+
+//   // set storage
+//   await setTabsForSpace(droppedSpaceId, [...droppedSpaceTabs, ...tabsToRemove]);
+// };
+
+//! not used - dropped in new space zone
+// const newSpaceDropHandler = async ({ sourceIndex }: Pick<DropHandlerProps, 'sourceIndex'>) => {
+//   // active tab in current active space
+//   const activeTab = activeSpaceTabs[activeSpace.activeTabIndex];
+//   // remove tabs
+
+//   const tabsToRemove = await removeTabsFromActiveSpace({
+//     activeSpace,
+//     tabs: activeSpaceTabs,
+//     activeTab,
+//     selectedTabs,
+//     updateSpaceState: space => updateSpaceState(space),
+//     updateTabs: tabs => setActiveSpaceTabs(tabs),
+//     sourceIndex,
+//   });
+
+//   // show modal to create new space with the dragged tabs
+//   setNewSpaceModal({ show: true, tabs: tabsToRemove });
+// };
+
+//!not used - helpers
+
+// type RemoveTabsFromActiveSpaceProps = {
+//   selectedTabs: ITab[];
+//   activeSpace: ISpace;
+//   tabs: ITab[];
+//   updateSpaceState: (space: ISpace) => void;
+//   updateTabs: (tabs: ITab[]) => void;
+//   sourceIndex: number;
+//   activeTab: ITab;
+// };
 
 // remove tab from current space
-const removeTabsFromActiveSpace = async ({
-  selectedTabs,
-  activeSpace,
-  tabs,
-  updateSpaceState,
-  updateTabs,
-  sourceIndex,
-  activeTab,
-}: RemoveTabsFromActiveSpaceProps): Promise<ITab[]> => {
-  let tabsToRemove: ITab[] = [];
+// const removeTabsFromActiveSpace = async ({
+//   selectedTabs,
+//   activeSpace,
+//   tabs,
+//   updateSpaceState,
+//   updateTabs,
+//   sourceIndex,
+//   activeTab,
+// }: RemoveTabsFromActiveSpaceProps): Promise<ITab[]> => {
+//   let tabsToRemove: ITab[] = [];
 
-  if (selectedTabs?.length > 0) {
-    //  multiple tabs
-    tabsToRemove = selectedTabs.map(t => ({ id: t.id, url: t.url, title: t.title }));
-  } else {
-    // single tab
-    const tabToRemove = tabs[sourceIndex];
-    tabsToRemove.push(tabToRemove);
-  }
-  // update tabs
-  const activeSpaceUpdatedTabs = tabs.filter(tab => tabsToRemove.find(t => t.id !== tab.id));
+//   if (selectedTabs?.length > 0) {
+//     //  multiple tabs
+//     tabsToRemove = selectedTabs.map(t => ({ id: t.id, url: t.url, title: t.title }));
+//   } else {
+//     // single tab
+//     const tabToRemove = tabs[sourceIndex];
+//     tabsToRemove.push(tabToRemove);
+//   }
+//   // update tabs
+//   const activeSpaceUpdatedTabs = tabs.filter(tab => tabsToRemove.find(t => t.id !== tab.id));
 
-  const newActiveTabIndex = activeSpaceUpdatedTabs.findIndex(t => t.id === activeTab.id);
+//   const newActiveTabIndex = activeSpaceUpdatedTabs.findIndex(t => t.id === activeTab.id);
 
-  // close/remove tab from window
-  await Promise.allSettled(tabsToRemove.map(tab => chrome.tabs.remove(tab.id)));
+//   // close/remove tab from window
+//   await Promise.allSettled(tabsToRemove.map(tab => chrome.tabs.remove(tab.id)));
 
-  // update ui state
-  updateSpaceState({ ...activeSpace, activeTabIndex: newActiveTabIndex });
-  updateTabs(activeSpaceUpdatedTabs);
+//   // update ui state
+//   updateSpaceState({ ...activeSpace, activeTabIndex: newActiveTabIndex });
+//   updateTabs(activeSpaceUpdatedTabs);
 
-  // update  storage
-  await setTabsForSpace(activeSpace.id, activeSpaceUpdatedTabs);
+//   // update  storage
+//   await setTabsForSpace(activeSpace.id, activeSpaceUpdatedTabs);
 
-  if (newActiveTabIndex !== activeSpace.activeTabIndex) {
-    await updateSpace(activeSpace.id, { ...activeSpace, activeTabIndex: newActiveTabIndex });
-  }
-  return tabsToRemove;
-};
+//   if (newActiveTabIndex !== activeSpace.activeTabIndex) {
+//     await updateSpace(activeSpace.id, { ...activeSpace, activeTabIndex: newActiveTabIndex });
+//   }
+//   return tabsToRemove;
+// };

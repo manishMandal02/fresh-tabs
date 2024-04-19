@@ -219,6 +219,32 @@ export const updateActiveTabInSpace = async (windowId: number, idx: number): Pro
   }
 };
 
+// merge to spaces
+export const mergeSpace = async (spaceId: string, mergeToSpaceId: string) => {
+  try {
+    // tabs of space to be merged
+    const tabsToMerge = await getTabsInSpace(spaceId);
+
+    const currentTabsInMergedSpace = await getTabsInSpace(mergeToSpaceId);
+
+    const updatedTabsForMergedSpace = [...currentTabsInMergedSpace, ...tabsToMerge];
+
+    // add tabs from the draggable space to dragged on space
+    await setTabsForSpace(mergeToSpaceId, updatedTabsForMergedSpace);
+
+    // delete space that is merged (dragged space)
+    await deleteSpace(spaceId);
+    return true;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Error merging space spaceId: ${spaceId}`,
+      fileTrace: 'src/services/chrome-storage/spaces.ts:1942 ~ (mergeToSpace) ~ catch block',
+    });
+    return false;
+  }
+};
+
 // check if new opened window's tabs/urls are a part of space (the space might not have saved this window's id)
 export const checkNewWindowTabs = async (windowId: number, urls: string[]): Promise<boolean> => {
   try {

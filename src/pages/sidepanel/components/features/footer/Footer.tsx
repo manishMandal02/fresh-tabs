@@ -41,8 +41,8 @@ const Footer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                 animate={isDraggingSpace ? 'visible' : 'hidden'}
                 variants={animationVariants}
                 transition={{ type: 'spring', stiffness: 1000, damping: 40, duration: 0.1 }}
-                className={`!size-full bg-gradient-to-bl px-1 from-brand-darkBgAccent/90 to-brand-darkBg/90 absolute top-px -right-px
-                             cursor-pointer flex items-center outline-brand-darkBgAccent border-none justify-center  rounded-lg`}
+                className={`!size-full bg-gradient-to-bl px-1 from-brand-darkBgAccent/90 to-brand-darkBg/90 absolute -top-px right-px
+                             cursor-pointer flex items-center outline-brand-darkBgAccent border border-brand-darkBgAccent/40 justify-center  rounded-[7px]`}
                 style={{
                   visibility: isDraggingSpace ? 'visible' : 'hidden',
                   zIndex: isDraggingSpace ? 200 : 1,
@@ -55,27 +55,18 @@ const Footer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
           </Droppable>
 
           {/* Add new space button */}
-          <Droppable droppableId={'add-new-space'} direction="horizontal" mode="standard" type="TAB">
-            {(provided, { isDraggingOver: isDraggingOverNewSpace }) => (
-              <motion.div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                animate={!isDraggingSpace ? 'visible' : 'hidden'}
-                variants={animationVariants}
-                transition={{ type: 'spring', stiffness: 1000, damping: 40, duration: 0.1 }}
-                className="size-full relative"
-                style={{
-                  visibility: !isDraggingSpace ? 'visible' : 'hidden',
-                  zIndex: !isDraggingSpace ? 200 : 1,
-                }}>
-                {/* click option: add note & add space  */}
-                <AddButton
-                  isDraggingGlobal={isDraggingSpace || isDraggingTabs}
-                  isDraggingOver={isDraggingOverNewSpace}
-                />
-              </motion.div>
-            )}
-          </Droppable>
+          <motion.div
+            animate={!isDraggingSpace ? 'visible' : 'hidden'}
+            variants={animationVariants}
+            transition={{ type: 'spring', stiffness: 1000, damping: 40, duration: 0.1 }}
+            className="size-full relative"
+            style={{
+              visibility: !isDraggingSpace ? 'visible' : 'hidden',
+              zIndex: !isDraggingSpace ? 200 : 1,
+            }}>
+            {/* click option: add note & add space  */}
+            <AddButton />
+          </motion.div>
         </div>
       </footer>
     </>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState , memo } from 'react';
 import { useSetAtom } from 'jotai';
 import { motion } from 'framer-motion';
 
@@ -9,12 +9,7 @@ import Tooltip from '../../../../../components/tooltip';
 import { useCustomAnimation } from '../../../hooks/useCustomAnimation';
 import { showAddNewNoteModalAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
 
-type Props = {
-  isDraggingGlobal: boolean;
-  isDraggingOver: boolean;
-};
-
-const AddButton = ({ isDraggingGlobal, isDraggingOver }: Props) => {
+const AddButton = () => {
   // global state
   const setNewSpaceModal = useSetAtom(showNewSpaceModalAtom);
   const setNewNoteModal = useSetAtom(showAddNewNoteModalAtom);
@@ -25,7 +20,7 @@ const AddButton = ({ isDraggingGlobal, isDraggingOver }: Props) => {
   const { bounce } = useCustomAnimation();
 
   return (
-    <Tooltip label={isDraggingGlobal ? '' : 'Add new space'} delay={1500}>
+    <Tooltip label={'Add new space'} delay={1500}>
       <Popover
         open={showAddOption}
         onChange={open => setShowAddOptions(open)}
@@ -61,10 +56,6 @@ const AddButton = ({ isDraggingGlobal, isDraggingOver }: Props) => {
         <button
           className={`!size-full absolute rounded-full outline-none flex items-center justify-center
       transition-all duration-200 hover:bg-brand-darkBgAccent/20`}
-          style={{
-            border: isDraggingOver ? '1px solid #29dc8071' : '',
-            backgroundColor: isDraggingOver ? ' #3ae88e6b' : '',
-          }}
           onClick={() => setShowAddOptions(true)}>
           <PlusIcon className="text-slate-500 scale-[1.3]" />
         </button>
@@ -73,4 +64,4 @@ const AddButton = ({ isDraggingGlobal, isDraggingOver }: Props) => {
   );
 };
 
-export default AddButton;
+export default memo(AddButton);

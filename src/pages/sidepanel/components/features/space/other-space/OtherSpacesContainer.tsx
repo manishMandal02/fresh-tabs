@@ -1,4 +1,5 @@
-import { useAtom } from 'jotai';
+import { useMemo } from 'react';
+import { useAtomValue } from 'jotai';
 import { motion } from 'framer-motion';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 
@@ -17,9 +18,14 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
   console.log(' OtherSpacesContainer ~ 🔁 rendered');
 
   // non active spaces  (global state)
-  const [spaces] = useAtom(nonActiveSpacesAtom);
+  const spaces = useAtomValue(nonActiveSpacesAtom);
 
   const { isMetaKeyPressed } = useMetaKeyPressed({});
+
+  const [savedSpaces, unSavedSpaces] = useMemo(
+    () => [spaces.filter(s => s.isSaved), spaces.filter(s => !s.isSaved)],
+    [spaces],
+  );
 
   // bounce div animation
   const { bounce } = useCustomAnimation();
@@ -28,7 +34,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
 
   return (
     <div
-      className="px-2 py-[2px] flex items-center justify-center overflow-hidden
+      className="px-2 py-[4px] flex items-center justify-center overflow-hidden
                 rounded-md  w-fit shadow-inner shadow-brand-darkBgAccent/10">
       <Droppable
         droppableId="other-spaces"
@@ -41,63 +47,46 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
             {...provided1.droppableProps}
             ref={provided1.innerRef}
             {...bounce}
-            className="w-fit flex justify-center items-center gap-x-[.45rem]"
-            style={{
-              width: 100 / spaces.length + '%',
-            }}>
+            className="w-fit flex justify-center items-center gap-x-[.4rem]">
             {/* non active spaces */}
-            {spaces
-              .sort(a => (a.isSaved ? -1 : 1))
-              .map((space, idx) => {
-                return (
-                  <>
-                    <Draggable
-                      key={space.id}
-                      draggableId={space.id}
-                      index={idx}
-                      isDragDisabled={isDraggingTabs || !space.isSaved}>
-                      {(provided3, { combineTargetFor, combineWith, draggingOver }) => (
-                        <div
-                          ref={provided3.innerRef}
-                          {...provided3.draggableProps}
-                          {...provided3.dragHandleProps}
-                          className="z-10  !cursor-default  size-full flex items-center"
-                          tabIndex={-1}
-                          style={{
-                            ...provided3.draggableProps.style,
-                            opacity: !combineWith || (!isDraggingOverOtherSpaces && isDraggingSpace) ? '1' : '0.75',
-                          }}>
-                          {/* unsaved space divider */}
-                          {!space.isSaved && spaces.findIndex(s => !s.isSaved) === idx ? (
-                            <hr className="h-[10px] w-[0.75px] bg-slate-500/80 rounded-md -ml-px mr-1.5 border-none" />
-                          ) : null}
-                          {draggingOver || combineWith ? (
-                            <DraggingOverNudge droppableId={draggingOver} mergeSpaceWith={combineWith} />
-                          ) : null}
-                          {/* tabs drop zone to add tab to a non active space */}
-                          <Droppable
-                            key={space.id}
-                            droppableId={'space-' + space.id}
-                            direction="horizontal"
-                            type="TAB"
-                            isDropDisabled={isDraggingSpace}>
-                            {(provided2, { isDraggingOver }) => (
-                              <div {...provided2.droppableProps} ref={provided2.innerRef}>
-                                <NonActiveSpace space={space} isDraggedOver={isDraggingOver || !!combineTargetFor} />
-                                {provided2.placeholder}
-                              </div>
-                            )}
-                          </Droppable>
-                        </div>
-                      )}
-                    </Draggable>
-                  </>
-                );
-              })}
+            {savedSpaces.map((space, idx) => {
+              return (
+                <>
+                  <Draggable key={space.id} draggableId={space.id} index={idx} isDragDisabled={isDraggingTabs}>
+                    {(provided3, { combineTargetFor, combineWith, draggingOver }) => (
+                      <div
+                        ref={provided3.innerRef}
+                        {...provided3.draggableProps}
+                        {...provided3.dragHandleProps}
+                        className="z-10  !cursor-default  size-full flex items-center"
+                        tabIndex={-1}
+                        style={{
+                          ...provided3.draggableProps.style,
+                          opacity: !combineWith || (!isDraggingOverOtherSpaces && isDraggingSpace) ? '1' : '0.75',
+                        }}>
+                        {draggingOver || combineWith ? (
+                          <DraggingOverNudge droppableId={draggingOver} mergeSpaceWith={combineWith} />
+                        ) : null}
+
+                        <NonActiveSpace space={space} isDraggedOver={!!combineTargetFor} />
+                      </div>
+                    )}
+                  </Draggable>
+                </>
+              );
+            })}
             {provided1.placeholder}
           </motion.div>
         )}
       </Droppable>
+      {unSavedSpaces?.length > 0 ? (
+        <div className="flex items-center ml-[5px]">
+          {/* vertical divider */}
+          <hr className="h-[10px] w-[0.5px] bg-slate-500/70 rounded-md mr-[4px] border-none" />
+          {/* unsaved spaces */}
+          {unSavedSpaces?.map(space => <NonActiveSpace key={space.id} space={space} isDraggedOver={false} />)}
+        </div>
+      ) : null}
     </div>
   );
 };

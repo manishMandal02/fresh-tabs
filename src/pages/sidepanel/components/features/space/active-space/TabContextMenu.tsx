@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useAtomValue, useSetAtom } from 'jotai';
 import * as RadixContextMenu from '@radix-ui/react-context-menu';
 import {
+  ArrowDownIcon,
   ChevronRightIcon,
   FileIcon,
   FilePlusIcon,
@@ -85,6 +86,12 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
 
     showNewSpaceModal({ show: true, tabs: tabsForNewSpace });
   };
+
+  // create new tab after current tab
+  const handleCreateNewTab = async () => {
+    //  TODO - use tab index
+    await chrome.tabs.create({ url: 'chrome://newtab', active: true });
+  };
   return (
     <RadixContextMenu.Root>
       <RadixContextMenu.Trigger className="" asChild>
@@ -101,15 +108,23 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
             className="flex items-center ext-[12px] font-normal text-slate-400 py-[7px] px-2.5  hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
             <MoonIcon className="text-slate-500 mr-1 scale-[0.8]" /> Discard
           </RadixContextMenu.Item>
+          <RadixContextMenu.Item
+            onClick={handleCreateNewTab}
+            className="flex items-center ext-[12px] font-normal text-slate-400 py-[7px] px-2.5  hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+            <ArrowDownIcon className="text-slate-500 mr-1 scale-[0.8]" /> New tab after this
+          </RadixContextMenu.Item>
 
-          <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/80 my-[2px]" />
+          <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
+
           <RadixContextMenu.Item className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
             <FilePlusIcon className="text-slate-500 mr-1 scale-[0.8]" /> New folder
           </RadixContextMenu.Item>
           <RadixContextMenu.Item className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
             <FileIcon className="text-slate-500 mr-1 scale-[0.8]" /> Move to folder
           </RadixContextMenu.Item>
-          <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/80 my-[2px]" />
+
+          <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
+
           <RadixContextMenu.Item
             onClick={handleNewSpace}
             className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
@@ -134,7 +149,8 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
             </RadixContextMenu.Portal>
           </RadixContextMenu.Sub>
 
-          <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/80 my-[2px]" />
+          <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
+
           <RadixContextMenu.Item
             onClick={onRemoveClick}
             className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
