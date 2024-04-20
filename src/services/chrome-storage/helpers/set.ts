@@ -3,6 +3,7 @@ import {
   IAppSettings,
   IDailySpaceTime,
   IDailySpaceTimeChunks,
+  IGroup,
   INote,
   IPinnedTab,
   ISiteVisit,
@@ -18,6 +19,7 @@ type StorageValue =
   | ISpace[]
   | INote[]
   | ITab[]
+  | IGroup[]
   | ISnoozedTab[]
   | ISiteVisit[]
   | IDailySpaceTimeChunks[]

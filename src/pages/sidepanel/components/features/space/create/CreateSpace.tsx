@@ -21,7 +21,7 @@ type DefaultSpaceFields = Pick<ISpace, 'title' | 'emoji' | 'theme'>;
 const defaultSpaceData: DefaultSpaceFields = {
   title: '',
   emoji: '🚀',
-  theme: ThemeColor.Fuchsia,
+  theme: ThemeColor.Blue,
 };
 
 const CreateSpace = () => {
@@ -72,7 +72,7 @@ const CreateSpace = () => {
 
         // index is not required here ⬇️
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { index, ...currentTabOpened } = await getCurrentTab();
+        const currentTabOpened = await getCurrentTab();
         setTabs([currentTabOpened]);
       })();
     }

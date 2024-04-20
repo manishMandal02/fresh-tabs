@@ -84,6 +84,7 @@ import {
   AlarmName,
   ALARM_NAME_PREFiX,
 } from '@root/src/constants/app';
+import { addGroup, removeGroup, updateGroup } from '@root/src/services/chrome-storage/groups';
 
 logger.info('🏁 background loaded');
 
@@ -136,7 +137,8 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - DnD checks (tabs, spaces, merge, delete, create) (unsaved space no drag)
+// TODO - handle groups DnD
+// TODO - show notes for tabs in active tabs sidepanel
 
 // TODO - new feat - tab thumbnail views and also grid views
 
@@ -169,6 +171,8 @@ const createUnsavedSpacesOnInstall = async () => {
         id: tab.id,
         title: tab.title,
         url: parseUrl(tab.url),
+        index: tab.index,
+        groupId: tab.groupId,
       }));
 
       // active tab for window
@@ -202,7 +206,7 @@ const updateTabHandler = async (tabId: number) => {
   if (!space?.id) return;
 
   //  create new  or update tab
-  await updateTab(space?.id, { id: tab.id, url: tab.url, title: tab.title }, tab.index);
+  await updateTab(space?.id, { id: tab.id, url: tab.url, title: tab.title, index: tab.index }, tab.index);
 
   // send send to side panel
   await publishEvents({
@@ -364,14 +368,14 @@ chrome.runtime.onMessage.addListener(
         const { spaceTitle } = payload;
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { index, ...tab } = await getCurrentTab();
+        const tab = await getCurrentTab();
 
         // TODO - new space with title
         const newSpace = await createNewSpace(
           {
             title: spaceTitle,
             emoji: '🚀',
-            theme: ThemeColor.Teal,
+            theme: ThemeColor.Cyan,
             activeTabIndex: 0,
             isSaved: true,
             windowId: 0,
@@ -471,7 +475,7 @@ chrome.runtime.onMessage.addListener(
         const tabsInSpace = await getTabsInSpace(spaceId);
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { index, ...tab } = await getCurrentTab();
+        const tab = await getCurrentTab();
 
         await setTabsForSpace(spaceId, [...tabsInSpace, tab]);
 
@@ -922,6 +926,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       payload: { spaceId: space.id },
     });
   }
+
+  // TODO - handle tab's group change
 });
 
 // event listener for when tabs get moved (index change)
@@ -978,7 +984,7 @@ chrome.tabs.onAttached.addListener(async tabId => {
   await updateTabHandler(tabId);
 });
 
-// event listener for when tabs are closed
+// on tab closed
 chrome.tabs.onRemoved.addListener(async (tabId, info) => {
   // do nothing if tab removed because window was closed
   if (info.isWindowClosing) return;
@@ -987,6 +993,59 @@ chrome.tabs.onRemoved.addListener(async (tabId, info) => {
   recordSiteVisit(info.windowId, tabId);
 
   await removeTabHandler(tabId, info.windowId);
+});
+
+// on tab group create
+chrome.tabGroups.onCreated.addListener(async group => {
+  const space = await getSpaceByWindow(group.windowId);
+
+  await addGroup(space.id, {
+    name: group.title,
+    id: group.id,
+    theme: group.color,
+    collapsed: group.collapsed,
+  });
+
+  // send send to side panel
+  await publishEvents({
+    id: generateId(),
+    event: 'UPDATE_GROUPS',
+    payload: {
+      spaceId: space.id,
+    },
+  });
+});
+
+// on tab group removed/deleted
+chrome.tabGroups.onRemoved.addListener(async group => {
+  const space = await getSpaceByWindow(group.windowId);
+
+  await removeGroup(space.id, group.id);
+
+  // send send to side panel
+  await publishEvents({
+    id: generateId(),
+    event: 'UPDATE_GROUPS',
+    payload: {
+      spaceId: space.id,
+    },
+  });
+});
+
+// on tab group removed/deleted
+chrome.tabGroups.onUpdated.addListener(async group => {
+  const space = await getSpaceByWindow(group.windowId);
+
+  await updateGroup(space.id, { id: group.id, name: group.title, theme: group.color, collapsed: group.collapsed });
+
+  // send send to side panel
+  await publishEvents({
+    id: generateId(),
+    event: 'UPDATE_GROUPS',
+    payload: {
+      spaceId: space.id,
+    },
+  });
 });
 
 // window created/opened
@@ -1010,12 +1069,24 @@ chrome.windows.onCreated.addListener(window => {
     // check if the chrome window obj  has tabs
     // if not, then query for tabs in this window
     if (window?.tabs?.length > 0) {
-      tabs = window.tabs.map(t => ({ url: t.url, faviconUrl: getFaviconURL(t.url), id: t.id, title: t.title }));
+      tabs = window.tabs.map(t => ({
+        url: t.url,
+        faviconUrl: getFaviconURL(t.url),
+        id: t.id,
+        title: t.title,
+        index: t.index,
+      }));
     } else {
       const queriedTabs = await chrome.tabs.query({ windowId: window.id });
 
       if (queriedTabs?.length < 1) return;
-      tabs = queriedTabs.map(t => ({ url: t.url, faviconUrl: getFaviconURL(t.url), id: t.id, title: t.title }));
+      tabs = queriedTabs.map(t => ({
+        url: t.url,
+        faviconUrl: getFaviconURL(t.url),
+        id: t.id,
+        title: t.title,
+        index: t.index,
+      }));
     }
 
     // check if the tabs in this window are of a space (check tab urls)

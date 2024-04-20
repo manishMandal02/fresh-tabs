@@ -10,7 +10,7 @@ export const getFaviconURL = (siteUrl: string, size = 32) => {
 
   if (!url.hostname || isChromeUrl(siteUrl)) return createChromeFaviconURL(url);
 
-  return `https://www.google.com/s2/favicons?domain=${url.hostname}/${url.pathname.split('/')[1]}&sz=${size}`;
+  return `https://www.google.com/s2/favicons?domain=https://${url.hostname}/${url.pathname.split('/')[1]}&sz=${size}`;
 };
 
 export const getAlternativeFaviconUrl = (siteUrl: string, size = 32) => {

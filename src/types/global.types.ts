@@ -24,6 +24,15 @@ export interface ITab {
   id: number;
   url: string;
   title: string;
+  index: number;
+  groupId?: number;
+}
+
+export interface IGroup {
+  id: number;
+  name: string;
+  collapsed: boolean;
+  theme: chrome.tabGroups.ColorEnum;
 }
 
 export interface ISpace {
@@ -56,11 +65,6 @@ export type ISpaceWithoutId = Omit<ISpace, 'id'>;
 export interface ISpaceWithTabs extends ISpace {
   tabs: ITab[];
 }
-
-export interface ITabWithIndex extends ITab {
-  index: number;
-}
-
 export interface ISiteVisit {
   url: string;
   title: string;
@@ -90,6 +94,7 @@ export interface ISnoozedTab {
 type MessageEventsSidePanel =
   | 'UPDATE_SPACE_ACTIVE_TAB'
   | 'UPDATE_TABS'
+  | 'UPDATE_GROUPS'
   | 'REMOVE_SPACE'
   | 'ADD_SPACE'
   | 'TABS_DISCARDED';

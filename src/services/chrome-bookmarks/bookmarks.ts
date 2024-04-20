@@ -79,7 +79,7 @@ export const syncSpacesFromBookmarks = async (rootFolderId: string) => {
       const tabs: ITab[] = [];
 
       for (const tabBM of tabsBM) {
-        tabs[tabBM.index] = { id: 0, title: tabBM.title, url: tabBM.url };
+        tabs.push({ id: 0, title: tabBM.title, url: tabBM.url, index: tabBM.index });
       }
 
       spaces.push(space);

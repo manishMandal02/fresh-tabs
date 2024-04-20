@@ -47,7 +47,7 @@ export const getTab = async (spaceId: string, idx: number): Promise<ITab | null>
 
     if (tabs?.length < 1) return null;
 
-    const tab = tabs[idx];
+    const tab = tabs.find(t => t.index === idx);
 
     if (!tab) return null;
 
@@ -74,11 +74,24 @@ export const updateTabIndex = async (spaceId: string, tabId: number, newIndex: n
 
     if (!tabToUpdate) throw new Error('Tab not found with this id.');
 
-    // remove tab from old index
-    const newTabs = tabs.filter(t => t.id !== tabId);
+    // tab index for tab
+    const newTabs = tabs.map(tab => {
+      if (tab.id === tabId) {
+        return {
+          ...tab,
+          index: newIndex,
+        };
+      }
 
-    // add tab to new index, mutate array
-    newTabs.splice(newIndex, 0, tabToUpdate);
+      if (tab.index > newIndex) {
+        return {
+          ...tab,
+          index: tab.index + 1,
+        };
+      }
+
+      return tab;
+    });
 
     // save new tabs array to storage
     await setTabsForSpace(spaceId, newTabs);
@@ -102,17 +115,23 @@ export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promis
 
     if (tabs?.length < 1) throw new Error(`Tabs not found for this space: ${spaceId}.`);
 
+    let tabToUpdate = tabs.find(tab => tab.index === idx);
+
+    const updatedTabs = tabs.filter(tab => tab.index !== idx);
+
     // check if tab exists
-    if (tabs.find(t => t.id === tab.id) || tabs[idx]?.url === tab.url) {
+    if (tabToUpdate?.url === tab.url) {
       // exists, update tab at index pos
-      tabs[idx] = tab;
+
+      tabToUpdate = tab;
+      updatedTabs.push(tabToUpdate);
     } else {
       // add new tab at index pos
-      tabs.splice(idx, 0, tab);
+      updatedTabs.push(tab);
     }
 
     // save updated tabs to storage
-    await setTabsForSpace(spaceId, tabs);
+    await setTabsForSpace(spaceId, updatedTabs);
 
     return true;
   } catch (error) {
@@ -138,18 +157,20 @@ export const removeTabFromSpace = async (
 
     if (tabs?.length < 1) throw new Error('No tabs found.');
 
-    const tabToDelete = id ? tabs.find(t => t.id === id) : tabs[index];
+    const tabToDelete = tabs.find(t => (id ? t.id === id : t.index === index));
 
     // do nothing, if only 1 tab remaining
     if (tabs.length === 1 || !tabToDelete) return false;
 
-    const updatedTabs = id ? [...tabs.filter(t => t.id !== id)] : [...tabs.filter((_t, idx) => idx !== index)];
+    const updatedTabs = tabs.filter(t => t.id !== tabToDelete.id);
+
+    console.log('🚀 ~ updatedTabs:', updatedTabs);
 
     // save new tab arrays to storage
     await setTabsForSpace(space.id, updatedTabs);
 
     // update active index for space to 0,  if this tab was the last active tab for this space
-    if (space.activeTabIndex === tabs.findIndex(t => t.id === id)) {
+    if (space.activeTabIndex === tabToDelete.index) {
       await updateActiveTabInSpace(space.windowId, 0);
     }
 

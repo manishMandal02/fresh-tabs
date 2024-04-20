@@ -118,6 +118,7 @@ const checkIfSpaceActiveInAnotherWindow = async (space: ISpace) => {
   return true;
 };
 
+// TODO - handle group creating and updating new group ids
 // opens a space in new window
 export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInNewWindow }: OpenSpaceProps) => {
   // focus window is space already active
@@ -137,6 +138,7 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
     url: tabs[activeTabIndex]?.url || 'chrome://newtab',
     title: tabs[activeTabIndex]?.title || 'New Tab',
     id: 0,
+    index: activeTabIndex,
   };
 
   const discardedTabsToCreate = tabs.filter((_tab, idx) => idx !== activeTabIndex);
@@ -192,7 +194,7 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
 
   const discardAllTabs = (await createDiscardedTabs(discardedTabsToCreate, windowId)) as ITab[];
 
-  const activeTabCreated = await createActiveTab(activeTab.url, activeTabIndex, windowId);
+  const activeTabCreated = await createActiveTab(activeTab.url, activeTab.index, windowId);
 
   activeTab.id = activeTabCreated.id;
   activeTab.url = activeTabCreated.pendingUrl || activeTabCreated.url;
@@ -231,7 +233,7 @@ export const goToTab = async (id: number) => {
 };
 
 // get current tab
-export const getCurrentTab = async (): Promise<ITab & { index: number }> => {
+export const getCurrentTab = async (): Promise<ITab> => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   if (!tab?.id) return null;
@@ -241,6 +243,7 @@ export const getCurrentTab = async (): Promise<ITab & { index: number }> => {
     title: tab.title,
     url: tab.url,
     index: tab.index,
+    groupId: tab.groupId,
   };
 };
 

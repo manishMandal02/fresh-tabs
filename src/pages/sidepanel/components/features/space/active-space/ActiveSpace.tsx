@@ -9,10 +9,17 @@ import MoreOptions from '../more-options';
 import Tabs from '../../../../../../components/tabs/Tabs';
 import ActiveSpaceTabs from './ActiveSpaceTabs';
 import SpaceHistory from '../history/SpaceHistory';
-import { ISpace, ITab } from '@root/src/types/global.types';
+import { IGroup, ISpace, ITab } from '@root/src/types/global.types';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
-import { activeSpaceTabsAtom, deleteSpaceModalAtom, snackbarAtom, updateSpaceAtom } from '@root/src/stores/app';
+import {
+  activeSpaceGroupsAtom,
+  activeSpaceTabsAtom,
+  deleteSpaceModalAtom,
+  snackbarAtom,
+  updateSpaceAtom,
+} from '@root/src/stores/app';
+import { setGroupsToSpace } from '@root/src/services/chrome-storage/groups';
 
 type Props = {
   space: ISpace;
@@ -30,6 +37,7 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
 
   const updateSpaceState = useSetAtom(updateSpaceAtom);
   const setActSpaceTabs = useSetAtom(activeSpaceTabsAtom);
+  const setActSpaceGroups = useSetAtom(activeSpaceGroupsAtom);
 
   // local state
   const [showSpaceHistory, setShowSpaceHistory] = useState(false);
@@ -42,7 +50,26 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
     // get all tabs in the window
     const currentTabs = await chrome.tabs.query({ currentWindow: true });
 
-    const tabsInWindow = currentTabs.map(t => ({ title: t.title, url: t.url, id: t.id }));
+    const groups = await chrome.tabGroups.query({ windowId: space.windowId });
+
+    const tabsInWindow: ITab[] = currentTabs.map(t => ({
+      title: t.title,
+      url: t.url,
+      id: t.id,
+      index: t.index,
+      groupId: t.groupId,
+    }));
+
+    const groupsInWindow: IGroup[] = groups.map(group => ({
+      id: group.id,
+      name: group.title,
+      theme: group.color,
+      collapsed: group.collapsed,
+    }));
+
+    console.log('🚀 ~ handleSyncTabs ~ groupsInWindow:', groupsInWindow);
+
+    setActSpaceGroups(groupsInWindow);
 
     const activeTab = currentTabs.find(t => t.active);
 
@@ -52,6 +79,8 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
     }
     // update tabs in space
     await setTabsForSpace(space.id, tabsInWindow);
+
+    await setGroupsToSpace(space.id, groupsInWindow);
 
     setActSpaceTabs(tabsInWindow);
     updateSpaceState({ ...space, activeTabIndex: activeTab.index });

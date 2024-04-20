@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import * as RadixContextMenu from '@radix-ui/react-context-menu';
 import {
   ArrowDownIcon,
@@ -12,83 +12,103 @@ import {
   TrashIcon,
 } from '@radix-ui/react-icons';
 
+import { IGroup, ISpace, ITab } from '@root/src/types/global.types';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
-import { ISpace, ITab } from '@root/src/types/global.types';
-import { nonActiveSpacesAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
+import { addGroup, setGroupsToSpace } from '@root/src/services/chrome-storage/groups';
 import { getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
+import {
+  activeSpaceGroupsAtom,
+  activeSpaceTabsAtom,
+  nonActiveSpacesAtom,
+  showNewSpaceModalAtom,
+} from '@root/src/stores/app';
 
 type Props = {
-  tab: ITab;
-  space: ISpace;
-  allTabs: ITab[];
   children: ReactNode;
-  selectedTabs: ITab[];
-  onRemoveClick: () => void;
-  setActiveSpaceTabs: (tabs: ITab[]) => void;
+  group: IGroup;
+  tabs: ITab[];
+  space: ISpace;
 };
 
-const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, space, setActiveSpaceTabs }: Props) => {
+const TabGroupContextMenu = ({ children, group, tabs, space }: Props) => {
   // global state
   const nonActiveSpaces = useAtomValue(nonActiveSpacesAtom);
   const showNewSpaceModal = useSetAtom(showNewSpaceModalAtom);
+  const setActiveSpaceTabs = useSetAtom(activeSpaceTabsAtom);
+  const [activeSpaceGroups, setActiveSpaceGroups] = useAtom(activeSpaceGroupsAtom);
 
-  // on discard click
+  // on discard click - discard all folder tabs
   const handleDiscardTabs = async () => {
-    if (selectedTabs.length > 1) {
-      await discardTabs(selectedTabs.map(tab => tab.id));
-    } else {
-      await discardTabs([tab.id]);
-    }
+    await discardTabs(tabs.map(tab => tab.id));
   };
 
-  // move tabs to another space
-  const handleMoveTabToSpace = async (newSpaceId: string) => {
-    if (selectedTabs?.length < 1) {
-      // 1. single Tab
-      // add tab to selected space
-      const tabs = await getTabsInSpace(newSpaceId);
-      await setTabsForSpace(newSpaceId, [...tabs, tab]);
+  // move group to another space
+  const handleMoveGroupToSpace = async (newSpaceId: string) => {
+    // get all tabs for new space
+    const tabs = await getTabsInSpace(newSpaceId);
 
-      // remove tab from current space
-
-      const updatedTabsForActiveSpace = allTabs.filter(t => t.id !== tab.id);
-      // ui state update
-      setActiveSpaceTabs(updatedTabsForActiveSpace);
-      // update storage
-      await setTabsForSpace(space.id, updatedTabsForActiveSpace);
-
-      await chrome.tabs.remove(tab.id);
-    } else {
-      // 2. selected multiple tabs
-      const tabs = await getTabsInSpace(newSpaceId);
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      await setTabsForSpace(newSpaceId, [...tabs, ...selectedTabs.map(tab => tab)]);
-
-      const updatedTabsForActiveSpace = allTabs.filter(t => selectedTabs.some(sT => sT.id !== t.id));
-
-      setActiveSpaceTabs(updatedTabsForActiveSpace);
-      await setTabsForSpace(space.id, updatedTabsForActiveSpace);
-
-      const removeTabsPromises = selectedTabs.map(t => chrome.tabs.remove(t.id));
-
-      await Promise.allSettled(removeTabsPromises);
-    }
-  };
-
-  // new space
-  const handleNewSpace = () => {
-    // index is not required here ⬇️
+    // add tabs to new space
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const tabsForNewSpace = selectedTabs?.length < 1 ? [tab] : selectedTabs.map(tab => tab);
+    await setTabsForSpace(newSpaceId, [...tabs, ...tabs.map(tab => tab)]);
+
+    // add group in new space
+    await addGroup(newSpaceId, group);
+
+    // all tabs in current space
+    const activeSpaceTabs = await getTabsInSpace(space.id);
+
+    // remove tabs & group from current space
+    const updatedTabsForActiveSpace = activeSpaceTabs.filter(t => tabs.some(sT => sT.id !== t.id));
+    const updatedGroupsForActiveSpace = activeSpaceGroups.filter(g => g.id !== group.id);
+
+    // update storage
+    await setTabsForSpace(space.id, updatedTabsForActiveSpace);
+    await setGroupsToSpace(space.id, updatedGroupsForActiveSpace);
+
+    // update ui state
+    setActiveSpaceTabs(updatedTabsForActiveSpace);
+    setActiveSpaceGroups(updatedGroupsForActiveSpace);
+
+    const removeTabsPromises = tabs.map(t => chrome.tabs.remove(t.id));
+
+    await Promise.allSettled(removeTabsPromises);
+  };
+
+  // new space with tabs in group
+  const handleNewSpace = () => {
+    const tabsForNewSpace = tabs.map(tab => tab);
 
     showNewSpaceModal({ show: true, tabs: tabsForNewSpace });
   };
 
   // create new tab after current tab
   const handleCreateNewTab = async () => {
-    await chrome.tabs.create({ url: 'chrome://newtab', active: true, index: tab.index + 1 });
+    // TODO - check if new tab is added to the group or not
+    await chrome.tabs.create({ url: 'chrome://newtab', active: true, index: tabs[tabs.length - 1].index + 1 });
   };
+
+  // remove group
+  const handleRemoveGroup = async () => {
+    // get all tabs in current space
+    const activeSpaceTabs = await getTabsInSpace(space.id);
+
+    // remove tabs & group from current space
+    const updatedTabsForActiveSpace = activeSpaceTabs.filter(t => tabs.some(sT => sT.id !== t.id));
+    const updatedGroupsForActiveSpace = activeSpaceGroups.filter(g => g.id !== group.id);
+
+    // update storage
+    await setTabsForSpace(space.id, updatedTabsForActiveSpace);
+    await setGroupsToSpace(space.id, updatedGroupsForActiveSpace);
+
+    // update ui state
+    setActiveSpaceTabs(updatedTabsForActiveSpace);
+    setActiveSpaceGroups(updatedGroupsForActiveSpace);
+
+    const removeTabsPromises = tabs.map(t => chrome.tabs.remove(t.id));
+
+    await Promise.allSettled(removeTabsPromises);
+  };
+
   return (
     <RadixContextMenu.Root>
       <RadixContextMenu.Trigger className="" asChild>
@@ -137,7 +157,7 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
                 {[...nonActiveSpaces.filter(s => s.isSaved)].map(space => (
                   <RadixContextMenu.Item
                     key={space.id}
-                    onClick={() => handleMoveTabToSpace(space.id)}
+                    onClick={() => handleMoveGroupToSpace(space.id)}
                     className="flex items-center text-[11px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
                     <span className="mr-1.5">{space.emoji}</span> {space.title}
                   </RadixContextMenu.Item>
@@ -149,7 +169,7 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
           <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
 
           <RadixContextMenu.Item
-            onClick={onRemoveClick}
+            onClick={handleRemoveGroup}
             className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
             <TrashIcon className="text-slate-500 mr-1 scale-[0.8]" /> Remove
           </RadixContextMenu.Item>
@@ -159,4 +179,4 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
   );
 };
 
-export default TabContextMenu;
+export default TabGroupContextMenu;

@@ -1,7 +1,8 @@
 import { DefaultAppSettings } from './../constants/app';
 import { atom } from 'jotai';
-import { IAppSettings, INote, ISpace, ISpaceWithTabs, ITab, ITabWithIndex } from '../types/global.types';
+import { IAppSettings, IGroup, INote, ISpace, ISpaceWithTabs, ITab } from '../types/global.types';
 import { getTabsInSpace } from '../services/chrome-storage/tabs';
+import { getGroups } from '../services/chrome-storage/groups';
 
 type SnackbarAtom = {
   show: boolean;
@@ -49,8 +50,11 @@ export const nonActiveSpacesAtom = atom<ISpace[]>(get =>
 // readonly atom - active space
 export const activeSpaceAtom = atom<ISpace>(get => get(spacesAtom).find(s => s.id === get(activeSpaceIdAtom)));
 
-// readonly atom - active space tabs
+// atom - active space tabs
 export const activeSpaceTabsAtom = atom<ITab[]>([]);
+
+//  atom - active space groups
+export const activeSpaceGroupsAtom = atom<IGroup[]>([]);
 
 // write only atom - update active space
 export const setActiveSpaceAtom = atom(null, async (_get, set, spaceId: string) => {
@@ -58,11 +62,13 @@ export const setActiveSpaceAtom = atom(null, async (_get, set, spaceId: string) 
   set(activeSpaceIdAtom, spaceId);
   //  set tabs for active space
   const activeSpaceTabs = await getTabsInSpace(spaceId);
+  const activeSpaceGroups = await getGroups(spaceId);
   set(activeSpaceTabsAtom, activeSpaceTabs);
+  set(activeSpaceGroupsAtom, activeSpaceGroups);
 });
 
 // selected tabs for dragging
-export const selectedTabsAtom = atom<ITabWithIndex[]>([]);
+export const selectedTabsAtom = atom<ITab[]>([]);
 
 // global dragging state
 export const dragStateAtom = atom<{ isDragging: boolean; type: 'space' | 'tabs' }>({

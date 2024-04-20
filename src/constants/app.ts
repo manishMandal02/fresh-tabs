@@ -14,17 +14,15 @@ export const DISCARD_TAB_URL_PREFIX = 'data:text/html,';
 export const SNOOZED_TAB_GROUP_TITLE = '⏰ Snoozed';
 
 export enum ThemeColor {
-  Green = '#34d399',
-  Orange = '#f97316',
-  Yellow = '#fbbf24',
+  Green = '#4ade80',
+  Orange = '#fdba74',
+  Yellow = '#fde047',
   Blue = '#38bdf8',
-  Purple = '#c084fc',
-  Pink = '#f472b6',
-  Red = '#f43f5e',
-  Indigo = '#6366f1',
-  Teal = '#5eead4',
-  Fuchsia = '#d946ef',
-  Grey = '#94a3b8',
+  Purple = '#d8b4fe',
+  Pink = '#f9a8d4',
+  Red = '#fb7185',
+  Cyan = '#67e8f9',
+  Grey = '#d1d5db',
 }
 
 export enum CommandType {
@@ -64,6 +62,7 @@ export const StorageKey = {
   PINNED_TABS: 'PINNED_TABS',
   DAILY_SPACE_TIME_CHUNKS: 'DAILY_SPACE_TIME_CHUNKS',
   tabs: (spaceId: string): `TABS-${string}` => `TABS-${spaceId}`,
+  groups: (spaceId: string): `GROUPS-${string}` => `GROUPS-${spaceId}`,
   snoozed: (spaceId: string): `SNOOZED-${string}` => `SNOOZED-${spaceId}`,
   dailySpaceTimeAll: (spaceId: string): `DAILY_SPACE_TIME_ALL-${string}` => `DAILY_SPACE_TIME_ALL-${spaceId}`,
   spaceHistoryAll: (spaceId: string): `SPACE_HISTORY_ALL-${string}` => `SPACE_HISTORY_ALL-${spaceId}`,
@@ -93,7 +92,7 @@ export const SampleSpaces: ISpaceWithTabs[] = [
     emoji: '🏗️',
     title: 'Extension Developer',
     isSaved: true,
-    theme: ThemeColor.Teal,
+    theme: ThemeColor.Cyan,
     activeTabIndex: 0,
     windowId: 0,
     tabs: [
@@ -101,16 +100,19 @@ export const SampleSpaces: ISpaceWithTabs[] = [
         id: 0,
         url: 'https://manishmandal.me',
         title: 'Manish Mandal',
+        index: 0,
       },
       {
         id: 0,
         url: 'https://freshinbox.xyz',
         title: 'Clean Inbox, Total Privacy | FreshInbox',
+        index: 1,
       },
       {
         id: 0,
         url: 'https://twitter.com/manishMandalJ',
         title: '(1) Manish Mandal (@manishMandalJ) / X',
+        index: 2,
       },
     ],
   },
@@ -127,11 +129,13 @@ export const SampleSpaces: ISpaceWithTabs[] = [
         id: 0,
         url: 'https://manishmandal.me',
         title: 'Manish Mandal',
+        index: 0,
       },
       {
         id: 0,
         url: 'https://github.com/manishMandal02',
         title: 'manishMandal02 (Manish Mandal)',
+        index: 1,
       },
     ],
   },

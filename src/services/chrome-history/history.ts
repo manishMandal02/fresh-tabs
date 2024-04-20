@@ -42,7 +42,7 @@ export const getRecentlyVisitedSites = async (maxResults = 4): Promise<ITab[]> =
       i++;
     }
 
-    return sites.map<ITab>(site => ({ url: site.url, title: site.title, id: 0 }));
+    return sites.map<ITab>(site => ({ url: site.url, title: site.title, id: 0, index: 0 }));
   } catch (error) {
     logger.error({
       error,

@@ -1,7 +1,7 @@
 import { GlobeIcon } from '@radix-ui/react-icons';
 import { CSSClasses } from '@root/src/types/global.types';
 import { cn } from '@root/src/utils/cn';
-import { getAlternativeFaviconUrl, getFaviconURL } from '@root/src/utils/url';
+import { getAlternativeFaviconUrl, getFaviconURL, isChromeUrl, isValidURL } from '@root/src/utils/url';
 import { ReactEventHandler } from 'react';
 
 type Props = {
@@ -24,11 +24,14 @@ const SiteIcon = ({ siteURl, classes }: Props) => {
         onError={handleImageLoadError}
         src={getFaviconURL(siteURl)}
         onLoad={async ev => {
-          const res = await fetch(ev.currentTarget.src);
+          if (!isValidURL(siteURl) || isChromeUrl(siteURl)) return;
+
+          const res = await fetch(siteURl);
 
           if (res.ok) return;
 
           const alternateFaviconUrl = getAlternativeFaviconUrl(siteURl);
+
           if (ev.currentTarget?.src) {
             ev.currentTarget.src = alternateFaviconUrl;
           } else {

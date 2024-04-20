@@ -118,9 +118,7 @@ export const useTabsDnd = () => {
       const droppedIndex = didTabsMoveDownward ? 1 + destinationIndex - selectedTabs.length : destinationIndex;
 
       // sort the selected tabs by index
-      const sortedSelectedTabs: ITab[] = selectedTabs
-        .toSorted((t1, t2) => (t1.index > t2.index ? 1 : -1))
-        .map(t => ({ id: t.id, title: t.title, url: t.url }));
+      const sortedSelectedTabs: ITab[] = selectedTabs.toSorted((t1, t2) => (t1.index > t2.index ? 1 : -1));
 
       // add selected tabs at dropped pos in active space
       reOrderedTabs = reOrderedTabs.toSpliced(droppedIndex, 0, ...sortedSelectedTabs);

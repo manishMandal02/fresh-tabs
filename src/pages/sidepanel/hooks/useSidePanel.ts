@@ -7,6 +7,7 @@ import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
 import {
   activeSpaceAtom,
+  activeSpaceGroupsAtom,
   activeSpaceTabsAtom,
   addSpaceAtom,
   dragStateAtom,
@@ -16,6 +17,7 @@ import {
 import { IMessageEventSidePanel, ISpace } from '../../../types/global.types';
 import { getAllSpaces, getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
 import type { OnDragEndResponder, OnBeforeDragStartResponder } from 'react-beautiful-dnd';
+import { getGroups } from '@root/src/services/chrome-storage/groups';
 
 export const useSidePanel = () => {
   // active space atom (global state)
@@ -24,6 +26,8 @@ export const useSidePanel = () => {
   const addSpace = useSetAtom(addSpaceAtom);
   const removeSpace = useSetAtom(removeSpaceAtom);
   const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
+
+  const setActiveSpaceGroups = useSetAtom(activeSpaceGroupsAtom);
 
   // dragging state
   const [, setDragging] = useAtom(dragStateAtom);
@@ -130,13 +134,23 @@ export const useSidePanel = () => {
           setActiveSpaceTabs(updatedTabs);
           break;
         }
+        case 'UPDATE_GROUPS': {
+          // get updated tabs from storage
+          if (payload.spaceId !== activeSpaceRef.current?.id) return;
+
+          const updatedGroups = await getGroups(payload.spaceId);
+
+          setActiveSpaceGroups(updatedGroups);
+
+          break;
+        }
 
         default: {
           logger.info(`Unknown event: ${event} `);
         }
       }
     },
-    [addSpace, removeSpace, updateSpace, setActiveSpaceTabs],
+    [addSpace, removeSpace, updateSpace, setActiveSpaceTabs, setActiveSpaceGroups],
   );
 
   return {
