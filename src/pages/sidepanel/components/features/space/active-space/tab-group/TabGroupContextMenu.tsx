@@ -5,7 +5,6 @@ import {
   ArrowDownIcon,
   ChevronRightIcon,
   FileIcon,
-  FilePlusIcon,
   MoonIcon,
   PinRightIcon,
   PlusIcon,
@@ -128,14 +127,11 @@ const TabGroupContextMenu = ({ children, group, tabs, space }: Props) => {
           <RadixContextMenu.Item
             onClick={handleCreateNewTab}
             className="flex items-center ext-[12px] font-normal text-slate-400 py-[7px] px-2.5  hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-            <ArrowDownIcon className="text-slate-500 mr-1 scale-[0.8]" /> New tab after this
+            <ArrowDownIcon className="text-slate-500 mr-1 scale-[0.8]" /> New tab in group
           </RadixContextMenu.Item>
 
           <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
 
-          <RadixContextMenu.Item className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-            <FilePlusIcon className="text-slate-500 mr-1 scale-[0.8]" /> New folder
-          </RadixContextMenu.Item>
           <RadixContextMenu.Item className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
             <FileIcon className="text-slate-500 mr-1 scale-[0.8]" /> Move to folder
           </RadixContextMenu.Item>
@@ -171,7 +167,7 @@ const TabGroupContextMenu = ({ children, group, tabs, space }: Props) => {
           <RadixContextMenu.Item
             onClick={handleRemoveGroup}
             className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-            <TrashIcon className="text-slate-500 mr-1 scale-[0.8]" /> Remove
+            <TrashIcon className="text-slate-500 mr-1 scale-[0.8]" /> Remove group
           </RadixContextMenu.Item>
         </RadixContextMenu.Content>
       </RadixContextMenu.Portal>

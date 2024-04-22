@@ -1,15 +1,16 @@
 /* eslint-disable react/display-name */
-import { HTMLProps, forwardRef } from 'react';
+import { ReactNode, HTMLProps, forwardRef } from 'react';
 import * as RadixAccordion from '@radix-ui/react-accordion';
 import { ChevronDownIcon } from '@radix-ui/react-icons';
 import { cn } from '@root/src/utils/cn';
 import { CSSClasses } from '@root/src/types/global.types';
 
 type Props = {
-  trigger: React.ReactNode;
-  children: React.ReactNode;
+  trigger: ReactNode;
+  children: ReactNode;
   id: string;
   defaultCollapsed?: boolean;
+
   classes?: {
     triggerContainer?: CSSClasses;
     triggerIcon?: CSSClasses;
@@ -19,7 +20,7 @@ type Props = {
 
 const Accordion = ({ id, trigger, children, defaultCollapsed, classes }: Props) => (
   <RadixAccordion.Root
-    className=" rounded-md shadow-[0_2px_10px] shadow-black/5"
+    className="rounded-md shadow-[0_2px_10px] shadow-black/5"
     type="single"
     collapsible
     defaultValue={id}>

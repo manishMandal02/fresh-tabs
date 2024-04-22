@@ -50,6 +50,7 @@
     "jotai": "^2.6.1",
     "lexical": "^0.14.2",
     "react": "18.2.0",
+    "react-arborist": "^3.4.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-day-picker": "^8.10.0",
     "react-dom": "18.2.0",

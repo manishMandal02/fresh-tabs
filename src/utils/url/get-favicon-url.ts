@@ -8,13 +8,15 @@ export const getFaviconURL = (siteUrl: string, size = 32) => {
 
   const url = new URL(parsedUrl) || new URL(siteUrl);
 
-  if (!url.hostname || isChromeUrl(siteUrl)) return createChromeFaviconURL(url);
+  if (!url.hostname || isChromeUrl(parsedUrl)) return createChromeFaviconURL(url);
 
   return `https://www.google.com/s2/favicons?domain=https://${url.hostname}/${url.pathname.split('/')[1]}&sz=${size}`;
 };
 
 export const getAlternativeFaviconUrl = (siteUrl: string, size = 32) => {
-  const url = new URL(siteUrl);
+  const parsedUrl = parseUrl(siteUrl);
+
+  const url = new URL(parsedUrl);
 
   //  get favicon url from favicon kit, if couldn't get it from google
   return `https://api.faviconkit.com/${url.hostname}/${size}`;
@@ -26,7 +28,7 @@ export const getFaviconURLAsync = async (siteUrl: string, size = 32) => {
 
   const url = new URL(parsedUrl) || new URL(siteUrl);
 
-  if (!url.hostname || isChromeUrl(siteUrl)) return createChromeFaviconURL(url);
+  if (!url.hostname || isChromeUrl(parsedUrl)) return createChromeFaviconURL(url);
 
   const googleFaviconURL = `https://www.google.com/s2/favicons?domain=${url.hostname}/${
     url.pathname.split('/')[1]

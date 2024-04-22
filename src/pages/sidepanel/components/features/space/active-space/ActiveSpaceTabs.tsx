@@ -37,6 +37,11 @@ const mapTabToGroups = (tabs: ITab[], groups: IGroup[]) => {
       } else {
         const group = groups.find(g => g.id === curr?.groupId);
 
+        if (!group?.id) {
+          prev.push(curr);
+          return prev;
+        }
+
         //@ts-expect-error - check if type of IGroupedTabs
         const groupCollectionExists = prev?.find(p => p?.group && p?.group?.id && p?.group?.id === group?.id);
 
@@ -77,7 +82,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
   const [activeSpaceGroups, setActiveSpaceGroups] = useAtom(activeSpaceGroupsAtom);
 
-  console.log('🚀 ~ setActiveSpaceGroups:', setActiveSpaceGroups);
+  console.log('🚀 ~ ActiveSpaceTabs ~ setActiveSpaceGroups:', setActiveSpaceGroups);
 
   const groupedTabs = useMemo(() => {
     return mapTabToGroups(activeSpaceTabs, activeSpaceGroups);
@@ -366,43 +371,58 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
   return (
     <Droppable droppableId={'active-space'} ignoreContainerClipping type="TAB">
-      {(provided1, { isDraggingOver }) => (
+      {(activeSpaceDroppableProvided, { isDraggingOver }) => (
         <motion.div
-          {...provided1.droppableProps}
-          ref={provided1.innerRef}
+          {...activeSpaceDroppableProvided.droppableProps}
+          ref={activeSpaceDroppableProvided.innerRef}
           className="h-full w-full px-px"
           style={{
             minHeight: `${activeSpaceTabs?.length * TAB_HEIGHT}px`,
           }}>
           {/* render draggable  tabs */}
-          {groupedTabs?.map((tab, idx) => {
-            if ('group' in tab) {
-              const { group, tabs } = tab;
-
-              console.log('🚀 ~ {groupedTabs?.map ~ group:', group);
-
+          {groupedTabs?.map((data, idx) => {
+            if ('group' in data) {
+              const { group, tabs } = data;
               return (
-                <Draggable draggableId={'group-' + group?.id} index={idx} key={group?.id}>
-                  {(provided2, { isDragging }) => (
+                <Draggable
+                  draggableId={'group-' + group?.id}
+                  index={idx}
+                  key={group?.id}
+                  isDragDisabled={!group.collapsed}>
+                  {(groupDraggableProvided, { isDragging }) => (
                     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
                     <div
-                      ref={provided2.innerRef}
-                      {...provided2.draggableProps}
-                      {...provided2.dragHandleProps}
+                      ref={groupDraggableProvided.innerRef}
+                      {...groupDraggableProvided.draggableProps}
+                      {...groupDraggableProvided.dragHandleProps}
                       tabIndex={-1}
-                      className={'relative outline-none mb-[4px]  focus-within:outline-none w-fit'}>
-                      <TabGroup space={space} group={group} tabs={tabs}>
-                        {tabs.map(gTab => ActiveSpaceSingleTab(gTab, idx, isDraggingOver || isDragging))}
+                      className={'relative outline-none mb-[4px] focus-within:outline-none w-fit'}>
+                      <TabGroup space={space} group={group} tabs={tabs} isDragging={isDragging}>
+                        <Droppable droppableId={'group-' + group.id} type="TAB">
+                          {(groupDroppableProvided, { isDraggingOver: isDraggingOverGroup }) => (
+                            <motion.div
+                              {...groupDroppableProvided.droppableProps}
+                              ref={groupDroppableProvided.innerRef}
+                              className="h-full w-full px-px"
+                              style={{
+                                minHeight: `${tabs?.length * TAB_HEIGHT}px`,
+                                backgroundColor: isDraggingOverGroup ? 'red' : 'blue',
+                              }}>
+                              {tabs.map((gTab, idx2) => ActiveSpaceSingleTab(gTab, idx2 + 1, isDraggingOverGroup))}
+                              {groupDroppableProvided.placeholder}
+                            </motion.div>
+                          )}
+                        </Droppable>
                       </TabGroup>
                     </div>
                   )}
                 </Draggable>
               );
             } else {
-              return ActiveSpaceSingleTab(tab, idx, isDraggingOver);
+              return ActiveSpaceSingleTab(data, idx, isDraggingOver);
             }
           })}
-          {provided1.placeholder}
+          {activeSpaceDroppableProvided.placeholder}
         </motion.div>
       )}
     </Droppable>

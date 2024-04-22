@@ -24,9 +24,9 @@ const SiteIcon = ({ siteURl, classes }: Props) => {
         onError={handleImageLoadError}
         src={getFaviconURL(siteURl)}
         onLoad={async ev => {
-          if (!isValidURL(siteURl) || isChromeUrl(siteURl)) return;
+          if (!isValidURL(siteURl) || isChromeUrl(siteURl) || ev.currentTarget?.src.includes('faviconkit.com')) return;
 
-          const res = await fetch(siteURl);
+          const res = await fetch(ev.currentTarget?.src);
 
           if (res.ok) return;
 
