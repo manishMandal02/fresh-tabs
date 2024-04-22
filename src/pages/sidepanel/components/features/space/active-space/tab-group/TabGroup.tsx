@@ -16,17 +16,19 @@ type Props = {
 };
 
 const TabGroup = ({ children, isDragging, group, tabs, space }: Props) => {
+  console.log('🚀 ~ TabGroup ~ isDragging:', isDragging);
+
   const [isExpanded, setIsExpanded] = useState(false);
 
   // init component
   useEffect(() => {
-    if (!group.collapsed && !isDragging) {
+    if (!group.collapsed) {
       // expand group if not collapsed (chrome) and not dragging
       setIsExpanded(true);
     } else {
       setIsExpanded(false);
     }
-  }, [isDragging, group]);
+  }, []);
 
   const handleExpandGroup = useCallback(() => {
     // TODO - expand

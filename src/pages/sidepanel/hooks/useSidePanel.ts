@@ -51,12 +51,13 @@ export const useSidePanel = () => {
   const onTabsDragStart: OnBeforeDragStartResponder = useCallback(
     start => {
       // set global dragging state
-      if (start.type === 'TAB') {
-        setDragging({ isDragging: true, type: 'tabs' });
+      if (start?.type === 'SPACE') {
+        setDragging({ isDragging: true, type: 'space' });
         return;
       }
+      console.log('🚀 ~ useSidePanel ~ start:', start);
 
-      setDragging({ isDragging: true, type: 'space' });
+      setDragging({ isDragging: true, type: 'tabs' });
     },
     [setDragging],
   );

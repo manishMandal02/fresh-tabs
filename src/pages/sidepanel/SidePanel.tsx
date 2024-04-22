@@ -139,7 +139,7 @@ const SidePanel = () => {
             {isLoadingSpaces ? (
               <Spinner size="md" />
             ) : (
-              <DragDropContext onDragEnd={onTabsDragEnd} onBeforeDragStart={onTabsDragStart}>
+              <DragDropContext onDragEnd={onTabsDragEnd} onBeforeCapture={onTabsDragStart}>
                 {/* Current space */}
                 <div className="h-[95%] relative px-1.5 ">
                   <ActiveSpace

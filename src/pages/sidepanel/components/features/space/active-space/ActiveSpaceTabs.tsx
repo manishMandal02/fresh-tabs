@@ -1,11 +1,14 @@
+import 'react-complex-tree/lib/style-modern.css';
+
 import { motion } from 'framer-motion';
+
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { Droppable, Draggable } from 'react-beautiful-dnd';
+import { Draggable } from 'react-beautiful-dnd';
+import { UncontrolledTreeEnvironment, Tree, StaticTreeDataProvider } from 'react-complex-tree';
 import { useState, useCallback, useEffect, useRef, useMemo, memo } from 'react';
 
 import { Tab } from '../tab';
-import TabGroup from './tab-group';
 import { logger } from '@root/src/utils';
 import TabContextMenu from './TabContextMenu';
 import { goToTab } from '@root/src/services/chrome-tabs/tabs';
@@ -23,39 +26,66 @@ import {
 } from '@root/src/stores/app';
 
 interface IGroupedTabs {
-  group: IGroup;
-  tabs: ITab[];
+  index: number | string;
+  canMove: boolean;
+  isFolder?: boolean;
+  canRename?: boolean;
+  children: number[];
+  data: IGroup | ITab | string;
 }
 
 const mapTabToGroups = (tabs: ITab[], groups: IGroup[]) => {
-  return tabs.reduce(
-    (prev, curr) => {
-      console.log('🚀 ~ mapTabToGroups ~ prev:', prev);
-
-      if (curr?.groupId < 1) {
-        prev.push(curr);
-      } else {
-        const group = groups.find(g => g.id === curr?.groupId);
-
-        if (!group?.id) {
-          prev.push(curr);
-          return prev;
-        }
-
-        //@ts-expect-error - check if type of IGroupedTabs
-        const groupCollectionExists = prev?.find(p => p?.group && p?.group?.id && p?.group?.id === group?.id);
-
-        if (groupCollectionExists) {
-          (groupCollectionExists as IGroupedTabs).tabs.push(curr);
-        } else {
-          prev.push({ group: group, tabs: [curr] });
-        }
-      }
-
-      return prev;
+  const groupedTabs: Record<number | string, IGroupedTabs> = {
+    root: {
+      index: 'root',
+      isFolder: false,
+      canMove: false,
+      children: [],
+      data: 'Root Item',
     },
-    [] as (ITab | IGroupedTabs)[],
-  );
+  };
+
+  // map data
+  tabs.forEach(item => {
+    const tabItem = {
+      index: item.id,
+      canMove: true,
+      children: [],
+      data: item,
+    };
+
+    groupedTabs[item.id] = tabItem;
+
+    groupedTabs['root'].children.push(item.id);
+
+    if (item?.groupId < 1) return;
+
+    const group = groups.find(g => g.id === item?.groupId);
+
+    if (!group?.id) {
+      return;
+    }
+
+    if (groupedTabs[group.id]?.index) {
+      // add tab to existing group
+      groupedTabs[group.id].children.push(item.id);
+    } else {
+      // add group item
+      const groupItem = {
+        index: group.id,
+        canMove: true,
+        canRename: false,
+        isFolder: true,
+        children: [item.id],
+        data: group,
+      };
+
+      groupedTabs[group.id] = groupItem;
+      groupedTabs['root'].children.push(group.id);
+    }
+  });
+
+  return groupedTabs;
 };
 
 const getDiscardedTabsInWindow = async (windowId: number) => {
@@ -125,6 +155,8 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
   // tabs dragging state
   const areTabsBeingDragged = useMemo(() => dragSate.isDragging && dragSate.type === 'tabs', [dragSate]);
+
+  console.log('✅ ~ ActiveSpaceTabs ~ areTabsBeingDragged:', areTabsBeingDragged);
 
   const handleGoToTab = useCallback(
     async (id: number, index: number) => {
@@ -369,63 +401,41 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     </Draggable>
   );
 
+  console.log('🚀 ~ ActiveSpaceTabs ~ ActiveSpaceSingleTab:', ActiveSpaceSingleTab);
+
   return (
-    <Droppable droppableId={'active-space'} ignoreContainerClipping type="TAB">
-      {(activeSpaceDroppableProvided, { isDraggingOver }) => (
-        <motion.div
-          {...activeSpaceDroppableProvided.droppableProps}
-          ref={activeSpaceDroppableProvided.innerRef}
-          className="h-full w-full px-px"
-          style={{
-            minHeight: `${activeSpaceTabs?.length * TAB_HEIGHT}px`,
-          }}>
-          {/* render draggable  tabs */}
-          {groupedTabs?.map((data, idx) => {
-            if ('group' in data) {
-              const { group, tabs } = data;
-              return (
-                <Draggable
-                  draggableId={'group-' + group?.id}
-                  index={idx}
-                  key={group?.id}
-                  isDragDisabled={!group.collapsed}>
-                  {(groupDraggableProvided, { isDragging }) => (
-                    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-                    <div
-                      ref={groupDraggableProvided.innerRef}
-                      {...groupDraggableProvided.draggableProps}
-                      {...groupDraggableProvided.dragHandleProps}
-                      tabIndex={-1}
-                      className={'relative outline-none mb-[4px] focus-within:outline-none w-fit'}>
-                      <TabGroup space={space} group={group} tabs={tabs} isDragging={isDragging}>
-                        <Droppable droppableId={'group-' + group.id} type="TAB">
-                          {(groupDroppableProvided, { isDraggingOver: isDraggingOverGroup }) => (
-                            <motion.div
-                              {...groupDroppableProvided.droppableProps}
-                              ref={groupDroppableProvided.innerRef}
-                              className="h-full w-full px-px"
-                              style={{
-                                minHeight: `${tabs?.length * TAB_HEIGHT}px`,
-                                backgroundColor: isDraggingOverGroup ? 'red' : 'blue',
-                              }}>
-                              {tabs.map((gTab, idx2) => ActiveSpaceSingleTab(gTab, idx2 + 1, isDraggingOverGroup))}
-                              {groupDroppableProvided.placeholder}
-                            </motion.div>
-                          )}
-                        </Droppable>
-                      </TabGroup>
-                    </div>
-                  )}
-                </Draggable>
-              );
-            } else {
-              return ActiveSpaceSingleTab(data, idx, isDraggingOver);
-            }
-          })}
-          {activeSpaceDroppableProvided.placeholder}
-        </motion.div>
-      )}
-    </Droppable>
+    <div className="text-slate-400">
+      <UncontrolledTreeEnvironment
+        canDragAndDrop={true}
+        canDropOnFolder={true}
+        canReorderItems={true}
+        dataProvider={
+          new StaticTreeDataProvider(groupedTabs, (item, data) => ({
+            ...item,
+            data,
+          }))
+        }
+        getItemTitle={item => (item.data?.name ? item.data.name : item.data.title)}
+        viewState={{}}
+        renderItemTitle={({ title }) => <span>{title}</span>}
+        renderItemArrow={({ item, context }) =>
+          item.isFolder ? <span {...context.arrowProps}>{context.isExpanded ? 'v ' : '> '}</span> : null
+        }
+        renderItem={({ title, arrow, context, children }) => (
+          <li {...context.itemContainerWithChildrenProps} className="items-start m-0 flex flex-col">
+            {/* @ts-expect-error - lib code */}
+            <button {...context.itemContainerWithoutChildrenProps} {...context.interactiveElementProps} className="">
+              {arrow}
+              {title}
+            </button>
+            {children}
+          </li>
+        )}
+        renderTreeContainer={({ children, containerProps }) => <div {...containerProps}>{children}</div>}
+        renderItemsContainer={({ children, containerProps }) => <ul {...containerProps}>{children}</ul>}>
+        <Tree treeId="active-space" rootItem="root" treeLabel="Tree Example" />
+      </UncontrolledTreeEnvironment>
+    </div>
   );
 };
 
