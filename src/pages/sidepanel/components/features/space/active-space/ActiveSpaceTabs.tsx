@@ -56,11 +56,12 @@ const mapTabToGroups = (tabs: ITab[], groups: IGroup[]) => {
 
     groupedTabs[item.id] = tabItem;
 
-    groupedTabs['root'].children.push(item.id);
+    if (item?.groupId < 1 || groups?.length < 1) {
+      groupedTabs['root'].children.push(item.id);
+      return;
+    }
 
-    if (item?.groupId < 1) return;
-
-    const group = groups.find(g => g.id === item?.groupId);
+    const group = groups?.find(g => g.id === item?.groupId);
 
     if (!group?.id) {
       return;
@@ -421,18 +422,49 @@ const ActiveSpaceTabs = ({ space }: Props) => {
         renderItemArrow={({ item, context }) =>
           item.isFolder ? <span {...context.arrowProps}>{context.isExpanded ? 'v ' : '> '}</span> : null
         }
-        renderItem={({ title, arrow, context, children }) => (
-          <li {...context.itemContainerWithChildrenProps} className="items-start m-0 flex flex-col">
-            {/* @ts-expect-error - lib code */}
-            <button {...context.itemContainerWithoutChildrenProps} {...context.interactiveElementProps} className="">
-              {arrow}
-              {title}
-            </button>
+        renderItem={({ title, arrow, context, children, item }) => (
+          <li {...context.itemContainerWithChildrenProps} className="items-start m-0 flex flex-col w-full">
+            {item.isFolder ? (
+              // @ts-expect-error - library code
+              <button
+                {...context.itemContainerWithoutChildrenProps}
+                {...context.interactiveElementProps}
+                className="bg-indigo-600 w-full flex items-center justify-start">
+                {arrow}
+                {title}
+              </button>
+            ) : (
+              // Tab
+              // @ts-expect-error - library code
+              <button
+                {...context.itemContainerWithoutChildrenProps}
+                {...context.interactiveElementProps}
+                className={`relative w-[96vw] min-w-[96vw] bg-transparent`}
+                // tabIndex={-1}
+                style={
+                  {
+                    // cursor: isMetaKeyPressed ? 'pointer' : 'default',
+                  }
+                }>
+                <Tab
+                  tabData={item.data}
+                  isTabDiscarded={isTabDiscarded(item.data?.id)}
+                  isSpaceActive={true}
+                  // onTabDelete={() => handleRemoveTab(idx)}
+                  // onTabDoubleClick={() => onTabDoubleClickHandler(tab.id, idx)}
+                  // onClick={() => onTabClick({ ...tab, index: idx })}
+                />
+              </button>
+            )}
             {children}
           </li>
         )}
         renderTreeContainer={({ children, containerProps }) => <div {...containerProps}>{children}</div>}
-        renderItemsContainer={({ children, containerProps }) => <ul {...containerProps}>{children}</ul>}>
+        renderItemsContainer={({ children, containerProps }) => (
+          <ul className="w-full" {...containerProps}>
+            {children}
+          </ul>
+        )}>
         <Tree treeId="active-space" rootItem="root" treeLabel="Tree Example" />
       </UncontrolledTreeEnvironment>
     </div>

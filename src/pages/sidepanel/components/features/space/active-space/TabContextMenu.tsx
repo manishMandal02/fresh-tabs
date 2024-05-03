@@ -12,8 +12,8 @@ import {
   TrashIcon,
 } from '@radix-ui/react-icons';
 
-import { discardTabs } from '@root/src/services/chrome-discard/discard';
 import { ISpace, ITab } from '@root/src/types/global.types';
+import { discardTabs } from '@root/src/services/chrome-discard/discard';
 import { nonActiveSpacesAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
 import { getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 
