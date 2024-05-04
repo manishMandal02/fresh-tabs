@@ -23,13 +23,23 @@ export const useCustomAnimation = () => {
   };
 
   const slide = {
-    initial: { opacity: 0, y: 100 },
+    initial: { opacity: 0, y: 50 },
     whileInView: {
       opacity: 1,
       y: 0,
     },
-    exit: { opacity: 0, y: 100 },
+    exit: { opacity: 0, y: 50 },
     transition: { type: 'spring', stiffness: 400, damping: 25, duration: 0.2 },
+  };
+
+  const slideDown = {
+    initial: { opacity: 0, y: -50 },
+    whileInView: {
+      opacity: 1,
+      y: 0,
+    },
+    exit: { opacity: 0, y: -50 },
+    transition: { type: 'spring', stiffness: 300, damping: 25, duration: 0.2 },
   };
 
   const fade = {
@@ -41,5 +51,5 @@ export const useCustomAnimation = () => {
     transition: { type: 'spring', stiffness: 400, damping: 25, duration: 0.2 },
   };
 
-  return { bounce, slide, fade, bounceWithTranslateXFull };
+  return { bounce, slide, slideDown, fade, bounceWithTranslateXFull };
 };

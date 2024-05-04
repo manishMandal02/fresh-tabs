@@ -84,7 +84,7 @@ const Tab = ({
             />
             {isTabDiscarded ? (
               <Tooltip label="💤  Discarded tab" delay={1000}>
-                <MoonIcon className="z-[99] rounded-full text-slate-600 -ml-[2px] mr-[1.5px] scale-[0.85]" />
+                <MoonIcon className="z-[30] rounded-full text-slate-600 -ml-[2px] mr-[1.5px] scale-[0.85]" />
               </Tooltip>
             ) : null}
           </>

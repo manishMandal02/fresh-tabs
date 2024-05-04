@@ -1,10 +1,10 @@
 import 'react-complex-tree/lib/style-modern.css';
 
 import { motion } from 'framer-motion';
-
 import { useHotkeys } from 'react-hotkeys-hook';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { Draggable } from 'react-beautiful-dnd';
+import { ChevronDownIcon } from '@radix-ui/react-icons';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { UncontrolledTreeEnvironment, Tree, StaticTreeDataProvider } from 'react-complex-tree';
 import { useState, useCallback, useEffect, useRef, useMemo, memo } from 'react';
 
@@ -24,6 +24,8 @@ import {
   selectedTabsAtom,
   updateSpaceAtom,
 } from '@root/src/stores/app';
+import SiteIcon from '@root/src/components/site-icon/SiteIcon';
+import { cn } from '@root/src/utils/cn';
 
 interface IGroupedTabs {
   index: number | string;
@@ -409,6 +411,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
       <UncontrolledTreeEnvironment
         canDragAndDrop={true}
         canDropOnFolder={true}
+        canDropOnNonFolder={false}
         canReorderItems={true}
         dataProvider={
           new StaticTreeDataProvider(groupedTabs, (item, data) => ({
@@ -416,56 +419,91 @@ const ActiveSpaceTabs = ({ space }: Props) => {
             data,
           }))
         }
+        viewState={{
+          ['active-space-tabs']: {
+            expandedItems: activeSpaceGroups?.map(g => g.id) || [],
+          },
+        }}
+        //TODO - handle group collapse
+        onCollapseItem={() => {}}
+        onExpandItem={() => {}}
+        // TODO handle select item
+        onSelectItems={() => {}}
+        // TODO - handle drop in item
+        onDrop={() => {}}
         getItemTitle={item => (item.data?.name ? item.data.name : item.data.title)}
-        viewState={{}}
-        renderItemTitle={({ title }) => <span>{title}</span>}
         renderItemArrow={({ item, context }) =>
-          item.isFolder ? <span {...context.arrowProps}>{context.isExpanded ? 'v ' : '> '}</span> : null
+          item.isFolder ? (
+            <>
+              <span {...context.arrowProps} className="flex items-center">
+                <ChevronDownIcon
+                  className={`text-slate-500/80 transition-transform duration-300 ${
+                    context?.isExpanded ? 'rotate-180' : ''
+                  }`}
+                />
+              </span>
+            </>
+          ) : null
         }
+        renderItemTitle={({ title, item }) => (
+          <div className={'w-full flex bg-transparent'}>
+            {item.isFolder ? (
+              <></>
+            ) : (
+              <SiteIcon
+                siteURl={item?.data.url}
+                classes={cn('size-[17px] max-w-[17px] z-10 border-none', { grayscale: isTabDiscarded })}
+              />
+            )}
+            <p
+              className={
+                'text-[13px] ml-px text-slate-300/80 max-w-full whitespace-nowrap overflow-hidden text-ellipsis text-start flex items-center'
+              }>
+              {title?.trim() || 'No title'}
+              {item.isFolder ? (
+                <span
+                  className="size-[8px] rounded-full block ml-1 -mb-px"
+                  style={{ backgroundColor: item?.data.theme }}></span>
+              ) : null}
+            </p>
+          </div>
+        )}
         renderItem={({ title, arrow, context, children, item }) => (
           <li {...context.itemContainerWithChildrenProps} className="items-start m-0 flex flex-col w-full">
-            {item.isFolder ? (
-              // @ts-expect-error - library code
-              <button
-                {...context.itemContainerWithoutChildrenProps}
-                {...context.interactiveElementProps}
-                className="bg-indigo-600 w-full flex items-center justify-start">
-                {arrow}
-                {title}
-              </button>
-            ) : (
-              // Tab
-              // @ts-expect-error - library code
-              <button
-                {...context.itemContainerWithoutChildrenProps}
-                {...context.interactiveElementProps}
-                className={`relative w-[96vw] min-w-[96vw] bg-transparent`}
-                // tabIndex={-1}
-                style={
-                  {
-                    // cursor: isMetaKeyPressed ? 'pointer' : 'default',
-                  }
-                }>
-                <Tab
-                  tabData={item.data}
-                  isTabDiscarded={isTabDiscarded(item.data?.id)}
-                  isSpaceActive={true}
-                  // onTabDelete={() => handleRemoveTab(idx)}
-                  // onTabDoubleClick={() => onTabDoubleClickHandler(tab.id, idx)}
-                  // onClick={() => onTabClick({ ...tab, index: idx })}
-                />
-              </button>
-            )}
+            {/* @ts-expect-error - lib code */}
+            <button
+              {...context.itemContainerWithoutChildrenProps}
+              {...context.interactiveElementProps}
+              className={cn(
+                'w-full flex items-center justify-between text-slate-300/70 text-[13px] py-1.5 px-2 rounded-md bg-brand-darkBg/80',
+                {
+                  'bg-brand-darkBgAccent/60': item.isFolder,
+                },
+                {
+                  'rounded-b-none border-b border-slate-800': item.isFolder && context?.isExpanded,
+                },
+                {
+                  'opacity-90': isTabDiscarded(item?.data?.id),
+                },
+                { 'bg-brand-darkBgAccent/40 border-brand-darkBgAccent/60': item.data?.groupId > 0 },
+              )}>
+              {title}
+              <span className="">{arrow}</span>
+            </button>
             {children}
           </li>
         )}
         renderTreeContainer={({ children, containerProps }) => <div {...containerProps}>{children}</div>}
-        renderItemsContainer={({ children, containerProps }) => (
-          <ul className="w-full" {...containerProps}>
+        renderItemsContainer={({ children, containerProps, parentId }) => (
+          // @ts-expect-error - lib props
+          <motion.ul
+            {...bounce}
+            className={cn('w-full', { 'bg-brand-darkBgAccent/40 rounded-b-md': parentId !== 'root' })}
+            {...containerProps}>
             {children}
-          </ul>
+          </motion.ul>
         )}>
-        <Tree treeId="active-space" rootItem="root" treeLabel="Tree Example" />
+        <Tree treeId="active-space-tabs" rootItem="root" treeLabel="Tree Example" />
       </UncontrolledTreeEnvironment>
     </div>
   );
