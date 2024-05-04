@@ -63,7 +63,7 @@ const Tab = ({
       tabIndex={-1}
       className={cn(
         `w-[99%] max-w-[99%] select-none z-[20] px-[10px] py-[12px] flex items-center justify-between outline-none
-                   relative shadow-sm rounded-lg overflow-hidden group hover:bg-brand-darkBgAccent/50 transition-all duration-200`,
+                   relative rounded-lg overflow-hidden group hover:bg-brand-darkBgAccent/50 transition-all duration-200`,
         { 'py-[6px]': size === 'sm' },
       )}
       onClick={onClick}

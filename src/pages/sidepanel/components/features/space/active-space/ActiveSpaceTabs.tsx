@@ -6,7 +6,7 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { Draggable } from 'react-beautiful-dnd';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useState, useCallback, useEffect, useRef, useMemo, memo } from 'react';
-import { UncontrolledTreeEnvironment, Tree, StaticTreeDataProvider } from 'react-complex-tree';
+import { Tree, ControlledTreeEnvironment, type TreeRef } from 'react-complex-tree';
 import { CopyIcon, Cross1Icon, ChevronDownIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
 
 import { Tab } from '../tab';
@@ -34,7 +34,7 @@ interface IGroupedTabs {
   isFolder?: boolean;
   canRename?: boolean;
   children: number[];
-  data: IGroup | ITab | string;
+  data: IGroup | ITab | { id: number };
 }
 
 // map tabs
@@ -45,7 +45,7 @@ const mapTabToGroups = (tabs: ITab[], groups: IGroup[]) => {
       isFolder: false,
       canMove: false,
       children: [],
-      data: 'Root Item',
+      data: { id: -1 },
     },
   };
 
@@ -130,6 +130,11 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
   // local state
   const [discardedTabIDs, setDiscardedTabIDs] = useState<number[]>([]);
+
+  // track dragging state
+  const [draggingItem, setDraggingItem] = useState(null);
+
+  const tabsTree = useRef<TreeRef>(null);
 
   // used ref to store the value to access in a hook outside
   // that didn't get the updated state in the callback
@@ -231,12 +236,12 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
   const { isShiftKeyPressed, isMetaKeyPressed } = useMetaKeyPressed({});
 
-  const isTabSelected = useCallback((id: number) => Boolean(selectedTabs[id]), [selectedTabs]);
-
   const isTabDiscarded = useCallback((id: number) => discardedTabIDs.some(tabId => tabId === id), [discardedTabIDs]);
 
   const onTabClick = useCallback(
     async (tab: ITab) => {
+      console.log('🚀 ~ tab:', tab);
+
       // ctrl/cmd is pressed
       if (isMetaKeyPressed) {
         await handleGoToTab(tab.id, tab.index);
@@ -264,7 +269,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
             return idx >= lastSelectedTabIndex && idx <= tab.index;
           });
 
-        if (isTabSelected(tab.id)) {
+        if (selectedTabs.includes(tab.id)) {
           // unselect tabs
           setSelectedTabs(prev => [...prev.filter(t1 => !tabsInRange.find(t2 => t2.id === t1))]);
         } else {
@@ -275,7 +280,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
       }
 
       // select tab
-      if (!isTabSelected(tab.id)) {
+      if (!selectedTabs.includes(tab.id)) {
         setSelectedTabs(prev => [...prev, tab.id]);
       } else {
         // un-select tab (already selected)
@@ -287,7 +292,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
       isMetaKeyPressed,
       isShiftKeyPressed,
       handleGoToTab,
-      isTabSelected,
       selectedTabs,
       setSelectedTabs,
       activeSpaceTabs,
@@ -388,7 +392,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
             ) : null}
 
             {/* selected tab indicator */}
-            {isTabSelected(tab.id) ? (
+            {selectedTabs.includes(tab.id) ? (
               <motion.div
                 {...bounce}
                 className={`absolute w-[99%] top-0 left-0 rounded-lg border border-gray-500/90 bg-brand-darkBgAccent/80 z-10 pointer-events-none`}
@@ -398,7 +402,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                 }}></motion.div>
             ) : null}
 
-            {areTabsBeingDragged && isTabSelected(tab.id) && !isDragging ? (
+            {areTabsBeingDragged && selectedTabs.includes(tab.id) && !isDragging ? (
               <div
                 style={{
                   height: TAB_HEIGHT + 'px',
@@ -415,17 +419,12 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
   return (
     <div className="text-slate-400">
-      <UncontrolledTreeEnvironment
+      <ControlledTreeEnvironment
         canDragAndDrop={true}
         canDropOnFolder={true}
         canDropOnNonFolder={false}
         canReorderItems={true}
-        dataProvider={
-          new StaticTreeDataProvider(groupedTabs, (item, data) => ({
-            ...item,
-            data,
-          }))
-        }
+        items={groupedTabs}
         viewState={{
           ['active-space-tabs']: {
             expandedItems: activeSpaceGroups?.map(g => g.id) || [],
@@ -434,17 +433,37 @@ const ActiveSpaceTabs = ({ space }: Props) => {
         //TODO - handle group collapse
         onCollapseItem={() => {}}
         onExpandItem={() => {}}
-        // TODO handle select item
-        onSelectItems={items => {
-          const selectedTabsIds = items?.filter(idx => !isNaN(Number(idx))).map(item => Number(item));
+        // handle select item
+        // onSelectItems={items => {
+        //   const selectedTabsIds = items?.filter(idx => !isNaN(Number(idx))).map(item => Number(item));
 
-          console.log('🚀 ~ ActiveSpaceTabs ~ selectedTabsIds:', selectedTabsIds);
+        //   console.log('🚀 ~ ActiveSpaceTabs ~ selectedTabsIds:', selectedTabsIds);
 
-          setSelectedTabs(prev => [...prev, ...selectedTabsIds]);
-        }}
+        //   setSelectedTabs(prev => [...prev, ...selectedTabsIds]);
+        // }}
         // TODO - handle drop in item
         onDrop={() => {}}
-        getItemTitle={item => (item.data?.name ? item.data.name : item.data.title)}
+        defaultInteractionMode={{
+          mode: 'custom',
+          extends: 'click-item-to-expand',
+          createInteractiveElementProps: (item, _treeId, action) => ({
+            onDragStart: () => {
+              // handle drag start
+              setDraggingItem(item.data.id);
+              action.startDragging();
+            },
+            onDragEnd: () => {
+              // handle drag end
+              setDraggingItem(null);
+            },
+          }),
+        }}
+        getItemTitle={item =>
+          'name' in item.data ? item.data.name : 'title' in item.data ? item.data.title : item.index.toString()
+        }
+        renderDragBetweenLine={({ lineProps }) => (
+          <hr {...lineProps} className="h-[2.5px] w-full bg-brand-primary/80 rounded-xl" />
+        )}
         renderItemArrow={({ item, context }) =>
           item.isFolder ? (
             <>
@@ -459,89 +478,128 @@ const ActiveSpaceTabs = ({ space }: Props) => {
           ) : null
         }
         renderItemTitle={({ title, item }) => (
-          <div className={'w-full flex bg-transparent'}>
+          <div
+            className={'w-full flex items-center bg-transparent overflow-hidden'}
+            style={
+              {
+                // height: TAB_HEIGHT + 'px',
+              }
+            }>
             {item.isFolder ? (
               <></>
             ) : (
               <SiteIcon
-                siteURl={item?.data.url}
+                siteURl={(item?.data as ITab).url}
                 classes={cn('size-[17px] max-w-[17px] z-10 border-none', { grayscale: isTabDiscarded(item.data.id) })}
               />
             )}
             <p
               className={
-                'text-[13px] ml-px text-slate-300/80 max-w-full whitespace-nowrap overflow-hidden text-ellipsis text-start flex items-center'
+                'text-[13px] ml-px text-slate-300/80 max-w-[95%] z-10 whitespace-nowrap overflow-hidden text-ellipsis text-start '
               }>
               {title?.trim() || 'No title'}
-              {item.isFolder ? (
-                <span
-                  className="size-[8px] rounded-full block ml-1 -mb-px opacity-95"
-                  style={{ backgroundColor: item?.data.theme }}></span>
-              ) : null}
             </p>
+            {item.isFolder ? (
+              <span
+                className="size-[8px] rounded-full block ml-1.5 -mb-px opacity-95"
+                style={{ backgroundColor: (item?.data as IGroup).theme }}></span>
+            ) : null}
           </div>
         )}
         renderItem={({ title, arrow, context, children, item }) => (
-          <li {...context.itemContainerWithChildrenProps} className="items-start m-0 flex flex-col w-full">
-            {/* @ts-expect-error - lib code */}
-            <button
-              {...context.itemContainerWithoutChildrenProps}
-              {...context.interactiveElementProps}
-              onDoubleClick={() => onTabDoubleClickHandler(item.data?.id, item.data?.index)}
-              className={cn(
-                'relative w-full flex items-center justify-between text-slate-300/70 text-[13px] py-1.5 px-2 group rounded-md bg-brand-darkBg/75',
-                {
-                  // group's style
-                  'bg-brand-darkBgAccent/60': item.isFolder,
-                },
-                {
-                  // group expanded
-                  'rounded-b-none border-b border-slate-800': item.isFolder && context?.isExpanded,
-                },
-                {
-                  // discarded tab
-                  'opacity-90': isTabDiscarded(item.data.id),
-                },
-                {
-                  // style for tabs inside group
-                  'bg-brand-darkBg/40': item.data.groupId > 0,
-                },
-                {
-                  //active tab
-                  'bg-brand-darkBgAccent/40 border border-brand-darkBgAccent/50':
-                    space.activeTabIndex === item.data.index,
-                },
-                {
-                  // selected tabs
-                  'bg-brand-darkBgAccent/80 border border-brand-darkBgAccent/60': selectedTabs.includes(item.data.id),
-                },
-              )}>
-              {title}
-              <span className="">{arrow}</span>
-              {/* hover options */}
-              {!item.isFolder ? (
-                <>
-                  {/*  eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-                  <span
-                    className="absolute opacity-0 hidden group-hover:flex group-hover:opacity-100 transition-all duration-300 right-[8px] items-center gap-x-3 shadow-md shadow-slate-800"
-                    onClick={ev => ev.stopPropagation()}>
-                    {/* open tab  */}
-                    <ExternalLinkIcon
-                      className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
-                      onClick={() => handleGoToTab(item.data?.id, item.data?.index)}
-                    />
-                    <CopyIcon
-                      className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
-                      onClick={async () => await copyToClipboard(item.data.index)}
-                    />
-                    <Cross1Icon
-                      className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
-                      onClick={() => handleRemoveTab(item.data?.id)}
-                    />
-                  </span>
-                </>
-              ) : null}
-            </button>
+          <li
+            {...context.itemContainerWithChildrenProps}
+            tabIndex={-1}
+            className="items-start m-0 flex flex-col w-full">
+            <TabContextMenu
+              space={space}
+              allTabs={activeSpaceTabs}
+              selectedTabs={selectedTabs}
+              setActiveSpaceTabs={setActiveSpaceTabs}
+              tab={item.data as ITab}
+              onRemoveClick={() => {}}>
+              {/* @ts-expect-error - lib code */}
+              <button
+                tabIndex={-1}
+                {...context.itemContainerWithoutChildrenProps}
+                {...context.interactiveElementProps}
+                onClick={() => {
+                  if (item.isFolder) return;
+                  onTabClick(item.data as ITab);
+                }}
+                onDoubleClick={() => {
+                  if (item.isFolder) return;
+                  onTabDoubleClickHandler(item.data?.id, (item.data as ITab).index);
+                }}
+                className={cn(
+                  'relative w-full mb-1 flex items-center justify-between text-slate-300/70 text-[13px] py-1.5 px-2 group z-20 rounded-lg outline-none',
+                  {
+                    // group's style
+                    'bg-brand-darkBgAccent/60 mb-0': item.isFolder,
+                  },
+                  {
+                    // group expanded
+                    'rounded-b-none border-b border-slate-800': item.isFolder && context?.isExpanded,
+                  },
+                  {
+                    // discarded tab
+                    'opacity-90': isTabDiscarded(item.data.id),
+                  },
+                  {
+                    // style for tabs inside group
+                    'bg-brand-darkBg/40': (item.data as ITab).groupId > 0,
+                  },
+                  {
+                    //active tab
+                    'bg-brand-darkBgAccent/40 border border-slate-700/70':
+                      space.activeTabIndex === (item.data as ITab).index,
+                  },
+                  {
+                    //selected tab bg
+                    'bg-brand-darkBgAccent/40': selectedTabs.includes((item.data as ITab).id),
+                  },
+                  {
+                    'bg-red-600 border border-red-600': draggingItem === item.data.id,
+                  },
+                )}>
+                {title}
+                {/* group arrow */}
+                <span>{arrow}</span>
+                {/* selected tab  */}
+                {selectedTabs.includes((item.data as ITab).id) ? (
+                  <motion.div
+                    {...bounce}
+                    className={`absolute w-full top-0 left-0 rounded-lg border border-gray-500/80 bg-brand-darkBgAccent/40 -z-10  pointer-events-none`}
+                    style={{
+                      height: TAB_HEIGHT + 'px',
+                      borderWidth: '1px',
+                    }}></motion.div>
+                ) : null}
+                {/* hover options */}
+                {!item.isFolder ? (
+                  <>
+                    {/*  eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+                    <span
+                      className="absolute opacity-0 hidden group-hover:flex group-hover:opacity-100 transition-all duration-300 right-[8px] items-center gap-x-3 shadow-md shadow-slate-800"
+                      onClick={ev => ev.stopPropagation()}>
+                      {/* open tab  */}
+                      <ExternalLinkIcon
+                        className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
+                        onClick={() => handleGoToTab(item.data?.id, (item.data as ITab).index)}
+                      />
+                      <CopyIcon
+                        className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
+                        onClick={async () => await copyToClipboard((item.data as ITab).url)}
+                      />
+                      <Cross1Icon
+                        className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
+                        onClick={() => handleRemoveTab(item.data?.id)}
+                      />
+                    </span>
+                  </>
+                ) : null}
+              </button>
+            </TabContextMenu>
             {children}
           </li>
         )}
@@ -550,13 +608,13 @@ const ActiveSpaceTabs = ({ space }: Props) => {
           // @ts-expect-error - lib props
           <motion.ul
             {...(parentId !== 'root' ? { ...bounce } : {})}
-            className={cn('w-full', { 'bg-brand-darkBgAccent/30 rounded-b-md': parentId !== 'root' })}
+            className={cn('w-full', { 'bg-brand-darkBgAccent/40 rounded-b-md pt-2 pb-1 px-1.5': parentId !== 'root' })}
             {...containerProps}>
             {children}
           </motion.ul>
         )}>
-        <Tree treeId="active-space-tabs" rootItem="root" treeLabel="Tree Example" />
-      </UncontrolledTreeEnvironment>
+        <Tree ref={tabsTree} treeId="active-space-tabs" rootItem="root" treeLabel="Tree Example" />
+      </ControlledTreeEnvironment>
     </div>
   );
 };
