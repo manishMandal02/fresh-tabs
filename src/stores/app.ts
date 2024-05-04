@@ -68,7 +68,7 @@ export const setActiveSpaceAtom = atom(null, async (_get, set, spaceId: string) 
 });
 
 // selected tabs for dragging
-export const selectedTabsAtom = atom<ITab[]>([]);
+export const selectedTabsAtom = atom<number[]>([]);
 
 // global dragging state
 export const dragStateAtom = atom<{ isDragging: boolean; type: 'space' | 'tabs' }>({

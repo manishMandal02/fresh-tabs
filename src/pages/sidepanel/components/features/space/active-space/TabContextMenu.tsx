@@ -22,7 +22,7 @@ type Props = {
   space: ISpace;
   allTabs: ITab[];
   children: ReactNode;
-  selectedTabs: ITab[];
+  selectedTabs: number[];
   onRemoveClick: () => void;
   setActiveSpaceTabs: (tabs: ITab[]) => void;
 };
@@ -35,7 +35,7 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
   // on discard click
   const handleDiscardTabs = async () => {
     if (selectedTabs.length > 1) {
-      await discardTabs(selectedTabs.map(tab => tab.id));
+      await discardTabs(selectedTabs);
     } else {
       await discardTabs([tab.id]);
     }
@@ -60,17 +60,20 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
       await chrome.tabs.remove(tab.id);
     } else {
       // 2. selected multiple tabs
-      const tabs = await getTabsInSpace(newSpaceId);
+      const newSpaceTabs = await getTabsInSpace(newSpaceId);
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      await setTabsForSpace(newSpaceId, [...tabs, ...selectedTabs.map(tab => tab)]);
+      await setTabsForSpace(newSpaceId, [
+        ...newSpaceTabs,
+        ...allTabs.filter(t => selectedTabs.includes(t.id)).map(t => t),
+      ]);
 
-      const updatedTabsForActiveSpace = allTabs.filter(t => selectedTabs.some(sT => sT.id !== t.id));
+      const updatedTabsForActiveSpace = allTabs.filter(t => !selectedTabs.includes(t.id));
 
       setActiveSpaceTabs(updatedTabsForActiveSpace);
       await setTabsForSpace(space.id, updatedTabsForActiveSpace);
 
-      const removeTabsPromises = selectedTabs.map(t => chrome.tabs.remove(t.id));
+      const removeTabsPromises = selectedTabs.map(tId => chrome.tabs.remove(tId));
 
       await Promise.allSettled(removeTabsPromises);
     }
@@ -80,7 +83,8 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
   const handleNewSpace = () => {
     // index is not required here ⬇️
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const tabsForNewSpace = selectedTabs?.length < 1 ? [tab] : selectedTabs.map(tab => tab);
+    const tabsForNewSpace =
+      selectedTabs?.length < 1 ? [tab] : allTabs.filter(t => selectedTabs.includes(t.id)).map(t => t);
 
     showNewSpaceModal({ show: true, tabs: tabsForNewSpace });
   };
