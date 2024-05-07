@@ -445,6 +445,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
         onDrop={() => {}}
         defaultInteractionMode={{
           mode: 'custom',
+          // @ts-expect-error - lib code
           extends: 'click-item-to-expand',
           createInteractiveElementProps: (item, _treeId, action) => ({
             onDragStart: () => {
@@ -462,7 +463,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
           'name' in item.data ? item.data.name : 'title' in item.data ? item.data.title : item.index.toString()
         }
         renderDragBetweenLine={({ lineProps }) => (
-          <hr {...lineProps} className="h-[2.5px] w-full bg-brand-primary/80 rounded-xl" />
+          <hr {...lineProps} className="h-[2.5px] w-full bg-brand-primary rounded-xl" />
         )}
         renderItemArrow={({ item, context }) =>
           item.isFolder ? (
@@ -478,13 +479,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
           ) : null
         }
         renderItemTitle={({ title, item }) => (
-          <div
-            className={'w-full flex items-center bg-transparent overflow-hidden'}
-            style={
-              {
-                // height: TAB_HEIGHT + 'px',
-              }
-            }>
+          <div className={'w-full flex items-center overflow-hidden h-full'} style={{}}>
             {item.isFolder ? (
               <></>
             ) : (
@@ -495,7 +490,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
             )}
             <p
               className={
-                'text-[13px] ml-px text-slate-300/80 max-w-[95%] z-10 whitespace-nowrap overflow-hidden text-ellipsis text-start '
+                'text-[13px] ml-px text-slate-300/80 max-w-[95%] z-10 whitespace-nowrap overflow-hidden text-ellipsis text-start bg-indigo-600'
               }>
               {title?.trim() || 'No title'}
             </p>
@@ -527,15 +522,18 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                   if (item.isFolder) return;
                   onTabClick(item.data as ITab);
                 }}
+                style={{
+                  height: TAB_HEIGHT + 'px',
+                }}
                 onDoubleClick={() => {
                   if (item.isFolder) return;
                   onTabDoubleClickHandler(item.data?.id, (item.data as ITab).index);
                 }}
                 className={cn(
-                  'relative w-full mb-1 flex items-center justify-between text-slate-300/70 text-[13px] py-1.5 px-2 group z-20 rounded-lg outline-none',
+                  'relative w-full bg-emerald-70 flex items-center justify-between text-slate-300/70 text-[13px] px-2 group z-20 rounded-lg outline-none',
                   {
                     // group's style
-                    'bg-brand-darkBgAccent/60 mb-0': item.isFolder,
+                    'bg-brand-darkBgAccent/60': item.isFolder,
                   },
                   {
                     // group expanded
@@ -576,7 +574,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                     }}></motion.div>
                 ) : null}
                 {/* hover options */}
-                {!item.isFolder ? (
+                {!item.isFolder && !draggingItem ? (
                   <>
                     {/*  eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                     <span
@@ -608,7 +606,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
           // @ts-expect-error - lib props
           <motion.ul
             {...(parentId !== 'root' ? { ...bounce } : {})}
-            className={cn('w-full', { 'bg-brand-darkBgAccent/40 rounded-b-md pt-2 pb-1 px-1.5': parentId !== 'root' })}
+            className={cn('w-full', { 'bg-brand-darkBgAccent/40 rounded-b-md px-1.5': parentId !== 'root' })}
             {...containerProps}>
             {children}
           </motion.ul>
