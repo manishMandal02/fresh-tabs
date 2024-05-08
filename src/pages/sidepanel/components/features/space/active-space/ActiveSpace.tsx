@@ -123,7 +123,7 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
       {/* tabs */}
       <div
         id="active-space-scrollable-container"
-        className="relative max-h-[90%]  cc-scrollbar min-h-fit overflow-x-hidden border-b border-brand-darkBgAccent/20">
+        className="relative max-h-[90%]  cc-scrollbar min-h-fit overflow-x-hidden border-b border-brand-darkBgAccent/20 pb-1">
         <Tabs tabs={[`Tabs`, 'Notes']} defaultTab={1}>
           <ActiveSpaceTabs space={space} />
           <Notes space={space} />

@@ -361,10 +361,11 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                     {selectedTabs.length > 1 ? (
                       <span
                         className={`w-6 h-6 rounded-lg px-1 py-1 absolute -top-2.5 -left-2.5 text-[11px] z-[200]
-              flex items-center justify-center font-semibold bg-brand-darkBgAccent text-slate-400`}>
+                                  flex items-center justify-center font-semibold bg-brand-darkBgAccent text-slate-400`}>
                         +{selectedTabs?.length - 1}
                       </span>
                     ) : null}
+
                     {/* tabs stacked effect  */}
                     {['one', 'two', 'three'].map((v, ix) => (
                       <div
@@ -463,7 +464,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
           'name' in item.data ? item.data.name : 'title' in item.data ? item.data.title : item.index.toString()
         }
         renderDragBetweenLine={({ lineProps }) => (
-          <hr {...lineProps} className="h-[2.5px] w-full bg-brand-primary rounded-xl" />
+          <hr {...lineProps} className="h-[2.5px] w-[calc(100%+20px)] bg-brand-primary rounded-xl z-[999] -ml-2" />
         )}
         renderItemArrow={({ item, context }) =>
           item.isFolder ? (
@@ -479,7 +480,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
           ) : null
         }
         renderItemTitle={({ title, item }) => (
-          <div className={'w-full flex items-center overflow-hidden h-full'} style={{}}>
+          <div className={'w-full flex items-center overflow-hidden h-full'}>
             {item.isFolder ? (
               <></>
             ) : (
@@ -490,7 +491,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
             )}
             <p
               className={
-                'text-[13px] ml-px text-slate-300/80 max-w-[95%] z-10 whitespace-nowrap overflow-hidden text-ellipsis text-start bg-indigo-600'
+                'text-[13px] ml-px text-slate-300/80 max-w-[95%] z-10 whitespace-nowrap overflow-hidden text-ellipsis text-start'
               }>
               {title?.trim() || 'No title'}
             </p>
@@ -548,16 +549,25 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                     'bg-brand-darkBg/40': (item.data as ITab).groupId > 0,
                   },
                   {
-                    //active tab
+                    // active tab
                     'bg-brand-darkBgAccent/40 border border-slate-700/70':
                       space.activeTabIndex === (item.data as ITab).index,
                   },
                   {
-                    //selected tab bg
+                    // selected tab bg
                     'bg-brand-darkBgAccent/40': selectedTabs.includes((item.data as ITab).id),
                   },
                   {
-                    'bg-red-600 border border-red-600': draggingItem === item.data.id,
+                    // on drag
+                    'bg-brand-darkBgAccent border border-slate-800/80': draggingItem === item.data.id,
+                  },
+                  {
+                    // selected tab on drag
+                    'opacity-60':
+                      !!draggingItem &&
+                      draggingItem !== item.data.id &&
+                      selectedTabs.length > 1 &&
+                      selectedTabs.includes(item.data.id),
                   },
                 )}>
                 {title}
@@ -567,12 +577,39 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                 {selectedTabs.includes((item.data as ITab).id) ? (
                   <motion.div
                     {...bounce}
-                    className={`absolute w-full top-0 left-0 rounded-lg border border-gray-500/80 bg-brand-darkBgAccent/40 -z-10  pointer-events-none`}
+                    className={`absolute w-full top-0 left-0 rounded-lg border border-gray-500/80 bg-brand-darkBgAccent/40 -z-10  pointer-events-none border-collapse`}
                     style={{
                       height: TAB_HEIGHT + 'px',
                       borderWidth: '1px',
                     }}></motion.div>
                 ) : null}
+
+                {/* dragging multiple tabs indicator */}
+                {draggingItem === item.data.id && selectedTabs?.length > 0 ? (
+                  <>
+                    {/* multiple tabs  */}
+                    {selectedTabs.length > 1 ? (
+                      <span
+                        className={`w-6 h-6 rounded-lg px-1 py-1 absolute -top-[8px] -left-[6px] text-[11px] z-[200] border border-slate-600
+                                  flex items-center justify-center font-semibold  bg-brand-darkBgAccent text-slate-300/80`}>
+                        +{selectedTabs?.length - 1}
+                      </span>
+                    ) : null}
+
+                    {/* tabs stacked effect  */}
+                    {['one', 'two'].map((v, ix) => (
+                      <div
+                        key={v}
+                        className="absolute   w-full -z-10 rounded-lg  border border-slate-700/70 bg-brand-darkBgAccent/60"
+                        style={{
+                          height: TAB_HEIGHT + 'px',
+                          top: `-${(ix + 0.25) * 2}px`,
+                          left: `-${(ix + 0.25) * 2}px`,
+                        }}></div>
+                    ))}
+                  </>
+                ) : null}
+
                 {/* hover options */}
                 {!item.isFolder && !draggingItem ? (
                   <>
@@ -606,7 +643,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
           // @ts-expect-error - lib props
           <motion.ul
             {...(parentId !== 'root' ? { ...bounce } : {})}
-            className={cn('w-full', { 'bg-brand-darkBgAccent/40 rounded-b-md px-1.5': parentId !== 'root' })}
+            className={cn('w-full ', { 'bg-brand-darkBgAccent/40 rounded-b-md px-1.5': parentId !== 'root' })}
             {...containerProps}>
             {children}
           </motion.ul>
