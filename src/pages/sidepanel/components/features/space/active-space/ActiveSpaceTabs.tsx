@@ -3,17 +3,24 @@ import 'react-complex-tree/lib/style-modern.css';
 
 import { motion } from 'framer-motion';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { Draggable } from 'react-beautiful-dnd';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useState, useCallback, useEffect, useRef, useMemo, memo } from 'react';
-import { Tree, ControlledTreeEnvironment, type TreeRef } from 'react-complex-tree';
+import { useState, useCallback, useEffect, useRef, memo } from 'react';
 import { CopyIcon, Cross1Icon, ChevronDownIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
+import {
+  Tree,
+  ControlledTreeEnvironment,
+  type TreeRef,
+  type DraggingPosition,
+  type TreeItem,
+} from 'react-complex-tree';
 
-import { Tab } from '../tab';
-import { copyToClipboard, logger } from '@root/src/utils';
+import { cn } from '@root/src/utils/cn';
 import TabContextMenu from './TabContextMenu';
+import { copyToClipboard, logger } from '@root/src/utils';
 import { goToTab } from '@root/src/services/chrome-tabs/tabs';
+import SiteIcon from '@root/src/components/site-icon/SiteIcon';
 import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
+import { setGroupsToSpace } from '@root/src/services/chrome-storage/groups';
 import { useMetaKeyPressed } from '@root/src/pages/sidepanel/hooks/use-key-shortcuts';
 import { IGroup, IMessageEventSidePanel, ISpace, ITab } from '@root/src/types/global.types';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
@@ -21,12 +28,9 @@ import {
   activeSpaceAtom,
   activeSpaceGroupsAtom,
   activeSpaceTabsAtom,
-  dragStateAtom,
   selectedTabsAtom,
   updateSpaceAtom,
 } from '@root/src/stores/app';
-import SiteIcon from '@root/src/components/site-icon/SiteIcon';
-import { cn } from '@root/src/utils/cn';
 
 interface IGroupedTabs {
   index: number | string;
@@ -34,7 +38,7 @@ interface IGroupedTabs {
   isFolder?: boolean;
   canRename?: boolean;
   children: number[];
-  data: IGroup | ITab | { id: number };
+  data: (IGroup | { id: number } | ITab) & { type: 'group' | 'tab' | 'root' };
 }
 
 // map tabs
@@ -45,7 +49,7 @@ const mapTabToGroups = (tabs: ITab[], groups: IGroup[]) => {
       isFolder: false,
       canMove: false,
       children: [],
-      data: { id: -1 },
+      data: { id: -1, type: 'root' },
     },
   };
 
@@ -58,7 +62,7 @@ const mapTabToGroups = (tabs: ITab[], groups: IGroup[]) => {
       data: item,
     };
 
-    groupedTabs[item.id] = tabItem;
+    groupedTabs[item.id] = { ...tabItem, data: { ...tabItem.data, type: 'tab' } };
 
     if (item?.groupId < 1 || groups?.length < 1) {
       groupedTabs['root'].children.push(item.id);
@@ -85,7 +89,7 @@ const mapTabToGroups = (tabs: ITab[], groups: IGroup[]) => {
         data: group,
       };
 
-      groupedTabs[group.id] = groupItem;
+      groupedTabs[group.id] = { ...groupItem, data: { ...groupItem.data, type: 'group' } };
       groupedTabs['root'].children.push(group.id);
     }
   });
@@ -120,13 +124,17 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
   console.log('🚀 ~ ActiveSpaceTabs ~ setActiveSpaceGroups:', setActiveSpaceGroups);
 
-  const groupedTabs = useMemo(() => {
-    return mapTabToGroups(activeSpaceTabs, activeSpaceGroups);
-  }, [activeSpaceTabs, activeSpaceGroups]);
+  const [groupedTabs, setGroupedTabs] = useState<Record<string | number, IGroupedTabs>>({});
 
-  console.log('🚀 ~ groupedTabs ~ groupedTabs:', groupedTabs);
-  // dragging state
-  const [dragSate] = useAtom(dragStateAtom);
+  useEffect(() => {
+    const groups = mapTabToGroups(activeSpaceTabs, activeSpaceGroups);
+
+    console.log('🚀 ~ useEffect ~ groups:', groups);
+
+    console.log('✅ ~ useEffect ~ activeSpaceGroups:', activeSpaceGroups);
+
+    setGroupedTabs(groups);
+  }, [activeSpaceTabs, activeSpaceGroups]);
 
   // local state
   const [discardedTabIDs, setDiscardedTabIDs] = useState<number[]>([]);
@@ -162,16 +170,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
   useEffect(() => {
     selectedTabsRef.current = selectedTabs;
-
-    console.log('🚀 ~ useEffect ~ selectedTabs:', selectedTabs);
   }, [selectedTabs]);
-
-  console.log('🚀 ~ useEffect ~ selectedTabsRef.current:', selectedTabsRef.current);
-
-  // tabs dragging state
-  const areTabsBeingDragged = useMemo(() => dragSate.isDragging && dragSate.type === 'tabs', [dragSate]);
-
-  console.log('✅ ~ ActiveSpaceTabs ~ areTabsBeingDragged:', areTabsBeingDragged);
 
   const handleGoToTab = useCallback(
     async (id: number, index: number) => {
@@ -313,110 +312,118 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     setActiveSpaceTabs(prev => [...prev.filter((_t, idx) => idx !== index)]);
   };
 
-  // returns a single tab to render
-  const ActiveSpaceSingleTab = (tab: ITab, idx: number, isDraggingOver: boolean) => (
-    <Draggable draggableId={'tab-' + tab.id} index={idx} key={tab.id}>
-      {(provided2, { isDragging }) => (
-        // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-        <div
-          ref={provided2.innerRef}
-          {...provided2.draggableProps}
-          {...provided2.dragHandleProps}
-          tabIndex={-1}
-          className={'relative outline-none mb-[4px]  focus-within:outline-none w-fit'}>
-          <>
-            <TabContextMenu
-              tab={tab}
-              allTabs={activeSpaceTabs}
-              setActiveSpaceTabs={setActiveSpaceTabs}
-              space={space}
-              selectedTabs={selectedTabs}
-              onRemoveClick={async () => {
-                if (selectedTabs?.length > 1) {
-                  await handleRemoveTab(tab.id);
-                } else {
-                  await handleRemoveTabs();
-                }
-              }}>
-              {/* tab */}
-              <div
-                className={`relative w-[96vw] min-w-[96vw] bg-transparent`}
-                tabIndex={-1}
-                style={{
-                  cursor: isMetaKeyPressed ? 'pointer' : 'default',
-                }}>
-                <Tab
-                  tabData={tab}
-                  isTabDiscarded={isTabDiscarded(tab.id)}
-                  isSpaceActive={true}
-                  onTabDelete={() => handleRemoveTab(idx)}
-                  onTabDoubleClick={() => onTabDoubleClickHandler(tab.id, idx)}
-                  onClick={() => onTabClick({ ...tab, index: idx })}
-                />
+  // update storage and ui state for tabs and groups
+  const updateTabsAndGroupState = useCallback(async () => {
+    // get current group & tab data from chrome
+    const currentGroups = await chrome.tabGroups.query({ windowId: space.windowId });
+    const currentTabs = await chrome.tabs.query({ windowId: space.windowId });
 
-                {/* dragging multiple tabs indicator */}
-                {isDraggingOver && isDragging && selectedTabs?.length > 0 ? (
-                  <>
-                    {/* multiple tabs  */}
-                    {selectedTabs.length > 1 ? (
-                      <span
-                        className={`w-6 h-6 rounded-lg px-1 py-1 absolute -top-2.5 -left-2.5 text-[11px] z-[200]
-                                  flex items-center justify-center font-semibold bg-brand-darkBgAccent text-slate-400`}>
-                        +{selectedTabs?.length - 1}
-                      </span>
-                    ) : null}
+    //  map data from chrome
+    const updateGroups = currentGroups.map<IGroup>(g => ({
+      collapsed: g.collapsed,
+      theme: g.color,
+      id: g.id,
+      name: g.title,
+    }));
 
-                    {/* tabs stacked effect  */}
-                    {['one', 'two', 'three'].map((v, ix) => (
-                      <div
-                        key={v}
-                        className="absolute   w-[98%] -z-10 rounded-lg   border border-slate-700/70 bg-brand-darkBgAccent "
-                        style={{
-                          height: TAB_HEIGHT + 'px',
-                          top: `-${(ix + 0.25) * 2}px`,
-                          left: `-${(ix + 0.25) * 2}px`,
-                        }}></div>
-                    ))}
-                  </>
-                ) : null}
-              </div>
-            </TabContextMenu>
+    const updatedTabs = currentTabs.map<ITab>(t => ({
+      groupId: t.groupId,
+      id: t.id,
+      index: t.index,
+      title: t.title,
+      url: t.url,
+    }));
 
-            {/* active tab indicator */}
-            {activeSpace.activeTabIndex === idx ? (
-              <motion.div
-                {...bounce}
-                style={{
-                  height: TAB_HEIGHT + 'px',
-                }}
-                className="absolute  w-[99%] top-0 left-0 rounded-lg border  border-slate-700/60 bg-brand-darkBgAccent/60 z-10 pointer-events-none"></motion.div>
-            ) : null}
+    // update storage
+    await setGroupsToSpace(space.id, updateGroups);
+    await setTabsForSpace(space.id, updatedTabs);
+    // update ui state
+    setActiveSpaceTabs(updatedTabs);
+    setActiveSpaceGroups(updateGroups);
 
-            {/* selected tab indicator */}
-            {selectedTabs.includes(tab.id) ? (
-              <motion.div
-                {...bounce}
-                className={`absolute w-[99%] top-0 left-0 rounded-lg border border-gray-500/90 bg-brand-darkBgAccent/80 z-10 pointer-events-none`}
-                style={{
-                  height: TAB_HEIGHT + 'px',
-                  borderWidth: areTabsBeingDragged && !isDragging ? '3px' : '1px',
-                }}></motion.div>
-            ) : null}
+    return;
+  }, [setActiveSpaceGroups, setActiveSpaceTabs, space]);
 
-            {areTabsBeingDragged && selectedTabs.includes(tab.id) && !isDragging ? (
-              <div
-                style={{
-                  height: TAB_HEIGHT + 'px',
-                }}
-                className={`absolute w-[99%] top-0 left-0 rounded-lg border border-brand-darkBgAccent/40 bg-brand-darkBgAccent/40 z-[99]`}></div>
-            ) : null}
-          </>
-        </div>
-      )}
-    </Draggable>
-  );
+  // * drop handler
+  const onDropHandler = async (
+    items: TreeItem<(IGroup | ITab) & { type: 'tab' | 'group' }>[],
+    target: DraggingPosition,
+  ) => {
+    console.log('⬇️ ~ ActiveSpaceTabs ~ target:', target);
 
-  console.log('🚀 ~ ActiveSpaceTabs ~ ActiveSpaceSingleTab:', ActiveSpaceSingleTab);
+    // @ts-expect-errors childIndex is included
+    const droppedIndex = target?.childIndex || 0;
+
+    if (items[0]?.data.type === 'group') {
+      // handle group drop
+      await chrome.tabGroups.move(items[0].data.id, { index: droppedIndex });
+
+      await updateTabsAndGroupState();
+
+      return;
+    }
+
+    //  single tab drop
+    const tabToMove = items[0].data as ITab | IGroup;
+
+    // check if dropped on a group
+    const droppedOnGroupId = target.targetType === 'item' ? target.targetItem : null;
+
+    console.log('🚀 ~ ActiveSpaceTabs ~ droppedOnGroupId:', droppedOnGroupId);
+
+    if (droppedOnGroupId) {
+      // add tabs to group
+      const tabs = selectedTabs?.length > 0 ? selectedTabs : [tabToMove.id];
+      await chrome.tabs.group({
+        tabIds: tabs,
+        groupId: droppedOnGroupId as number,
+      });
+      await updateTabsAndGroupState();
+      return;
+    }
+
+    // check dropped inside a group
+    if (target.targetType === 'between-items' && target.parentItem !== 'root') {
+      // get the index of first tab in group
+      const firstTabInGroup = activeSpaceTabs
+        .filter(t => t.groupId === target.parentItem)
+        .toSorted((t1, t2) => (t1.index < t2.index ? -1 : 1))[0];
+
+      console.log('🚀 ~ ActiveSpaceTabs ~ firstTabInGroup:', firstTabInGroup);
+
+      console.log('☘️ ~ ActiveSpaceTabs ~ tabToMove:', tabToMove);
+
+      //  move multiple tabs if selected
+      const tabs = selectedTabs?.length > 0 ? selectedTabs : [tabToMove.id];
+
+      await chrome.tabs.move(tabs, { index: (firstTabInGroup?.index || 0) + droppedIndex });
+
+      // add tabs to group
+      chrome.tabs.group({
+        tabIds: tabs,
+        groupId: target.parentItem as number,
+      });
+
+      await updateTabsAndGroupState();
+      return;
+    }
+
+    // handle tab drop
+    if (selectedTabs?.length > 1) {
+      //  multiple tabs drop
+      const tabs = selectedTabs?.length > 0 ? selectedTabs : [tabToMove.id];
+
+      await chrome.tabs.move(tabs, { index: droppedIndex });
+      await updateTabsAndGroupState();
+    } else {
+      if ((tabToMove as ITab).groupId) {
+        // remove tab from group
+        await chrome.tabs.ungroup(tabToMove.id);
+      }
+      await chrome.tabs.move(tabToMove.id, { index: droppedIndex });
+      await updateTabsAndGroupState();
+    }
+  };
 
   return (
     <div className="text-slate-400">
@@ -428,28 +435,22 @@ const ActiveSpaceTabs = ({ space }: Props) => {
         items={groupedTabs}
         viewState={{
           ['active-space-tabs']: {
-            expandedItems: activeSpaceGroups?.map(g => g.id) || [],
+            expandedItems: activeSpaceGroups?.filter(g => !g.collapsed)?.map(g1 => g1.id) || [],
           },
         }}
-        //TODO - handle group collapse
-        onCollapseItem={() => {}}
-        onExpandItem={() => {}}
-        // handle select item
-        // onSelectItems={items => {
-        //   const selectedTabsIds = items?.filter(idx => !isNaN(Number(idx))).map(item => Number(item));
-
-        //   console.log('🚀 ~ ActiveSpaceTabs ~ selectedTabsIds:', selectedTabsIds);
-
-        //   setSelectedTabs(prev => [...prev, ...selectedTabsIds]);
-        // }}
-        // TODO - handle drop in item
-        onDrop={() => {}}
+        // handle drop in item
+        onDrop={onDropHandler}
         defaultInteractionMode={{
           mode: 'custom',
           // @ts-expect-error - lib code
           extends: 'click-item-to-expand',
           createInteractiveElementProps: (item, _treeId, action) => ({
-            onDragStart: () => {
+            onDragStart: async () => {
+              // if (item.data.type === 'group' && !item.data.collapsed) {
+              //   await chrome.tabGroups.update(item.data.id, {
+              //     collapsed: true,
+              //   });
+              // }
               // handle drag start
               setDraggingItem(item.data.id);
               action.startDragging();
@@ -468,15 +469,13 @@ const ActiveSpaceTabs = ({ space }: Props) => {
         )}
         renderItemArrow={({ item, context }) =>
           item.isFolder ? (
-            <>
-              <span {...context.arrowProps} className="flex items-center">
-                <ChevronDownIcon
-                  className={`text-slate-500/80 transition-transform duration-300 ${
-                    context?.isExpanded ? 'rotate-180' : ''
-                  }`}
-                />
-              </span>
-            </>
+            <span {...context.arrowProps} className="flex items-center">
+              <ChevronDownIcon
+                className={`text-slate-500/80 transition-transform duration-300 ${
+                  context?.isExpanded ? 'rotate-180' : ''
+                }`}
+              />
+            </span>
           ) : null
         }
         renderItemTitle={({ title, item }) => (
@@ -519,8 +518,14 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                 tabIndex={-1}
                 {...context.itemContainerWithoutChildrenProps}
                 {...context.interactiveElementProps}
-                onClick={() => {
-                  if (item.isFolder) return;
+                onClick={async () => {
+                  if (item.isFolder) {
+                    //TODO collapse/expand group
+                    await chrome.tabGroups.update(item.data.id, {
+                      collapsed: !(item.data as IGroup).collapsed,
+                    });
+                    return;
+                  }
                   onTabClick(item.data as ITab);
                 }}
                 style={{
@@ -534,7 +539,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                   'relative w-full bg-emerald-70 flex items-center justify-between text-slate-300/70 text-[13px] px-2 group z-20 rounded-lg outline-none',
                   {
                     // group's style
-                    'bg-brand-darkBgAccent/60': item.isFolder,
+                    'bg-brand-darkBgAccent/60 shadow-md shadow-brand-darkBgAccent/40 px-2.5': item.isFolder,
                   },
                   {
                     // group expanded
@@ -550,7 +555,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                   },
                   {
                     // active tab
-                    'bg-brand-darkBgAccent/40 border border-slate-700/70':
+                    'bg-brand-darkBgAccent/30 border border-slate-600/80  shadow shadow-brand-darkBgAccent/40':
                       space.activeTabIndex === (item.data as ITab).index,
                   },
                   {

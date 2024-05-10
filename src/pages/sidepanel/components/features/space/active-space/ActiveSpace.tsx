@@ -50,6 +50,7 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
     // get all tabs in the window
     const currentTabs = await chrome.tabs.query({ currentWindow: true });
 
+    // get all groups
     const groups = await chrome.tabGroups.query({ windowId: space.windowId });
 
     const tabsInWindow: ITab[] = currentTabs.map(t => ({

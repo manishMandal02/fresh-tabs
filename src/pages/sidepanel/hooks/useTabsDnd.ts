@@ -107,7 +107,7 @@ export const useTabsDnd = () => {
     if (selectedTabs?.length > 0) {
       // multi tab drop
       // remove selected tabs for active space
-      reOrderedTabs = reOrderedTabs.filter(aT => !selectedTabs.find(sT => sT.id === aT.id));
+      reOrderedTabs = reOrderedTabs.filter(aT => !selectedTabs.find(sT => sT === aT.id));
 
       // check if the tabs are moved up or down from it's previous pos
       const didTabsMoveDownward = sourceIndex < destinationIndex;
@@ -118,7 +118,9 @@ export const useTabsDnd = () => {
       const droppedIndex = didTabsMoveDownward ? 1 + destinationIndex - selectedTabs.length : destinationIndex;
 
       // sort the selected tabs by index
-      const sortedSelectedTabs: ITab[] = selectedTabs.toSorted((t1, t2) => (t1.index > t2.index ? 1 : -1));
+      const sortedSelectedTabs: ITab[] = selectedTabs
+        .map(id => activeSpaceTabs.find(t => t.id === id))
+        .toSorted((t1, t2) => (t1.index > t2.index ? 1 : -1));
 
       // add selected tabs at dropped pos in active space
       reOrderedTabs = reOrderedTabs.toSpliced(droppedIndex, 0, ...sortedSelectedTabs);
