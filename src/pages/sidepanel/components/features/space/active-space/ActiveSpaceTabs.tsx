@@ -354,6 +354,8 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     // @ts-expect-errors childIndex is included
     const droppedIndex = target?.childIndex || 0;
 
+    console.log('☘️ ~ onDropHandler  ~  groupedTabs[target.linearIndex]:', groupedTabs[target.linearIndex]);
+
     if (items[0]?.data.type === 'group') {
       // handle group drop
       await chrome.tabGroups.move(items[0].data.id, { index: droppedIndex });
