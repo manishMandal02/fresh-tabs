@@ -18,7 +18,6 @@ import { cn } from '@root/src/utils/cn';
 import TabContextMenu from './TabContextMenu';
 import { copyToClipboard, logger } from '@root/src/utils';
 import { goToTab } from '@root/src/services/chrome-tabs/tabs';
-import SiteIcon from '@root/src/components/site-icon/SiteIcon';
 import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
 import { setGroupsToSpace } from '@root/src/services/chrome-storage/groups';
 import { useMetaKeyPressed } from '@root/src/pages/sidepanel/hooks/use-key-shortcuts';
@@ -31,6 +30,7 @@ import {
   selectedTabsAtom,
   updateSpaceAtom,
 } from '@root/src/stores/app';
+import SiteIcon from '@root/src/components/site-icon/SiteIcon';
 
 interface IGroupedTabs {
   index: number | string;
@@ -130,8 +130,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     const groups = mapTabToGroups(activeSpaceTabs, activeSpaceGroups);
 
     console.log('🚀 ~ useEffect ~ groups:', groups);
-
-    console.log('✅ ~ useEffect ~ activeSpaceGroups:', activeSpaceGroups);
 
     setGroupedTabs(groups);
   }, [activeSpaceTabs, activeSpaceGroups]);
@@ -239,8 +237,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
   const onTabClick = useCallback(
     async (tab: ITab) => {
-      console.log('🚀 ~ tab:', tab);
-
       // ctrl/cmd is pressed
       if (isMetaKeyPressed) {
         await handleGoToTab(tab.id, tab.index);
@@ -349,12 +345,8 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     items: TreeItem<(IGroup | ITab) & { type: 'tab' | 'group' }>[],
     target: DraggingPosition,
   ) => {
-    console.log('⬇️ ~ ActiveSpaceTabs ~ target:', target);
-
     // @ts-expect-errors childIndex is included
     const droppedIndex = target?.childIndex || 0;
-
-    console.log('☘️ ~ onDropHandler  ~  groupedTabs[target.linearIndex]:', groupedTabs[target.linearIndex]);
 
     if (items[0]?.data.type === 'group') {
       // handle group drop
@@ -370,8 +362,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
     // check if dropped on a group
     const droppedOnGroupId = target.targetType === 'item' ? target.targetItem : null;
-
-    console.log('🚀 ~ ActiveSpaceTabs ~ droppedOnGroupId:', droppedOnGroupId);
 
     if (droppedOnGroupId) {
       // add tabs to group
@@ -391,10 +381,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
         .filter(t => t.groupId === target.parentItem)
         .toSorted((t1, t2) => (t1.index < t2.index ? -1 : 1))[0];
 
-      console.log('🚀 ~ ActiveSpaceTabs ~ firstTabInGroup:', firstTabInGroup);
-
-      console.log('☘️ ~ ActiveSpaceTabs ~ tabToMove:', tabToMove);
-
       //  move multiple tabs if selected
       const tabs = selectedTabs?.length > 0 ? selectedTabs : [tabToMove.id];
 
@@ -410,21 +396,30 @@ const ActiveSpaceTabs = ({ space }: Props) => {
       return;
     }
 
-    // handle tab drop
-    if (selectedTabs?.length > 1) {
-      //  multiple tabs drop
-      const tabs = selectedTabs?.length > 0 ? selectedTabs : [tabToMove.id];
+    // dropped index for tab dropped in the root/base container (index is the tab of thz tab at the previous pos)
+    const droppedIndexRoot = groupedTabs['root'].children[Math.max(droppedIndex - 1, 0)];
 
-      await chrome.tabs.move(tabs, { index: droppedIndex });
-      await updateTabsAndGroupState();
-    } else {
-      if ((tabToMove as ITab).groupId) {
-        // remove tab from group
-        await chrome.tabs.ungroup(tabToMove.id);
-      }
-      await chrome.tabs.move(tabToMove.id, { index: droppedIndex });
-      await updateTabsAndGroupState();
+    let tabIndex = activeSpaceTabs.find(tab => tab.id === droppedIndexRoot)?.index || 0;
+
+    if (droppedIndex > 0 && (items[0].data as ITab).index > tabIndex) {
+      // add +1 to index if moved the tab backward
+      tabIndex += 1;
     }
+
+    // handle tab drop
+
+    //  multiple tabs drop
+    const tabs = selectedTabs?.length > 0 ? selectedTabs : [tabToMove.id];
+
+    await chrome.tabs.move(tabs, { index: tabIndex });
+    await updateTabsAndGroupState();
+
+    if ((tabToMove as ITab).groupId) {
+      // remove tab from group
+      await chrome.tabs.ungroup(tabToMove.id);
+    }
+    // await chrome.tabs.move(tabToMove.id, { index: tabIndex + 1 });
+    await updateTabsAndGroupState();
   };
 
   return (
@@ -620,7 +615,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                 {/* hover options */}
                 {!item.isFolder && !draggingItem ? (
                   <>
-                    {/*  eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+                    {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                     <span
                       className="absolute opacity-0 hidden group-hover:flex group-hover:opacity-100 transition-all duration-300 right-[8px] items-center gap-x-3 shadow-md shadow-slate-800"
                       onClick={ev => ev.stopPropagation()}>
@@ -647,7 +642,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
         )}
         renderTreeContainer={({ children, containerProps }) => <div {...containerProps}>{children}</div>}
         renderItemsContainer={({ children, containerProps, parentId }) => (
-          // @ts-expect-error - lib props
+          // @ts-expect-error - lib code
           <motion.ul
             {...(parentId !== 'root' ? { ...bounce } : {})}
             className={cn('w-full ', { 'bg-brand-darkBgAccent/40 rounded-b-md px-1.5': parentId !== 'root' })}

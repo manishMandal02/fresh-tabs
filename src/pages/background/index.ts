@@ -933,7 +933,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 // event listener for when tabs get moved (index change)
 chrome.tabs.onMoved.addListener(async (tabId, info) => {
   await wait(250);
-  console.log('✅ ~ chrome.tabs.onMoved.addListener ~ info:', info);
 
   // get space by windowId
   const space = await getSpaceByWindow(info.windowId);

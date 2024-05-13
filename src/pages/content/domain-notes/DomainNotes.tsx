@@ -88,9 +88,9 @@ const DomainNotes = ({ domainNotes, onNoteClick, onNewNoteClick, onDeleteNoteCli
               <motion.span
                 {...bounce}
                 onClick={onClose}
-                className={`absolute hidden group-hover:block -top-[7px] -left-[2px] rounded-full bg-brand-darkBgAccent/60 p-[2px] w-fit group 
+                className={`absolute hidden group-hover:block -top-[8px] -right-[1.5px] rounded-full bg-brand-darkBgAccent/60 p-[2px] w-fit group 
                           hover:bg-brand-darkBgAccent/80 [&>svg]:hover:text-slate-200 transition-colors duration-300`}>
-                <Cross1Icon className="text-slate-300/90 scale-[0.8]  transition-colors duration-300" />
+                <Cross1Icon className="text-slate-300/90 scale-[0.7]  transition-colors duration-300" />
               </motion.span>
             </>
           ) : null}
@@ -99,51 +99,49 @@ const DomainNotes = ({ domainNotes, onNoteClick, onNewNoteClick, onDeleteNoteCli
       {/* notes list view */}
       {showNotes
         ? createPortal(
-            <>
-              <motion.div {...bounce} className="notes-container cc-scrollbar">
-                {/* new note button */}
-                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+            <motion.div {...bounce} className="notes-container cc-scrollbar">
+              {/* new note button */}
+              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+              <div
+                className="new-note"
+                onClick={() => {
+                  onNewNoteClick();
+                }}>
+                <PlusIcon />
+              </div>
+              {notes.map(note => (
+                // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
                 <div
-                  className="new-note"
+                  key={note.id}
+                  className="note"
                   onClick={() => {
-                    onNewNoteClick();
+                    onNoteClick(note.id, note.spaceId);
                   }}>
-                  <PlusIcon />
-                </div>
-                {notes.map(note => (
-                  // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-                  <div
-                    key={note.id}
-                    className="note"
-                    onClick={() => {
-                      onNoteClick(note.id, note.spaceId);
-                    }}>
-                    <p>{note.title}</p>
+                  <p>{note.title}</p>
 
-                    <div className="bottom-container">
-                      {note.remainderAt ? (
-                        <span>
-                          <LapTimerIcon /> {getTimeAgo(note.remainderAt)}
-                        </span>
-                      ) : null}
+                  <div className="bottom-container">
+                    {note.remainderAt ? (
                       <span>
-                        <CounterClockwiseClockIcon /> {getTimeAgo(note.createdAt)}
+                        <LapTimerIcon /> {getTimeAgo(note.remainderAt)}
                       </span>
-                    </div>
-                    {/* delete */}
-                    {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-                    <div
-                      className="delete"
-                      onClick={ev => {
-                        ev.stopPropagation();
-                        handleDeleteNote(note.id);
-                      }}>
-                      <TrashIcon />
-                    </div>
+                    ) : null}
+                    <span>
+                      <CounterClockwiseClockIcon /> {getTimeAgo(note.createdAt)}
+                    </span>
                   </div>
-                ))}
-              </motion.div>
-            </>,
+                  {/* delete */}
+                  {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+                  <div
+                    className="delete"
+                    onClick={ev => {
+                      ev.stopPropagation();
+                      handleDeleteNote(note.id);
+                    }}>
+                    <TrashIcon />
+                  </div>
+                </div>
+              ))}
+            </motion.div>,
             createShadowRoot(handleClickOutsideNotesContainer),
           )
         : null}
