@@ -80,8 +80,8 @@ const DomainNotes = ({ domainNotes, onNoteClick, onNewNoteClick, onDeleteNoteCli
             <>
               <motion.span
                 {...bounce}
-                className={`absolute block  group-hover:hidden  -top-[8px] right-0 text-slate-700 text-[12.5px] font-semibold px-2 py-[2px] rounded-full
-              bg-gradient-to-br from-brand-primary to-emerald-400 shadow shadow-brand-darkBg/70 `}>
+                className={`absolute flex  group-hover:hidden  -top-[8px] right-0 text-slate-700 text-[12.5px] font-semibold px-2 py-[2px] rounded-full
+                            bg-gradient-to-br from-brand-primary to-emerald-400 shadow shadow-brand-darkBg/70 `}>
                 {notes?.length}
               </motion.span>
               {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}

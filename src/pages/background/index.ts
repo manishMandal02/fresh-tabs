@@ -94,7 +94,7 @@ const checkExtensionBadgeEmoji = async () => {
   const activeSpace = await getSpaceByWindow(currentWindow);
   const currentBadge = await chrome.action.getBadgeText({});
 
-  if (currentBadge.trim() !== activeSpace.emoji) {
+  if (currentBadge?.trim() !== activeSpace.emoji) {
     await chrome.action.setBadgeBackgroundColor({ color: '#1e293b' });
     await chrome.action.setBadgeText({ text: activeSpace.emoji });
   }
@@ -139,6 +139,8 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 
 // TODO - handle groups DnD
 // TODO - show notes for tabs in active tabs sidepanel
+
+// TODO - fix - no icon for for some discard tabs
 
 // TODO - new feat - tab thumbnail views and also grid views
 

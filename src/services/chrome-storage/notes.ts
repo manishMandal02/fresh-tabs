@@ -43,6 +43,7 @@ export const getNote = async (id: string) => {
 
 export const getNoteByDomain = async (domain: string) => {
   const allNotes = await getAllNotes();
+  if (!allNotes || allNotes?.length < 1) return null;
   const note = allNotes.filter(note => note.domain === domain);
 
   return note;

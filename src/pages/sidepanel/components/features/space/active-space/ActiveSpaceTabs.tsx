@@ -31,6 +31,7 @@ import {
   updateSpaceAtom,
 } from '@root/src/stores/app';
 import SiteIcon from '@root/src/components/site-icon/SiteIcon';
+import { DISCARD_TAB_URL_PREFIX } from '@root/src/constants/app';
 
 interface IGroupedTabs {
   index: number | string;
@@ -233,7 +234,11 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
   const { isShiftKeyPressed, isMetaKeyPressed } = useMetaKeyPressed({});
 
-  const isTabDiscarded = useCallback((id: number) => discardedTabIDs.some(tabId => tabId === id), [discardedTabIDs]);
+  const isTabDiscarded = useCallback(
+    (id: number, url?: string) =>
+      discardedTabIDs.some(tabId => tabId === id) || url?.startsWith(DISCARD_TAB_URL_PREFIX),
+    [discardedTabIDs],
+  );
 
   const onTabClick = useCallback(
     async (tab: ITab) => {
@@ -482,7 +487,9 @@ const ActiveSpaceTabs = ({ space }: Props) => {
             ) : (
               <SiteIcon
                 siteURl={(item?.data as ITab).url}
-                classes={cn('size-[17px] max-w-[17px] z-10 border-none', { grayscale: isTabDiscarded(item.data.id) })}
+                classes={cn('size-[17px] max-w-[17px] z-10 border-none', {
+                  grayscale: isTabDiscarded(item.data.id, (item.data as ITab)?.url),
+                })}
               />
             )}
             <p
