@@ -1,10 +1,11 @@
 import { getFaviconURL } from '@root/src/utils/url';
 import { parseUrl } from '@root/src/utils/url/parse-url';
-import { ISpace, ITab } from '@root/src/types/global.types';
+import { IGroup, ISpace, ITab } from '@root/src/types/global.types';
 import { getTabToUnSnooze } from '../chrome-storage/snooze-tabs';
 import { getTabsInSpace, setTabsForSpace } from '../chrome-storage/tabs';
 import { getSpaceByWindow, updateSpace } from '../chrome-storage/spaces';
 import { DISCARD_TAB_URL_PREFIX, SNOOZED_TAB_GROUP_TITLE } from '@root/src/constants/app';
+import { setGroupsToSpace } from '../chrome-storage/groups';
 
 type OpenSpaceProps = {
   space: ISpace;
@@ -269,4 +270,33 @@ export const newTabGroup = async (groupTitle: string, tabURL: string, windowId: 
     color: 'orange',
     collapsed: false,
   });
+};
+
+export const syncTabs = async (spaceId: string, windowId: number) => {
+  // get all tabs in the window
+  const currentTabs = await chrome.tabs.query({ windowId });
+
+  // get all groups
+  const groups = await chrome.tabGroups.query({ windowId });
+
+  const tabsInWindow: ITab[] = currentTabs.map(t => ({
+    title: t.title,
+    url: t.url,
+    id: t.id,
+    index: t.index,
+    groupId: t.groupId,
+  }));
+
+  const groupsInWindow: IGroup[] = groups.map(group => ({
+    id: group.id,
+    name: group.title,
+    theme: group.color,
+    collapsed: group.collapsed,
+  }));
+
+  await setTabsForSpace(spaceId, tabsInWindow);
+
+  await setGroupsToSpace(spaceId, groupsInWindow);
+
+  return { tabs: tabsInWindow, groups: groupsInWindow, activeTab: currentTabs.filter(t => t.active)[0] || null };
 };

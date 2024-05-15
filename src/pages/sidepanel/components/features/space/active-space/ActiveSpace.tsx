@@ -1,17 +1,17 @@
-import { useAtom, useSetAtom } from 'jotai';
 import { useState, memo } from 'react';
+import { useAtom, useSetAtom } from 'jotai';
 import { BellIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
 
 import { Notes } from '../../notes';
 import SpaceTitle from './SpaceTitle';
 import SnoozedTabs from './SnoozedTabs';
 import MoreOptions from '../more-options';
-import Tabs from '../../../../../../components/tabs/Tabs';
 import ActiveSpaceTabs from './ActiveSpaceTabs';
 import SpaceHistory from '../history/SpaceHistory';
-import { IGroup, ISpace, ITab } from '@root/src/types/global.types';
+import Tabs from '../../../../../../components/tabs/Tabs';
+import { ISpace, ITab } from '@root/src/types/global.types';
+import { syncTabs } from '@root/src/services/chrome-tabs/tabs';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
-import { setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import {
   activeSpaceGroupsAtom,
   activeSpaceTabsAtom,
@@ -19,7 +19,6 @@ import {
   snackbarAtom,
   updateSpaceAtom,
 } from '@root/src/stores/app';
-import { setGroupsToSpace } from '@root/src/services/chrome-storage/groups';
 
 type Props = {
   space: ISpace;
@@ -47,44 +46,17 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
   const handleSyncTabs = async () => {
     setSnackbar({ msg: '', show: false, isLoading: true });
 
-    // get all tabs in the window
-    const currentTabs = await chrome.tabs.query({ currentWindow: true });
-
-    // get all groups
-    const groups = await chrome.tabGroups.query({ windowId: space.windowId });
-
-    const tabsInWindow: ITab[] = currentTabs.map(t => ({
-      title: t.title,
-      url: t.url,
-      id: t.id,
-      index: t.index,
-      groupId: t.groupId,
-    }));
-
-    const groupsInWindow: IGroup[] = groups.map(group => ({
-      id: group.id,
-      name: group.title,
-      theme: group.color,
-      collapsed: group.collapsed,
-    }));
-
-    console.log('🚀 ~ handleSyncTabs ~ groupsInWindow:', groupsInWindow);
-
-    setActSpaceGroups(groupsInWindow);
-
-    const activeTab = currentTabs.find(t => t.active);
+    const { tabs, groups, activeTab } = await syncTabs(space.id, space.windowId);
 
     // update space's active tab index if not correct
     if (space.activeTabIndex !== activeTab.index) {
       await updateSpace(space.id, { ...space, activeTabIndex: activeTab.index });
+      updateSpaceState({ ...space, activeTabIndex: activeTab.index });
     }
-    // update tabs in space
-    await setTabsForSpace(space.id, tabsInWindow);
 
-    await setGroupsToSpace(space.id, groupsInWindow);
-
-    setActSpaceTabs(tabsInWindow);
-    updateSpaceState({ ...space, activeTabIndex: activeTab.index });
+    // update ui state
+    setActSpaceGroups(groups);
+    setActSpaceTabs(tabs);
 
     setSnackbar({ msg: 'Tabs synced', show: true, isLoading: false, isSuccess: true });
   };

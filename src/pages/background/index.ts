@@ -137,10 +137,9 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - handle groups DnD
 // TODO - show notes for tabs in active tabs sidepanel
 
-// TODO - fix - no icon for for some discard tabs
+// TODO - fix - no icon for for some discard tabs (discard url prefix)
 
 // TODO - new feat - tab thumbnail views and also grid views
 

@@ -80,9 +80,9 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
         )}
       </Droppable>
       {unSavedSpaces?.length > 0 ? (
-        <div className="flex items-center ml-[5px]">
+        <div className="flex items-center ml-[5px] gap-x-[.25rem]">
           {/* vertical divider */}
-          <hr className="h-[10px] w-[0.5px] bg-slate-500/70 rounded-md mr-[4px] border-none" />
+          <hr className="h-[10px] w-[0.5px] bg-slate-500/70 rounded-md mr-[1px] border-none" />
           {/* unsaved spaces */}
           {unSavedSpaces?.map(space => <NonActiveSpace key={space.id} space={space} isDraggedOver={false} />)}
         </div>

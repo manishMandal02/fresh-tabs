@@ -1,12 +1,22 @@
-import { useAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useState } from 'react';
 import { HamburgerMenuIcon, BarChartIcon, MoonIcon, BookmarkIcon, GearIcon } from '@radix-ui/react-icons';
 
 import Popover from '../../../../../components/popover';
 import Analytics from '../space/analytics/Analytics';
 import { discardAllTabs } from '@root/src/services/chrome-discard/discard';
-import { showSettingsModalAtom, showUserAccountModalAtom, snackbarAtom } from '@root/src/stores/app';
+import {
+  activeSpaceAtom,
+  activeSpaceGroupsAtom,
+  activeSpaceTabsAtom,
+  showSettingsModalAtom,
+  showUserAccountModalAtom,
+  snackbarAtom,
+  updateSpaceAtom,
+} from '@root/src/stores/app';
 import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
+import { syncTabs } from '@root/src/services/chrome-tabs/tabs';
+import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 
 // testing
 const manishProfilePicUrl = 'https://avatars.githubusercontent.com/u/76472450?v=4';
@@ -15,9 +25,13 @@ const Menu = () => {
   console.log('Footer Menu ~ 🔁 rendered');
 
   // globals state
-  const [, setSnackbar] = useAtom(snackbarAtom);
-  const [, setShowSettingsModal] = useAtom(showSettingsModalAtom);
-  const [, setShowUserAccountModal] = useAtom(showUserAccountModalAtom);
+  const activeSpace = useAtomValue(activeSpaceAtom);
+  const setSnackbar = useSetAtom(snackbarAtom);
+  const setShowSettingsModal = useSetAtom(showSettingsModalAtom);
+  const setShowUserAccountModal = useSetAtom(showUserAccountModalAtom);
+  const setActiveSpaceTabs = useSetAtom(activeSpaceTabsAtom);
+  const setActiveSpaceGroups = useSetAtom(activeSpaceGroupsAtom);
+  const updateSpaceState = useSetAtom(updateSpaceAtom);
 
   // local state
   // show menu
@@ -40,6 +54,22 @@ const Menu = () => {
     setSnackbar({ show: true, isLoading: true, msg: 'Discarding tabs' });
 
     await discardAllTabs();
+    const { tabs, groups, activeTab } = await syncTabs(activeSpace.id, activeSpace.windowId);
+
+    if (activeTab.index !== activeSpace.activeTabIndex) {
+      await updateSpace(activeSpace.id, {
+        ...activeSpace,
+        activeTabIndex: activeTab.index,
+      });
+      updateSpaceState({
+        ...activeSpace,
+        activeTabIndex: activeTab.index,
+      });
+    }
+
+    setActiveSpaceGroups(groups);
+    setActiveSpaceTabs(tabs);
+
     setSnackbar({ show: true, isLoading: false, isSuccess: true, msg: 'Discarded non active tabs' });
   };
   return (
