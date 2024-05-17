@@ -326,7 +326,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     const { tabs, groups, activeTab } = await syncTabs(space.id, space.windowId);
 
     if (activeTab.index !== space.activeTabIndex) {
-      // update storage
+      // update active tab index
       updateSpaceState({ ...space, activeTabIndex: activeTab.index });
       updateSpace(space.id, { activeTabIndex: activeTab.index });
     }
@@ -394,13 +394,17 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
       let updatedIndex = (tabsInGroup[0]?.index || 0) + droppedIndex;
 
-      // reduce 1 if moved upwards
+      // add 1 if moved upwards
       if (tabsInGroup.findIndex(t => t.id === tabToMove.id) > target.childIndex) {
         updatedIndex++;
       }
 
-      await chrome.tabs.move(tabs, { index: updatedIndex });
+      // move tabs
+      const moveTabsPromises = tabs.map(async tabId => {
+        return chrome.tabs.move(tabId, { index: updatedIndex });
+      });
 
+      await Promise.allSettled(moveTabsPromises);
       // add tabs to group
       chrome.tabs.group({
         tabIds: tabs,
@@ -414,15 +418,23 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     // dropped index for tab dropped in the root/base container (index is the tab of thz tab at the previous pos)
     const droppedIndexRoot = groupedTabs['root'].children[Math.max(droppedIndex, 0)];
 
+    console.log('✅ ~ dropHandler:417 ~ droppedIndexRoot:', droppedIndexRoot);
+
     const tabIndex = activeSpaceTabs.find(tab => tab.id === droppedIndexRoot)?.index || 0;
+
+    console.log('✅ ~ ActiveSpaceTabs ~ tabIndex:', tabIndex);
 
     // handle tab drop
 
     //  multiple tabs drop
     const tabs = selectedTabs?.length > 0 ? selectedTabs : [tabToMove.id];
 
-    await chrome.tabs.move(tabs, { index: tabIndex });
-    await updateTabsAndGroupState();
+    // move tabs
+    const moveTabsPromises = tabs.map(async tabId => {
+      return chrome.tabs.move(tabId, { index: tabIndex });
+    });
+
+    await Promise.allSettled(moveTabsPromises);
 
     if ((tabToMove as ITab).groupId) {
       // remove tab from group
