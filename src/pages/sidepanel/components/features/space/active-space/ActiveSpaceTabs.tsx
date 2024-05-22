@@ -346,18 +346,58 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     items: TreeItem<(IGroup | ITab) & { type: 'tab' | 'group' }>[],
     target: DraggingPosition,
   ) => {
-    // @ts-expect-errors childIndex is included
-    let droppedIndex = target?.childIndex || 0;
+    const getTabIndexClosestToTarget = () => {
+      // @ts-expect-errors childIndex is included
+      const droppedIndex = target?.childIndex;
 
-    const hasMovedDown = groupedTabs['root'].children?.findIndex(t => t === items[0].data.id) < droppedIndex;
+      if (target.targetType === 'between-items' && target.parentItem !== 'root') {
+        const tab = groupedTabs[target.parentItem].children[droppedIndex];
+        return (groupedTabs[tab].data as ITab).index;
+      }
 
-    if (hasMovedDown) droppedIndex--;
+      let tab = groupedTabs['root'].children[droppedIndex];
+
+      if (groupedTabs[tab]?.isFolder) {
+        tab = groupedTabs[tab].children[groupedTabs[tab].children.length - 1];
+      }
+      return (groupedTabs[tab].data as ITab).index;
+    };
+
+    //  get the index of the tab at the dropped location and adjust the dropped-index accordingly
+    const targetIndex = target.targetType !== 'item' ? getTabIndexClosestToTarget() : 0;
 
     if (items[0]?.data.type === 'group') {
-      // check if moved the group downward, if yes subtract 1 from droppedIndex
+      // handle group dropped on a group (merge)
+      if (target.targetType === 'item') {
+        // add the dragged group's tab to the target group
+        const tabs = selectedTabs?.length > 0 ? selectedTabs : [items[0].data.id];
+
+        await chrome.tabs.group({
+          tabIds: tabs,
+          groupId: target.targetItem as number,
+        });
+
+        return;
+      }
+
+      //  handle group dropped inside a group
+      if (target.targetType === 'between-items' && target.parentItem !== 'root') {
+        // add dragged groups tabs to the target group at dropped index
+        const tabs = selectedTabs?.length > 0 ? selectedTabs : [items[0].data.id];
+
+        // add tabs to target group
+        await chrome.tabs.group({
+          tabIds: tabs,
+          groupId: target.parentItem as number,
+        });
+        // move tabs to the dropped index
+        await chrome.tabs.move(tabs, { index: targetIndex });
+        return;
+      }
+
       // handle group drop
       await chrome.tabGroups.move(items[0].data.id, {
-        index: droppedIndex,
+        index: targetIndex,
       });
 
       await updateTabsAndGroupState();
@@ -384,24 +424,12 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
     // check dropped inside a group
     if (target.targetType === 'between-items' && target.parentItem !== 'root') {
-      // get the index of first tab in group
-      const tabsInGroup = activeSpaceTabs
-        .filter(t => t.groupId === target.parentItem)
-        .toSorted((t1, t2) => (t1.index < t2.index ? -1 : 1));
-
       //  move multiple tabs if selected
       const tabs = selectedTabs?.length > 0 ? selectedTabs : [tabToMove.id];
 
-      let updatedIndex = (tabsInGroup[0]?.index || 0) + droppedIndex;
-
-      // add 1 if moved upwards
-      if (tabsInGroup.findIndex(t => t.id === tabToMove.id) > target.childIndex) {
-        updatedIndex++;
-      }
-
       // move tabs
       const moveTabsPromises = tabs.map(async tabId => {
-        return chrome.tabs.move(tabId, { index: updatedIndex });
+        return chrome.tabs.move(tabId, { index: targetIndex });
       });
 
       await Promise.allSettled(moveTabsPromises);
@@ -416,22 +444,13 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     }
 
     // dropped index for tab dropped in the root/base container (index is the tab of thz tab at the previous pos)
-    const droppedIndexRoot = groupedTabs['root'].children[Math.max(droppedIndex, 0)];
-
-    console.log('✅ ~ dropHandler:417 ~ droppedIndexRoot:', droppedIndexRoot);
-
-    const tabIndex = activeSpaceTabs.find(tab => tab.id === droppedIndexRoot)?.index || 0;
-
-    console.log('✅ ~ ActiveSpaceTabs ~ tabIndex:', tabIndex);
-
-    // handle tab drop
 
     //  multiple tabs drop
     const tabs = selectedTabs?.length > 0 ? selectedTabs : [tabToMove.id];
 
     // move tabs
     const moveTabsPromises = tabs.map(async tabId => {
-      return chrome.tabs.move(tabId, { index: tabIndex });
+      return chrome.tabs.move(tabId, { index: targetIndex });
     });
 
     await Promise.allSettled(moveTabsPromises);
@@ -582,6 +601,10 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                   {
                     // selected tab bg
                     'bg-brand-darkBgAccent/40': selectedTabs.includes((item.data as ITab).id),
+                  },
+                  {
+                    // selected tab bg
+                    'bg-rose-400/40': context?.isDraggingOver,
                   },
                   {
                     // on drag
