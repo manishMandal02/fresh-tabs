@@ -139,6 +139,8 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 
 // TODO - show notes for tabs in active tabs sidepanel
 
+// TODO - fix - domain notes popup embedding twice (sometimes)
+
 // TODO - fix - no icon for for some discard tabs (discard url prefix)
 
 // TODO - new feat - tab thumbnail views and also grid views
@@ -146,6 +148,7 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 // TODO - remove space history older than 30 days
 
 // TODO - backend - Use UTC date & time stamp for server (save user timezone)
+
 // TODO - backend - reset day at 3am at default
 
 // helpers for chrome event handlers

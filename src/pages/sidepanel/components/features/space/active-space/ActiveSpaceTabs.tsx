@@ -346,13 +346,15 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     items: TreeItem<(IGroup | ITab) & { type: 'tab' | 'group' }>[],
     target: DraggingPosition,
   ) => {
+    console.log('✅ ~ getTabIndexClosestToTarget:349 ~ target:', target);
+
     const getTabIndexClosestToTarget = () => {
       // @ts-expect-errors childIndex is included
-      const droppedIndex = target?.childIndex;
+      const droppedIndex = Math.max(target?.childIndex - 1, 0);
 
       if (target.targetType === 'between-items' && target.parentItem !== 'root') {
-        const tab = groupedTabs[target.parentItem].children[droppedIndex];
-        return (groupedTabs[tab].data as ITab).index;
+        const closestTabId = groupedTabs[target.parentItem].children[droppedIndex];
+        return (groupedTabs[closestTabId].data as ITab).index;
       }
 
       let tab = groupedTabs['root'].children[droppedIndex];
@@ -364,7 +366,15 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     };
 
     //  get the index of the tab at the dropped location and adjust the dropped-index accordingly
-    const targetIndex = target.targetType !== 'item' ? getTabIndexClosestToTarget() : 0;
+    let targetIndex = target.targetType !== 'item' ? getTabIndexClosestToTarget() : 0;
+
+    const hasMovedUpward =
+      items[0]?.data.type === 'group'
+        ? // @ts-expect-errors childIndex is included
+          groupedTabs['root'].children?.findIndex(t => t === items[0].data.id) > target?.childIndex
+        : (items[0]?.data as ITab).index > targetIndex;
+
+    if (hasMovedUpward) targetIndex++;
 
     if (items[0]?.data.type === 'group') {
       // handle group dropped on a group (merge)
@@ -395,7 +405,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
         return;
       }
 
-      // handle group drop
+      // handle move group
       await chrome.tabGroups.move(items[0].data.id, {
         index: targetIndex,
       });
