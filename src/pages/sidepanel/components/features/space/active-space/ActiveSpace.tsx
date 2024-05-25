@@ -9,20 +9,20 @@ import MoreOptions from '../more-options';
 import ActiveSpaceTabs from './ActiveSpaceTabs';
 import SpaceHistory from '../history/SpaceHistory';
 import Tabs from '../../../../../../components/tabs/Tabs';
-import { ISpace, ITab } from '@root/src/types/global.types';
+import { ISpace } from '@root/src/types/global.types';
 import { syncTabs } from '@root/src/services/chrome-tabs/tabs';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import {
   activeSpaceGroupsAtom,
   activeSpaceTabsAtom,
   deleteSpaceModalAtom,
+  selectedTabsAtom,
   snackbarAtom,
   updateSpaceAtom,
 } from '@root/src/stores/app';
 
 type Props = {
   space: ISpace;
-  tab: ITab[];
   onSearchClick: () => void;
   onNotificationClick: () => void;
 };
@@ -37,6 +37,7 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
   const updateSpaceState = useSetAtom(updateSpaceAtom);
   const setActSpaceTabs = useSetAtom(activeSpaceTabsAtom);
   const setActSpaceGroups = useSetAtom(activeSpaceGroupsAtom);
+  const setSelectedTabs = useSetAtom(selectedTabsAtom);
 
   // local state
   const [showSpaceHistory, setShowSpaceHistory] = useState(false);
@@ -57,6 +58,7 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
     // update ui state
     setActSpaceGroups(groups);
     setActSpaceTabs(tabs);
+    setSelectedTabs([]);
 
     setSnackbar({ msg: 'Tabs synced', show: true, isLoading: false, isSuccess: true });
   };

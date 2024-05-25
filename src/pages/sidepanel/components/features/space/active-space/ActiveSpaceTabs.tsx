@@ -1,8 +1,8 @@
 // lib styles
 import 'react-complex-tree/lib/style-modern.css';
 
-import { motion } from 'framer-motion';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useState, useCallback, useEffect, useRef, memo } from 'react';
 import { CopyIcon, Cross1Icon, ChevronDownIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
@@ -404,11 +404,11 @@ const ActiveSpaceTabs = ({ space }: Props) => {
           groupId: target.parentItem as number,
         });
         // move tabs to the dropped index
-        const moveTabsPromises = tabsInDraggedGroup.map(async tabId => {
+        const moveTabsToIndexPromises = tabsInDraggedGroup.map(async tabId => {
           return chrome.tabs.move(tabId, { index: targetIndex });
         });
 
-        await Promise.allSettled(moveTabsPromises);
+        await Promise.allSettled(moveTabsToIndexPromises);
         return;
       }
 
@@ -581,6 +581,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                     await chrome.tabGroups.update(item.data.id, {
                       collapsed: !(item.data as IGroup).collapsed,
                     });
+
                     return;
                   }
                   onTabClick(item.data as ITab);
@@ -681,20 +682,24 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                   <>
                     {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                     <span
-                      className="absolute opacity-0 hidden group-hover:flex group-hover:opacity-100 z-20 transition-all duration-300 right-[8px] items-center gap-x-3 shadow-md shadow-slate-800"
+                      className={`absolute opacity-0 hidden group-hover:flex group-hover:opacity-100 z-20 
+                              transition-all duration-300 right-[8px] items-center gap-x-3 shadow-md shadow-slate-800`}
                       onClick={ev => ev.stopPropagation()}>
                       {/* open tab  */}
                       <ExternalLinkIcon
-                        className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
+                        className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer 
+                                   py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
                         onClick={() => handleGoToTab(item.data?.id, (item.data as ITab).index)}
                       />
                       <CopyIcon
-                        className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
+                        className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer 
+                                   py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
                         onClick={async () => await copyToClipboard((item.data as ITab).url)}
                       />
                       <Cross1Icon
-                        className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
-                        onClick={() => handleRemoveTab(item.data?.id)}
+                        className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer 
+                                   py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
+                        onClick={() => handleRemoveTab((item.data as ITab).index)}
                       />
                     </span>
                   </>
@@ -706,13 +711,41 @@ const ActiveSpaceTabs = ({ space }: Props) => {
         )}
         renderTreeContainer={({ children, containerProps }) => <div {...containerProps}>{children}</div>}
         renderItemsContainer={({ children, containerProps, parentId }) => (
-          // @ts-expect-error - lib code
-          <motion.ul
-            {...(parentId !== 'root' ? { ...bounce } : {})}
-            className={cn('w-full ', { 'bg-brand-darkBgAccent/40 rounded-b-md px-1.5': parentId !== 'root' })}
-            {...containerProps}>
-            {children}
-          </motion.ul>
+          // TODO - exit animation not working
+          <AnimatePresence initial={false}>
+            {parentId !== 'root' ? (
+              // @ts-expect-error - element props by lib
+              <motion.ul
+                key={parentId}
+                initial="collapsed"
+                exit="collapsed"
+                animate={(groupedTabs[parentId].data as IGroup).collapsed ? 'collapsed' : 'open'}
+                variants={{
+                  open: {
+                    opacity: 1,
+                    height: 'auto',
+                  },
+                  collapsed: {
+                    opacity: 0,
+                    height: 0,
+                  },
+                }}
+                transition={{
+                  type: 'spring',
+                  stiffness: 250,
+                  damping: 25,
+                  duration: 0.5,
+                }}
+                className={cn('w-full ', { 'bg-brand-darkBgAccent/40 rounded-b-md px-1.5': parentId !== 'root' })}
+                {...containerProps}>
+                {children}
+              </motion.ul>
+            ) : (
+              <ul className="w-full" {...containerProps}>
+                {children}
+              </ul>
+            )}
+          </AnimatePresence>
         )}>
         <Tree ref={tabsTree} treeId="active-space-tabs" rootItem="root" treeLabel="Tree Example" />
       </ControlledTreeEnvironment>

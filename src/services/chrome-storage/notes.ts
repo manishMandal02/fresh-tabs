@@ -29,6 +29,7 @@ export const addNewNote = async (note: INote) => {
 
 export const getNotesBySpace = async (spaceId: string) => {
   const allNotes = await getAllNotes();
+  if (!allNotes || allNotes?.length < 1) return [];
   const spaceNotes = allNotes.filter(note => note.spaceId === spaceId);
 
   return spaceNotes;

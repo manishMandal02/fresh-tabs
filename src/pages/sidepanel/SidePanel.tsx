@@ -144,7 +144,6 @@ const SidePanel = () => {
                 <div className="h-[95%] relative px-1.5 ">
                   <ActiveSpace
                     space={activeSpace}
-                    tab={activeSpaceTabs}
                     onSearchClick={handleShowCommandPalette}
                     onNotificationClick={handleShowNotification}
                   />

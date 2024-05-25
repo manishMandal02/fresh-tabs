@@ -112,8 +112,6 @@ export const useTabsDnd = () => {
       // check if the tabs are moved up or down from it's previous pos
       const didTabsMoveDownward = sourceIndex < destinationIndex;
 
-      console.log('🚀 ~ useTabsDnd ~ didTabsMoveDownward:', didTabsMoveDownward);
-
       // calculate dropped index
       const droppedIndex = didTabsMoveDownward ? 1 + destinationIndex - selectedTabs.length : destinationIndex;
 

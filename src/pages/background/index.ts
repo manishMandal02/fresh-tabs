@@ -137,7 +137,7 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - show notes for tabs in active tabs sidepanel
+// TODO - show num notes for a tab in active tabs list sidepanel
 
 // TODO - fix - domain notes popup embedding twice (sometimes)
 
@@ -192,7 +192,7 @@ const createUnsavedSpacesOnInstall = async () => {
     logger.error({
       error: new Error('Failed to initialize app.'),
       msg: 'Failed to create unsaved spaces during app initialization.',
-      fileTrace: 'src/pages/background/index.ts:170 ~ createUnsavedSpacesOnInstall() ~ catch block',
+      fileTrace: 'src/pages/background/index.ts:195 ~ createUnsavedSpacesOnInstall() ~ catch block',
     });
     return false;
   }
@@ -248,7 +248,7 @@ const recordSiteVisit = async (windowId: number, tabId: number) => {
 
   const updatedTab = tabsInSpace.find(t => t.id === tabId);
 
-  if (!updatedTab?.url || !updatedTab.url.startsWith('http')) return;
+  if (!updatedTab?.url.startsWith('http')) return;
 
   const { url, title } = updatedTab;
   const spaceHistoryToday = await getSpaceHistory(space.id);
@@ -341,6 +341,7 @@ chrome.runtime.onMessage.addListener(
 
     logger.info(`Event received at background:: ${event}`);
 
+    // handle events cases
     switch (event) {
       case 'SWITCH_TAB': {
         const { tabId, shouldCloseCurrentTab } = payload;
@@ -374,7 +375,6 @@ chrome.runtime.onMessage.addListener(
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const tab = await getCurrentTab();
 
-        // TODO - new space with title
         const newSpace = await createNewSpace(
           {
             title: spaceTitle,
@@ -655,7 +655,6 @@ chrome.runtime.onMessage.addListener(
         return true;
       }
     }
-    // end switch statement
   }),
 );
 
@@ -718,8 +717,6 @@ chrome.runtime.onInstalled.addListener(async info => {
 
 // shortcut commands
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  console.log('🚀 ~ chrome.commands.onCommand.addListener ~ command:', command);
-
   // new tab to right shortcut
   if (command === 'newTab') {
     const newTab = await createActiveTab('chrome://newtab', tab.index + 1);
@@ -727,7 +724,7 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
     // TODO - temp fix: a additional new tab gets created when side panel is opened
     const [nextTab] = await chrome.tabs.query({ index: newTab.index + 1 });
 
-    if (nextTab && nextTab.pendingUrl.startsWith('chrome://newtab')) {
+    if (nextTab?.pendingUrl.startsWith('chrome://newtab')) {
       await chrome.tabs.remove(nextTab.id);
     }
 
@@ -835,6 +832,9 @@ chrome.alarms.onAlarm.addListener(async alarm => {
       logger.info('⏰ Midnight: merge space history & usage data');
 
       break;
+    }
+    default: {
+      logger.info(`⏰ ${alarm.name} alarm triggered, no handler attached ⚠️`);
     }
   }
 });
