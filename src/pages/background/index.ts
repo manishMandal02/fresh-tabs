@@ -209,6 +209,7 @@ const updateTabHandler = async (tabId: number) => {
 
   if (!space?.id) return;
 
+  // TODO - get tabs from chrome api if added or just update the existing tab
   //  create new  or update tab
   await updateTab(space?.id, { id: tab.id, url: tab.url, title: tab.title, index: tab.index }, tab.index);
 
@@ -884,8 +885,6 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
     });
   }
 
-  // record site usage
-
   // wait for 0.2s
   await wait(250);
 
@@ -906,11 +905,13 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
 // TODO - debounce this event handler
 // event listener for when tabs get updated
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  console.log('✉️ ~ chrome.tabs.onUpdated.addListener:907 ~ changeInfo:', changeInfo);
   if (changeInfo?.url) {
     // record site visit for the previous url
     recordSiteVisit(tab.windowId, tab.id);
   }
 
+  // TODO - fix: update tabs handler fix (separate add and update logic)
   if (changeInfo?.status === 'complete') {
     // if this is discard tab, do nothing
     if (changeInfo?.url?.startsWith(DISCARD_TAB_URL_PREFIX)) return;
@@ -1161,7 +1162,11 @@ const handleTabsReplaced = async events => {
 
   for (const window of windows) {
     const space = await getSpaceByWindow(window.id);
+
+    if (space?.id) continue;
+
     const tabsInSpace = await getTabsInSpace(space.id);
+
     // find changed tab
     const hasTabChanged = tabsInSpace.some(t => eventsToProcess.some(e => e.replacedTabId === t.id));
 
@@ -1176,6 +1181,8 @@ const handleTabsReplaced = async events => {
         return { ...t, id: event.tabId };
       }),
     ];
+
+    console.log('✅ ~ handleTabsReplaced:1183 ~ updatedTabs:', updatedTabs);
 
     // update tabs storage
     await setTabsForSpace(space.id, updatedTabs);

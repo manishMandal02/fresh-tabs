@@ -124,14 +124,10 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
   const [activeSpaceGroups, setActiveSpaceGroups] = useAtom(activeSpaceGroupsAtom);
 
-  console.log('🚀 ~ ActiveSpaceTabs ~ setActiveSpaceGroups:', setActiveSpaceGroups);
-
   const [groupedTabs, setGroupedTabs] = useState<Record<string | number, IGroupedTabs>>({});
 
   useEffect(() => {
     const groups = mapTabToGroups(activeSpaceTabs, activeSpaceGroups);
-
-    console.log('🚀 ~ useEffect ~ groups:', groups);
 
     setGroupedTabs(groups);
   }, [activeSpaceTabs, activeSpaceGroups]);
@@ -346,8 +342,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     items: TreeItem<(IGroup | ITab) & { type: 'tab' | 'group' }>[],
     target: DraggingPosition,
   ) => {
-    console.log('✅ ~ getTabIndexClosestToTarget:349 ~ target:', target);
-
     const getTabIndexClosestToTarget = () => {
       // @ts-expect-errors childIndex is included
       const droppedIndex = Math.max(target?.childIndex - 1, 0);

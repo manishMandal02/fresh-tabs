@@ -115,9 +115,9 @@ export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promis
 
     if (tabs?.length < 1) throw new Error(`Tabs not found for this space: ${spaceId}.`);
 
-    let tabToUpdate = tabs.find(tab => tab.index === idx);
+    let tabToUpdate = tabs.find(t1 => t1.index === idx);
 
-    const updatedTabs = tabs.filter(tab => tab.index !== idx);
+    const updatedTabs = tabs.filter(t2 => t2.index !== idx);
 
     // check if tab exists
     if (tabToUpdate?.url === tab.url) {

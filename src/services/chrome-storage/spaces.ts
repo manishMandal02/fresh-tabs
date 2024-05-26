@@ -172,7 +172,7 @@ export const getSpace = async (id: string): Promise<ISpace | null> => {
     // get all spaces from storage
     const spaces = await getAllSpaces();
 
-    if (spaces.length < 1) throw new Error('No found spaces in storage.');
+    if (spaces.length < 1) throw new Error('No found spaces.');
 
     return spaces.find(s => s.id === id) || null;
   } catch (error) {
@@ -191,7 +191,7 @@ export const updateActiveTabInSpace = async (windowId: number, idx: number): Pro
     // get all spaces from storage
     const spaces = await getAllSpaces();
 
-    if (spaces.length < 1) throw new Error('No found spaces in storage.');
+    if (spaces.length < 1) throw new Error('No spaces found in storage.');
 
     // find space to update
     const spaceToUpdateIndex = spaces.findIndex(s => s.windowId === windowId);
@@ -213,7 +213,7 @@ export const updateActiveTabInSpace = async (windowId: number, idx: number): Pro
     logger.error({
       error,
       msg: `Error updating active tab for window windowId: ${windowId}`,
-      fileTrace: 'src/services/chrome-storage/spaces.ts:191 ~ updateActiveTabInSpace() ~ catch block',
+      fileTrace: 'src/services/chrome-storage/spaces.ts:216 ~ updateActiveTabInSpace() ~ catch block',
     });
     return null;
   }
