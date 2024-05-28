@@ -4,7 +4,7 @@ import 'react-complex-tree/lib/style-modern.css';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useState, useCallback, useEffect, useRef, memo } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo, memo } from 'react';
 import { CopyIcon, Cross1Icon, ChevronDownIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
 import {
   Tree,
@@ -66,7 +66,7 @@ const mapTabToGroups = (tabs: ITab[], groups: IGroup[]) => {
 
     groupedTabs[item.id] = { ...tabItem, data: { ...tabItem.data, type: 'tab' } };
 
-    if (item?.groupId < 1 || groups?.length < 1) {
+    if (!item.groupId || item.groupId < 1 || groups?.length < 1) {
       groupedTabs['root'].children.push(item.id);
       return;
     }
@@ -122,15 +122,20 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   const activeSpace = useAtomValue(activeSpaceAtom);
   const updateSpaceState = useSetAtom(updateSpaceAtom);
   const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
+
+  console.log('🎯 ~ ActiveSpaceTabs ~ activeSpaceTabs:', activeSpaceTabs);
+
+  const activeSpaceTabsSorted = useMemo(() => activeSpaceTabs.sort((a, b) => a.index - b.index), [activeSpaceTabs]);
+
   const [activeSpaceGroups, setActiveSpaceGroups] = useAtom(activeSpaceGroupsAtom);
 
   const [groupedTabs, setGroupedTabs] = useState<Record<string | number, IGroupedTabs>>({});
 
   useEffect(() => {
-    const groups = mapTabToGroups(activeSpaceTabs, activeSpaceGroups);
+    const groups = mapTabToGroups(activeSpaceTabsSorted, activeSpaceGroups);
 
     setGroupedTabs(groups);
-  }, [activeSpaceTabs, activeSpaceGroups]);
+  }, [activeSpaceTabsSorted, activeSpaceGroups]);
 
   // local state
   const [discardedTabIDs, setDiscardedTabIDs] = useState<number[]>([]);
@@ -279,9 +284,8 @@ const ActiveSpaceTabs = ({ space }: Props) => {
       // select tab
       if (!selectedTabs.includes(tab.id)) {
         // add new add at the sorted index of main tabs
-        const sortedTabs = activeSpaceTabs.sort((a, b) => a.index - b.index);
 
-        const newSelectedTabs = sortedTabs
+        const newSelectedTabs = activeSpaceTabsSorted
           .filter(sT => sT.id === tab.id || selectedTabs.includes(sT.id))
           .map(t => t.id);
         setSelectedTabs(newSelectedTabs);
@@ -298,6 +302,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
       selectedTabs,
       setSelectedTabs,
       activeSpaceTabs,
+      activeSpaceTabsSorted,
     ],
   );
 

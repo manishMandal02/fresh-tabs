@@ -107,42 +107,43 @@ export const updateTabIndex = async (spaceId: string, tabId: number, newIndex: n
   }
 };
 
-// update/save tab url, title, etc
-export const updateTab = async (spaceId: string, tab: ITab, idx: number): Promise<boolean> => {
-  try {
-    // get all tabs from the space
-    const tabs = await getTabsInSpace(spaceId);
+//! not used - update/save tab url, title, etc
 
-    if (tabs?.length < 1) throw new Error(`Tabs not found for this space: ${spaceId}.`);
+// const updateTab = async (spaceId: string, tab: ITab, idx: number): Promise<boolean> => {
+//   try {
+//     // get all tabs from the space
+//     const tabs = await getTabsInSpace(spaceId);
 
-    let tabToUpdate = tabs.find(t1 => t1.index === idx);
+//     if (tabs?.length < 1) throw new Error(`Tabs not found for this space: ${spaceId}.`);
 
-    const updatedTabs = tabs.filter(t2 => t2.index !== idx);
+//     let tabToUpdate = tabs.find(t1 => t1.index === idx && t1.id === tab.id);
 
-    // check if tab exists
-    if (tabToUpdate?.url === tab.url) {
-      // exists, update tab at index pos
+//     const updatedTabs = tabs.filter(t2 => t2.index !== idx);
 
-      tabToUpdate = tab;
-      updatedTabs.push(tabToUpdate);
-    } else {
-      // add new tab at index pos
-      updatedTabs.push(tab);
-    }
+//     // check if tab exists
+//     if (tabToUpdate?.id) {
+//       // exists, update tab at index pos
 
-    // save updated tabs to storage
-    await setTabsForSpace(spaceId, updatedTabs);
+//       tabToUpdate = tab;
+//       updatedTabs.push(tabToUpdate);
+//     } else {
+//       // add new tab at index pos
+//       updatedTabs.push(tab);
+//     }
 
-    return true;
-  } catch (error) {
-    logger.error({
-      error,
-      msg: `Error updating tab: ${tab.title}`,
-      fileTrace: 'src/services/chrome-storage/tabs.ts:101 ~ updateTab() ~ catch block',
-    });
-    return false;
-  }
-};
+//     // save updated tabs to storage
+//     await setTabsForSpace(spaceId, updatedTabs);
+
+//     return true;
+//   } catch (error) {
+//     logger.error({
+//       error,
+//       msg: `Error updating tab: ${tab.title}`,
+//       fileTrace: 'src/services/chrome-storage/tabs.ts:101 ~ updateTab() ~ catch block',
+//     });
+//     return false;
+//   }
+// };
 
 // remove/delete a tab
 export const removeTabFromSpace = async (
@@ -160,7 +161,7 @@ export const removeTabFromSpace = async (
     const tabToDelete = tabs.find(t => (id ? t.id === id : t.index === index));
 
     // do nothing, if only 1 tab remaining
-    if (tabs.length === 1 || !tabToDelete) return false;
+    if (!tabToDelete || tabs.length === 1) return false;
 
     const updatedTabs = tabs.filter(t => t.id !== tabToDelete.id);
 
@@ -176,13 +177,11 @@ export const removeTabFromSpace = async (
 
     // remove tab from window, when deleted from spaces view
     if (removeFromWindow) {
-      // check if the tab is opened
+      // get tab details
       const tab = await chrome.tabs.get(tabToDelete.id);
 
-      // if not, do nothing
-      if (tab?.id) {
-        await chrome.tabs.remove(tabToDelete.id);
-      }
+      // delete tab if it's opened
+      if (tab?.id) await chrome.tabs.remove(tabToDelete.id);
     }
 
     return true;

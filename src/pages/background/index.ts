@@ -28,6 +28,7 @@ import {
   getCurrentWindowId,
   goToTab,
   openSpace,
+  syncTabs,
 } from '@root/src/services/chrome-tabs/tabs';
 import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
@@ -61,7 +62,6 @@ import {
   removeTabFromSpace,
   saveGlobalPinnedTabs,
   setTabsForSpace,
-  updateTab,
   updateTabIndex,
 } from '@root/src/services/chrome-storage/tabs';
 import {
@@ -211,7 +211,7 @@ const updateTabHandler = async (tabId: number) => {
 
   // TODO - get tabs from chrome api if added or just update the existing tab
   //  create new  or update tab
-  await updateTab(space?.id, { id: tab.id, url: tab.url, title: tab.title, index: tab.index }, tab.index);
+  await syncTabs(space.id, space.windowId, true, false);
 
   // send send to side panel
   await publishEvents({
@@ -911,7 +911,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     recordSiteVisit(tab.windowId, tab.id);
   }
 
-  // TODO - fix: update tabs handler fix (separate add and update logic)
   if (changeInfo?.status === 'complete') {
     // if this is discard tab, do nothing
     if (changeInfo?.url?.startsWith(DISCARD_TAB_URL_PREFIX)) return;

@@ -272,31 +272,37 @@ export const newTabGroup = async (groupTitle: string, tabURL: string, windowId: 
   });
 };
 
-export const syncTabs = async (spaceId: string, windowId: number) => {
-  // get all tabs in the window
-  const currentTabs = await chrome.tabs.query({ windowId });
+export const syncTabs = async (spaceId: string, windowId: number, tabs = true, groups = true) => {
+  let tabsInWindow: ITab[] = [];
+  let currentTabs: chrome.tabs.Tab[] = [];
+  if (tabs) {
+    // get all tabs in the window
+    currentTabs = await chrome.tabs.query({ windowId });
+    tabsInWindow = currentTabs.map(t => ({
+      title: t.title,
+      url: t.url,
+      id: t.id,
+      index: t.index,
+      groupId: t.groupId,
+    }));
+    await setTabsForSpace(spaceId, tabsInWindow);
+  }
 
-  // get all groups
-  const groups = await chrome.tabGroups.query({ windowId });
+  let groupsInWindow: IGroup[] = [];
 
-  const tabsInWindow: ITab[] = currentTabs.map(t => ({
-    title: t.title,
-    url: t.url,
-    id: t.id,
-    index: t.index,
-    groupId: t.groupId,
-  }));
+  if (groups) {
+    // get all groups
+    const currentGroups = await chrome.tabGroups.query({ windowId });
 
-  const groupsInWindow: IGroup[] = groups.map(group => ({
-    id: group.id,
-    name: group.title,
-    theme: group.color,
-    collapsed: group.collapsed,
-  }));
+    groupsInWindow = currentGroups.map(group => ({
+      id: group.id,
+      name: group.title,
+      theme: group.color,
+      collapsed: group.collapsed,
+    }));
 
-  await setTabsForSpace(spaceId, tabsInWindow);
+    await setGroupsToSpace(spaceId, groupsInWindow);
+  }
 
-  await setGroupsToSpace(spaceId, groupsInWindow);
-
-  return { tabs: tabsInWindow, groups: groupsInWindow, activeTab: currentTabs.filter(t => t.active)[0] || null };
+  return { tabs: tabsInWindow, groups: groupsInWindow, activeTab: currentTabs?.filter(t => t.active)[0] || null };
 };
