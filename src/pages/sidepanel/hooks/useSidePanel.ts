@@ -93,8 +93,6 @@ export const useSidePanel = () => {
   // handle background events
   const handleEvents = useCallback(
     async ({ event, payload }: IMessageEventSidePanel, activeSpaceRef: MutableRefObject<ISpace>) => {
-      console.log('✅ ~ handleEvents:97 ~ event:', event);
-
       switch (event) {
         case 'ADD_SPACE': {
           // add new space
@@ -132,8 +130,6 @@ export const useSidePanel = () => {
           if (payload.spaceId !== activeSpaceRef.current?.id) return;
 
           const updatedTabs = await getTabsInSpace(payload.spaceId);
-
-          console.log('✅ ~ handleEvents:136 ~ updatedTabs:', updatedTabs);
 
           setActiveSpaceTabs(updatedTabs);
           break;

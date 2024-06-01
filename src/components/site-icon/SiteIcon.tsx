@@ -40,7 +40,7 @@ const SiteIcon = ({ siteURl, classes }: Props) => {
           }
         }}
         className={cn(
-          'size-[14px] mr-[6px] rounded-md border-[0.5px] border-slate-700 object-center object-scale-down ',
+          'size-[14px] mr-[6px] rounded-md bg-brand-darkBgAccent/15 object-center object-scale-down',
           { invert: siteURl.includes('github.com') },
           classes,
         )}

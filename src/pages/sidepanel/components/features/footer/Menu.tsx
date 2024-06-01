@@ -16,7 +16,6 @@ import {
 } from '@root/src/stores/app';
 import { syncSpacesToBookmark } from '@root/src/services/chrome-bookmarks/bookmarks';
 import { syncTabs } from '@root/src/services/chrome-tabs/tabs';
-import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 
 // testing
 const manishProfilePicUrl = 'https://avatars.githubusercontent.com/u/76472450?v=4';
@@ -54,13 +53,13 @@ const Menu = () => {
     setSnackbar({ show: true, isLoading: true, msg: 'Discarding tabs' });
 
     await discardAllTabs();
-    const { tabs, groups, activeTab } = await syncTabs(activeSpace.id, activeSpace.windowId);
+    const { tabs, groups, activeTab } = await syncTabs(
+      activeSpace.id,
+      activeSpace.windowId,
+      activeSpace.activeTabIndex,
+    );
 
     if (activeTab.index !== activeSpace.activeTabIndex) {
-      await updateSpace(activeSpace.id, {
-        ...activeSpace,
-        activeTabIndex: activeTab.index,
-      });
       updateSpaceState({
         ...activeSpace,
         activeTabIndex: activeTab.index,

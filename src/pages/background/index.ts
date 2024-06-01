@@ -62,7 +62,6 @@ import {
   removeTabFromSpace,
   saveGlobalPinnedTabs,
   setTabsForSpace,
-  updateTabIndex,
 } from '@root/src/services/chrome-storage/tabs';
 import {
   checkNewWindowTabs,
@@ -209,11 +208,10 @@ const updateTabHandler = async (tabId: number) => {
 
   if (!space?.id) return;
 
-  // TODO - get tabs from chrome api if added or just update the existing tab
   //  create new  or update tab
-  await syncTabs(space.id, space.windowId, true, false);
+  const { activeTab } = await syncTabs(space.id, space.windowId, space.activeTabIndex, true, false);
 
-  // send send to side panel
+  // send  to side panel
   await publishEvents({
     id: generateId(),
     event: 'UPDATE_TABS',
@@ -221,6 +219,18 @@ const updateTabHandler = async (tabId: number) => {
       spaceId: space.id,
     },
   });
+
+  if (space.activeTabIndex !== activeTab.index) {
+    // send  to side panel
+    await publishEvents({
+      id: generateId(),
+      event: 'UPDATE_SPACE_ACTIVE_TAB',
+      payload: {
+        spaceId: space.id,
+        newActiveIndex: activeTab.index,
+      },
+    });
+  }
 };
 
 const removeTabHandler = async (tabId: number, windowId: number) => {
@@ -270,6 +280,7 @@ const recordDailySpaceTime = async (windowId: number) => {
     // chrome window/space focused
     // get space
     const space = await getSpaceByWindow(windowId);
+    if (!space?.id) return;
     dailySpaceTimeChunks.spaceId = space.id;
   }
 
@@ -902,7 +913,7 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   });
 });
 
-// TODO - debounce this event handler
+// TODO - debounce handler
 // event listener for when tabs get updated
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   console.log('✉️ ~ chrome.tabs.onUpdated.addListener:907 ~ changeInfo:', changeInfo);
@@ -921,6 +932,13 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     showNotesBubbleContentScript(tab?.url, tabId, tab.windowId);
   }
 
+  // handle tab's group change
+  if (changeInfo?.groupId) {
+    // get space by windowId
+    // add/update tab
+    await updateTabHandler(tabId);
+  }
+
   if (changeInfo?.discarded) {
     const space = await getSpaceByWindow(tab.windowId);
     // send send to side panel
@@ -930,10 +948,9 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       payload: { spaceId: space.id },
     });
   }
-
-  // TODO - handle tab's group change
 });
 
+// TODO - debounce handler
 // event listener for when tabs get moved (index change)
 chrome.tabs.onMoved.addListener(async (tabId, info) => {
   await wait(250);
@@ -944,36 +961,7 @@ chrome.tabs.onMoved.addListener(async (tabId, info) => {
   if (!space?.id) return;
 
   // update tab index
-  await updateTabIndex(space.id, tabId, info.toIndex);
-
-  // check if active tab has changed
-  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-  if (space.activeTabIndex !== activeTab.index) {
-    // tabs moved from side panel
-
-    // update space's active tab index
-    await updateActiveTabInSpace(info.windowId, info.toIndex);
-
-    // send send to side panel
-    await publishEvents({
-      id: generateId(),
-      event: 'UPDATE_TABS',
-      payload: {
-        spaceId: space.id,
-      },
-    });
-  }
-
-  // send send to side panel
-  await publishEvents({
-    id: generateId(),
-    event: 'UPDATE_SPACE_ACTIVE_TAB',
-    payload: {
-      spaceId: space.id,
-      newActiveIndex: info.toIndex,
-    },
-  });
+  await updateTabHandler(tabId);
 });
 
 // on tab detached from window
@@ -1181,8 +1169,6 @@ const handleTabsReplaced = async events => {
       }),
     ];
 
-    console.log('✅ ~ handleTabsReplaced:1183 ~ updatedTabs:', updatedTabs);
-
     // update tabs storage
     await setTabsForSpace(space.id, updatedTabs);
 
@@ -1194,8 +1180,6 @@ const handleTabsReplaced = async events => {
         spaceId: space.id,
       },
     });
-
-    break;
   }
 };
 

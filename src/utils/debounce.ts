@@ -1,5 +1,5 @@
 export function debounce<T extends (...args: unknown[]) => void>(func: T, delay = 500) {
-  let timer: ReturnType<typeof setTimeout>;
+  let timer: NodeJS.Timeout;
   return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
     clearTimeout(timer);
     timer = setTimeout(() => {
@@ -13,7 +13,7 @@ export function debounceWithEvents<T extends (...args: unknown[]) => unknown>(
   func: T,
   delay: number,
 ): (...args: Parameters<T>) => void {
-  let timer: ReturnType<typeof setTimeout>;
+  let timer: NodeJS.Timeout;
   let events: Parameters<T>[] = [];
   return function (...args: Parameters<T>) {
     clearTimeout(timer);

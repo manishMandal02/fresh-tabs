@@ -47,7 +47,7 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
   const handleSyncTabs = async () => {
     setSnackbar({ msg: '', show: false, isLoading: true });
 
-    const { tabs, groups, activeTab } = await syncTabs(space.id, space.windowId);
+    const { tabs, groups, activeTab } = await syncTabs(space.id, space.windowId, space.activeTabIndex);
 
     // update space's active tab index if not correct
     if (space.activeTabIndex !== activeTab.index) {

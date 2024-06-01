@@ -62,51 +62,6 @@ export const getTab = async (spaceId: string, idx: number): Promise<ITab | null>
   }
 };
 
-// update tab index
-export const updateTabIndex = async (spaceId: string, tabId: number, newIndex: number): Promise<boolean> => {
-  try {
-    // get all tabs from the space
-    const tabs = await getTabsInSpace(spaceId);
-
-    if (tabs?.length < 1) throw new Error(`Tabs not found for this space: ${spaceId}.`);
-
-    const tabToUpdate = tabs.find(t => t.id === tabId);
-
-    if (!tabToUpdate) throw new Error('Tab not found with this id.');
-
-    // tab index for tab
-    const newTabs = tabs.map(tab => {
-      if (tab.id === tabId) {
-        return {
-          ...tab,
-          index: newIndex,
-        };
-      }
-
-      if (tab.index > newIndex) {
-        return {
-          ...tab,
-          index: tab.index + 1,
-        };
-      }
-
-      return tab;
-    });
-
-    // save new tabs array to storage
-    await setTabsForSpace(spaceId, newTabs);
-
-    return true;
-  } catch (error) {
-    logger.error({
-      error,
-      msg: `Error updating tab's index tab-index: ${tabId}.`,
-      fileTrace: 'src/services/chrome-storage/tabs.ts:67 ~ updateTabIndex() ~ catch block',
-    });
-    return false;
-  }
-};
-
 //! not used - update/save tab url, title, etc
 
 // const updateTab = async (spaceId: string, tab: ITab, idx: number): Promise<boolean> => {

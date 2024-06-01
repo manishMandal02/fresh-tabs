@@ -22,7 +22,6 @@ import { DISCARD_TAB_URL_PREFIX } from '@root/src/constants/app';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { goToTab, syncTabs } from '@root/src/services/chrome-tabs/tabs';
 import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
-import { setGroupsToSpace } from '@root/src/services/chrome-storage/groups';
 import { useMetaKeyPressed } from '@root/src/pages/sidepanel/hooks/use-key-shortcuts';
 import { IGroup, IMessageEventSidePanel, ISpace, ITab } from '@root/src/types/global.types';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
@@ -130,6 +129,8 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   const [activeSpaceGroups, setActiveSpaceGroups] = useAtom(activeSpaceGroupsAtom);
 
   const [groupedTabs, setGroupedTabs] = useState<Record<string | number, IGroupedTabs>>({});
+
+  console.log('✅ ~ ActiveSpaceTabs ~ groupedTabs:', groupedTabs);
 
   useEffect(() => {
     const groups = mapTabToGroups(activeSpaceTabsSorted, activeSpaceGroups);
@@ -324,7 +325,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   // update storage and ui state for tabs and groups
   const updateTabsAndGroupState = useCallback(async () => {
     // get current group & tab data from chrome
-    const { tabs, groups, activeTab } = await syncTabs(space.id, space.windowId);
+    const { tabs, groups, activeTab } = await syncTabs(space.id, space.windowId, space.activeTabIndex);
 
     if (activeTab.index !== space.activeTabIndex) {
       // update active tab index
@@ -332,14 +333,9 @@ const ActiveSpaceTabs = ({ space }: Props) => {
       updateSpace(space.id, { activeTabIndex: activeTab.index });
     }
 
-    // update storage
-    await setGroupsToSpace(space.id, groups);
-    await setTabsForSpace(space.id, tabs);
     // update ui state
     setActiveSpaceTabs(tabs);
     setActiveSpaceGroups(groups);
-
-    return;
   }, [setActiveSpaceGroups, setActiveSpaceTabs, space, updateSpaceState]);
 
   // * drop handler
@@ -347,9 +343,14 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     items: TreeItem<(IGroup | ITab) & { type: 'tab' | 'group' }>[],
     target: DraggingPosition,
   ) => {
+    // find closest tab index
     const getTabIndexClosestToTarget = () => {
       // @ts-expect-errors childIndex is included
       const droppedIndex = Math.max(target?.childIndex - 1, 0);
+
+      console.log('✅ ~ getTabIndexClosestToTarget ~ target:', target);
+
+      console.log('✅ ~ getTabIndexClosestToTarget ~ droppedIndex:', droppedIndex);
 
       if (droppedIndex < 1) return 0;
 
@@ -363,6 +364,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
       if (groupedTabs[tab]?.isFolder) {
         tab = groupedTabs[tab].children[groupedTabs[tab].children.length - 1];
       }
+      console.log('🚀 ~ getTabIndexClosestToTarget ~ tab:', tab);
       return (groupedTabs[tab].data as ITab).index;
     };
 
@@ -375,7 +377,10 @@ const ActiveSpaceTabs = ({ space }: Props) => {
           groupedTabs['root'].children?.findIndex(t => t === items[0].data.id) > target?.childIndex
         : (items[0]?.data as ITab).index > targetIndex;
 
-    if (hasMovedUpward && targetIndex > 0) targetIndex++;
+    // @ts-expect-errors childIndex is included
+    if (hasMovedUpward && target?.childIndex !== 0) targetIndex++;
+
+    console.log('💰 ~ ActiveSpaceTabs ~ targetIndex:', targetIndex);
 
     if (items[0]?.data.type === 'group') {
       // handle group dropped on a group (merge)
