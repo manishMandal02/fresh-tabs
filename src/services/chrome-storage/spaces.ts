@@ -5,6 +5,7 @@ import { logger } from '@root/src/utils/logger';
 import { setStorage } from './helpers/set';
 import { generateId } from '@root/src/utils/generateId';
 import { getTabsInSpace, setTabsForSpace } from './tabs';
+import { deleteAllSpaceNotes } from './notes';
 
 // get all spaces
 export const getAllSpaces = async () => await getStorage<ISpace[]>({ key: StorageKey.SPACES, type: 'sync' });
@@ -122,6 +123,16 @@ export const deleteSpace = async (spaceId: string) => {
 
     // remove saved tabs for this space
     await chrome.storage.local.remove(StorageKey.tabs(spaceId));
+    // remove groups
+    await chrome.storage.local.remove(StorageKey.groups(spaceId));
+    // remove snoozed tabs
+    await chrome.storage.local.remove(StorageKey.snoozed(spaceId));
+    // remove notes
+    await deleteAllSpaceNotes(spaceId);
+
+    // remove site history
+    await chrome.storage.local.remove(StorageKey.spaceHistoryAll(spaceId));
+    await chrome.storage.local.remove(StorageKey.spaceHistoryToday(spaceId));
 
     if (spaceToDelete?.windowId === 0) return true;
 

@@ -35,6 +35,25 @@ export const getNotesBySpace = async (spaceId: string) => {
   return spaceNotes;
 };
 
+export const deleteAllSpaceNotes = async (spaceId: string) => {
+  try {
+    const allNotes = await getAllNotes();
+
+    const newNotes = allNotes?.filter(note => note.spaceId !== spaceId);
+
+    await setNotesToStorage(newNotes);
+
+    return true;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Error deleting space notes.`,
+      fileTrace: 'services/chrome-storage/notes.ts:51 deleteAllSpaceNotes ~ catch block',
+    });
+    return false;
+  }
+};
+
 export const getNote = async (id: string) => {
   const allNotes = await getAllNotes();
   const note = allNotes.find(note => note.id === id);

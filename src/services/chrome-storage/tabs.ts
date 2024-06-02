@@ -19,7 +19,7 @@ export const getTabsInSpace = async (spaceId: string): Promise<ITab[] | null> =>
       msg: `Error getting tabs in space spaceId: ${spaceId}`,
       fileTrace: 'src/services/chrome-storage/tabs.ts:26 ~ getTabsInSpace() ~ catch block',
     });
-    return null;
+    return [];
   }
 };
 

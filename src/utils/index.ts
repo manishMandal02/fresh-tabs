@@ -1,12 +1,16 @@
 export * from './asyncMessageHandler';
 
+export * from './cn';
+
 export * from './copy-to-clipboard';
 
 export * from './debounce';
 
+export * from './formatNumTo2Digits';
+
 export * from './generateId';
 
-export * from './string/limitCharLength';
+export * from './getUserSelectedText';
 
 export * from './logger';
 
@@ -19,3 +23,9 @@ export * from './retryAtIntervals';
 export * from './scrollActiveSpaceBottom';
 
 export * from './wait';
+
+export * from './string';
+
+export * from './date-time';
+
+export * from './url';

@@ -16,9 +16,9 @@ import {
 
 import { cn } from '@root/src/utils/cn';
 import TabContextMenu from './TabContextMenu';
-import { copyToClipboard, logger } from '@root/src/utils';
+import { capitalize, copyToClipboard, logger } from '@root/src/utils';
 import SiteIcon from '@root/src/components/site-icon/SiteIcon';
-import { DISCARD_TAB_URL_PREFIX } from '@root/src/constants/app';
+import { DISCARD_TAB_URL_PREFIX, ThemeColor } from '@root/src/constants/app';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { goToTab, syncTabs } from '@root/src/services/chrome-tabs/tabs';
 import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
@@ -505,12 +505,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
           extends: 'click-item-to-expand',
           createInteractiveElementProps: (item, _treeId, action) => ({
             onDragStart: async () => {
-              // if (item.data.type === 'group' && !item.data.collapsed) {
-              //   await chrome.tabGroups.update(item.data.id, {
-              //     collapsed: true,
-              //   });
-              // }
-              // handle drag start
               setDraggingItem(item.data.id);
               action.startDragging();
             },
@@ -557,8 +551,8 @@ const ActiveSpaceTabs = ({ space }: Props) => {
             </p>
             {item.isFolder ? (
               <span
-                className="size-[8px] rounded-full block ml-1.5 -mb-px opacity-95"
-                style={{ backgroundColor: (item?.data as IGroup).theme }}></span>
+                className="size-[8px] rounded-full block ml-1.5 -mb-px z-[20] opacity-95"
+                style={{ backgroundColor: ThemeColor[capitalize((item?.data as IGroup).theme)] }}></span>
             ) : null}
           </div>
         )}
@@ -601,11 +595,11 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                   'relative w-full bg-emerald-70 flex items-center justify-between text-slate-300/70 text-[13px] px-2 group z-20 rounded-lg outline-none',
                   {
                     // group's style
-                    'bg-brand-darkBgAccent/60 shadow-md shadow-brand-darkBgAccent/40 px-2.5': item.isFolder,
+                    'bg-slate-900 shadow-sm shadow-brand-darkBgAccent/40 px-2.5': item.isFolder,
                   },
                   {
                     // group expanded
-                    'rounded-b-none border-b border-slate-800': item.isFolder && context?.isExpanded,
+                    'rounded-b-none border-b border-brand-darkBgAccent/50': item.isFolder && context?.isExpanded,
                   },
                   {
                     // discarded tab
@@ -625,8 +619,8 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                     'bg-brand-darkBgAccent/40': selectedTabs.includes((item.data as ITab).id),
                   },
                   {
-                    // selected tab bg
-                    'bg-rose-400/40': context?.isDraggingOver,
+                    // dragging over group
+                    'bg-brand-primary/25': context?.isDraggingOver,
                   },
                   {
                     // on drag
@@ -740,7 +734,9 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                   damping: 25,
                   duration: 0.5,
                 }}
-                className={cn('w-full ', { 'bg-brand-darkBgAccent/40 rounded-b-md px-1.5': parentId !== 'root' })}
+                className={cn('w-full ', {
+                  'bg-slate-900/90 rounded-b-md px-1.5 border-b border-brand-darkBgAccent/80': parentId !== 'root',
+                })}
                 {...containerProps}>
                 {children}
               </motion.ul>

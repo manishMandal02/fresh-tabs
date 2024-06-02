@@ -52,7 +52,7 @@ export const addGroup = async (spaceId: string, newGroup: IGroup) => {
   try {
     const allGroups = await getGroups(spaceId);
 
-    await setGroupsToSpace(spaceId, [...allGroups, newGroup]);
+    await setGroupsToSpace(spaceId, [...(allGroups || []), newGroup]);
 
     return true;
   } catch (error) {
@@ -61,7 +61,7 @@ export const addGroup = async (spaceId: string, newGroup: IGroup) => {
       msg: `Error adding new group groupId: ${newGroup.id}.`,
       fileTrace: ` ${'src/services/chrome-storage/groups.ts:41 getGroup() ~ catch block'}`,
     });
-    return CSSFontFeatureValuesRule;
+    return false;
   }
 };
 

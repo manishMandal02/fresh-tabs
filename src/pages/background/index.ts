@@ -55,6 +55,7 @@ import {
   IMessageEventContentScript,
   INote,
   ISiteVisit,
+  ISpace,
   ITab,
 } from '../../types/global.types';
 import {
@@ -197,14 +198,20 @@ const createUnsavedSpacesOnInstall = async () => {
   }
 };
 
-const updateTabHandler = async (tabId: number) => {
-  // get tab details
-  const tab = await chrome.tabs.get(tabId);
+const syncTabsAndGroups = async (tabId: number, windowId?: number) => {
+  console.log('🔴 ~ syncTabsAndGroups called!!');
 
-  if (tab?.url.startsWith(DISCARD_TAB_URL_PREFIX)) return;
+  if (tabId) {
+    // get tab details
+    const tab = await chrome.tabs.get(tabId);
+
+    if (tab?.url.startsWith(DISCARD_TAB_URL_PREFIX)) return;
+  }
+
+  const spaceWindow = tabId ? tabId : windowId;
 
   // get space by windowId
-  const space = await getSpaceByWindow(tab.windowId);
+  const space = await getSpaceByWindow(spaceWindow);
 
   if (!space?.id) return;
 
@@ -220,14 +227,14 @@ const updateTabHandler = async (tabId: number) => {
     },
   });
 
-  if (space.activeTabIndex !== activeTab.index) {
+  if (activeTab?.index !== space.activeTabIndex) {
     // send  to side panel
     await publishEvents({
       id: generateId(),
       event: 'UPDATE_SPACE_ACTIVE_TAB',
       payload: {
         spaceId: space.id,
-        newActiveIndex: activeTab.index,
+        newActiveIndex: activeTab?.index || 0,
       },
     });
   }
@@ -255,6 +262,9 @@ const removeTabHandler = async (tabId: number, windowId: number) => {
 const recordSiteVisit = async (windowId: number, tabId: number) => {
   // get the tab's previous url details
   const space = await getSpaceByWindow(windowId);
+
+  if (!space?.id) return;
+
   const tabsInSpace = await getTabsInSpace(space.id);
 
   const updatedTab = tabsInSpace.find(t => t.id === tabId);
@@ -913,7 +923,7 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   });
 });
 
-// TODO - debounce handler
+//* TODO - improvement - debounce handler
 // event listener for when tabs get updated
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   console.log('✉️ ~ chrome.tabs.onUpdated.addListener:907 ~ changeInfo:', changeInfo);
@@ -927,7 +937,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (changeInfo?.url?.startsWith(DISCARD_TAB_URL_PREFIX)) return;
 
     // add/update tab
-    await updateTabHandler(tabId);
+    await syncTabsAndGroups(tabId);
 
     showNotesBubbleContentScript(tab?.url, tabId, tab.windowId);
   }
@@ -936,7 +946,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo?.groupId) {
     // get space by windowId
     // add/update tab
-    await updateTabHandler(tabId);
+    await syncTabsAndGroups(tabId);
   }
 
   if (changeInfo?.discarded) {
@@ -950,7 +960,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 });
 
-// TODO - debounce handler
+//* TODO - improvement - debounce handler
 // event listener for when tabs get moved (index change)
 chrome.tabs.onMoved.addListener(async (tabId, info) => {
   await wait(250);
@@ -961,7 +971,7 @@ chrome.tabs.onMoved.addListener(async (tabId, info) => {
   if (!space?.id) return;
 
   // update tab index
-  await updateTabHandler(tabId);
+  await syncTabsAndGroups(tabId);
 });
 
 // on tab detached from window
@@ -973,7 +983,7 @@ chrome.tabs.onDetached.addListener(async (tabId, info) => {
 // on tab attached to a window
 chrome.tabs.onAttached.addListener(async tabId => {
   // add tab to the attached space/window
-  await updateTabHandler(tabId);
+  await syncTabsAndGroups(tabId);
 });
 
 // on tab closed
@@ -987,9 +997,24 @@ chrome.tabs.onRemoved.addListener(async (tabId, info) => {
   await removeTabHandler(tabId, info.windowId);
 });
 
-// on tab group create
+// on group create
 chrome.tabGroups.onCreated.addListener(async group => {
-  const space = await getSpaceByWindow(group.windowId);
+  let space: ISpace = await getSpaceByWindow(group.windowId);
+
+  if (!space?.id) {
+    // add retry as new created windows may take some time to be associated with a space
+    await retryAtIntervals({
+      retries: 4,
+      interval: 1000,
+      callback: async () => {
+        const windowSpace = await getSpaceByWindow(group.windowId);
+        if (!windowSpace) return false;
+
+        space = windowSpace;
+        return true;
+      },
+    });
+  }
 
   await addGroup(space.id, {
     name: group.title,
@@ -998,6 +1023,8 @@ chrome.tabGroups.onCreated.addListener(async group => {
     collapsed: group.collapsed,
   });
 
+  await syncTabsAndGroups(null, group.windowId);
+
   // send send to side panel
   await publishEvents({
     id: generateId(),
@@ -1008,12 +1035,14 @@ chrome.tabGroups.onCreated.addListener(async group => {
   });
 });
 
-// on tab group removed/deleted
+// on  group removed/deleted
 chrome.tabGroups.onRemoved.addListener(async group => {
   const space = await getSpaceByWindow(group.windowId);
 
   await removeGroup(space.id, group.id);
 
+  await syncTabsAndGroups(null, group.windowId);
+
   // send send to side panel
   await publishEvents({
     id: generateId(),
@@ -1024,9 +1053,25 @@ chrome.tabGroups.onRemoved.addListener(async group => {
   });
 });
 
-// on tab group removed/deleted
+// on  group removed/deleted
 chrome.tabGroups.onUpdated.addListener(async group => {
-  const space = await getSpaceByWindow(group.windowId);
+  let space: ISpace = await getSpaceByWindow(group.windowId);
+
+  if (!space?.id) {
+    // add retry as new created windows may take some time to be associated with a space
+    await retryAtIntervals({
+      retries: 4,
+      interval: 1000,
+      callback: async () => {
+        const windowSpace = await getSpaceByWindow(group.windowId);
+        if (!windowSpace) return false;
+
+        space = windowSpace;
+
+        return true;
+      },
+    });
+  }
 
   await updateGroup(space.id, { id: group.id, name: group.title, theme: group.color, collapsed: group.collapsed });
 
@@ -1040,17 +1085,23 @@ chrome.tabGroups.onUpdated.addListener(async group => {
   });
 });
 
+//* TODO - improvement - debounce handler
+// on group moved
+chrome.tabGroups.onMoved.addListener(async group => {
+  await syncTabsAndGroups(null, group.windowId);
+});
+
 // window created/opened
 chrome.windows.onCreated.addListener(window => {
+  // do nothing if incognito window
   if (window.incognito) return;
+
   (async () => {
-    // wait for 500ms
+    // wait for 1s
     await wait(1000);
 
     // get space by window
     const space = await getSpaceByWindow(window.id);
-
-    console.log('🚀 ~ space:', space);
 
     // if this window is associated with a space then do nothing
     if (space?.id) return;
@@ -1058,8 +1109,7 @@ chrome.windows.onCreated.addListener(window => {
     // tabs of this window
     let tabs: ITab[] = [];
 
-    // check if the chrome window obj  has tabs
-    // if not, then query for tabs in this window
+    // check if the chrome window obj has tabs
     if (window?.tabs?.length > 0) {
       tabs = window.tabs.map(t => ({
         url: t.url,
@@ -1069,6 +1119,7 @@ chrome.windows.onCreated.addListener(window => {
         index: t.index,
       }));
     } else {
+      // if tabs not found, then query for tabs in this window
       const queriedTabs = await chrome.tabs.query({ windowId: window.id });
 
       if (queriedTabs?.length < 1) return;
@@ -1084,20 +1135,26 @@ chrome.windows.onCreated.addListener(window => {
     // check if the tabs in this window are of a space (check tab urls)
     const res = await checkNewWindowTabs(window.id, [...tabs.map(tab => tab.url)]);
 
+    console.log('🔵 ~ .windows.onCreated:1121  ~ checkNewWindowTabs:1118 ~ res:', res);
+
     // if the tabs in this window are part of a space, do nothing
     // window id was saved to the respective space
     if (res) return;
 
+    console.log('🔵 ~ .windows.onCreated:1127  ~ tabs:', tabs);
+
     // if not then create new unsaved space with all tabs
     // create new unsaved space
     const newUnsavedSpace = await createUnsavedSpace(window.id, tabs);
+
+    console.log('🔵 ~ .windows.onCreated:1133  ~ newUnsavedSpace:', newUnsavedSpace);
 
     // send send to side panel
     await publishEvents({
       id: generateId(),
       event: 'ADD_SPACE',
       payload: {
-        space: { ...newUnsavedSpace, tabs: [...tabs] },
+        space: { ...newUnsavedSpace },
       },
     });
   })();
@@ -1109,7 +1166,7 @@ chrome.windows.onRemoved.addListener(async windowId => {
   const space = await getSpaceByWindow(windowId);
 
   // if the space is a saved space then do nothing
-  if (!space?.id || space?.isSaved) return;
+  if (space?.isSaved) return;
 
   // get user preference
   const { deleteUnsavedSpace } = await getAppSettings();
@@ -1123,7 +1180,9 @@ chrome.windows.onRemoved.addListener(async windowId => {
   }
 
   // delete space immediately
-  await deleteSpace(space.id);
+  const res = await deleteSpace(space.id);
+
+  console.log('✅ ~ windows.onRemoved ~ space deleted ~ res:', res);
 
   // send send to side panel
   await publishEvents({

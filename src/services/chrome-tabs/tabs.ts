@@ -280,11 +280,10 @@ export const syncTabs = async (
   groups = true,
 ) => {
   let tabsInWindow: ITab[] = [];
-  let currentTabs: chrome.tabs.Tab[] = [];
   // tabs
   if (tabs) {
     // get all tabs in the window
-    currentTabs = await chrome.tabs.query({ windowId });
+    const currentTabs = await chrome.tabs.query({ windowId });
     tabsInWindow = currentTabs.map(t => ({
       title: t.title,
       url: t.url,
@@ -311,13 +310,18 @@ export const syncTabs = async (
     await setGroupsToSpace(spaceId, groupsInWindow);
   }
 
-  const activeTab = currentTabs?.filter(t => t.active)[0] || null;
+  const activeTabQuery = await chrome.tabs.query({ windowId, active: true });
 
-  // update  active tab index for space if changed
-  if (activeTabIndex && activeTabIndex !== activeTab?.index) {
-    await updateSpace(spaceId, {
-      activeTabIndex,
-    });
+  let activeTab: chrome.tabs.Tab = null;
+  if (activeTabQuery?.length > 0) {
+    activeTab = activeTabQuery[0];
+
+    // update  active tab index for space if changed
+    if (activeTabIndex && activeTabIndex !== activeTab[0]?.index) {
+      await updateSpace(spaceId, {
+        activeTabIndex: activeTab.index,
+      });
+    }
   }
 
   return { activeTab, tabs: tabsInWindow, groups: groupsInWindow };

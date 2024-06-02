@@ -15,7 +15,7 @@ import {
   updateSpaceAtom,
 } from '@root/src/stores/app';
 import { IMessageEventSidePanel, ISpace } from '../../../types/global.types';
-import { getAllSpaces, getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
+import { getAllSpaces, getSpace, getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
 import type { OnDragEndResponder, OnBeforeDragStartResponder } from 'react-beautiful-dnd';
 import { getGroups } from '@root/src/services/chrome-storage/groups';
 
@@ -97,6 +97,7 @@ export const useSidePanel = () => {
         case 'ADD_SPACE': {
           // add new space
           addSpace(payload.space);
+
           break;
         }
 
@@ -132,6 +133,12 @@ export const useSidePanel = () => {
           const updatedTabs = await getTabsInSpace(payload.spaceId);
 
           setActiveSpaceTabs(updatedTabs);
+
+          const space = await getSpace(payload.spaceId);
+
+          if (space?.activeTabIndex !== activeSpaceRef.current.activeTabIndex) {
+            updateSpace({ ...activeSpaceRef.current, activeTabIndex: space.activeTabIndex });
+          }
           break;
         }
         case 'UPDATE_GROUPS': {
