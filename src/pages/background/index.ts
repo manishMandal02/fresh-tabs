@@ -201,14 +201,15 @@ const createUnsavedSpacesOnInstall = async () => {
 const syncTabsAndGroups = async (tabId: number, windowId?: number) => {
   console.log('🔴 ~ syncTabsAndGroups called!!');
 
+  let spaceWindow = windowId;
+
   if (tabId) {
     // get tab details
     const tab = await chrome.tabs.get(tabId);
 
     if (tab?.url.startsWith(DISCARD_TAB_URL_PREFIX)) return;
+    spaceWindow = tab.windowId;
   }
-
-  const spaceWindow = tabId ? tabId : windowId;
 
   // get space by windowId
   const space = await getSpaceByWindow(spaceWindow);

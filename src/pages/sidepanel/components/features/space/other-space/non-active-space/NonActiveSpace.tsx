@@ -20,10 +20,11 @@ import { cn } from '@root/src/utils/cn';
 
 type Props = {
   space: ISpace;
+  totalSpaces: number;
   isDraggedOver: boolean;
 };
 
-const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
+const NonActiveSpace = ({ space, isDraggedOver, totalSpaces }: Props) => {
   console.log('🚀 ~ NonActiveSpace ~ 🔁 rendered');
 
   // global state/atom
@@ -102,7 +103,7 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
               await handleOpenSpace(false);
             }}
             className={cn(
-              '!size-full text-slate-300 px-[5px] py-[1.5px]  rounded-[6px] flex items-center justify-center border-[0.5px] border-transparent  select-none outline-none focus-within:outline-slate-700 bg-gradient-to-bl  border-opacity-70 from-brand-darkBgAccent/95 to-brand-darkBg/90',
+              '!size-full text-slate-300 px-[4px] py-[1.5px]  rounded-[6px] flex items-center justify-center border-[0.5px] border-transparent  select-none outline-none focus-within:outline-slate-700 bg-gradient-to-bl  border-opacity-70 from-brand-darkBgAccent/95 to-brand-darkBg/90',
               { 'from-brand-darkBgAccent/85 to-brand-darkBg/85': isDraggedOver },
             )}
             style={{
@@ -115,7 +116,13 @@ const NonActiveSpace = ({ space, isDraggedOver }: Props) => {
               cursor: !isMetaKeyPressed ? 'default' : 'pointer',
               borderColor: activeSpace.id === space.id ? space.theme : '',
             }}>
-            <span className="opacity-90 text-[3vw]">{space.emoji}</span>
+            <span
+              className="opacity-90 "
+              style={{
+                fontSize: totalSpaces > 10 ? '2vw' : totalSpaces > 15 ? '1.5vw' : '3vw',
+              }}>
+              {space.emoji}
+            </span>
           </div>
         </Tooltip>
       </div>

@@ -11,10 +11,9 @@ import { useMetaKeyPressed } from '@root/src/pages/sidepanel/hooks/use-key-short
 
 type Props = {
   isDraggingSpace: boolean;
-  isDraggingTabs: boolean;
 };
 
-const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
+const OtherSpacesContainer = ({ isDraggingSpace }: Props) => {
   console.log(' OtherSpacesContainer ~ 🔁 rendered');
 
   // non active spaces  (global state)
@@ -30,29 +29,25 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
   // bounce div animation
   const { bounce } = useCustomAnimation();
 
-  // TODO - separate unsaved spaces
-
   return (
     <div
       className="px-2 py-[4px] flex items-center justify-center overflow-hidden
                 rounded-md  w-fit shadow-inner shadow-brand-darkBgAccent/10">
-      <Droppable
-        droppableId="other-spaces"
-        direction="horizontal"
-        isDropDisabled={isDraggingTabs}
-        type="SPACE"
-        isCombineEnabled={isMetaKeyPressed}>
+      <Droppable droppableId="other-spaces" direction="horizontal" type="SPACE" isCombineEnabled={isMetaKeyPressed}>
         {(provided1, { isDraggingOver: isDraggingOverOtherSpaces }) => (
           <motion.div
             {...provided1.droppableProps}
             ref={provided1.innerRef}
             {...bounce}
-            className="w-fit flex justify-center items-center gap-x-[.4rem]">
+            className="w-fit flex justify-center items-center"
+            style={{
+              columnGap: spaces.length > 15 ? '2.5px' : spaces.length > 10 ? '4px' : '6.5px',
+            }}>
             {/* non active spaces */}
             {savedSpaces.map((space, idx) => {
               return (
                 <>
-                  <Draggable key={space.id} draggableId={space.id} index={idx} isDragDisabled={isDraggingTabs}>
+                  <Draggable key={space.id} draggableId={space.id} index={idx}>
                     {(provided3, { combineTargetFor, combineWith, draggingOver }) => (
                       <div
                         ref={provided3.innerRef}
@@ -68,7 +63,7 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
                           <DraggingOverNudge droppableId={draggingOver} mergeSpaceWith={combineWith} />
                         ) : null}
 
-                        <NonActiveSpace space={space} isDraggedOver={!!combineTargetFor} />
+                        <NonActiveSpace space={space} isDraggedOver={!!combineTargetFor} totalSpaces={spaces.length} />
                       </div>
                     )}
                   </Draggable>
@@ -84,7 +79,9 @@ const OtherSpacesContainer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
           {/* vertical divider */}
           <hr className="h-[10px] w-[0.5px] bg-slate-500/70 rounded-md mr-[1px] border-none" />
           {/* unsaved spaces */}
-          {unSavedSpaces?.map(space => <NonActiveSpace key={space.id} space={space} isDraggedOver={false} />)}
+          {unSavedSpaces?.map(space => (
+            <NonActiveSpace key={space.id} space={space} isDraggedOver={false} totalSpaces={spaces.length} />
+          ))}
         </div>
       ) : null}
     </div>

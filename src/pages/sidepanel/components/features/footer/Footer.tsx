@@ -9,10 +9,9 @@ import AddButton from './AddButton';
 
 type Props = {
   isDraggingSpace: boolean;
-  isDraggingTabs: boolean;
 };
 
-const Footer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
+const Footer = ({ isDraggingSpace }: Props) => {
   const animationVariants = {
     visible: { scale: 1, opacity: 1 },
     hidden: { scale: 0, opacity: 0 },
@@ -27,13 +26,13 @@ const Footer = ({ isDraggingSpace, isDraggingTabs }: Props) => {
         </div>
         {/* other spaces */}
         <div className="flex  items-center justify-center flex-grow max-w-[88%] overflow-hidden">
-          <OtherSpacesContainer isDraggingSpace={isDraggingSpace} isDraggingTabs={isDraggingTabs} />
+          <OtherSpacesContainer isDraggingSpace={isDraggingSpace} />
         </div>
 
         {/* add/delete space container */}
         {/* delete space drop box */}
         <div className="relative size-[25px] bg-orange-20 right-[4px] bottom-px">
-          <Droppable droppableId="delete-space" direction="horizontal" type="SPACE" isDropDisabled={isDraggingTabs}>
+          <Droppable droppableId="delete-space" direction="horizontal" type="SPACE">
             {(provided, { isDraggingOver: isDraggingOverDelete }) => (
               <motion.div
                 {...provided.droppableProps}

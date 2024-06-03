@@ -47,17 +47,9 @@ export const useSidePanel = () => {
 
   const { dropHandler, getDroppedLocation } = useTabsDnd();
 
-  // handle tab drag start
+  // handle tab drag start - set global dragging state
   const onTabsDragStart: OnBeforeDragStartResponder = useCallback(
-    start => {
-      // set global dragging state
-      if (start?.type === 'SPACE') {
-        setDragging({ isDragging: true, type: 'space' });
-        return;
-      }
-
-      setDragging({ isDragging: true, type: 'tabs' });
-    },
+    () => setDragging({ isDragging: true, type: 'space' }),
     [setDragging],
   );
 

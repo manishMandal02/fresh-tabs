@@ -39,7 +39,7 @@ export const useUpdateSpace = ({ updateSpaceData, spaceId, onClose }: UseUpdateS
 
     if (res) {
       // update spaces list ui with same order
-      updateSpaceState({ ...updateSpaceData, id: spaceId });
+      updateSpaceState({ ...updateSpaceData, isSaved: true, id: spaceId });
       // close modal
       onClose();
       setSnackbar({ show: true, msg: 'Space updated', isSuccess: true });

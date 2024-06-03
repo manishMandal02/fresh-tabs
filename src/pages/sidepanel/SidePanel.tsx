@@ -153,9 +153,9 @@ const SidePanel = () => {
                     {(provided2, { isDraggingOver }) => (
                       <div
                         ref={provided2.innerRef}
-                        className="flex-grow w-full absolute top-[70px] left-0 rounded-lg transition-all duration-300 ease-in-out "
+                        className="flex-grow w-full absolute top-[70px] left-0 border-2 rounded-lg transition-all duration-300 ease-in-out "
                         style={{
-                          border: isDraggingOver ? '2px solid #05957f' : '#082545',
+                          borderColor: isDraggingOver ? '#05957f' : '#1e293b',
                           height: `${activeSpaceTabs?.length * (TAB_HEIGHT * 1.15)}px`,
                           visibility: isDraggingGlobal && draggingType === 'space' ? 'visible' : 'hidden',
                           zIndex: isDraggingGlobal && draggingType === 'space' ? 200 : 1,
@@ -180,10 +180,7 @@ const SidePanel = () => {
                     )}
                   </Droppable>
                 </div>
-                <Footer
-                  isDraggingSpace={isDraggingGlobal && draggingType === 'space'}
-                  isDraggingTabs={isDraggingGlobal && draggingType === 'tabs'}
-                />
+                <Footer isDraggingSpace={isDraggingGlobal && draggingType === 'space'} />
               </DragDropContext>
             )}
           </div>

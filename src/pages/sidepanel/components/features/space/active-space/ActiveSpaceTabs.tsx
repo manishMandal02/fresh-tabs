@@ -543,17 +543,17 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                 })}
               />
             )}
+            {item.isFolder ? (
+              <span
+                className="size-[9px] rounded-full block mr-2 -mb-px z-[20] opacity-95"
+                style={{ backgroundColor: ThemeColor[capitalize((item?.data as IGroup).theme)] }}></span>
+            ) : null}
             <p
               className={
                 'text-[13px] ml-px text-slate-300/80 max-w-[95%] z-10 whitespace-nowrap overflow-hidden text-ellipsis text-start'
               }>
               {title?.trim() || 'No title'}
             </p>
-            {item.isFolder ? (
-              <span
-                className="size-[8px] rounded-full block ml-1.5 -mb-px z-[20] opacity-95"
-                style={{ backgroundColor: ThemeColor[capitalize((item?.data as IGroup).theme)] }}></span>
-            ) : null}
           </div>
         )}
         renderItem={({ title, arrow, context, children, item }) => (
@@ -595,7 +595,8 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                   'relative w-full bg-emerald-70 flex items-center justify-between text-slate-300/70 text-[13px] px-2 group z-20 rounded-lg outline-none',
                   {
                     // group's style
-                    'bg-slate-900 shadow-sm shadow-brand-darkBgAccent/40 px-2.5': item.isFolder,
+                    'bg-brand-darkBgAccent/60 shadow-sm shadow-brand-darkBgAccent/60 px-2 border border-brand-darkBg/80':
+                      item.isFolder,
                   },
                   {
                     // group expanded
@@ -604,10 +605,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                   {
                     // discarded tab
                     'opacity-90': isTabDiscarded(item.data.id),
-                  },
-                  {
-                    // style for tabs inside group
-                    'bg-brand-darkBg/40': (item.data as ITab).groupId > 0,
                   },
                   {
                     // active tab
@@ -735,7 +732,8 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                   duration: 0.5,
                 }}
                 className={cn('w-full ', {
-                  'bg-slate-900/90 rounded-b-md px-1.5 border-b border-brand-darkBgAccent/80': parentId !== 'root',
+                  'bg-brand-darkBgAccent/40 rounded-b-md  pl-[5px] pr-[2px] border-b border-brand-darkBgAccent':
+                    parentId !== 'root',
                 })}
                 {...containerProps}>
                 {children}
