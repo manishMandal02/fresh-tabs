@@ -25,7 +25,7 @@ export const createActiveTab = async (url: string, index: number, windowId?: num
 };
 
 // creates a html url tabs that doesn't load tab until user visits them
-export const createDiscardedTabs = async (tabs: ITab[], windowId?: number) => {
+export const createDiscardedTabs = async (tabs: ITab[], windowId?: number, shouldCreateTabsAtEnd = false) => {
   //  set html for discard tabs so they load only after visited by user
   const discardedTabHTML = (tab: ITab) => `
       <!DOCTYPE html>
@@ -49,7 +49,7 @@ export const createDiscardedTabs = async (tabs: ITab[], windowId?: number) => {
     } else {
       return chrome.tabs.create({
         windowId,
-        index,
+        ...(!shouldCreateTabsAtEnd ? { index } : {}),
         active: false,
         url: `${DISCARD_TAB_URL_PREFIX}${encodeURIComponent(discardedTabHTML(tab))}`,
       });
@@ -58,8 +58,8 @@ export const createDiscardedTabs = async (tabs: ITab[], windowId?: number) => {
 
   const responses = await Promise.allSettled(createMultipleTabsPromise);
 
-  // if the just create flag is passed it will only create tabs and strop the fn
-  if (!windowId) {
+  // if the just create flag is passed it will only create tabs and return
+  if (!windowId || shouldCreateTabsAtEnd) {
     return true;
   }
 
@@ -286,7 +286,7 @@ export const syncTabs = async (
     const currentTabs = await chrome.tabs.query({ windowId });
     tabsInWindow = currentTabs.map(t => ({
       title: t.title,
-      url: t.url,
+      url: parseUrl(t.url) || parseUrl(t.pendingUrl),
       id: t.id,
       index: t.index,
       groupId: t.groupId,

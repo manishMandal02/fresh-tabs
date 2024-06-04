@@ -122,15 +122,11 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   const updateSpaceState = useSetAtom(updateSpaceAtom);
   const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
 
-  console.log('🎯 ~ ActiveSpaceTabs ~ activeSpaceTabs:', activeSpaceTabs);
-
   const activeSpaceTabsSorted = useMemo(() => activeSpaceTabs.sort((a, b) => a.index - b.index), [activeSpaceTabs]);
 
   const [activeSpaceGroups, setActiveSpaceGroups] = useAtom(activeSpaceGroupsAtom);
 
   const [groupedTabs, setGroupedTabs] = useState<Record<string | number, IGroupedTabs>>({});
-
-  console.log('✅ ~ ActiveSpaceTabs ~ groupedTabs:', groupedTabs);
 
   useEffect(() => {
     const groups = mapTabToGroups(activeSpaceTabsSorted, activeSpaceGroups);
@@ -348,10 +344,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
       // @ts-expect-errors childIndex is included
       const droppedIndex = Math.max(target?.childIndex - 1, 0);
 
-      console.log('✅ ~ getTabIndexClosestToTarget ~ target:', target);
-
-      console.log('✅ ~ getTabIndexClosestToTarget ~ droppedIndex:', droppedIndex);
-
       if (droppedIndex < 1) return 0;
 
       if (target.targetType === 'between-items' && target.parentItem !== 'root') {
@@ -364,7 +356,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
       if (groupedTabs[tab]?.isFolder) {
         tab = groupedTabs[tab].children[groupedTabs[tab].children.length - 1];
       }
-      console.log('🚀 ~ getTabIndexClosestToTarget ~ tab:', tab);
       return (groupedTabs[tab].data as ITab).index;
     };
 
@@ -379,8 +370,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
     // @ts-expect-errors childIndex is included
     if (hasMovedUpward && target?.childIndex !== 0) targetIndex++;
-
-    console.log('💰 ~ ActiveSpaceTabs ~ targetIndex:', targetIndex);
 
     if (items[0]?.data.type === 'group') {
       // handle group dropped on a group (merge)
@@ -567,7 +556,13 @@ const ActiveSpaceTabs = ({ space }: Props) => {
               selectedTabs={selectedTabs}
               setActiveSpaceTabs={setActiveSpaceTabs}
               tab={item.data as ITab}
-              onRemoveClick={() => {}}>
+              onRemoveClick={() => {
+                if (selectedTabs?.length > 0) {
+                  handleRemoveTabs();
+                  return;
+                }
+                handleRemoveTab((item.data as ITab).index);
+              }}>
               {/* @ts-expect-error - lib code */}
               <button
                 tabIndex={-1}

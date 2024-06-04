@@ -6,7 +6,7 @@ const createChromeFaviconURL = (url: URL) => `${chrome.runtime.getURL('/_favicon
 export const getFaviconURL = (siteUrl: string, size = 32) => {
   const parsedUrl = parseUrl(siteUrl);
 
-  const url = new URL(parsedUrl) || new URL(siteUrl);
+  const url = new URL(parsedUrl) || new URL(siteUrl) || new URL('https://freshinbox.com');
 
   if (!url.hostname || isChromeUrl(parsedUrl)) return createChromeFaviconURL(url);
 

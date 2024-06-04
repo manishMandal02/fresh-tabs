@@ -16,6 +16,9 @@ import { ISpace, ITab } from '@root/src/types/global.types';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
 import { nonActiveSpacesAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
 import { getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
+import { getSpace } from '@root/src/services/chrome-storage/spaces';
+import { createDiscardedTabs, syncTabs } from '@root/src/services/chrome-tabs/tabs';
+import { generateId, publishEvents, wait } from '@root/src/utils';
 
 type Props = {
   tab: ITab;
@@ -44,14 +47,15 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
   // move tabs to another space
   const handleMoveTabToSpace = async (newSpaceId: string) => {
     if (selectedTabs?.length < 1) {
-      // 1. single Tab
+      // move single Tab
+
       // add tab to selected space
       const tabs = await getTabsInSpace(newSpaceId);
       await setTabsForSpace(newSpaceId, [...tabs, tab]);
 
       // remove tab from current space
-
       const updatedTabsForActiveSpace = allTabs.filter(t => t.id !== tab.id);
+
       // ui state update
       setActiveSpaceTabs(updatedTabsForActiveSpace);
       // update storage
@@ -59,10 +63,9 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
 
       await chrome.tabs.remove(tab.id);
     } else {
-      // 2. selected multiple tabs
+      //  move multiple tabs
       const newSpaceTabs = await getTabsInSpace(newSpaceId);
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       await setTabsForSpace(newSpaceId, [
         ...newSpaceTabs,
         ...allTabs.filter(t => selectedTabs.includes(t.id)).map(t => t),
@@ -77,6 +80,34 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
 
       await Promise.allSettled(removeTabsPromises);
     }
+
+    // create moved tabs in the selected space if space opened in another window
+
+    const openWindows = await chrome.windows.getAll();
+
+    if (openWindows?.length < 2) return;
+    // more than 1 window opened currently
+
+    // check if selected space in another window
+    const selectedSpace = await getSpace(newSpaceId);
+
+    if (selectedSpace?.windowId < 0 || !openWindows.some(w => w.id === selectedSpace.windowId)) return;
+
+    //  create new tabs in selected space
+
+    const tabsToCreate =
+      selectedTabs?.length > 1 ? allTabs.filter(t => selectedTabs.includes(t.id)).map(t => t) : [tab];
+
+    // update Id's for newly created tabs
+    await createDiscardedTabs(tabsToCreate, selectedSpace.windowId, true);
+
+    // wait .5s to sync tabs
+    await wait(250);
+
+    await syncTabs(selectedSpace.id, selectedSpace.windowId, selectedSpace.activeTabIndex);
+
+    // file update tabs event for selected space to update state
+    await publishEvents({ id: generateId(), event: 'UPDATE_TABS', payload: { spaceId: newSpaceId } });
   };
 
   // new space

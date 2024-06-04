@@ -9,6 +9,8 @@ export const getUrlFromHTML = (htmlString: string) => {
 
   const matches = decodeURIComponent(htmlString).match(regexPattern) || [];
 
+  console.log('✅ ~ getUrlFromHTML:12 ~ matches:', matches);
+
   if (matches.length < 1) {
     logger.error({
       error: new Error('Failed to get url link from html for discarded tab'),
