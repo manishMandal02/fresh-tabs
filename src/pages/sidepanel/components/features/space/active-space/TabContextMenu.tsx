@@ -12,25 +12,34 @@ import {
   TrashIcon,
 } from '@radix-ui/react-icons';
 
-import { ISpace, ITab } from '@root/src/types/global.types';
+import { IGroup, ISpace, ITab } from '@root/src/types/global.types';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
+import { openTabsInTransferredSpace } from '@root/src/services/chrome-tabs/tabs';
 import { nonActiveSpacesAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
 import { getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
-import { getSpace } from '@root/src/services/chrome-storage/spaces';
-import { createDiscardedTabs, syncTabs } from '@root/src/services/chrome-tabs/tabs';
-import { generateId, publishEvents, wait } from '@root/src/utils';
+import { memo } from 'react';
 
 type Props = {
-  tab: ITab;
+  selectedItem: ITab | IGroup;
   space: ISpace;
   allTabs: ITab[];
   children: ReactNode;
   selectedTabs: number[];
+  totalGroups: number;
   onRemoveClick: () => void;
   setActiveSpaceTabs: (tabs: ITab[]) => void;
 };
 
-const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, space, setActiveSpaceTabs }: Props) => {
+const TabContextMenu = ({
+  children,
+  onRemoveClick,
+  selectedTabs,
+  selectedItem,
+  allTabs,
+  space,
+  totalGroups,
+  setActiveSpaceTabs,
+}: Props) => {
   // global state
   const nonActiveSpaces = useAtomValue(nonActiveSpacesAtom);
   const showNewSpaceModal = useSetAtom(showNewSpaceModalAtom);
@@ -40,8 +49,21 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
     if (selectedTabs.length > 1) {
       await discardTabs(selectedTabs);
     } else {
-      await discardTabs([tab.id]);
+      await discardTabs([selectedItem.id]);
     }
+  };
+
+  // new group
+  const handleCreateNewGroup = async () => {
+    // create group
+    const newGroupId = await chrome.tabs.group({
+      tabIds: selectedTabs?.length > 0 ? selectedTabs : selectedItem.id,
+    });
+
+    // update group title
+    await chrome.tabGroups.update(newGroupId, {
+      title: `New group ${totalGroups + 1}`,
+    });
   };
 
   // move tabs to another space
@@ -51,17 +73,17 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
 
       // add tab to selected space
       const tabs = await getTabsInSpace(newSpaceId);
-      await setTabsForSpace(newSpaceId, [...tabs, tab]);
+      await setTabsForSpace(newSpaceId, [...tabs, selectedItem as ITab]);
 
       // remove tab from current space
-      const updatedTabsForActiveSpace = allTabs.filter(t => t.id !== tab.id);
+      const updatedTabsForActiveSpace = allTabs.filter(t => t.id !== selectedItem.id);
 
       // ui state update
       setActiveSpaceTabs(updatedTabsForActiveSpace);
       // update storage
       await setTabsForSpace(space.id, updatedTabsForActiveSpace);
 
-      await chrome.tabs.remove(tab.id);
+      await chrome.tabs.remove(selectedItem.id);
     } else {
       //  move multiple tabs
       const newSpaceTabs = await getTabsInSpace(newSpaceId);
@@ -82,32 +104,9 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
     }
 
     // create moved tabs in the selected space if space opened in another window
-
-    const openWindows = await chrome.windows.getAll();
-
-    if (openWindows?.length < 2) return;
-    // more than 1 window opened currently
-
-    // check if selected space in another window
-    const selectedSpace = await getSpace(newSpaceId);
-
-    if (selectedSpace?.windowId < 0 || !openWindows.some(w => w.id === selectedSpace.windowId)) return;
-
-    //  create new tabs in selected space
-
     const tabsToCreate =
-      selectedTabs?.length > 1 ? allTabs.filter(t => selectedTabs.includes(t.id)).map(t => t) : [tab];
-
-    // update Id's for newly created tabs
-    await createDiscardedTabs(tabsToCreate, selectedSpace.windowId, true);
-
-    // wait .5s to sync tabs
-    await wait(250);
-
-    await syncTabs(selectedSpace.id, selectedSpace.windowId, selectedSpace.activeTabIndex);
-
-    // file update tabs event for selected space to update state
-    await publishEvents({ id: generateId(), event: 'UPDATE_TABS', payload: { spaceId: newSpaceId } });
+      selectedTabs?.length > 1 ? allTabs.filter(t => selectedTabs.includes(t.id)).map(t => t) : [selectedItem as ITab];
+    await openTabsInTransferredSpace(newSpaceId, tabsToCreate);
   };
 
   // new space
@@ -115,15 +114,25 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
     // index is not required here ⬇️
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const tabsForNewSpace =
-      selectedTabs?.length < 1 ? [tab] : allTabs.filter(t => selectedTabs.includes(t.id)).map(t => t);
+      selectedTabs?.length < 1 ? [selectedItem as ITab] : allTabs.filter(t => selectedTabs.includes(t.id)).map(t => t);
 
     showNewSpaceModal({ show: true, tabs: tabsForNewSpace });
   };
 
   // create new tab after current tab
   const handleCreateNewTab = async () => {
-    await chrome.tabs.create({ url: 'chrome://newtab', active: true, index: tab.index + 1 });
+    let newTabIndex = -1;
+
+    // if group selected then create new tab after last tab in group
+    if ('name' in selectedItem) {
+      const tabsInSelectedGroup = allTabs.filter(t => t.groupId === selectedItem.id);
+      newTabIndex = tabsInSelectedGroup[tabsInSelectedGroup.length - 1].index + 1;
+    } else {
+      newTabIndex = selectedItem.index + 1;
+    }
+    await chrome.tabs.create({ url: 'chrome://newtab', active: true, index: newTabIndex });
   };
+
   return (
     <RadixContextMenu.Root>
       <RadixContextMenu.Trigger className="" asChild>
@@ -148,11 +157,13 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
 
           <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
 
-          <RadixContextMenu.Item className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-            <FilePlusIcon className="text-slate-500 mr-1 scale-[0.8]" /> New folder
+          <RadixContextMenu.Item
+            onClick={handleCreateNewGroup}
+            className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+            <FilePlusIcon className="text-slate-500 mr-1 scale-[0.8]" /> New group
           </RadixContextMenu.Item>
           <RadixContextMenu.Item className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-            <FileIcon className="text-slate-500 mr-1 scale-[0.8]" /> Move to folder
+            <FileIcon className="text-slate-500 mr-1 scale-[0.8]" /> Move to group
           </RadixContextMenu.Item>
 
           <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
@@ -194,4 +205,4 @@ const TabContextMenu = ({ children, onRemoveClick, selectedTabs, tab, allTabs, s
   );
 };
 
-export default TabContextMenu;
+export default memo(TabContextMenu);

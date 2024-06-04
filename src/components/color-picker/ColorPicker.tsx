@@ -22,7 +22,7 @@ const ColorPicker = ({ color, onChange }: Props) => {
       open={isOpen}
       onChange={open => setIsOpen(open)}
       content={
-        <div className="px-3 py-2 rounded gap-4 flex flex-wrap items-center justify-center bg-slate-900 w-52">
+        <div className="px-3 py-2 rounded gap-4 flex flex-wrap items-center justify-center bg-slate-900 w-52 ">
           {(Object.keys(ThemeColor) as Array<ColorType>).map(key => (
             <button
               tabIndex={0}
@@ -41,8 +41,11 @@ const ColorPicker = ({ color, onChange }: Props) => {
         </div>
       }>
       <button
-        onClick={() => setIsOpen(true)}
-        className={` select-none  bg-brand-darkBgAccent/50 rounded-md w-[45px] h-[40px] flex items-center justify-center hover:bg-brand-darkBgAccent/70
+        onClick={ev => {
+          ev.stopPropagation();
+          setIsOpen(true);
+        }}
+        className={` select-none z-50 bg-brand-darkBgAccent/50 rounded-md w-[45px] h-[40px] flex items-center justify-center hover:bg-brand-darkBgAccent/70
       transition-all duration-200 text-[20px] focus-within:bg-brand-darkBgAccent/90 focus-within:outline-brand-darkBgAccent`}>
         <div
           className="w-5 h-5 rounded-full"

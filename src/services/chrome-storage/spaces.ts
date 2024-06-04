@@ -6,6 +6,7 @@ import { setStorage } from './helpers/set';
 import { generateId } from '@root/src/utils/generateId';
 import { getTabsInSpace, setTabsForSpace } from './tabs';
 import { deleteAllSpaceNotes } from './notes';
+import { openTabsInTransferredSpace } from '../chrome-tabs/tabs';
 
 // get all spaces
 export const getAllSpaces = async () => await getStorage<ISpace[]>({ key: StorageKey.SPACES, type: 'sync' });
@@ -245,6 +246,10 @@ export const mergeSpace = async (spaceId: string, mergeToSpaceId: string) => {
 
     // delete space that is merged (dragged space)
     await deleteSpace(spaceId);
+
+    //  opened tabs/urls if merge to space is opened in another window
+    await openTabsInTransferredSpace(mergeToSpaceId, tabsToMerge);
+
     return true;
   } catch (error) {
     logger.error({

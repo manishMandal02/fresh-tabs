@@ -318,6 +318,13 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     setActiveSpaceTabs(prev => [...prev.filter((_t, idx) => idx !== index)]);
   };
 
+  // delete group
+  const handlerDeleteGroup = async (id: number) => {
+    // delete all tabs in group
+    const tabsInSelectedGroup = activeSpaceTabs.filter(t => t.groupId === id).map(t => t.id);
+    await chrome.tabs.remove(tabsInSelectedGroup);
+  };
+
   // update storage and ui state for tabs and groups
   const updateTabsAndGroupState = useCallback(async () => {
     // get current group & tab data from chrome
@@ -521,6 +528,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
           ) : null
         }
         renderItemTitle={({ title, item }) => (
+          //  TODO - allow title change on click (leverage the built in api)
           <div className={'w-full flex items-center overflow-hidden h-full'}>
             {item.isFolder ? (
               <></>
@@ -532,17 +540,19 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                 })}
               />
             )}
-            {item.isFolder ? (
-              <span
-                className="size-[9px] rounded-full block mr-2 -mb-px z-[20] opacity-95"
-                style={{ backgroundColor: ThemeColor[capitalize((item?.data as IGroup).theme)] }}></span>
-            ) : null}
             <p
               className={
                 'text-[13px] ml-px text-slate-300/80 max-w-[95%] z-10 whitespace-nowrap overflow-hidden text-ellipsis text-start'
               }>
               {title?.trim() || 'No title'}
             </p>
+            {item.isFolder ? (
+              // TODO - add a color for the group theme
+              <button
+                onClick={ev => ev.stopPropagation()}
+                className="size-[10px] rounded-full block ml-2 -mb-px z-[20] opacity-90"
+                style={{ backgroundColor: ThemeColor[capitalize((item?.data as IGroup).theme)] }}></button>
+            ) : null}
           </div>
         )}
         renderItem={({ title, arrow, context, children, item }) => (
@@ -553,14 +563,21 @@ const ActiveSpaceTabs = ({ space }: Props) => {
             <TabContextMenu
               space={space}
               allTabs={activeSpaceTabs}
+              totalGroups={activeSpaceGroups?.length || 0}
               selectedTabs={selectedTabs}
               setActiveSpaceTabs={setActiveSpaceTabs}
-              tab={item.data as ITab}
+              selectedItem={item.data as ITab | IGroup}
               onRemoveClick={() => {
+                if ('name' in item.data && selectedTabs?.length < 1) {
+                  handlerDeleteGroup(item.data.id);
+                  return;
+                }
+
                 if (selectedTabs?.length > 0) {
                   handleRemoveTabs();
                   return;
                 }
+
                 handleRemoveTab((item.data as ITab).index);
               }}>
               {/* @ts-expect-error - lib code */}
@@ -581,21 +598,22 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                 }}
                 style={{
                   height: TAB_HEIGHT + 'px',
+                  borderLeftColor: 'name' in item.data ? ThemeColor[capitalize(item.data.theme)] : '',
                 }}
                 onDoubleClick={() => {
                   if (item.isFolder) return;
                   onTabDoubleClickHandler(item.data?.id, (item.data as ITab).index);
                 }}
                 className={cn(
-                  'relative w-full bg-emerald-70 flex items-center justify-between text-slate-300/70 text-[13px] px-2 group z-20 rounded-lg outline-none',
+                  'relative w-full cursor-default bg-emerald-70 flex items-center justify-between text-slate-300/70 text-[13px] px-2 group z-20 rounded-lg outline-none',
                   {
                     // group's style
-                    'bg-brand-darkBgAccent/60 shadow-sm shadow-brand-darkBgAccent/60 px-2 border border-brand-darkBg/80':
+                    'bg-brand-darkBgAccent/60 shadow-sm shadow-brand-darkBgAccent/60 px-2 border border-brand-darkBg/80 ':
                       item.isFolder,
                   },
                   {
                     // group expanded
-                    'rounded-b-none border-b border-brand-darkBgAccent/50': item.isFolder && context?.isExpanded,
+                    'rounded-b-none border-b-0': item.isFolder && context?.isExpanded,
                   },
                   {
                     // discarded tab
@@ -714,6 +732,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                   open: {
                     opacity: 1,
                     height: 'auto',
+                    borderLeft: `1px solid ${ThemeColor[capitalize((groupedTabs[parentId].data as IGroup).theme)]}`,
                   },
                   collapsed: {
                     opacity: 0,

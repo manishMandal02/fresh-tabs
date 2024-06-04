@@ -3,9 +3,10 @@ import { parseUrl } from '@root/src/utils/url/parse-url';
 import { IGroup, ISpace, ITab } from '@root/src/types/global.types';
 import { getTabToUnSnooze } from '../chrome-storage/snooze-tabs';
 import { getTabsInSpace, setTabsForSpace } from '../chrome-storage/tabs';
-import { getSpaceByWindow, updateSpace } from '../chrome-storage/spaces';
+import { getSpace, getSpaceByWindow, updateSpace } from '../chrome-storage/spaces';
 import { DISCARD_TAB_URL_PREFIX, SNOOZED_TAB_GROUP_TITLE } from '@root/src/constants/app';
 import { setGroupsToSpace } from '../chrome-storage/groups';
+import { generateId, publishEvents, wait } from '@root/src/utils';
 
 type OpenSpaceProps = {
   space: ISpace;
@@ -255,6 +256,7 @@ export const getCurrentWindowId = async () => {
   return id;
 };
 
+// new group with a tab
 export const newTabGroup = async (groupTitle: string, tabURL: string, windowId: number) => {
   // create un-snoozed tab
   const newTab = await chrome.tabs.create({ windowId, url: tabURL, active: false });
@@ -270,6 +272,33 @@ export const newTabGroup = async (groupTitle: string, tabURL: string, windowId: 
     color: 'orange',
     collapsed: false,
   });
+};
+
+// open tabs in space when tabs moved to a space when it is opened in another window
+
+export const openTabsInTransferredSpace = async (spaceId: string, tabs: ITab[]) => {
+  const openWindows = await chrome.windows.getAll();
+
+  if (openWindows?.length < 2) return;
+  // more than 1 window opened currently
+
+  // check if selected space in another window
+  const selectedSpace = await getSpace(spaceId);
+
+  if (selectedSpace?.windowId < 0 || !openWindows.some(w => w.id === selectedSpace.windowId)) return;
+
+  //  create new tabs in selected space
+
+  // update Id's for newly created tabs
+  await createDiscardedTabs(tabs, selectedSpace.windowId, true);
+
+  // wait .5s to sync tabs
+  await wait(250);
+
+  await syncTabs(selectedSpace.id, selectedSpace.windowId, selectedSpace.activeTabIndex);
+
+  // file update tabs event for selected space to update state
+  await publishEvents({ id: generateId(), event: 'UPDATE_TABS', payload: { spaceId } });
 };
 
 export const syncTabs = async (

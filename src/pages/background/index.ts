@@ -28,6 +28,7 @@ import {
   getCurrentWindowId,
   goToTab,
   openSpace,
+  openTabsInTransferredSpace as openTabsInTransferredSpace,
   syncTabs,
 } from '@root/src/services/chrome-tabs/tabs';
 import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
@@ -508,6 +509,8 @@ chrome.runtime.onMessage.addListener(
 
         await chrome.tabs.remove(tab.id);
 
+        // create new tab if selected space is opened in another window
+        await openTabsInTransferredSpace(spaceId, [tab]);
         return true;
       }
 
@@ -927,36 +930,44 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
 //* TODO - improvement - debounce handler
 // event listener for when tabs get updated
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  console.log('✉️ ~ chrome.tabs.onUpdated.addListener:907 ~ changeInfo:', changeInfo);
-  if (changeInfo?.url) {
-    // record site visit for the previous url
-    recordSiteVisit(tab.windowId, tab.id);
-  }
+  try {
+    console.log('✉️ ~ chrome.tabs.onUpdated.addListener:907 ~ changeInfo:', changeInfo);
+    if (changeInfo?.url) {
+      // record site visit for the previous url
+      recordSiteVisit(tab.windowId, tab.id);
+    }
 
-  if (changeInfo?.status === 'complete') {
-    // if this is discard tab, do nothing
-    if (changeInfo?.url?.startsWith(DISCARD_TAB_URL_PREFIX)) return;
+    if (changeInfo?.status === 'complete') {
+      // if this is discard tab, do nothing
+      if (changeInfo?.url?.startsWith(DISCARD_TAB_URL_PREFIX)) return;
 
-    // add/update tab
-    await syncTabsAndGroups(tabId);
+      // add/update tab
+      await syncTabsAndGroups(tabId);
 
-    showNotesBubbleContentScript(tab?.url, tabId, tab.windowId);
-  }
+      showNotesBubbleContentScript(tab?.url, tabId, tab.windowId);
+    }
 
-  // handle tab's group change
-  if (changeInfo?.groupId) {
-    // get space by windowId
-    // add/update tab
-    await syncTabsAndGroups(tabId);
-  }
+    // handle tab's group change
+    if (changeInfo?.groupId) {
+      // get space by windowId
+      // add/update tab
+      await syncTabsAndGroups(tabId);
+    }
 
-  if (changeInfo?.discarded) {
-    const space = await getSpaceByWindow(tab.windowId);
-    // send send to side panel
-    await publishEvents({
-      id: generateId(),
-      event: 'TABS_DISCARDED',
-      payload: { spaceId: space.id },
+    if (changeInfo?.discarded) {
+      const space = await getSpaceByWindow(tab.windowId);
+      // send send to side panel
+      await publishEvents({
+        id: generateId(),
+        event: 'TABS_DISCARDED',
+        payload: { spaceId: space.id },
+      });
+    }
+  } catch (error) {
+    logger.error({
+      error,
+      msg: 'Error in chrome.tabs.onUpdated.addListener ~ catch block',
+      fileTrace: 'background/index.ts:970',
     });
   }
 });
