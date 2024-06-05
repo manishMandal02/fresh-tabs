@@ -137,10 +137,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   // local state
   const [discardedTabIDs, setDiscardedTabIDs] = useState<number[]>([]);
 
-  // group name edit
-  const [isEditingGroupName, setIsEditingGroupName] = useState(0);
-  const [groupName, setGroupName] = useState('');
-
   // track dragging state
   const [draggingItem, setDraggingItem] = useState(null);
 
@@ -173,11 +169,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   useEffect(() => {
     selectedTabsRef.current = selectedTabs;
   }, [selectedTabs]);
-
-  // group name update
-  const handleGroupNameUpdate = async (id: number) => {
-    await chrome.tabGroups.update(id, { title: groupName });
-  };
 
   const handleGoToTab = useCallback(
     async (id: number, index: number) => {
@@ -495,6 +486,8 @@ const ActiveSpaceTabs = ({ space }: Props) => {
         canDragAndDrop
         canDropOnFolder
         canReorderItems
+        canRename={false}
+        canSearch={false}
         canDropOnNonFolder={false}
         items={groupedTabs}
         viewState={{
@@ -548,49 +541,12 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                 })}
               />
             )}
-
-            <>
-              {isEditingGroupName !== item.data.id ? (
-                // TODO -fix - edit title on click
-                // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
-                <p
-                  onClick={ev => {
-                    if (!item.isFolder) return;
-                    ev.stopPropagation();
-                  }}
-                  onDoubleClick={ev => {
-                    if (!item.isFolder) return;
-                    setIsEditingGroupName(item.data.id);
-                    ev.stopPropagation();
-                  }}
-                  className={
-                    'text-[13px] ml-px text-slate-300/80 max-w-[95%] z-10 whitespace-nowrap overflow-hidden text-ellipsis text-start'
-                  }>
-                  {title?.trim() || 'No title'}
-                </p>
-              ) : (
-                <motion.input
-                  {...bounce}
-                  value={title?.trim()}
-                  placeholder="Group name..."
-                  onKeyDown={ev => {
-                    if (ev.code === 'Escape') {
-                      setIsEditingGroupName(0);
-                    }
-                    if (ev.code === 'Enter') {
-                      setIsEditingGroupName(0);
-                      handleGroupNameUpdate(item.data.id);
-                    }
-                  }}
-                  // eslint-disable-next-line jsx-a11y/no-autofocus
-                  autoFocus
-                  onChange={ev => setGroupName(ev.currentTarget.value)}
-                  className={`bg-brand-darkBgAccent/40 text-slate-400 font-light -ml-1 text-[12px] py-1 px-1 w-[95%]
-                            border border-brand-darkBgAccent/40 rounded outline-none`}
-                />
-              )}
-            </>
-
+            <p
+              className={
+                'text-[13px] ml-px text-slate-300/80 max-w-[95%] z-10 whitespace-nowrap overflow-hidden text-ellipsis text-start'
+              }>
+              {title?.trim() || 'No title'}
+            </p>
             {item.isFolder ? (
               <span
                 className="size-[10px] rounded-full block ml-2 -mb-px z-[20] opacity-90"

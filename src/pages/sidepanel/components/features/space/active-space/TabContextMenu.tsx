@@ -1,12 +1,14 @@
-import type { ReactNode } from 'react';
 import { useAtomValue, useSetAtom } from 'jotai';
 import * as RadixContextMenu from '@radix-ui/react-context-menu';
+import { ReactNode, useRef, useMemo, useState, memo, FormEventHandler } from 'react';
 import {
   ArrowDownIcon,
   ChevronRightIcon,
-  FileIcon,
+  ColorWheelIcon,
   FilePlusIcon,
+  LayersIcon,
   MoonIcon,
+  Pencil1Icon,
   PinRightIcon,
   PlusIcon,
   TrashIcon,
@@ -17,9 +19,11 @@ import { discardTabs } from '@root/src/services/chrome-discard/discard';
 import { openTabsInTransferredSpace } from '@root/src/services/chrome-tabs/tabs';
 import { nonActiveSpacesAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
 import { getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
-import { memo , useMemo } from 'react';
 import { ThemeColor } from '@root/src/constants/app';
 import { ColorType } from '@root/src/components/color-picker/ColorPicker';
+import { createPortal } from 'react-dom';
+import { SlideModal } from '@root/src/components/modal';
+import { wait } from '@root/src/utils';
 
 type Props = {
   selectedItem: ITab | IGroup;
@@ -146,103 +150,165 @@ const TabContextMenu = ({
     await chrome.tabGroups.update(selectedItem.id, { color });
   };
 
+  // rename group
+  const [showGroupRenameModal, setShowGroupRenameModal] = useState(0);
+  const [groupTitle, setGroupTitle] = useState('');
+
+  const renameInputRef = useRef<HTMLInputElement>(null);
+
+  const handleRenameGroup: FormEventHandler<HTMLFormElement> = async ev => {
+    ev.preventDefault();
+    if (groupTitle?.length < 3) {
+      return;
+    }
+    await chrome.tabGroups.update(selectedItem.id, { title: groupTitle });
+    setShowGroupRenameModal(0);
+  };
+
   return (
-    <RadixContextMenu.Root>
-      <RadixContextMenu.Trigger asChild>{children}</RadixContextMenu.Trigger>
-      <RadixContextMenu.Portal>
-        <RadixContextMenu.Content
-          className="!bg-brand-darkBg !opacity-100 rounded-md overflow-hidden min-w-[180px] h-fit z-[9999] py-px border border-brand-darkBgAccent/30"
-          //   sideOffset={5}
-          //   align="end"
-        >
-          <RadixContextMenu.Item
-            onClick={handleDiscardTabs}
-            className="flex items-center ext-[12px] font-normal text-slate-400 py-[7px] px-2.5  hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-            <MoonIcon className="text-slate-500 mr-1 scale-[0.8]" /> Discard
-          </RadixContextMenu.Item>
-          <RadixContextMenu.Item
-            onClick={handleCreateNewTab}
-            className="flex items-center ext-[12px] font-normal text-slate-400 py-[7px] px-2.5  hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-            <ArrowDownIcon className="text-slate-500 mr-1 scale-[0.8]" />
-            {isSelectedItemTab ? 'New tab after this' : 'New tab in group'}
-          </RadixContextMenu.Item>
-
-          <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
-
-          {isSelectedItemTab ? (
+    <>
+      <RadixContextMenu.Root>
+        <RadixContextMenu.Trigger asChild>{children}</RadixContextMenu.Trigger>
+        <RadixContextMenu.Portal>
+          <RadixContextMenu.Content
+            className="!bg-brand-darkBg !opacity-100 rounded-md overflow-hidden min-w-[180px] h-fit z-[9999] py-px border border-brand-darkBgAccent/30"
+            //   sideOffset={5}
+            //   align="end"
+          >
             <RadixContextMenu.Item
-              onClick={handleCreateNewGroup}
-              className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-              <FilePlusIcon className="text-slate-500 mr-1 scale-[0.8]" /> New group
+              onClick={handleDiscardTabs}
+              className="flex items-center ext-[12px] font-normal text-slate-400 py-[7px] px-2.5  hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+              <MoonIcon className="text-slate-500 mr-1 scale-[0.8]" /> Discard
             </RadixContextMenu.Item>
-          ) : null}
-          <RadixContextMenu.Item className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-            <FileIcon className="text-slate-500 mr-1 scale-[0.8]" />{' '}
-            {isSelectedItemTab ? ' Move to group' : 'Merge group'}
-          </RadixContextMenu.Item>
-          {!isSelectedItemTab ? (
+            <RadixContextMenu.Item
+              onClick={handleCreateNewTab}
+              className="flex items-center ext-[12px] font-normal text-slate-400 py-[7px] px-2.5  hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+              <ArrowDownIcon className="text-slate-500 mr-1 scale-[0.8]" />
+              {isSelectedItemTab ? 'New tab after this' : 'New tab in group'}
+            </RadixContextMenu.Item>
+
+            <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
+
+            {isSelectedItemTab ? (
+              <RadixContextMenu.Item
+                onClick={handleCreateNewGroup}
+                className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+                <FilePlusIcon className="text-slate-500 mr-1 scale-[0.8]" /> New group
+              </RadixContextMenu.Item>
+            ) : null}
+            <RadixContextMenu.Item className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+              <LayersIcon className="text-slate-500 mr-1 scale-[0.8]" />{' '}
+              {isSelectedItemTab ? ' Move to group' : 'Merge group'}
+            </RadixContextMenu.Item>
+
+            {!isSelectedItemTab ? (
+              <>
+                <RadixContextMenu.Item
+                  onClick={async () => {
+                    setGroupTitle((selectedItem as IGroup).name);
+                    setShowGroupRenameModal(selectedItem.id);
+                    await wait(100);
+                    renameInputRef.current?.focus();
+                  }}
+                  className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+                  <Pencil1Icon className="text-slate-500 mr-1 scale-[0.8]" /> Rename group
+                </RadixContextMenu.Item>
+                <RadixContextMenu.Sub>
+                  <RadixContextMenu.SubTrigger className="flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+                    <ColorWheelIcon className="text-slate-500 mr-1 scale-[0.8]" /> Change group color
+                    <ChevronRightIcon className="text-slate-600/90 ml-2 scale-[0.8]" />
+                  </RadixContextMenu.SubTrigger>
+                  <RadixContextMenu.Portal>
+                    <RadixContextMenu.SubContent className="!bg-brand-darkBg !opacity-100 rounded-md overflow-hidden w-fit h-fit z-[99999] py-px border border-brand-darkBgAccent/30">
+                      {[...(Object.keys(ThemeColor) as Array<ColorType>)].map(color => (
+                        <RadixContextMenu.Item
+                          key={color}
+                          onClick={() => {
+                            // handle color change
+                            handleGroupColorChange(color.toLowerCase() as chrome.tabGroups.ColorEnum);
+                          }}
+                          className="flex items-center py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+                          <span
+                            className="size-[10px] rounded-full block -mb-px z-[20] opacity-90"
+                            style={{ backgroundColor: ThemeColor[color] }}></span>
+                          <span className="ml-2 text-[11px] font-normal text-slate-400">{color}</span>
+                        </RadixContextMenu.Item>
+                      ))}
+                    </RadixContextMenu.SubContent>
+                  </RadixContextMenu.Portal>
+                </RadixContextMenu.Sub>
+              </>
+            ) : null}
+
+            <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
+
+            <RadixContextMenu.Item
+              onClick={handleNewSpace}
+              className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+              <PlusIcon className="text-slate-500 mr-1 scale-[0.8]" /> New space
+            </RadixContextMenu.Item>
             <RadixContextMenu.Sub>
               <RadixContextMenu.SubTrigger className="flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-                <PinRightIcon className="text-slate-500 mr-1 scale-[0.8]" /> Change group color
+                <PinRightIcon className="text-slate-500 mr-1 scale-[0.8]" /> Move to another space{' '}
                 <ChevronRightIcon className="text-slate-600/90 ml-2 scale-[0.8]" />
               </RadixContextMenu.SubTrigger>
               <RadixContextMenu.Portal>
                 <RadixContextMenu.SubContent className="!bg-brand-darkBg !opacity-100 rounded-md overflow-hidden w-fit h-fit z-[99999] py-px border border-brand-darkBgAccent/30">
-                  {[...(Object.keys(ThemeColor) as Array<ColorType>)].map(color => (
+                  {[...nonActiveSpaces.filter(s => s.isSaved)].map(space => (
                     <RadixContextMenu.Item
-                      key={color}
-                      onClick={() => {
-                        // handle color change
-                        handleGroupColorChange(color.toLowerCase() as chrome.tabGroups.ColorEnum);
-                      }}
-                      className="flex items-center py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-                      <span
-                        className="size-[10px] rounded-full block -mb-px z-[20] opacity-90"
-                        style={{ backgroundColor: ThemeColor[color] }}></span>
-                      <span className="ml-2 text-[11px] font-normal text-slate-400">{color}</span>
+                      key={space.id}
+                      onClick={() => handleMoveTabToSpace(space.id)}
+                      className="flex items-center text-[11px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+                      <span className="mr-1.5">{space.emoji}</span> {space.title}
                     </RadixContextMenu.Item>
                   ))}
                 </RadixContextMenu.SubContent>
               </RadixContextMenu.Portal>
             </RadixContextMenu.Sub>
-          ) : null}
 
-          <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
+            <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
 
-          <RadixContextMenu.Item
-            onClick={handleNewSpace}
-            className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-            <PlusIcon className="text-slate-500 mr-1 scale-[0.8]" /> New space
-          </RadixContextMenu.Item>
-          <RadixContextMenu.Sub>
-            <RadixContextMenu.SubTrigger className="flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-              <PinRightIcon className="text-slate-500 mr-1 scale-[0.8]" /> Move to another space{' '}
-              <ChevronRightIcon className="text-slate-600/90 ml-2 scale-[0.8]" />
-            </RadixContextMenu.SubTrigger>
-            <RadixContextMenu.Portal>
-              <RadixContextMenu.SubContent className="!bg-brand-darkBg !opacity-100 rounded-md overflow-hidden w-fit h-fit z-[99999] py-px border border-brand-darkBgAccent/30">
-                {[...nonActiveSpaces.filter(s => s.isSaved)].map(space => (
-                  <RadixContextMenu.Item
-                    key={space.id}
-                    onClick={() => handleMoveTabToSpace(space.id)}
-                    className="flex items-center text-[11px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-                    <span className="mr-1.5">{space.emoji}</span> {space.title}
-                  </RadixContextMenu.Item>
-                ))}
-              </RadixContextMenu.SubContent>
-            </RadixContextMenu.Portal>
-          </RadixContextMenu.Sub>
-
-          <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
-
-          <RadixContextMenu.Item
-            onClick={onRemoveClick}
-            className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-            <TrashIcon className="text-slate-500 mr-1 scale-[0.8]" /> Remove
-          </RadixContextMenu.Item>
-        </RadixContextMenu.Content>
-      </RadixContextMenu.Portal>
-    </RadixContextMenu.Root>
+            <RadixContextMenu.Item
+              onClick={onRemoveClick}
+              className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+              <TrashIcon className="text-slate-500 mr-1 scale-[0.8]" /> Remove
+            </RadixContextMenu.Item>
+          </RadixContextMenu.Content>
+        </RadixContextMenu.Portal>
+      </RadixContextMenu.Root>
+      {/* modal */}
+      {showGroupRenameModal
+        ? createPortal(
+            <>
+              <SlideModal
+                isOpen={true}
+                title={`Rename ${(selectedItem as IGroup).name}`}
+                onClose={() => setShowGroupRenameModal(0)}>
+                <form className="px-3 pt-4 flex items-center flex-col" onSubmit={handleRenameGroup}>
+                  <input
+                    ref={renameInputRef}
+                    type="text"
+                    // eslint-disable-next-line jsx-a11y/no-autofocus
+                    autoFocus
+                    placeholder="Group name..."
+                    value={groupTitle}
+                    onChange={e => setGroupTitle(e.target.value)}
+                    className="w-[85%] text-[14px] px-2 py-1.5 text-slate-300 bg-brand-darkBgAccent/60 border border-transparent rounded-md transition-colors duration-200 focus:outline-none focus:border-slate-600"
+                  />
+                  {/* update button */}
+                  <button
+                    className={` mt-4 mx-auto w-[50%] py-2 rounded-md text-brand-darkBg/70 font-semibold text-[13px] 
+                    bg-brand-primary/90 hover:opacity-95 transition-all duration-200 border-none outline-none focus-within:outline-slate-600`}
+                    type="submit">
+                    Rename
+                  </button>
+                </form>
+              </SlideModal>
+            </>,
+            document.body,
+          )
+        : null}
+    </>
   );
 };
 
