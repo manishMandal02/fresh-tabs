@@ -82,12 +82,12 @@ const TabContextMenu = ({
 
       setGroupsToSpace(newSpaceId, [...(groupsInSelectedSpace || []), selectedItem as IGroup]);
 
-      // remove tabs in group
+      // remove tabs from current space/group
       const tabsInGroup = allTabs.filter(t => t.groupId === selectedItem.id);
 
       await chrome.tabs.remove(tabsInGroup.map(t => t.id));
 
-      // remove group from current space
+      // remove from storage
       setGroupsToSpace(
         space.id,
         allGroups.filter(g => g.id !== selectedItem.id),

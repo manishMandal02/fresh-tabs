@@ -921,7 +921,6 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
 // event listener for when tabs get updated
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   try {
-    console.log('✉️ ~ chrome.tabs.onUpdated.addListener:907 ~ changeInfo:', changeInfo);
     if (changeInfo?.url) {
       // record site visit for the previous url
       recordSiteVisit(tab.windowId, tab.id);

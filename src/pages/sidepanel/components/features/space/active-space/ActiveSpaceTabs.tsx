@@ -479,6 +479,8 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     await updateTabsAndGroupState();
   };
 
+  // TODO - scroll (container) to active tab if lot more tabs present
+
   return (
     <div className="text-slate-400">
       <ControlledTreeEnvironment
@@ -606,8 +608,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                   'relative w-full cursor-default bg-emerald-70 flex mb-[1px] items-center justify-between text-slate-300/70 text-[13px] px-2 group z-20 rounded-lg outline-none',
                   {
                     // group's style
-                    'bg-brand-darkBgAccent/60 shadow-sm shadow-brand-darkBgAccent/60 px-2 border border-brand-darkBg/80 ':
-                      item.isFolder,
+                    'bg-brand-darkBgAccent/60  px-2 border border-brand-darkBg/80 ': item.isFolder,
                   },
                   {
                     // group expanded
