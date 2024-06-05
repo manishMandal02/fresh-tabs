@@ -7,7 +7,7 @@ type Props = {
   onChange: (color: string) => void;
 };
 
-type ColorType = keyof typeof ThemeColor;
+export type ColorType = keyof typeof ThemeColor;
 
 const ColorPicker = ({ color, onChange }: Props) => {
   const [isOpen, setIsOpen] = useState(false);

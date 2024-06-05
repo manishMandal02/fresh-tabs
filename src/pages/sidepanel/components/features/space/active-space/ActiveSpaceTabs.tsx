@@ -137,6 +137,10 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   // local state
   const [discardedTabIDs, setDiscardedTabIDs] = useState<number[]>([]);
 
+  // group name edit
+  const [isEditingGroupName, setIsEditingGroupName] = useState(0);
+  const [groupName, setGroupName] = useState('');
+
   // track dragging state
   const [draggingItem, setDraggingItem] = useState(null);
 
@@ -169,6 +173,11 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   useEffect(() => {
     selectedTabsRef.current = selectedTabs;
   }, [selectedTabs]);
+
+  // group name update
+  const handleGroupNameUpdate = async (id: number) => {
+    await chrome.tabGroups.update(id, { title: groupName });
+  };
 
   const handleGoToTab = useCallback(
     async (id: number, index: number) => {
@@ -483,10 +492,10 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   return (
     <div className="text-slate-400">
       <ControlledTreeEnvironment
-        canDragAndDrop={true}
-        canDropOnFolder={true}
+        canDragAndDrop
+        canDropOnFolder
+        canReorderItems
         canDropOnNonFolder={false}
-        canReorderItems={true}
         items={groupedTabs}
         viewState={{
           ['active-space-tabs']: {
@@ -528,7 +537,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
           ) : null
         }
         renderItemTitle={({ title, item }) => (
-          //  TODO - allow title change on click (leverage the built in api)
           <div className={'w-full flex items-center overflow-hidden h-full'}>
             {item.isFolder ? (
               <></>
@@ -540,18 +548,53 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                 })}
               />
             )}
-            <p
-              className={
-                'text-[13px] ml-px text-slate-300/80 max-w-[95%] z-10 whitespace-nowrap overflow-hidden text-ellipsis text-start'
-              }>
-              {title?.trim() || 'No title'}
-            </p>
+
+            <>
+              {isEditingGroupName !== item.data.id ? (
+                // TODO -fix - edit title on click
+                // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
+                <p
+                  onClick={ev => {
+                    if (!item.isFolder) return;
+                    ev.stopPropagation();
+                  }}
+                  onDoubleClick={ev => {
+                    if (!item.isFolder) return;
+                    setIsEditingGroupName(item.data.id);
+                    ev.stopPropagation();
+                  }}
+                  className={
+                    'text-[13px] ml-px text-slate-300/80 max-w-[95%] z-10 whitespace-nowrap overflow-hidden text-ellipsis text-start'
+                  }>
+                  {title?.trim() || 'No title'}
+                </p>
+              ) : (
+                <motion.input
+                  {...bounce}
+                  value={title?.trim()}
+                  placeholder="Group name..."
+                  onKeyDown={ev => {
+                    if (ev.code === 'Escape') {
+                      setIsEditingGroupName(0);
+                    }
+                    if (ev.code === 'Enter') {
+                      setIsEditingGroupName(0);
+                      handleGroupNameUpdate(item.data.id);
+                    }
+                  }}
+                  // eslint-disable-next-line jsx-a11y/no-autofocus
+                  autoFocus
+                  onChange={ev => setGroupName(ev.currentTarget.value)}
+                  className={`bg-brand-darkBgAccent/40 text-slate-400 font-light -ml-1 text-[12px] py-1 px-1 w-[95%]
+                            border border-brand-darkBgAccent/40 rounded outline-none`}
+                />
+              )}
+            </>
+
             {item.isFolder ? (
-              // TODO - add a color for the group theme
-              <button
-                onClick={ev => ev.stopPropagation()}
+              <span
                 className="size-[10px] rounded-full block ml-2 -mb-px z-[20] opacity-90"
-                style={{ backgroundColor: ThemeColor[capitalize((item?.data as IGroup).theme)] }}></button>
+                style={{ backgroundColor: ThemeColor[capitalize((item?.data as IGroup).theme)] }}></span>
             ) : null}
           </div>
         )}
@@ -605,7 +648,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                   onTabDoubleClickHandler(item.data?.id, (item.data as ITab).index);
                 }}
                 className={cn(
-                  'relative w-full cursor-default bg-emerald-70 flex items-center justify-between text-slate-300/70 text-[13px] px-2 group z-20 rounded-lg outline-none',
+                  'relative w-full cursor-default bg-emerald-70 flex mb-[1px] items-center justify-between text-slate-300/70 text-[13px] px-2 group z-20 rounded-lg outline-none',
                   {
                     // group's style
                     'bg-brand-darkBgAccent/60 shadow-sm shadow-brand-darkBgAccent/60 px-2 border border-brand-darkBg/80 ':

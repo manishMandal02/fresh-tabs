@@ -17,7 +17,9 @@ import { discardTabs } from '@root/src/services/chrome-discard/discard';
 import { openTabsInTransferredSpace } from '@root/src/services/chrome-tabs/tabs';
 import { nonActiveSpacesAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
 import { getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
-import { memo } from 'react';
+import { memo , useMemo } from 'react';
+import { ThemeColor } from '@root/src/constants/app';
+import { ColorType } from '@root/src/components/color-picker/ColorPicker';
 
 type Props = {
   selectedItem: ITab | IGroup;
@@ -43,6 +45,8 @@ const TabContextMenu = ({
   // global state
   const nonActiveSpaces = useAtomValue(nonActiveSpacesAtom);
   const showNewSpaceModal = useSetAtom(showNewSpaceModalAtom);
+
+  const isSelectedItemTab = useMemo(() => 'index' in selectedItem, [selectedItem]);
 
   // on discard click
   const handleDiscardTabs = async () => {
@@ -124,20 +128,27 @@ const TabContextMenu = ({
     let newTabIndex = -1;
 
     // if group selected then create new tab after last tab in group
-    if ('name' in selectedItem) {
+    if (!isSelectedItemTab) {
       const tabsInSelectedGroup = allTabs.filter(t => t.groupId === selectedItem.id);
       newTabIndex = tabsInSelectedGroup[tabsInSelectedGroup.length - 1].index + 1;
     } else {
-      newTabIndex = selectedItem.index + 1;
+      newTabIndex = (selectedItem as ITab).index + 1;
     }
-    await chrome.tabs.create({ url: 'chrome://newtab', active: true, index: newTabIndex });
+    const tab = await chrome.tabs.create({ url: 'chrome://newtab', active: true, index: newTabIndex });
+
+    if (!isSelectedItemTab) {
+      await chrome.tabs.group({ groupId: selectedItem.id, tabIds: [tab.id] });
+    }
+  };
+
+  // change group color/theme
+  const handleGroupColorChange = async (color: chrome.tabGroups.ColorEnum) => {
+    await chrome.tabGroups.update(selectedItem.id, { color });
   };
 
   return (
     <RadixContextMenu.Root>
-      <RadixContextMenu.Trigger className="" asChild>
-        {children}
-      </RadixContextMenu.Trigger>
+      <RadixContextMenu.Trigger asChild>{children}</RadixContextMenu.Trigger>
       <RadixContextMenu.Portal>
         <RadixContextMenu.Content
           className="!bg-brand-darkBg !opacity-100 rounded-md overflow-hidden min-w-[180px] h-fit z-[9999] py-px border border-brand-darkBgAccent/30"
@@ -152,19 +163,49 @@ const TabContextMenu = ({
           <RadixContextMenu.Item
             onClick={handleCreateNewTab}
             className="flex items-center ext-[12px] font-normal text-slate-400 py-[7px] px-2.5  hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-            <ArrowDownIcon className="text-slate-500 mr-1 scale-[0.8]" /> New tab after this
+            <ArrowDownIcon className="text-slate-500 mr-1 scale-[0.8]" />
+            {isSelectedItemTab ? 'New tab after this' : 'New tab in group'}
           </RadixContextMenu.Item>
 
           <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
 
-          <RadixContextMenu.Item
-            onClick={handleCreateNewGroup}
-            className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-            <FilePlusIcon className="text-slate-500 mr-1 scale-[0.8]" /> New group
-          </RadixContextMenu.Item>
+          {isSelectedItemTab ? (
+            <RadixContextMenu.Item
+              onClick={handleCreateNewGroup}
+              className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+              <FilePlusIcon className="text-slate-500 mr-1 scale-[0.8]" /> New group
+            </RadixContextMenu.Item>
+          ) : null}
           <RadixContextMenu.Item className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-            <FileIcon className="text-slate-500 mr-1 scale-[0.8]" /> Move to group
+            <FileIcon className="text-slate-500 mr-1 scale-[0.8]" />{' '}
+            {isSelectedItemTab ? ' Move to group' : 'Merge group'}
           </RadixContextMenu.Item>
+          {!isSelectedItemTab ? (
+            <RadixContextMenu.Sub>
+              <RadixContextMenu.SubTrigger className="flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+                <PinRightIcon className="text-slate-500 mr-1 scale-[0.8]" /> Change group color
+                <ChevronRightIcon className="text-slate-600/90 ml-2 scale-[0.8]" />
+              </RadixContextMenu.SubTrigger>
+              <RadixContextMenu.Portal>
+                <RadixContextMenu.SubContent className="!bg-brand-darkBg !opacity-100 rounded-md overflow-hidden w-fit h-fit z-[99999] py-px border border-brand-darkBgAccent/30">
+                  {[...(Object.keys(ThemeColor) as Array<ColorType>)].map(color => (
+                    <RadixContextMenu.Item
+                      key={color}
+                      onClick={() => {
+                        // handle color change
+                        handleGroupColorChange(color.toLowerCase() as chrome.tabGroups.ColorEnum);
+                      }}
+                      className="flex items-center py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+                      <span
+                        className="size-[10px] rounded-full block -mb-px z-[20] opacity-90"
+                        style={{ backgroundColor: ThemeColor[color] }}></span>
+                      <span className="ml-2 text-[11px] font-normal text-slate-400">{color}</span>
+                    </RadixContextMenu.Item>
+                  ))}
+                </RadixContextMenu.SubContent>
+              </RadixContextMenu.Portal>
+            </RadixContextMenu.Sub>
+          ) : null}
 
           <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
 
