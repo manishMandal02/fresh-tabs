@@ -60,7 +60,7 @@ export const createDiscardedTabs = async (tabs: ITab[], windowId?: number, shoul
   const responses = await Promise.allSettled(createMultipleTabsPromise);
 
   // if the just create flag is passed it will only create tabs and return
-  if (!windowId || shouldCreateTabsAtEnd) {
+  if (!windowId) {
     return true;
   }
 
@@ -276,7 +276,7 @@ export const newTabGroup = async (groupTitle: string, tabURL: string, windowId: 
 
 // open tabs in space when tabs moved to a space when it is opened in another window
 
-export const openTabsInTransferredSpace = async (spaceId: string, tabs: ITab[]) => {
+export const openTabsInTransferredSpace = async (spaceId: string, tabs: ITab[], group?: IGroup) => {
   const openWindows = await chrome.windows.getAll();
 
   if (openWindows?.length < 2) return;
@@ -290,7 +290,20 @@ export const openTabsInTransferredSpace = async (spaceId: string, tabs: ITab[]) 
   //  create new tabs in selected space
 
   // update Id's for newly created tabs
-  await createDiscardedTabs(tabs, selectedSpace.windowId, true);
+  const createdTabs = await createDiscardedTabs(tabs, selectedSpace.windowId, true);
+
+  if (group?.name) {
+    const newGroup = await chrome.tabs.group({
+      tabIds: (createdTabs as ITab[]).map(t => t.id),
+      createProperties: { windowId: selectedSpace.windowId },
+    });
+
+    await chrome.tabGroups.update(newGroup, {
+      title: group.name,
+      color: group.theme,
+      collapsed: true,
+    });
+  }
 
   // wait .5s to sync tabs
   await wait(250);

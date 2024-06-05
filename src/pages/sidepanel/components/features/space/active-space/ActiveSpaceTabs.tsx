@@ -122,7 +122,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   const updateSpaceState = useSetAtom(updateSpaceAtom);
   const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
 
-  const activeSpaceTabsSorted = useMemo(() => activeSpaceTabs.sort((a, b) => a.index - b.index), [activeSpaceTabs]);
+  const activeSpaceTabsSorted = useMemo(() => activeSpaceTabs.toSorted((a, b) => a.index - b.index), [activeSpaceTabs]);
 
   const [activeSpaceGroups, setActiveSpaceGroups] = useAtom(activeSpaceGroupsAtom);
 
@@ -186,7 +186,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     // tab ids to remove
     const ids = selectedTabsRef.current;
 
-    const updatedTabs = activeSpaceTabs?.filter(t => !ids.includes(t.id));
+    const updatedTabs = activeSpaceTabsSorted?.filter(t => !ids.includes(t.id));
 
     await setTabsForSpace(space.id, updatedTabs);
 
@@ -209,7 +209,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
     setActiveSpaceTabs(updatedTabs);
     updateSpaceState({ ...space, activeTabIndex: tab.index });
-  }, [selectedTabsRef, space, activeSpaceTabs, updateSpaceState, setActiveSpaceTabs]);
+  }, [selectedTabsRef, space, activeSpaceTabsSorted, updateSpaceState, setActiveSpaceTabs]);
 
   const { bounce } = useCustomAnimation();
 
@@ -255,7 +255,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
 
         const tabIsBeforeLastSelectedTab = tab.index < lastSelectedTabIndex;
 
-        const tabsInRange: ITab[] = activeSpaceTabs
+        const tabsInRange: ITab[] = activeSpaceTabsSorted
           .map((t, idx) => ({ ...t, index: idx }))
           .filter((t, idx) => {
             // duplicate tab
@@ -298,7 +298,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
       handleGoToTab,
       selectedTabs,
       setSelectedTabs,
-      activeSpaceTabs,
       activeSpaceTabsSorted,
     ],
   );
@@ -321,7 +320,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   // delete group
   const handlerDeleteGroup = async (id: number) => {
     // delete all tabs in group
-    const tabsInSelectedGroup = activeSpaceTabs.filter(t => t.groupId === id).map(t => t.id);
+    const tabsInSelectedGroup = activeSpaceTabsSorted.filter(t => t.groupId === id).map(t => t.id);
     await chrome.tabs.remove(tabsInSelectedGroup);
   };
 
@@ -383,7 +382,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
       if (target.targetType === 'item') {
         // add the dragged group's tab to the target group
 
-        const tabsInDraggedGroup = activeSpaceTabs.filter(t1 => t1.groupId === items[0].data.id).map(t2 => t2.id);
+        const tabsInDraggedGroup = activeSpaceTabsSorted.filter(t1 => t1.groupId === items[0].data.id).map(t2 => t2.id);
 
         await chrome.tabs.group({
           tabIds: tabsInDraggedGroup,
@@ -396,7 +395,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
       //  handle group dropped inside a group
       if (target.targetType === 'between-items' && target.parentItem !== 'root') {
         // add dragged groups tabs to the target group at dropped index
-        const tabsInDraggedGroup = activeSpaceTabs.filter(t1 => t1.groupId === items[0].data.id).map(t2 => t2.id);
+        const tabsInDraggedGroup = activeSpaceTabsSorted.filter(t1 => t1.groupId === items[0].data.id).map(t2 => t2.id);
 
         // add tabs to target group
         await chrome.tabs.group({
@@ -561,8 +560,8 @@ const ActiveSpaceTabs = ({ space }: Props) => {
             className="items-start m-0 flex flex-col w-full">
             <TabContextMenu
               space={space}
-              allTabs={activeSpaceTabs}
-              totalGroups={activeSpaceGroups?.length || 0}
+              allTabs={activeSpaceTabsSorted}
+              allGroups={activeSpaceGroups}
               selectedTabs={selectedTabs}
               setActiveSpaceTabs={setActiveSpaceTabs}
               selectedItem={item.data as ITab | IGroup}

@@ -14,7 +14,7 @@ export const getGroups = async (spaceId: string) => {
       msg: 'Error getting groups.',
       fileTrace: ` ${'src/services/chrome-storage/groups.ts:15 getGroups() ~ catch block'}`,
     });
-    return null;
+    return [];
   }
 };
 

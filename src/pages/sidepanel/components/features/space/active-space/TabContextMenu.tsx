@@ -24,14 +24,15 @@ import { ColorType } from '@root/src/components/color-picker/ColorPicker';
 import { createPortal } from 'react-dom';
 import { SlideModal } from '@root/src/components/modal';
 import { wait } from '@root/src/utils';
+import { getGroups, setGroupsToSpace } from '@root/src/services/chrome-storage/groups';
 
 type Props = {
   selectedItem: ITab | IGroup;
   space: ISpace;
   allTabs: ITab[];
+  allGroups: IGroup[];
   children: ReactNode;
   selectedTabs: number[];
-  totalGroups: number;
   onRemoveClick: () => void;
   setActiveSpaceTabs: (tabs: ITab[]) => void;
 };
@@ -43,7 +44,7 @@ const TabContextMenu = ({
   selectedItem,
   allTabs,
   space,
-  totalGroups,
+  allGroups,
   setActiveSpaceTabs,
 }: Props) => {
   // global state
@@ -70,12 +71,33 @@ const TabContextMenu = ({
 
     // update group title
     await chrome.tabGroups.update(newGroupId, {
-      title: `New group ${totalGroups + 1}`,
+      title: `New group ${allGroups?.length + 1}`,
     });
   };
 
   // move tabs to another space
   const handleMoveTabToSpace = async (newSpaceId: string) => {
+    if ('name' in selectedItem) {
+      const groupsInSelectedSpace = await getGroups(newSpaceId);
+
+      setGroupsToSpace(newSpaceId, [...(groupsInSelectedSpace || []), selectedItem as IGroup]);
+
+      // remove tabs in group
+      const tabsInGroup = allTabs.filter(t => t.groupId === selectedItem.id);
+
+      await chrome.tabs.remove(tabsInGroup.map(t => t.id));
+
+      // remove group from current space
+      setGroupsToSpace(
+        space.id,
+        allGroups.filter(g => g.id !== selectedItem.id),
+      );
+
+      // open group in selected space if space opened in another window
+      await openTabsInTransferredSpace(newSpaceId, tabsInGroup, selectedItem);
+      return;
+    }
+
     if (selectedTabs?.length < 1) {
       // move single Tab
 
@@ -150,6 +172,24 @@ const TabContextMenu = ({
     await chrome.tabGroups.update(selectedItem.id, { color });
   };
 
+  // move tab/group to a group
+  const handleMoveToGroup = async (groupId: number) => {
+    if (selectedTabs?.length > 0 || 'index' in selectedItem) {
+      const tabsToMove = selectedTabs?.length > 0 ? selectedTabs : selectedItem.id;
+
+      await chrome.tabs.group({ groupId, tabIds: tabsToMove });
+
+      // move tabs to group
+      return;
+    }
+
+    // merge groups
+    const tabsInSelectedGroup = allTabs.filter(t => t.groupId === selectedItem.id).map(t => t.id);
+
+    await chrome.tabs.group({ groupId, tabIds: tabsInSelectedGroup });
+    return;
+  };
+
   // rename group
   const [showGroupRenameModal, setShowGroupRenameModal] = useState(0);
   const [groupTitle, setGroupTitle] = useState('');
@@ -170,11 +210,7 @@ const TabContextMenu = ({
       <RadixContextMenu.Root>
         <RadixContextMenu.Trigger asChild>{children}</RadixContextMenu.Trigger>
         <RadixContextMenu.Portal>
-          <RadixContextMenu.Content
-            className="!bg-brand-darkBg !opacity-100 rounded-md overflow-hidden min-w-[180px] h-fit z-[9999] py-px border border-brand-darkBgAccent/30"
-            //   sideOffset={5}
-            //   align="end"
-          >
+          <RadixContextMenu.Content className="!bg-brand-darkBg !opacity-100 rounded-md overflow-hidden min-w-[180px] h-fit z-[9999] py-px border border-brand-darkBgAccent/30">
             <RadixContextMenu.Item
               onClick={handleDiscardTabs}
               className="flex items-center ext-[12px] font-normal text-slate-400 py-[7px] px-2.5  hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
@@ -196,10 +232,6 @@ const TabContextMenu = ({
                 <FilePlusIcon className="text-slate-500 mr-1 scale-[0.8]" /> New group
               </RadixContextMenu.Item>
             ) : null}
-            <RadixContextMenu.Item className=" flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-              <LayersIcon className="text-slate-500 mr-1 scale-[0.8]" />{' '}
-              {isSelectedItemTab ? ' Move to group' : 'Merge group'}
-            </RadixContextMenu.Item>
 
             {!isSelectedItemTab ? (
               <>
@@ -239,6 +271,30 @@ const TabContextMenu = ({
                 </RadixContextMenu.Sub>
               </>
             ) : null}
+
+            <RadixContextMenu.Sub>
+              <RadixContextMenu.SubTrigger className="flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+                <LayersIcon className="text-slate-500 mr-1 scale-[0.8]" />{' '}
+                {isSelectedItemTab ? ' Move to group' : 'Merge group'}
+                <ChevronRightIcon className="text-slate-600/90 ml-2 scale-[0.8]" />
+              </RadixContextMenu.SubTrigger>
+              <RadixContextMenu.Portal>
+                <RadixContextMenu.SubContent className="!bg-brand-darkBg !opacity-100 rounded-md overflow-hidden w-fit h-fit z-[99999] py-px border border-brand-darkBgAccent/30">
+                  {[
+                    ...allGroups.filter(
+                      g => g.id !== ('index' in selectedItem ? selectedItem.groupId : selectedItem.id),
+                    ),
+                  ].map(group => (
+                    <RadixContextMenu.Item
+                      key={group.id}
+                      onClick={() => handleMoveToGroup(group.id)}
+                      className="flex items-center text-[11px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+                      {group.name}
+                    </RadixContextMenu.Item>
+                  ))}
+                </RadixContextMenu.SubContent>
+              </RadixContextMenu.Portal>
+            </RadixContextMenu.Sub>
 
             <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
 
