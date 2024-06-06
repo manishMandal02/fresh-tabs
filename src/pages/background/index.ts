@@ -189,7 +189,7 @@ const createUnsavedSpacesOnInstall = async () => {
   }
 };
 
-const syncTabsAndGroups = async (tabId: number, windowId?: number) => {
+const syncTabsAndGroups = async (tabId: number, windowId?: number, syncGroups = false) => {
   console.log('🔴 ~ syncTabsAndGroups called!!');
 
   let spaceWindow = windowId;
@@ -208,7 +208,7 @@ const syncTabsAndGroups = async (tabId: number, windowId?: number) => {
   if (!space?.id) return;
 
   //  create new  or update tab
-  const { activeTab } = await syncTabs(space.id, space.windowId, space.activeTabIndex, true, false);
+  const { activeTab } = await syncTabs(space.id, space.windowId, space.activeTabIndex, true, syncGroups);
 
   // send  to side panel
   await publishEvents({
@@ -920,6 +920,8 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
 //* TODO - improvement - debounce handler
 // event listener for when tabs get updated
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  console.log('🚀 ~ chrome.tabs.onUpdated.addListener ~ changeInfo:', changeInfo);
+
   try {
     if (changeInfo?.url) {
       // record site visit for the previous url
@@ -940,7 +942,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (changeInfo?.groupId) {
       // get space by windowId
       // add/update tab
-      await syncTabsAndGroups(tabId);
+      await syncTabsAndGroups(tabId, 0, true);
     }
 
     if (changeInfo?.discarded) {
@@ -1024,7 +1026,7 @@ chrome.tabGroups.onCreated.addListener(async group => {
     collapsed: group.collapsed,
   });
 
-  await syncTabsAndGroups(null, group.windowId);
+  await syncTabsAndGroups(null, group.windowId, true);
 
   // send send to side panel
   await publishEvents({
@@ -1042,7 +1044,7 @@ chrome.tabGroups.onRemoved.addListener(async group => {
 
   await removeGroup(space.id, group.id);
 
-  await syncTabsAndGroups(null, group.windowId);
+  await syncTabsAndGroups(null, group.windowId, true);
 
   // send send to side panel
   await publishEvents({
@@ -1089,7 +1091,7 @@ chrome.tabGroups.onUpdated.addListener(async group => {
 //* TODO - improvement - debounce handler
 // on group moved
 chrome.tabGroups.onMoved.addListener(async group => {
-  await syncTabsAndGroups(null, group.windowId);
+  await syncTabsAndGroups(null, group.windowId, true);
 });
 
 // window created/opened

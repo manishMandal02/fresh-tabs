@@ -75,6 +75,21 @@ const TabContextMenu = ({
     });
   };
 
+  // move tab/group to a group
+  const handleMoveToGroup = async (groupId: number) => {
+    // move tabs to group
+    if (selectedTabs?.length > 0 || 'index' in selectedItem) {
+      const tabsToMove = selectedTabs?.length > 0 ? selectedTabs : selectedItem.id;
+
+      await chrome.tabs.group({ groupId, tabIds: tabsToMove });
+      return;
+    }
+    // merge groups
+    const tabsInSelectedGroup = allTabs.filter(t => t.groupId === selectedItem.id).map(t => t.id);
+
+    await chrome.tabs.group({ groupId, tabIds: tabsInSelectedGroup });
+  };
+
   // move tabs to another space
   const handleMoveTabToSpace = async (newSpaceId: string) => {
     if ('name' in selectedItem) {
@@ -170,24 +185,6 @@ const TabContextMenu = ({
   // change group color/theme
   const handleGroupColorChange = async (color: chrome.tabGroups.ColorEnum) => {
     await chrome.tabGroups.update(selectedItem.id, { color });
-  };
-
-  // move tab/group to a group
-  const handleMoveToGroup = async (groupId: number) => {
-    if (selectedTabs?.length > 0 || 'index' in selectedItem) {
-      const tabsToMove = selectedTabs?.length > 0 ? selectedTabs : selectedItem.id;
-
-      await chrome.tabs.group({ groupId, tabIds: tabsToMove });
-
-      // move tabs to group
-      return;
-    }
-
-    // merge groups
-    const tabsInSelectedGroup = allTabs.filter(t => t.groupId === selectedItem.id).map(t => t.id);
-
-    await chrome.tabs.group({ groupId, tabIds: tabsInSelectedGroup });
-    return;
   };
 
   // rename group

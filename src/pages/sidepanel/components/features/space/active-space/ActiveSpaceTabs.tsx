@@ -166,24 +166,21 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // scroll (container) to active tab if lot more tabs present
   useEffect(() => {
     (async () => {
-      // scroll active tab into view
       await wait(500);
-      console.log('🌅 ~ activeSpaceTabs:', activeSpaceTabs);
-      console.log('🌅 ~ space:', space);
       const activeTabId = activeSpaceTabs.find(tab => tab.index === space.activeTabIndex)?.id;
-
-      console.log('🌅 ~ activeTabId:', activeTabId);
 
       if (!activeTabId || activeTabId < 1) return;
 
       const activeTabBtn = document.body.querySelector(`[data-rct-item-id="${activeTabId}"]`);
-      console.log('🌅 ~ activeTabBtn:', activeTabBtn);
       if (!activeTabBtn) return;
 
       activeTabBtn.scrollIntoView({ behavior: 'smooth', block: 'end' });
     })();
+    // only re-render if active space tabs changes (activeSpaceTabsSorted)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSpaceTabsSorted]);
 
   useEffect(() => {
@@ -498,8 +495,6 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     // await chrome.tabs.move(tabToMove.id, { index: tabIndex + 1 });
     await updateTabsAndGroupState();
   };
-
-  // TODO - scroll (container) to active tab if lot more tabs present
 
   return (
     <div className="text-slate-400 ">

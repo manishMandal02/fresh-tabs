@@ -5,7 +5,7 @@ import { getTabToUnSnooze } from '../chrome-storage/snooze-tabs';
 import { getTabsInSpace, setTabsForSpace } from '../chrome-storage/tabs';
 import { getSpace, getSpaceByWindow, updateSpace } from '../chrome-storage/spaces';
 import { DISCARD_TAB_URL_PREFIX, SNOOZED_TAB_GROUP_TITLE } from '@root/src/constants/app';
-import { setGroupsToSpace } from '../chrome-storage/groups';
+import { getGroups, setGroupsToSpace } from '../chrome-storage/groups';
 import { generateId, logger, publishEvents, wait } from '@root/src/utils';
 
 type OpenSpaceProps = {
@@ -120,7 +120,6 @@ const checkIfSpaceActiveInAnotherWindow = async (space: ISpace) => {
   return true;
 };
 
-// TODO - handle group creating and updating new group ids
 // opens a space in new window
 export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInNewWindow }: OpenSpaceProps) => {
   // focus window is space already active
@@ -149,23 +148,15 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
 
   let defaultWindowTabId = 0;
 
-  // for same-window method only
-  // storing the tabs of the current (previous) space to add them back after the window is cleared for new space
-  const currentSpaceInfo: { id: string; tabs: ITab[] } = {
-    id: '',
-    tabs: [],
-  };
-
   // get the window based on user preference
   if (!shouldOpenInNewWindow) {
+    // same window
     const currentWindowId = await getCurrentWindowId();
 
     const currentSpace = await getSpaceByWindow(currentWindowId);
-    // tabs in space before clearing
+    // storage tabs/groups of the current (previous) space to add them back after the window is cleared for new space
     const tabsInSpaceBefore = await getTabsInSpace(currentSpace.id);
-
-    currentSpaceInfo.id = currentSpace.id;
-    currentSpaceInfo.tabs = tabsInSpaceBefore;
+    const groupsInSpace = await getGroups(currentSpace.id);
 
     // clear the current window
     await clearCurrentWindow(currentWindowId);
@@ -176,6 +167,9 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
 
     // remove this window id from the current space
     await updateSpace(currentSpace.id, { ...currentSpace, windowId: 0 });
+
+    setTabsForSpace(currentSpace.id, tabsInSpaceBefore);
+    setGroupsToSpace(currentSpace.id, groupsInSpace);
   } else {
     //  create new window
     const window = await chrome.windows.create({ focused: true });
@@ -200,12 +194,10 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
 
   activeTab.id = activeTabCreated.id;
   activeTab.url = activeTabCreated.pendingUrl || activeTabCreated.url;
+  activeTab.index = activeTabCreated.index;
 
   // newly created tabs
-  const updatedTabs = [...discardAllTabs];
-
-  // add active tab at its index
-  updatedTabs.splice(activeTabIndex, 0, activeTab);
+  const updatedTabs = [...discardAllTabs, activeTab];
 
   // set tabs with new ids
   await setTabsForSpace(space.id, updatedTabs);
@@ -213,8 +205,36 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
   // delete the default tab created (an empty tab gets created along with window)
   await chrome.tabs.remove(defaultWindowTabId);
 
+  // group tabs if space has groups
+  const groupsInSpace = await getGroups(space.id);
+
+  console.log('🌅 ~ openSpace:211 ~ groupsInSpace:', groupsInSpace);
+
+  if (groupsInSpace?.length > 0) {
+    // map tabs to previous groups
+    const groupsToCreate: Record<string, number[]> = {};
+
+    tabs.forEach(tab => {
+      if (tab?.groupId < 1) return;
+      const newTabId = updatedTabs.find(t => t.index === tab.index)?.id;
+      groupsToCreate[tab.groupId].push(newTabId);
+    });
+
+    console.log('🌅 ~ openSpace:223 ~ groupsToCreate:', groupsToCreate);
+
+    if (Object.keys(groupsToCreate).length > 1) {
+      for (const groupId in groupsToCreate) {
+        const groupInfo = groupsInSpace.find(g => g.id === Number(groupId));
+
+        const newGroupId = await chrome.tabs.group({ tabIds: groupsToCreate[groupId], createProperties: { windowId } });
+
+        await chrome.tabGroups.update(newGroupId, { title: groupInfo.name, collapsed: true, color: groupInfo.theme });
+      }
+    }
+  }
+
   // making sure the tabs are updated & synced with window
-  await setTabsForSpace(currentSpaceInfo.id, currentSpaceInfo.tabs);
+  await syncTabs(space.id, windowId, activeTab.index);
 
   //  check if a snoozed tab has to be added
   // some tab might've been un-snoozed when the space was not active, so show it now
@@ -324,6 +344,7 @@ export const openTabsInTransferredSpace = async (spaceId: string, tabs: ITab[], 
   }
 };
 
+// sync tabs/groups from browser to storage
 export const syncTabs = async (
   spaceId: string,
   windowId: number,
