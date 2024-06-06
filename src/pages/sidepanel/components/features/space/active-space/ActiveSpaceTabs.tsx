@@ -16,7 +16,7 @@ import {
 
 import { cn } from '@root/src/utils/cn';
 import TabContextMenu from './TabContextMenu';
-import { capitalize, copyToClipboard, logger } from '@root/src/utils';
+import { capitalize, copyToClipboard, logger, wait } from '@root/src/utils';
 import SiteIcon from '@root/src/components/site-icon/SiteIcon';
 import { DISCARD_TAB_URL_PREFIX, ThemeColor } from '@root/src/constants/app';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
@@ -165,6 +165,26 @@ const ActiveSpaceTabs = ({ space }: Props) => {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      // scroll active tab into view
+      await wait(500);
+      console.log('🌅 ~ activeSpaceTabs:', activeSpaceTabs);
+      console.log('🌅 ~ space:', space);
+      const activeTabId = activeSpaceTabs.find(tab => tab.index === space.activeTabIndex)?.id;
+
+      console.log('🌅 ~ activeTabId:', activeTabId);
+
+      if (!activeTabId || activeTabId < 1) return;
+
+      const activeTabBtn = document.body.querySelector(`[data-rct-item-id="${activeTabId}"]`);
+      console.log('🌅 ~ activeTabBtn:', activeTabBtn);
+      if (!activeTabBtn) return;
+
+      activeTabBtn.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    })();
+  }, [activeSpaceTabsSorted]);
 
   useEffect(() => {
     selectedTabsRef.current = selectedTabs;
@@ -482,18 +502,23 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   // TODO - scroll (container) to active tab if lot more tabs present
 
   return (
-    <div className="text-slate-400">
+    <div className="text-slate-400 ">
       <ControlledTreeEnvironment
         canDragAndDrop
         canDropOnFolder
         canReorderItems
+        // eslint-disable-next-line jsx-a11y/no-autofocus
+        autoFocus
         canRename={false}
         canSearch={false}
         canDropOnNonFolder={false}
+        canDropBelowOpenFolders
+        canSearchByStartingTyping={false}
         items={groupedTabs}
         viewState={{
           ['active-space-tabs']: {
             expandedItems: activeSpaceGroups?.filter(g => !g.collapsed)?.map(g1 => g1.id) || [],
+            focusedItem: activeSpaceTabs.find(tab => tab.index === space.activeTabIndex)?.id || 0,
           },
         }}
         // handle drop in item
