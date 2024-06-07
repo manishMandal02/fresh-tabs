@@ -1,10 +1,11 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 
+import Tooltip from '@root/src/components/tooltip';
 import { ISpace } from '@root/src/types/global.types';
-import Tooltip from '../../../../../../../components/tooltip';
 import NonActiveSpaceContextMenu from './NonActiveSpaceContextMenu';
-import { getSpace, mergeSpace } from '@root/src/services/chrome-storage/spaces';
+import { getGroups } from '@root/src/services/chrome-storage/groups';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
+import { getSpace, mergeSpace } from '@root/src/services/chrome-storage/spaces';
 import { getCurrentWindowId, openSpace } from '@root/src/services/chrome-tabs/tabs';
 import { useMetaKeyPressed } from '@root/src/pages/sidepanel/hooks/use-key-shortcuts';
 import {
@@ -17,8 +18,6 @@ import {
   updateSpaceAtom,
 } from '@root/src/stores/app';
 import { cn } from '@root/src/utils/cn';
-import { useEffect } from 'react';
-import { getGroups } from '@root/src/services/chrome-storage/groups';
 
 type Props = {
   space: ISpace;
@@ -44,13 +43,6 @@ const NonActiveSpace = ({ space, isDraggedOver, totalSpaces }: Props) => {
 
     setUpdateModal({ ...space, tabs, groups });
   };
-
-  // TODO - testing
-  useEffect(() => {
-    if (space.emoji === '✉️') {
-      handleUpdateClick();
-    }
-  }, []);
 
   const handleDeleteClick = async () => {
     setDeleteModal({ show: true, spaceId: space.id });

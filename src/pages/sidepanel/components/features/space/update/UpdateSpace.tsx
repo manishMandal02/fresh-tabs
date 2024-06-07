@@ -106,18 +106,31 @@ const UpdateSpace = () => {
               if (tab.groupId > 0 && tabs.findIndex(t => t.groupId === tab.groupId) === idx) {
                 const group = groups.find(g => g.id === tab.groupId);
                 return (
-                  <div key={group.id} className="bg-brand-darkBgAccent/60  px-2 border border-brand-darkBg/80 ">
-                    <span className="text-slate-400 font-medium text-[13px]">{group.name}</span>
+                  <div
+                    key={group.id}
+                    style={{
+                      borderLeftColor: ThemeColor[capitalize(group.theme)],
+                    }}
+                    className="bg-brand-darkBgAccent/50  px-2.5 py-1.5 border border-brand-darkBg/80 rounded-r-md flex items-center">
+                    <span className="text-slate-400 text-[13.5px] ">{group.name}</span>
                     <span
-                      className="size-[10px] rounded-full ml-2"
+                      className="size-[8px] rounded-full ml-2"
                       style={{ backgroundColor: ThemeColor[capitalize(group.theme)] }}></span>
                   </div>
                 );
               }
               return (
-                <>
-                  <Tab key={tab.id} tabData={tab} />
-                </>
+                <div
+                  key={tab.id}
+                  style={{
+                    backgroundColor: tab.groupId > 0 ? '#262b4969' : '',
+                    borderLeft:
+                      tab.groupId > 0
+                        ? `1px solid ${ThemeColor[capitalize(groups.find(g => g.id === tab.groupId)?.theme)]}`
+                        : '',
+                  }}>
+                  <Tab tabData={tab} />
+                </div>
               );
             })}
           </div>

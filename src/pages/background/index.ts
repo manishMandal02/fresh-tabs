@@ -1050,29 +1050,35 @@ chrome.tabGroups.onCreated.addListener(async group => {
 
 // on  group removed/deleted
 chrome.tabGroups.onRemoved.addListener(async group => {
-  console.log('💰 ~ chrome.tabGroups.onRemoved:1057 ~ group:', group);
+  try {
+    // wait 0.5s to process updated event data (incase a window was closed)
+    await wait(500);
 
-  // wait 0.5s to process updated event data (incase a window was closed)
-  await wait(500);
+    // do nothing if window was closed
+    const window = await chrome.windows.get(group.windowId);
+    if (!window?.id) return;
 
-  // do nothing if window was closed
-  const window = await chrome.windows.get(group.windowId);
-  if (!window?.id) return;
+    const space = await getSpaceByWindow(group.windowId);
 
-  const space = await getSpaceByWindow(group.windowId);
+    await removeGroup(space.id, group.id);
 
-  await removeGroup(space.id, group.id);
+    await syncTabsAndGroups(null, group.windowId, true);
 
-  await syncTabsAndGroups(null, group.windowId, true);
-
-  // send send to side panel
-  await publishEvents({
-    id: generateId(),
-    event: 'UPDATE_GROUPS',
-    payload: {
-      spaceId: space.id,
-    },
-  });
+    // send send to side panel
+    await publishEvents({
+      id: generateId(),
+      event: 'UPDATE_GROUPS',
+      payload: {
+        spaceId: space.id,
+      },
+    });
+  } catch (error) {
+    logger.error({
+      error,
+      msg: 'Error in chrome.tabGroups.onRemoved.addListener ~ catch block',
+      fileTrace: 'background/index.ts:1081',
+    });
+  }
 });
 
 // on  group removed/deleted
@@ -1157,19 +1163,13 @@ chrome.windows.onCreated.addListener(window => {
     // check if the tabs in this window are of a space (check tab urls)
     const res = await checkNewWindowTabs(window.id, [...tabs.map(tab => tab.url)]);
 
-    console.log('🔵 ~ .windows.onCreated:1121  ~ checkNewWindowTabs:1118 ~ res:', res);
-
     // if the tabs in this window are part of a space, do nothing
     // window id was saved to the respective space
     if (res) return;
 
-    console.log('🔵 ~ .windows.onCreated:1127  ~ tabs:', tabs);
-
     // if not then create new unsaved space with all tabs
     // create new unsaved space
     const newUnsavedSpace = await createUnsavedSpace(window.id, tabs);
-
-    console.log('🔵 ~ .windows.onCreated:1133  ~ newUnsavedSpace:', newUnsavedSpace);
 
     // send send to side panel
     await publishEvents({
