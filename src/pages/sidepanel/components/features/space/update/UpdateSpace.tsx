@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef , ReactNode } from 'react';
 import { useAtom } from 'jotai';
 
 import { Tab } from '../tab';
@@ -103,9 +103,10 @@ const UpdateSpace = () => {
 
           <div className="w-full h-fit max-h-[16rem] border-y border-brand-darkBgAccent/20 bg-red-30 overflow-x-hidden overflow-y-auto cc-scrollbar">
             {tabs.map((tab, idx) => {
+              let renderGroupHeading: ReactNode = null;
               if (tab.groupId > 0 && tabs.findIndex(t => t.groupId === tab.groupId) === idx) {
                 const group = groups.find(g => g.id === tab.groupId);
-                return (
+                renderGroupHeading = (
                   <div
                     key={group.id}
                     style={{
@@ -120,17 +121,20 @@ const UpdateSpace = () => {
                 );
               }
               return (
-                <div
-                  key={tab.id}
-                  style={{
-                    backgroundColor: tab.groupId > 0 ? '#262b4969' : '',
-                    borderLeft:
-                      tab.groupId > 0
-                        ? `1px solid ${ThemeColor[capitalize(groups.find(g => g.id === tab.groupId)?.theme)]}`
-                        : '',
-                  }}>
-                  <Tab tabData={tab} />
-                </div>
+                <>
+                  {renderGroupHeading ? renderGroupHeading : null}
+                  <div
+                    key={tab.id}
+                    style={{
+                      backgroundColor: tab.groupId > 0 ? '#262b4969' : '',
+                      borderLeft:
+                        tab.groupId > 0
+                          ? `1px solid ${ThemeColor[capitalize(groups.find(g => g.id === tab.groupId)?.theme)]}`
+                          : '',
+                    }}>
+                    <Tab tabData={tab} />
+                  </div>
+                </>
               );
             })}
           </div>
