@@ -138,9 +138,8 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - feat - tab thumbnail views and also grid views
-
 // TODO - feat - new tab (full app)
+//--- tab thumbnail views and also grid views
 
 // TODO - backend - Use UTC date & time stamp for server & reset day @ 3am (save user timezone)
 
@@ -849,6 +848,8 @@ chrome.alarms.onAlarm.addListener(async alarm => {
       await handleMergeSpaceHistoryAlarm();
 
       await handleMergeDailySpaceTimeChunksAlarm();
+
+      // delete space history older than 30 days
 
       logger.info('⏰ Midnight: merge space history & usage data');
 
