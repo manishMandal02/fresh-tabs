@@ -122,11 +122,7 @@ const Settings = () => {
   const handleResetDiscardedURL = async () => {
     const tabs = await chrome.tabs.query({ url: 'data:text/html,*' });
 
-    const updateTabsBatch = tabs.map(t =>
-      chrome.tabs.update({ url: parseUrl(t.url), active: false, autoDiscardable: true }),
-    );
-
-    console.log('✅ ~ handleResetDiscardedURL ~ updateTabsBatch:', updateTabsBatch);
+    const updateTabsBatch = tabs.map(t => chrome.tabs.update(t.id, { url: parseUrl(t.url) }));
 
     await Promise.allSettled(updateTabsBatch);
 
@@ -135,18 +131,22 @@ const Settings = () => {
 
     await discardAllTabs();
 
-    await wait(1000);
+    await wait(750);
 
     // using retry mechanism to make sure the tabs are discarded at set intervals
     retryAtIntervals({
       retries: 5,
       interval: 1000,
       callback: async () => {
-        const tabs = await chrome.tabs.query({ discarded: false, active: false, audible: false });
+        const tabs = await chrome.tabs.query({ discarded: false, active: false, audible: false, status: 'complete' });
 
-        if (!tabs || tabs?.length < 1) return true;
+        // check if tabs are loading
+        const loadingTabs = await chrome.tabs.query({ status: 'loading', active: false });
+
+        if (tabs?.length < 1 && loadingTabs?.length < 1) return true;
 
         await discardAllTabs();
+
         return false;
       },
     });
@@ -254,6 +254,7 @@ const Settings = () => {
         {/* reset discarded tab urls */}
         <Accordion
           id="reset-discarded-tabs"
+          defaultCollapsed
           classes={{
             triggerContainer:
               'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px',
@@ -266,7 +267,7 @@ const Settings = () => {
             {/* include bookmarks in search */}
             <div className="flex items-center justify-between px-2">
               <p className="text-[12px]  font-light tracking-wide ml-1">
-                Resitting will make any discarded tabs <br /> (via discard url) active
+                Reset discarded tabs url and <br /> discard them natively
               </p>
               <button
                 onClick={handleResetDiscardedURL}

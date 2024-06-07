@@ -4,7 +4,7 @@ import { logger } from '@root/src/utils/logger';
 export const discardAllTabs = async (autoDiscard = false) => {
   try {
     //TODO - take user preferences into consideration (whitelisted sites, etc.)
-    let tabs = await chrome.tabs.query({ active: false, audible: false, discarded: false });
+    let tabs = await chrome.tabs.query({ active: false, audible: false, discarded: false, status: 'complete' });
 
     if (autoDiscard) {
       //@ts-expect-error - lastAccesses is a newly added feature (the types are not updated)

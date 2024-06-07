@@ -17,8 +17,6 @@ export const retryAtIntervals = async <T>({ retries, interval, callback }: Retry
     try {
       const callbackSuccess = await callback();
 
-      console.log('🚀 ~ retryAtIntervals ~ callbackSuccess:', callbackSuccess);
-
       // stop the loop, if the callback is successful
       if (callbackSuccess) {
         success = true;

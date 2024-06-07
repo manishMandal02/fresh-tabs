@@ -1,8 +1,9 @@
-import { DefaultAppSettings } from './../constants/app';
 import { atom } from 'jotai';
-import { IAppSettings, IGroup, INote, ISpace, ISpaceWithTabsAndGroups, ITab } from '../types/global.types';
-import { getTabsInSpace } from '../services/chrome-storage/tabs';
+
+import { DefaultAppSettings } from './../constants/app';
 import { getGroups } from '../services/chrome-storage/groups';
+import { getTabsInSpace } from '../services/chrome-storage/tabs';
+import { IAppSettings, IGroup, INote, ISpace, ISpaceWithTabsAndGroups, ITab } from '../types/global.types';
 
 type SnackbarAtom = {
   show: boolean;
@@ -90,7 +91,7 @@ export const snackbarAtom = atom<SnackbarAtom>({
 export const appSettingsAtom = atom<IAppSettings>({ ...DefaultAppSettings });
 
 // settings modal
-export const showSettingsModalAtom = atom(true);
+export const showSettingsModalAtom = atom(false);
 
 // notification
 export const showNotificationModalAtom = atom(false);
