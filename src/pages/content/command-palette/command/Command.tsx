@@ -217,6 +217,7 @@ type CommandIconProps = {
 };
 
 // TODO - fix - some icon appear too small
+// TODO - fix - chrome extension tab icon had url text
 const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
   if (type === CommandType.Note) Icon = FileTextIcon;
 

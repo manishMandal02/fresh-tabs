@@ -1,6 +1,6 @@
 import { DefaultAppSettings } from './../constants/app';
 import { atom } from 'jotai';
-import { IAppSettings, IGroup, INote, ISpace, ISpaceWithTabs, ITab } from '../types/global.types';
+import { IAppSettings, IGroup, INote, ISpace, ISpaceWithTabsAndGroups, ITab } from '../types/global.types';
 import { getTabsInSpace } from '../services/chrome-storage/tabs';
 import { getGroups } from '../services/chrome-storage/groups';
 
@@ -108,7 +108,8 @@ export const showAddNewNoteModalAtom = atom<{ show: boolean; note: Partial<INote
 export const showNewSpaceModalAtom = atom<{ show: boolean; tabs: ITab[] }>({ show: false, tabs: [] });
 
 // edit space modal
-export const showUpdateSpaceModalAtom = atom<ISpaceWithTabs>(null as ISpaceWithTabs);
+// export const showUpdateSpaceModalAtom = atom<ISpaceWithTabs>(null as ISpaceWithTabs);
+export const showUpdateSpaceModalAtom = atom<ISpaceWithTabsAndGroups>(null as ISpaceWithTabsAndGroups);
 
 // delete space modal
 export const deleteSpaceModalAtom = atom<{ show: boolean; spaceId: string }>({ show: false, spaceId: '' });

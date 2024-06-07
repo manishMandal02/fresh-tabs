@@ -210,6 +210,7 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
 
   console.log('🌅 ~ openSpace:211 ~ groupsInSpace:', groupsInSpace);
 
+  // TODO - fix group
   if (groupsInSpace?.length > 0) {
     // map tabs to previous groups
     const groupsToCreate: Record<string, number[]> = {};

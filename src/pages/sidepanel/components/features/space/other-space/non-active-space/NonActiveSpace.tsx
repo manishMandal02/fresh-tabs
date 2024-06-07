@@ -17,6 +17,8 @@ import {
   updateSpaceAtom,
 } from '@root/src/stores/app';
 import { cn } from '@root/src/utils/cn';
+import { useEffect } from 'react';
+import { getGroups } from '@root/src/services/chrome-storage/groups';
 
 type Props = {
   space: ISpace;
@@ -38,8 +40,17 @@ const NonActiveSpace = ({ space, isDraggedOver, totalSpaces }: Props) => {
 
   const handleUpdateClick = async () => {
     const tabs = await getTabsInSpace(space.id);
-    setUpdateModal({ ...space, tabs });
+    const groups = await getGroups(space.id);
+
+    setUpdateModal({ ...space, tabs, groups });
   };
+
+  // TODO - testing
+  useEffect(() => {
+    if (space.emoji === '✉️') {
+      handleUpdateClick();
+    }
+  }, []);
 
   const handleDeleteClick = async () => {
     setDeleteModal({ show: true, spaceId: space.id });

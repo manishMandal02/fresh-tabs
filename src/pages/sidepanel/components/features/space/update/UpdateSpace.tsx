@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAtom } from 'jotai';
 
 import { Tab } from '../tab';
-import { wait } from '@root/src/utils';
+import { capitalize, wait } from '@root/src/utils';
 import Spinner from '../../../../../../components/spinner';
 import { useUpdateSpace } from './useUpdateSpace';
 import { SlideModal } from '../../../../../../components/modal';
@@ -11,7 +11,8 @@ import EmojiPicker from '../../../../../../components/emoji-picker';
 import { showUpdateSpaceModalAtom } from '@root/src/stores/app';
 import TextInput from '../../../../../../components/TextInput/TextInput';
 import ErrorMessage from '../../../../../../components/alert-message/ErrorMessage';
-import { ISpaceWithoutId, ITab } from '@root/src/types/global.types';
+import { IGroup, ISpaceWithoutId, ITab } from '@root/src/types/global.types';
+import { ThemeColor } from '@root/src/constants/app';
 
 const UpdateSpace = () => {
   console.log('UpdateSpace ~ 🔁 rendered');
@@ -24,6 +25,7 @@ const UpdateSpace = () => {
   const [updateSpaceData, setUpdateSpaceData] = useState<ISpaceWithoutId | null>(null);
 
   const [tabs, setTabs] = useState<ITab[]>([]);
+  const [groups, setGroups] = useState<IGroup[]>([]);
 
   // form ref
   const formRef = useRef<HTMLFormElement | null>(null);
@@ -45,11 +47,12 @@ const UpdateSpace = () => {
     if (!updateSpaceModal?.id) return;
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { tabs: tabsInSpace, id, ...space } = updateSpaceModal;
+    const { tabs: tabsInSpace, groups: groupsInSpace, id, ...space } = updateSpaceModal;
 
     setUpdateSpaceData(space);
     setErrorMsg('');
     setTabs(tabsInSpace);
+    setGroups(groupsInSpace);
     setShowModal(true);
     // focus title input after the form loads
     (async () => {
@@ -99,9 +102,24 @@ const UpdateSpace = () => {
           </p>
 
           <div className="w-full h-fit max-h-[16rem] border-y border-brand-darkBgAccent/20 bg-red-30 overflow-x-hidden overflow-y-auto cc-scrollbar">
-            {tabs.map(tab => (
-              <Tab key={tab.id} tabData={tab} />
-            ))}
+            {tabs.map((tab, idx) => {
+              if (tab.groupId > 0 && tabs.findIndex(t => t.groupId === tab.groupId) === idx) {
+                const group = groups.find(g => g.id === tab.groupId);
+                return (
+                  <div key={group.id} className="bg-brand-darkBgAccent/60  px-2 border border-brand-darkBg/80 ">
+                    <span className="text-slate-400 font-medium text-[13px]">{group.name}</span>
+                    <span
+                      className="size-[10px] rounded-full ml-2"
+                      style={{ backgroundColor: ThemeColor[capitalize(group.theme)] }}></span>
+                  </div>
+                );
+              }
+              return (
+                <>
+                  <Tab key={tab.id} tabData={tab} />
+                </>
+              );
+            })}
           </div>
 
           {/* error msg */}

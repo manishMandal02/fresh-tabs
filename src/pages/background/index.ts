@@ -138,7 +138,9 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - new feat - tab thumbnail views and also grid views
+// TODO - feat - tab thumbnail views and also grid views
+
+// TODO - feat - new tab (full app)
 
 // TODO - backend - Use UTC date & time stamp for server & reset day @ 3am (save user timezone)
 
@@ -920,7 +922,7 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
 //* TODO - improvement - debounce handler
 // event listener for when tabs get updated
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  console.log('🚀 ~ chrome.tabs.onUpdated.addListener ~ changeInfo:', changeInfo);
+  console.log('💰 ~ chrome.tabs.onUpdated.addListener ~ changeInfo:', changeInfo);
 
   try {
     if (changeInfo?.url) {
@@ -938,13 +940,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       showNotesBubbleContentScript(tab?.url, tabId, tab.windowId);
     }
 
-    // handle tab's group change
-    if (changeInfo?.groupId) {
-      // get space by windowId
-      // add/update tab
-      await syncTabsAndGroups(tabId, 0, true);
-    }
-
     if (changeInfo?.discarded) {
       const space = await getSpaceByWindow(tab.windowId);
       // send send to side panel
@@ -953,6 +948,21 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
         event: 'TABS_DISCARDED',
         payload: { spaceId: space.id },
       });
+    }
+
+    // handle tab's group change
+    if (changeInfo?.groupId) {
+      // make sure the window is open before syncing updates
+      // wait for 0.5s to process updated changes (incase a window closed)
+      await wait(500);
+
+      const window = await chrome.windows.get(tab.windowId);
+
+      // do nothing if window was closed
+      if (!window?.id) return;
+
+      // add/update tab
+      await syncTabsAndGroups(tabId, 0, true);
     }
   } catch (error) {
     logger.error({
@@ -1040,6 +1050,15 @@ chrome.tabGroups.onCreated.addListener(async group => {
 
 // on  group removed/deleted
 chrome.tabGroups.onRemoved.addListener(async group => {
+  console.log('💰 ~ chrome.tabGroups.onRemoved:1057 ~ group:', group);
+
+  // wait 0.5s to process updated event data (incase a window was closed)
+  await wait(500);
+
+  // do nothing if window was closed
+  const window = await chrome.windows.get(group.windowId);
+  if (!window?.id) return;
+
   const space = await getSpaceByWindow(group.windowId);
 
   await removeGroup(space.id, group.id);

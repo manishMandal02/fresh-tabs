@@ -65,6 +65,10 @@ export type ISpaceWithoutId = Omit<ISpace, 'id'>;
 export interface ISpaceWithTabs extends ISpace {
   tabs: ITab[];
 }
+export interface ISpaceWithTabsAndGroups extends ISpace {
+  tabs: ITab[];
+  groups: IGroup[];
+}
 export interface ISiteVisit {
   url: string;
   title: string;

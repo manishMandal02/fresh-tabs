@@ -75,6 +75,7 @@ const TabContextMenu = ({
     });
   };
 
+  // TODO - not syncing after moving tabs to groups
   // move tab/group to a group
   const handleMoveToGroup = async (groupId: number) => {
     // move tabs to group
