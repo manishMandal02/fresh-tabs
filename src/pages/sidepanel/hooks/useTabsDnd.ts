@@ -214,7 +214,7 @@ export const useTabsDnd = () => {
     const tabsInDraggedSpace = await getTabsInSpace(spaceId);
 
     // open tabs in active space window
-    await createDiscardedTabs(tabsInDraggedSpace);
+    await createDiscardedTabs(tabsInDraggedSpace, activeSpace.windowId);
 
     // add tabs to active space
 

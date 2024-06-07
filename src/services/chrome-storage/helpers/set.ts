@@ -26,6 +26,7 @@ type StorageValue =
   | IDailySpaceTime[]
   | IAppSettings
   | IPinnedTab[]
+  | number[]
   | string;
 
 type SetStorageParams = {

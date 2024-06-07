@@ -733,6 +733,9 @@ chrome.runtime.onInstalled.addListener(async info => {
   }
 });
 
+// on extension installed
+chrome.runtime.onSuspend.addListener(async () => {});
+
 // shortcut commands
 chrome.commands.onCommand.addListener(async (command, tab) => {
   // new tab to right shortcut

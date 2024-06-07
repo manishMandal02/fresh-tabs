@@ -3,14 +3,16 @@ import { OpenInNewWindowIcon } from '@radix-ui/react-icons';
 import { useState, useEffect, memo, ReactNode, FC } from 'react';
 
 import Spinner from '../../../../../components/spinner';
-import { SlideModal } from '../../../../../components/modal';
-import Switch from '../../../../../components/switch/Switch';
-import Accordion from '../../../../../components/accordion/Accordion';
 import { IAppSettings } from '@root/src/types/global.types';
+import Switch from '../../../../../components/switch/Switch';
+import { SlideModal } from '../../../../../components/modal';
+import { parseUrl, retryAtIntervals, wait } from '@root/src/utils';
+import Accordion from '../../../../../components/accordion/Accordion';
 import { AlarmName, DefaultAppSettings } from '@root/src/constants/app';
 import { saveSettings } from '@root/src/services/chrome-storage/settings';
-import RadioGroup, { RadioOptions } from '../../../../../components/radio-group/RadioGroup';
+import { discardAllTabs } from '@root/src/services/chrome-discard/discard';
 import { createAlarm, deleteAlarm } from '@root/src/services/chrome-alarms/helpers';
+import RadioGroup, { RadioOptions } from '../../../../../components/radio-group/RadioGroup';
 import { appSettingsAtom, showSettingsModalAtom, snackbarAtom } from '@root/src/stores/app';
 
 const autoSaveToBookmark: RadioOptions[] = [
@@ -116,6 +118,40 @@ const Settings = () => {
   );
   const BodyContainer: FC<{ children?: ReactNode }> = ({ children }) => <div className="py-2 px-2">{children}</div>;
 
+  // activate tabs discarded via discarded url
+  const handleResetDiscardedURL = async () => {
+    const tabs = await chrome.tabs.query({ url: 'data:text/html,*' });
+
+    const updateTabsBatch = tabs.map(t =>
+      chrome.tabs.update({ url: parseUrl(t.url), active: false, autoDiscardable: true }),
+    );
+
+    console.log('✅ ~ handleResetDiscardedURL ~ updateTabsBatch:', updateTabsBatch);
+
+    await Promise.allSettled(updateTabsBatch);
+
+    // start discarding tabs as they're activated
+    await wait(500);
+
+    await discardAllTabs();
+
+    await wait(1000);
+
+    // using retry mechanism to make sure the tabs are discarded at set intervals
+    retryAtIntervals({
+      retries: 5,
+      interval: 1000,
+      callback: async () => {
+        const tabs = await chrome.tabs.query({ discarded: false, active: false, audible: false });
+
+        if (!tabs || tabs?.length < 1) return true;
+
+        await discardAllTabs();
+        return false;
+      },
+    });
+  };
+
   return (
     <SlideModal title="Preferences" isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)}>
       <div className="relative flex flex-col w-full h-fit max-h-[90vh] pt-2 pb-1 px-1.5 text-slate-400">
@@ -198,7 +234,7 @@ const Settings = () => {
             triggerContainer:
               'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px',
             triggerIcon: 'scale-[1.1] text-slate-700',
-            content: 'bg-brand-darkBgAccent/15 border-b  border-brand-darkBgAccent/30 rounded-br-md rounded-bl-md',
+            content: 'bg-brand-darkBgAccent/15 border-b  border-brand-darkBgAccent/30 rounded-br-md rounded-bl-md mb-1',
           }}
           trigger={<SettingsHeader heading="Command Palette" />}>
           {/* accordion body */}
@@ -212,6 +248,31 @@ const Settings = () => {
                 checked={settingsUpdateData.includeBookmarksInSearch}
                 onChange={checked => handleSettingsChange('includeBookmarksInSearch', checked)}
               />
+            </div>
+          </BodyContainer>
+        </Accordion>
+        {/* reset discarded tab urls */}
+        <Accordion
+          id="reset-discarded-tabs"
+          classes={{
+            triggerContainer:
+              'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px',
+            triggerIcon: 'scale-[1.1] text-slate-700',
+            content: 'bg-brand-darkBgAccent/15 border-b  border-brand-darkBgAccent/30 rounded-br-md rounded-bl-md',
+          }}
+          trigger={<SettingsHeader heading="Reset discarded tab URLs" />}>
+          {/* accordion body */}
+          <BodyContainer>
+            {/* include bookmarks in search */}
+            <div className="flex items-center justify-between px-2">
+              <p className="text-[12px]  font-light tracking-wide ml-1">
+                Resitting will make any discarded tabs <br /> (via discard url) active
+              </p>
+              <button
+                onClick={handleResetDiscardedURL}
+                className="text-slate-400 bg-brand-darkBgAccent/80 px-4 py-1 rounded-md hover:opacity-90 transition-opacity duration-200">
+                Reset
+              </button>
             </div>
           </BodyContainer>
         </Accordion>
