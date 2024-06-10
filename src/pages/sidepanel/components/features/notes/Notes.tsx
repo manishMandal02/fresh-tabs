@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 import { useCallback, useEffect, useState } from 'react';
-import { CounterClockwiseClockIcon, GlobeIcon, TrashIcon } from '@radix-ui/react-icons';
+import { CounterClockwiseClockIcon, GlobeIcon, MagnifyingGlassIcon, TrashIcon } from '@radix-ui/react-icons';
 
 import DeleteNote from './DeleteNote';
 import Tooltip from '../../../../../components/tooltip';
@@ -8,17 +8,20 @@ import { showAddNewNoteModalAtom } from '@root/src/stores/app';
 import { INote, ISpace } from '@root/src/types/global.types';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
 import { getNotesBySpace } from '@root/src/services/chrome-storage/notes';
-import { limitCharLength } from '@root/src/utils';
+import { debounce, limitCharLength } from '@root/src/utils';
 
 type Props = {
   space: ISpace;
+  notesSearchQuery: string;
 };
-const Notes = ({ space }: Props) => {
+const Notes = ({ space, notesSearchQuery }: Props) => {
   // global sate
   const [, setNoteModal] = useAtom(showAddNewNoteModalAtom);
 
   // local state
+
   const [notes, setNotes] = useState<INote[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [deleteNoteId, setDeleteNoteId] = useState('');
 
   const getNotes = useCallback(async () => {
@@ -32,16 +35,59 @@ const Notes = ({ space }: Props) => {
   useEffect(() => {
     (async () => {
       await getNotes();
+      // set search query if params passed
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!notesSearchQuery) return;
+    setSearchQuery(notesSearchQuery);
+  }, [notesSearchQuery]);
 
   const handleNoteClick = (note: INote) => {
     setNoteModal({ show: true, note });
   };
 
+  const handleSearch = async (query: string) => {
+    const allNotes = await getNotesBySpace(space.id);
+    let filteredNotes: INote[] = [];
+    if (query.startsWith('site:')) {
+      // search for notes with domain
+      filteredNotes = allNotes.filter(note => note.domain.includes(query.replace('site:', '')));
+    } else {
+      // full notes search
+      filteredNotes = allNotes.filter(note => {
+        const noteTitle = note.title.toLowerCase();
+        const noteBody = note.text.toLowerCase();
+        return noteTitle.includes(query) || noteBody.includes(query) || note.domain.includes(query);
+      });
+    }
+    setNotes(filteredNotes);
+  };
+
+  const debouncedSearch = debounce(handleSearch, 400);
+
+  useEffect(() => {
+    if (searchQuery?.length < 3) {
+      getNotes();
+    } else {
+      debouncedSearch(searchQuery.toLowerCase());
+    }
+  }, [searchQuery]);
+
   return (
-    <>
+    <div>
+      <div className="flex items-center px-2 py-1 bg-brand-darkBgAccent/40 rounded-md border border-brand-darkBgAccent/40 focus-within:border-slate-700/80">
+        <MagnifyingGlassIcon className="text-slate-400/80" />
+        <input
+          type="text"
+          placeholder="Search notes..."
+          value={searchQuery}
+          onChange={ev => setSearchQuery(ev.currentTarget.value)}
+          className="w-full h-full px-2 py-1 bg-transparent text-[14px] text-slate-400 outline-none placeholder:text-slate-500"
+        />
+      </div>
       <div className="py-1.5 px-1 w-full">
         {notes.length > 0 ? (
           notes.toReversed().map(note => (
@@ -89,17 +135,20 @@ const Notes = ({ space }: Props) => {
                   ev.stopPropagation();
                   setDeleteNoteId(note.id);
                 }}
-                className=" translate-x-[34px] group-hover:translate-x-0 flex items-center justify-center rounded-tr-md rounded-br-md bg-brand-darkBgAccent/30 hover:bg-rose-400/20 absolute w-[34px] h-full top-0 right-0  transition-all duration-300">
+                className={`translate-x-[34px] group-hover:translate-x-0 flex items-center justify-center rounded-tr-md rounded-br-md
+                          bg-brand-darkBgAccent/30 hover:bg-rose-400/20 absolute w-[34px] h-full top-0 right-0  transition-all duration-300`}>
                 <TrashIcon className="text-rose-400 scale-[1] z-[99]" />
               </button>
             </button>
           ))
         ) : (
-          <div className="text-slate-400 text-center py-6">No notes in this space</div>
+          <div className="text-slate-400 text-center py-6">
+            {searchQuery ? `No result for ${searchQuery}` : 'No notes in this space'}
+          </div>
         )}
       </div>
       {deleteNoteId ? <DeleteNote noteId={deleteNoteId} onClose={() => setDeleteNoteId('')} /> : null}
-    </>
+    </div>
   );
 };
 

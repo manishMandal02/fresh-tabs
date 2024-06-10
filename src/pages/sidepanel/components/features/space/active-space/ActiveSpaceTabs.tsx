@@ -5,7 +5,7 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useState, useCallback, useEffect, useRef, useMemo, memo } from 'react';
-import { CopyIcon, Cross1Icon, ChevronDownIcon, ExternalLinkIcon } from '@radix-ui/react-icons';
+import { CopyIcon, Cross1Icon, ChevronDownIcon, FileIcon, Crosshair1Icon } from '@radix-ui/react-icons';
 import {
   Tree,
   ControlledTreeEnvironment,
@@ -16,22 +16,24 @@ import {
 
 import { cn } from '@root/src/utils/cn';
 import TabContextMenu from './TabContextMenu';
-import { capitalize, copyToClipboard, logger, wait } from '@root/src/utils';
+import { capitalize, copyToClipboard, getUrlDomain, logger, wait } from '@root/src/utils';
 import SiteIcon from '@root/src/components/site-icon/SiteIcon';
 import { DISCARD_TAB_URL_PREFIX, ThemeColor } from '@root/src/constants/app';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import { goToTab, syncTabs } from '@root/src/services/chrome-tabs/tabs';
 import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
 import { useMetaKeyPressed } from '@root/src/pages/sidepanel/hooks/use-key-shortcuts';
-import { IGroup, IMessageEventSidePanel, ISpace, ITab } from '@root/src/types/global.types';
+import { IGroup, IMessageEventSidePanel, INote, ISpace, ITab } from '@root/src/types/global.types';
 import { removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import {
   activeSpaceAtom,
   activeSpaceGroupsAtom,
   activeSpaceTabsAtom,
   selectedTabsAtom,
+  showAddNewNoteModalAtom,
   updateSpaceAtom,
 } from '@root/src/stores/app';
+import { getNotesBySpace } from '@root/src/services/chrome-storage/notes';
 
 interface IGroupedTabs {
   index: number | string;
@@ -107,11 +109,12 @@ const getDiscardedTabsInWindow = async (windowId: number) => {
 
 type Props = {
   space: ISpace;
+  onTabNotesClick: (url: string) => void;
 };
 
 export const TAB_HEIGHT = 32;
 
-const ActiveSpaceTabs = ({ space }: Props) => {
+const ActiveSpaceTabs = ({ space, onTabNotesClick }: Props) => {
   console.log('ActiveSpaceTabs ~ 🔁 rendered');
 
   // global state
@@ -120,6 +123,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   // active space
   const activeSpace = useAtomValue(activeSpaceAtom);
   const updateSpaceState = useSetAtom(updateSpaceAtom);
+  const showNotesModal = useSetAtom(showAddNewNoteModalAtom);
   const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
 
   const activeSpaceTabsSorted = useMemo(() => activeSpaceTabs.toSorted((a, b) => a.index - b.index), [activeSpaceTabs]);
@@ -135,8 +139,10 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   }, [activeSpaceTabsSorted, activeSpaceGroups]);
 
   // local state
+  // discarded tabs
   const [discardedTabIDs, setDiscardedTabIDs] = useState<number[]>([]);
-
+  // tab notes
+  const [tabNotes, setTabNotes] = useState<Record<number, INote[]>>({});
   // track dragging state
   const [draggingItem, setDraggingItem] = useState(null);
 
@@ -161,15 +167,41 @@ const ActiveSpaceTabs = ({ space }: Props) => {
   useEffect(() => {
     (async () => {
       const tabs = await getDiscardedTabsInWindow(space.windowId);
+
       setDiscardedTabIDs(tabs);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // get notes for tabs in active space
+  useEffect(() => {
+    (async () => {
+      // check if notes exists for the tabs in active space
+      const notes = await getNotesBySpace(space.id);
+      const filteredNotes: Record<number, INote[]> = {};
+
+      notes.forEach(n => {
+        const tabNote = activeSpaceTabs.find(t => getUrlDomain(t.url) === n.domain);
+
+        if (tabNote) {
+          if (!filteredNotes[tabNote.id]) filteredNotes[tabNote.id] = [];
+          filteredNotes[tabNote.id].push(n);
+        }
+      });
+
+      filteredNotes;
+      console.log('✅ ~ filteredNotes:', filteredNotes);
+      setTabNotes(filteredNotes);
+    })();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSpaceTabs]);
+
   // scroll (container) to active tab if lot more tabs present
   useEffect(() => {
     (async () => {
       await wait(500);
+
       const activeTabId = activeSpaceTabs.find(tab => tab.index === space.activeTabIndex)?.id;
 
       if (!activeTabId || activeTabId < 1) return;
@@ -710,26 +742,52 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                     {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
                     <span
                       className={`absolute opacity-0 hidden group-hover:flex group-hover:opacity-100 z-20 
-                              transition-all duration-300 right-[8px] items-center gap-x-3 shadow-md shadow-slate-800`}
+                              transition-all duration-300 right-[8px] items-center gap-x-3 shadow-md shadow-brand-darkBgAccent/70`}
+                      style={{ right: tabNotes[item.data.id]?.length > 0 ? '50px' : '8px' }}
                       onClick={ev => ev.stopPropagation()}>
                       {/* open tab  */}
-                      <ExternalLinkIcon
-                        className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer 
-                                   py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
-                        onClick={() => handleGoToTab(item.data?.id, (item.data as ITab).index)}
-                      />
+                      {space.activeTabIndex !== (item.data as ITab).index ? (
+                        <Crosshair1Icon
+                          className={`text-slate-400 rounded bg-brand-darkBgAccent/80 text-xs cursor-pointer 
+                                   py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent`}
+                          onClick={() => handleGoToTab(item.data?.id, (item.data as ITab).index)}
+                        />
+                      ) : null}
                       <CopyIcon
-                        className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer 
-                                   py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
+                        className={`text-slate-400 rounded bg-brand-darkBgAccent/80 text-xs cursor-pointer 
+                                   py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent`}
                         onClick={async () => await copyToClipboard((item.data as ITab).url)}
                       />
                       <Cross1Icon
-                        className={`text-slate-400 rounded bg-brand-darkBgAccent text-xs cursor-pointer 
-                                   py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent/95`}
+                        className={`text-slate-400 rounded bg-brand-darkBgAccent/80 text-xs cursor-pointer 
+                                   py-[2px] px-[3.5px] scale-[1.6] transition-all duration-200 hover:bg-brand-darkBgAccent`}
                         onClick={() => handleRemoveTab((item.data as ITab).index)}
                       />
                     </span>
                   </>
+                ) : null}
+                {/* notes */}
+                {tabNotes[item.data.id]?.length > 0 ? (
+                  // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+                  <span
+                    className={`flex z-20 mr-1 items-center px-[2px] py-px bg-brand-darkBg/80 border border-brand-darkBgAccent/60 rounded
+                                shadow shadow-brand-darkBgAccent/40 hover:bg-brand-darkBgAccent/30 cursor-pointer transition-all duration-200`}
+                    onClick={ev => {
+                      ev.stopPropagation();
+
+                      if (tabNotes[item.data.id]?.length === 1) {
+                        showNotesModal({ show: true, note: tabNotes[item.data.id][0] });
+                        return;
+                      }
+
+                      onTabNotesClick((item.data as ITab).url);
+                    }}>
+                    {/* num of notes */}
+                    <span className="rounded-full text-[11px] ml-[2px] mr-[1.2px] text-slate-300/80 font-light">
+                      {tabNotes[item.data.id]?.length}
+                    </span>
+                    <FileIcon className={`text-slate-500/90 scale-[0.8]`} />
+                  </span>
                 ) : null}
               </button>
             </TabContextMenu>
@@ -765,7 +823,7 @@ const ActiveSpaceTabs = ({ space }: Props) => {
                   duration: 0.5,
                 }}
                 className={cn('w-full ', {
-                  'bg-brand-darkBgAccent/40 rounded-b-md  pl-[5px] pr-[2px] border-b border-brand-darkBgAccent':
+                  'bg-brand-darkBgAccent/40 rounded-b-md  pl-[5px] pr-[2px] border-b mb-[2px] border-brand-darkBgAccent':
                     parentId !== 'root',
                 })}
                 {...containerProps}>

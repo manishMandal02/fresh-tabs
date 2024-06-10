@@ -1,6 +1,8 @@
 // get domain (including subdomain) from url
 export const getUrlDomain = (url: string) => {
-  return new URL(url)?.hostname || '';
+  const domain = new URL(url)?.hostname || '';
+
+  return cleanDomainName(domain);
 };
 
 // remove www for domains

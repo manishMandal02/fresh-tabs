@@ -4,7 +4,7 @@ import { ClipboardEventHandler } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
-import { generateId } from '@root/src/utils';
+import { generateId, omitObjProps } from '@root/src/utils';
 import { isValidURL } from '@root/src/utils/url';
 import { INote } from '@root/src/types/global.types';
 import { snackbarAtom, activeSpaceAtom } from '@root/src/stores/app';
@@ -95,7 +95,7 @@ export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteP
     if (!noteId) {
       res = await addNewNote(noteObj);
     } else {
-      res = await updateNote(noteId, noteObj);
+      res = await updateNote(noteId, omitObjProps(noteObj, 'createdAt'));
     }
     if (res) {
       setSnackbar({ show: true, msg: `Note ${noteId ? 'updated' : 'added'}`, isSuccess: true });

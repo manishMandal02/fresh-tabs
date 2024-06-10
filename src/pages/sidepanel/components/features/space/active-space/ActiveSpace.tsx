@@ -20,6 +20,7 @@ import {
   snackbarAtom,
   updateSpaceAtom,
 } from '@root/src/stores/app';
+import { getUrlDomain } from '@root/src/utils';
 
 type Props = {
   space: ISpace;
@@ -42,6 +43,8 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
   // local state
   const [showSpaceHistory, setShowSpaceHistory] = useState(false);
   const [showSnoozedTabs, setShowSnoozedTabs] = useState(false);
+  const [selectedNavTab, setSelectedNavTab] = useState(1);
+  const [notesSearchQuery, setNotesSearchQuery] = useState('');
 
   // sync tabs
   const handleSyncTabs = async () => {
@@ -63,11 +66,17 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
     setSnackbar({ msg: 'Tabs synced', show: true, isLoading: false, isSuccess: true });
   };
 
+  // show site notes
+  const handleTabNotesClick = (url: string) => {
+    const domain = getUrlDomain(url);
+    setNotesSearchQuery(`site:${domain}`);
+    setSelectedNavTab(2);
+  };
+
   return space?.id ? (
     <div className="h-full mt-4 ">
       <div className="flex items-center h-[6.5%] justify-between px-1">
         <SpaceTitle space={space} />
-
         <div className="flex item-center">
           {/* search */}
           <button
@@ -99,9 +108,13 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
       <div
         id="active-space-scrollable-container"
         className="relative max-h-[90%]  cc-scrollbar min-h-fit overflow-x-hidden overflow-y-auto border-b border-brand-darkBgAccent/20 pb-1">
-        <Tabs tabs={[`Tabs`, 'Notes']} defaultTab={1}>
-          <ActiveSpaceTabs space={space} />
-          <Notes space={space} />
+        <Tabs
+          tabs={[`Tabs`, 'Notes']}
+          defaultTab={selectedNavTab}
+          selectedTab={selectedNavTab}
+          onTabChange={tab => setSelectedNavTab(tab)}>
+          <ActiveSpaceTabs space={space} onTabNotesClick={handleTabNotesClick} />
+          <Notes space={space} notesSearchQuery={notesSearchQuery} />
         </Tabs>
       </div>
 

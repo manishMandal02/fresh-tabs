@@ -51,6 +51,14 @@ const NotesModal = () => {
     if (!modalGlobalState.note?.id) {
       // new note
       modalGlobalState.note.text?.length > 0 ? setNote(modalGlobalState.note.text) : setNote(EDITOR_EMPTY_STATE);
+
+      if (modalGlobalState.note.domain) {
+        setShouldAddDomain(true);
+        inputFrom.setValue('domain', modalGlobalState.note.domain);
+      }
+      if (modalGlobalState.note.title) {
+        inputFrom.setValue('title', modalGlobalState.note.title);
+      }
       // focus notes editor
       // setTimeout(() => {
       //   (editorContainerRef.current?.querySelector('div[contenteditable="true"]') as HTMLDivElement)?.focus();

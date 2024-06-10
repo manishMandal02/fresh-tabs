@@ -1,19 +1,26 @@
-import * as TabsRadix from '@radix-ui/react-tabs';
-import { generateId } from '@root/src/utils';
 import { ReactNode } from 'react';
+import * as TabsRadix from '@radix-ui/react-tabs';
+
+import { generateId } from '@root/src/utils';
 
 type Props<T extends string[]> = {
   tabs: [...T];
   children: [...{ [I in keyof T]: ReactNode }];
   defaultTab: number;
+  selectedTab: number;
+  onTabChange: (tab: number) => void;
 };
 
-const Tabs = <T extends string[]>({ tabs, children, defaultTab }: Props<T>) => {
+const Tabs = <T extends string[]>({ tabs, children, defaultTab, selectedTab, onTabChange }: Props<T>) => {
   if (tabs.length !== children.length) {
     throw new TypeError('Tabs and children must have the same length.');
   }
+
   return (
-    <TabsRadix.Root defaultValue={defaultTab.toString()}>
+    <TabsRadix.Root
+      defaultValue={defaultTab.toString()}
+      value={selectedTab.toString()}
+      onValueChange={value => onTabChange(Number(value))}>
       <TabsRadix.List className="shrink-0 z-[99] flex bg-brand-darkBg border-b border-brand-darkBgAccent/30 rounded-md py-1 px-px sticky top-0 left-0">
         {/* tabs */}
         {tabs.map((tab, index) => (

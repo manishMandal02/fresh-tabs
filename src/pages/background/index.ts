@@ -737,7 +737,7 @@ chrome.runtime.onSuspend.addListener(async () => {});
 
 // shortcut commands
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  // new tab to right shortcut
+  //* new tab to right shortcut
   if (command === 'newTab') {
     const newTab = await createActiveTab('chrome://newtab', tab.index + 1);
 
@@ -766,9 +766,9 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
       // chrome url
       // switch tab as content script doesn't work on chrome pages
 
-      //  TODO - use space history
       // get last visited url
-      const recentlyVisitedURL = await getRecentlyVisitedSites(1);
+      const space = await getSpaceByWindow(tab.windowId);
+      const recentlyVisitedURL = await getSpaceHistory(space.id);
 
       const tabs = await chrome.tabs.query({ currentWindow: true });
 
