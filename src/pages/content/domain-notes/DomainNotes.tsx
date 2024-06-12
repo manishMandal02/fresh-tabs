@@ -6,6 +6,7 @@ import {
   Cross1Icon,
   FileTextIcon,
   LapTimerIcon,
+  Pencil2Icon,
   PlusIcon,
   TrashIcon,
 } from '@radix-ui/react-icons';
@@ -70,24 +71,44 @@ const DomainNotes = ({ domainNotes, onNoteClick, onNewNoteClick, onDeleteNoteCli
       {/* note bubble */}
       <motion.div
         {...bounce}
-        onClick={() => setShowNotes(prev => !prev)}
+        onClick={() => {
+          if (notes?.length < 1) {
+            onNewNoteClick();
+            return;
+          }
+
+          setShowNotes(prev => !prev);
+        }}
         className={`relative bg-gradient-to-br from-brand-darkBgAccent/90 to-brand-darkBg/95  flex items-center justify-center size-[55px] rounded-full select-none
                   border border-brand-darkBgAccent  shadow-md shadow-brand-darkBgAccent/50 cursor-pointer group`}>
         <div>
-          <FileTextIcon className="text-slate-500 scale-[1.8] opacity-70 group-hover:opacity-80 duration-300 transition-opacity" />
+          {notes.length > 0 ? (
+            <FileTextIcon className="text-slate-600 scale-[1.8] group-hover:opacity-80 duration-300 transition-opacity" />
+          ) : (
+            <span className="relative">
+              <Pencil2Icon className="text-slate-600 scale-[1.5] group-hover:opacity-80 duration-300 transition-opacity" />
+            </span>
+          )}
+
           {/* notes count */}
           {!showNotes ? (
             <>
-              <motion.span
-                {...bounce}
-                className={`absolute flex  group-hover:hidden  -top-[8px] right-0 text-slate-700 text-[12.5px] font-semibold px-2 py-[2px] rounded-full
+              {/* show notes count if notes greater than 0 */}
+              {notes.length > 0 ? (
+                <motion.span
+                  {...bounce}
+                  className={`absolute flex  group-hover:hidden  -top-[8px] right-0 text-slate-700 text-[12.5px] font-semibold px-2 py-[2px] rounded-full
                             bg-gradient-to-br from-brand-primary to-emerald-400 shadow shadow-brand-darkBg/70 `}>
-                {notes?.length}
-              </motion.span>
+                  {notes?.length}
+                </motion.span>
+              ) : null}
               {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
               <motion.span
                 {...bounce}
-                onClick={onClose}
+                onClick={ev => {
+                  ev.stopPropagation();
+                  onClose();
+                }}
                 className={`absolute hidden group-hover:block -top-[8px] -right-[1.5px] rounded-full bg-brand-darkBgAccent/60 p-[2px] w-fit group 
                           hover:bg-brand-darkBgAccent/80 [&>svg]:hover:text-slate-200 transition-colors duration-300`}>
                 <Cross1Icon className="text-slate-300/90 scale-[0.7]  transition-colors duration-300" />

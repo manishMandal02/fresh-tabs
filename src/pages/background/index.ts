@@ -20,7 +20,7 @@ import { matchWordsInText } from '@root/src/utils/string/matchWordsInText';
 import { publishEvents, publishEventsTab } from '../../utils/publish-events';
 import { handleMergeSpaceHistoryAlarm } from './handler/alarm/mergeSpaceHistory';
 import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers';
-import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';
+import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
 import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
 import {
   createActiveTab,
@@ -37,14 +37,7 @@ import { addSnoozedTab, getTabToUnSnooze } from '@root/src/services/chrome-stora
 import { handleMergeDailySpaceTimeChunksAlarm } from './handler/alarm/mergeDailySpaceTimeChunks';
 import { getSpaceHistory, setSpaceHistory } from '@root/src/services/chrome-storage/space-history';
 import { getDailySpaceTime, setDailySpaceTime } from '@root/src/services/chrome-storage/space-analytics';
-import {
-  addNewNote,
-  deleteNote,
-  getAllNotes,
-  getNote,
-  getNoteByDomain,
-  updateNote,
-} from '@root/src/services/chrome-storage/notes';
+import { addNewNote, deleteNote, getAllNotes, getNote, updateNote } from '@root/src/services/chrome-storage/notes';
 import {
   checkParentBMFolder,
   syncSpacesFromBookmarks,
@@ -299,12 +292,13 @@ const recordDailySpaceTime = async (windowId: number) => {
 const showNotesBubbleContentScript = async (url: string, tabId: number, windowId: number) => {
   if (!url) return;
 
-  const domain = cleanDomainName(getUrlDomain(url));
-  const notes = await getNoteByDomain(domain);
+  // const domain = cleanDomainName(getUrlDomain(url));
+  // const notes = await getNoteByDomain(domain);
 
-  if (notes?.length < 1) return;
-  // if yes, send a event to context script with notes data
+  // // do nothing if no notes found for this domain
+  // if (notes?.length < 1) return;
 
+  // send a event to context script with notes data
   const activeSpace = await getSpaceByWindow(windowId);
   // send msg/event to content scr
   await retryAtIntervals({

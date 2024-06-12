@@ -147,6 +147,7 @@ const showNotes = async (spaceId: string, reRender = false) => {
       notesRootContainer.remove();
     }
   }
+
   const siteDomain = cleanDomainName(location.hostname);
 
   const siteNotes = await getNoteByDomain(siteDomain);
