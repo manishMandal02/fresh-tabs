@@ -183,7 +183,7 @@ const CreateNote = ({
             </motion.div>
           ) : null}
 
-          {/* remainder */}
+          {/* remainder time display */}
           {remainder ? (
             <motion.div
               {...bounce}

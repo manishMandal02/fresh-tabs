@@ -1,5 +1,5 @@
 import { CodeNode } from '@lexical/code';
-import { useCallback, useRef, memo , useEffect } from 'react';
+import { useCallback, useRef, memo, useEffect } from 'react';
 import { ListNode, ListItemNode } from '@lexical/list';
 import { AutoLinkNode, LinkNode } from '@lexical/link';
 import { $createQuoteNode, HeadingNode, QuoteNode } from '@lexical/rich-text';
@@ -70,7 +70,6 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
       const span = rootDocumentToSearch.evaluate(
         `//span[contains(., '${dateString}')]`,
         rootDocumentToSearch,
-
         null,
         XPathResult.ANY_TYPE,
         null,
@@ -83,49 +82,55 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
 
       const text = spanEl.textContent?.toLowerCase() || '';
 
-      const dateStringIndex = text.indexOf(dateString.toLowerCase());
+      console.log('⌛️ ~ addDateHighlightStyle ~ text:', text);
 
-      if (
-        text.includes('remind') &&
-        text.indexOf('remind') < dateStringIndex - 1 &&
-        text.indexOf('remind') > dateStringIndex - 20
-      ) {
-        // set the last occurrence of the date hint
-        setRemainder(dateString);
+      removeDateHighlightStyle();
+
+      if (text.toLowerCase().includes('remind')) {
         // add date highlight class
         spanEl.classList.add('add-note-date-highlight');
 
-        removeDateHighlightStyle(spanEl);
-      } else {
-        removeDateHighlightStyle();
-        setRemainder('');
+        return true;
       }
+
+      return false;
     },
-    [rootDocument, setRemainder],
+    [rootDocument, removeDateHighlightStyle],
   );
+
+  const handleEditorChange = (note: string) => {
+    // debounce  change handler
+    onChange(note);
+
+    if (!setRemainder) return;
+
+    const res = parseStringForDateTimeHint(note);
+
+    console.log('🚀 ~ debounce ~ res.dateString:', res?.dateString);
+
+    if (!res?.dateString) {
+      // date hint not found, remove highlight class if added previously
+      setRemainder('');
+      removeDateHighlightStyle();
+      return;
+    }
+
+    const dateHintString = res.dateString.replaceAll('at', '@');
+
+    console.log('⌛️ ~ handleEditorChange ~ dateHintString:', dateHintString);
+
+    // highlight the date hint
+    const isHighlighted = addDateHighlightStyle(dateHintString);
+
+    console.log('⌛️ ~ handleEditorChange ~ isHighlighted:', isHighlighted);
+
+    // set the last occurrence of the date hint
+
+    if (isHighlighted) setRemainder(dateHintString);
+  };
+
   // check for data hint string for remainders
-  const debouncedChangeHandler = useCallback(
-    debounce((note: string) => {
-      // debounce  change handler
-      onChange(note);
-
-      if (!setRemainder) return;
-
-      const res = parseStringForDateTimeHint(note);
-
-      console.log('🚀 ~ debounce ~ res.dateString:', res?.dateString);
-
-      if (!res) {
-        // date hint not found, remove highlight class if added previously
-        setRemainder('');
-        removeDateHighlightStyle();
-        return;
-      }
-
-      addDateHighlightStyle(res.dateString);
-    }, 300),
-    [onChange, setRemainder, rootDocument, removeDateHighlightStyle, addDateHighlightStyle],
-  );
+  const debouncedChangeHandler = debounce(handleEditorChange, 300);
 
   // add date highlight class for initial note content (edit/view note)
   useEffect(() => {
