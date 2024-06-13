@@ -74,6 +74,8 @@ export const StorageKey = {
 export const DefaultAppSettings: IAppSettings = {
   includeBookmarksInSearch: true,
   includeNotesInSearch: false,
+  showNotesBubbleForAllSites: true,
+  notesBubblePos: 'bottom-right',
   deleteUnsavedSpace: 'immediately',
   openSpace: 'newWindow',
   autoSaveToBookmark: 'daily',

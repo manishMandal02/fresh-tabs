@@ -20,7 +20,7 @@ import { matchWordsInText } from '@root/src/utils/string/matchWordsInText';
 import { publishEvents, publishEventsTab } from '../../utils/publish-events';
 import { handleMergeSpaceHistoryAlarm } from './handler/alarm/mergeSpaceHistory';
 import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers';
-import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
+import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';
 import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
 import {
   createActiveTab,
@@ -37,7 +37,14 @@ import { addSnoozedTab, getTabToUnSnooze } from '@root/src/services/chrome-stora
 import { handleMergeDailySpaceTimeChunksAlarm } from './handler/alarm/mergeDailySpaceTimeChunks';
 import { getSpaceHistory, setSpaceHistory } from '@root/src/services/chrome-storage/space-history';
 import { getDailySpaceTime, setDailySpaceTime } from '@root/src/services/chrome-storage/space-analytics';
-import { addNewNote, deleteNote, getAllNotes, getNote, updateNote } from '@root/src/services/chrome-storage/notes';
+import {
+  addNewNote,
+  deleteNote,
+  getAllNotes,
+  getNote,
+  getNoteByDomain,
+  updateNote,
+} from '@root/src/services/chrome-storage/notes';
 import {
   checkParentBMFolder,
   syncSpacesFromBookmarks,
@@ -292,11 +299,16 @@ const recordDailySpaceTime = async (windowId: number) => {
 const showNotesBubbleContentScript = async (url: string, tabId: number, windowId: number) => {
   if (!url) return;
 
-  // const domain = cleanDomainName(getUrlDomain(url));
-  // const notes = await getNoteByDomain(domain);
+  const { notesBubblePos, showNotesBubbleForAllSites } = await getAppSettings();
 
-  // // do nothing if no notes found for this domain
-  // if (notes?.length < 1) return;
+  if (!showNotesBubbleForAllSites) {
+    // show notes bubble only for sites with notes
+    const domain = cleanDomainName(getUrlDomain(url));
+    const notes = await getNoteByDomain(domain);
+
+    // do nothing if no notes found for this domain
+    if (notes?.length < 1) return;
+  }
 
   // send a event to context script with notes data
   const activeSpace = await getSpaceByWindow(windowId);
@@ -307,7 +319,7 @@ const showNotesBubbleContentScript = async (url: string, tabId: number, windowId
     callback: async () => {
       return await publishEventsTab(tabId, {
         event: 'SHOW_DOMAIN_NOTES',
-        payload: { activeSpace },
+        payload: { activeSpace, notesBubblePos },
       });
     },
   });
@@ -424,9 +436,11 @@ chrome.runtime.onMessage.addListener(
         // create note
         await addNewNote(newNote);
 
+        const { notesBubblePos } = await getAppSettings();
+
         await publishEventsTab(currentTab.id, {
           event: 'SHOW_SNACKBAR',
-          payload: { activeSpace, snackbarMsg: 'Note Captured' },
+          payload: { activeSpace, notesBubblePos, snackbarMsg: 'Note Captured' },
         });
 
         return true;
@@ -447,9 +461,11 @@ chrome.runtime.onMessage.addListener(
 
         const currentTab = await getCurrentTab();
 
+        const { notesBubblePos } = await getAppSettings();
+
         await publishEventsTab(currentTab.id, {
           event: 'SHOW_SNACKBAR',
-          payload: { activeSpace, snackbarMsg: 'Note Saved' },
+          payload: { activeSpace, notesBubblePos, snackbarMsg: 'Note Saved' },
         });
 
         return true;

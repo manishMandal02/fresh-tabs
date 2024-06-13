@@ -16,7 +16,7 @@ import CommandPalette, { COMMAND_PALETTE_SIZE } from './CommandPalette';
 import { getNoteByDomain } from '@root/src/services/chrome-storage/notes';
 import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
-import { IMessageEventContentScript, ISearchFilters, ISpace, ITab } from '../../../types/global.types';
+import { IMessageEventContentScript, ISearchFilters, ISpace, ITab, NoteBubblePos } from '../../../types/global.types';
 
 // development: refresh content page on update
 refreshOnUpdate('pages/content');
@@ -136,7 +136,7 @@ const handleShowSnackbar = (title: string) => {
   createRoot(rootIntoShadow).render(<SnackbarContentScript title={title} />);
 };
 
-const showNotes = async (spaceId: string, reRender = false) => {
+const showNotes = async (spaceId: string, position: NoteBubblePos, reRender = false) => {
   // do nothing if component already rendered
   if (document.getElementById(ContentScriptContainerIds.DOMAIN_NOTES) && !reRender) return;
 
@@ -162,7 +162,12 @@ const showNotes = async (spaceId: string, reRender = false) => {
   notesContainer.style.zIndex = '2147483647';
   notesContainer.style.position = 'fixed';
   notesContainer.style.bottom = '16px';
-  notesContainer.style.right = '20px';
+
+  if (!position || position === 'bottom-right') {
+    notesContainer.style.right = '20px';
+  } else {
+    notesContainer.style.left = '20px';
+  }
 
   document.body.appendChild(notesContainer);
 
@@ -235,7 +240,7 @@ const showNotes = async (spaceId: string, reRender = false) => {
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   const event = msg as IMessageEventContentScript;
 
-  const { recentSites, activeSpace, snackbarMsg, searchFilterPreferences } = event.payload;
+  const { recentSites, activeSpace, snackbarMsg, searchFilterPreferences, notesBubblePos } = event.payload;
 
   const msgEvent = event.event;
 
@@ -250,13 +255,13 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
 
   if (msgEvent === 'SHOW_DOMAIN_NOTES') {
-    showNotes(activeSpace.id);
+    showNotes(activeSpace.id, notesBubblePos);
   }
 
   if (msgEvent === 'SHOW_SNACKBAR') {
     handleShowSnackbar(snackbarMsg);
     if (snackbarMsg.toLowerCase().startsWith('note')) {
-      showNotes(activeSpace.id, true);
+      showNotes(activeSpace.id, notesBubblePos, true);
     }
   }
 

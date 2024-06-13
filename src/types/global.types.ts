@@ -151,6 +151,7 @@ interface IEventPayloadContentScript {
   shouldOpenInNewTab?: boolean;
   shouldCloseCurrentTab?: boolean;
   shouldOpenInNewWindow?: boolean;
+  notesBubblePos?: NoteBubblePos;
   searchFilterPreferences?: ISearchFilters;
 }
 
@@ -159,9 +160,13 @@ export interface IMessageEventContentScript {
   payload?: IEventPayloadContentScript;
 }
 
+export type NoteBubblePos = 'bottom-left' | 'bottom-right';
+
 export interface IAppSettings {
   includeBookmarksInSearch: boolean;
   includeNotesInSearch: boolean;
+  notesBubblePos: NoteBubblePos;
+  showNotesBubbleForAllSites: boolean;
   deleteUnsavedSpace: 'immediately' | 'week';
   openSpace: 'newWindow' | 'sameWindow';
   autoSaveToBookmark: 'off' | 'daily' | 'weekly';

@@ -18,7 +18,7 @@ const Switch = ({ id, checked, onChange, size = 'medium' }: Props) => {
           id={id}
           checked={checked}
           onCheckedChange={onChange}
-          className={`${switchSize} rounded-full relative  transition-all duration-200 data-[state=checked]:bg-brand-primary/90 outline-none cursor-default`}>
+          className={`${switchSize} rounded-full relative  transition-all duration-200 data-[state=checked]:bg-brand-primary/75 outline-none cursor-default`}>
           <SwitchRadix.Thumb
             className={`block ${thumbSize}  rounded-full 
                         transition-transform duration-300 translate-x-[20%] will-change-transform data-[state=checked]:bg-white data-[state=checked]:translate-x-[130%]`}

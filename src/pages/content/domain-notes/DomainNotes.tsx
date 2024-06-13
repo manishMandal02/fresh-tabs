@@ -79,8 +79,8 @@ const DomainNotes = ({ domainNotes, onNoteClick, onNewNoteClick, onDeleteNoteCli
 
           setShowNotes(prev => !prev);
         }}
-        className={`relative bg-gradient-to-br from-brand-darkBgAccent/90 to-brand-darkBg/95  flex items-center justify-center size-[55px] rounded-full select-none
-                  border border-brand-darkBgAccent  shadow-md shadow-brand-darkBgAccent/50 cursor-pointer group`}>
+        className={`relative flex items-center justify-center size-[55px] rounded-full border border-brand-darkBgAccent group
+                    bg-gradient-to-br from-brand-darkBgAccent/90 to-brand-darkBg/95 shadow-md shadow-brand-darkBgAccent/50 cursor-pointer select-none`}>
         <div>
           {notes.length > 0 ? (
             <FileTextIcon className="text-slate-600 scale-[1.8] group-hover:opacity-80 duration-300 transition-opacity" />
