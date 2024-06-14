@@ -75,6 +75,8 @@ export const DefaultAppSettings: IAppSettings = {
   includeBookmarksInSearch: true,
   includeNotesInSearch: false,
   showNotesBubbleForAllSites: true,
+  isCommandPaletteDisabled: false,
+  isNotesDisabled: false,
   notesBubblePos: 'bottom-right',
   deleteUnsavedSpace: 'immediately',
   openSpace: 'newWindow',

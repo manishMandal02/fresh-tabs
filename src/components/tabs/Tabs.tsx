@@ -4,15 +4,15 @@ import * as TabsRadix from '@radix-ui/react-tabs';
 import { generateId } from '@root/src/utils';
 
 type Props<T extends string[]> = {
-  tabs: [...T];
-  children: [...{ [I in keyof T]: ReactNode }];
+  tabs: T;
+  children: { [K in keyof T]: ReactNode };
   defaultTab: number;
   selectedTab: number;
   onTabChange: (tab: number) => void;
 };
 
 const Tabs = <T extends string[]>({ tabs, children, defaultTab, selectedTab, onTabChange }: Props<T>) => {
-  if (tabs.length !== children.length) {
+  if (children?.length > 0 && tabs.length !== children?.length) {
     throw new TypeError('Tabs and children must have the same length.');
   }
 
@@ -26,8 +26,8 @@ const Tabs = <T extends string[]>({ tabs, children, defaultTab, selectedTab, onT
         {tabs.map((tab, index) => (
           <TabsRadix.Trigger
             key={generateId()}
-            className={` py-[6.5px]  flex-1 flex items-center justify-center text-[12px] font-normal leading-none text-slate-400/90 transition-all duration-200 
-             select-none  data-[state=active]:text-slate-300/80 data-[state=active]:bg-brand-darkBgAccent/50 rounded-md outline-none cursor-pointer`}
+            className={`py-[6.5px] flex-1 flex items-center justify-center text-[12px] font-normal leading-none text-slate-400/90 transition-all duration-200 
+                        select-none data-[state=active]:text-slate-300/80 data-[state=active]:bg-brand-darkBgAccent/50 rounded-md outline-none cursor-pointer`}
             value={(index + 1).toString()}>
             <h1>{tab as string}</h1>
           </TabsRadix.Trigger>

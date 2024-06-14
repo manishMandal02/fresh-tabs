@@ -1,5 +1,5 @@
 import { useState, memo } from 'react';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { BellIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
 
 import { Notes } from '../../notes';
@@ -15,6 +15,7 @@ import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import {
   activeSpaceGroupsAtom,
   activeSpaceTabsAtom,
+  appSettingsAtom,
   deleteSpaceModalAtom,
   selectedTabsAtom,
   snackbarAtom,
@@ -32,8 +33,9 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
   console.log('ActiveSpace ~ 🔁 rendered');
 
   // global state
-  const [, setSnackbar] = useAtom(snackbarAtom);
-  const [, setDeleteSpaceModal] = useAtom(deleteSpaceModalAtom);
+  const appSettings = useAtomValue(appSettingsAtom);
+  const setSnackbar = useSetAtom(snackbarAtom);
+  const setDeleteSpaceModal = useSetAtom(deleteSpaceModalAtom);
 
   const updateSpaceState = useSetAtom(updateSpaceAtom);
   const setActSpaceTabs = useSetAtom(activeSpaceTabsAtom);
@@ -108,14 +110,18 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
       <div
         id="active-space-scrollable-container"
         className="relative max-h-[90%]  cc-scrollbar min-h-fit overflow-x-hidden overflow-y-auto border-b border-brand-darkBgAccent/20 pb-1">
-        <Tabs
-          tabs={[`Tabs`, 'Notes']}
-          defaultTab={selectedNavTab}
-          selectedTab={selectedNavTab}
-          onTabChange={tab => setSelectedNavTab(tab)}>
+        {!appSettings.isNotesDisabled ? (
+          <Tabs
+            tabs={[`Tabs`, 'Notes']}
+            defaultTab={selectedNavTab}
+            selectedTab={selectedNavTab}
+            onTabChange={tab => setSelectedNavTab(tab)}>
+            <ActiveSpaceTabs space={space} onTabNotesClick={handleTabNotesClick} />
+            <Notes space={space} notesSearchQuery={notesSearchQuery} />
+          </Tabs>
+        ) : (
           <ActiveSpaceTabs space={space} onTabNotesClick={handleTabNotesClick} />
-          <Notes space={space} notesSearchQuery={notesSearchQuery} />
-        </Tabs>
+        )}
       </div>
 
       {/* space history modal */}

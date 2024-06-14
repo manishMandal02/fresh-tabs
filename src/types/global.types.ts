@@ -13,11 +13,11 @@ export interface ISearchFilters {
 
 export interface ICommand {
   index: number;
-  type: CommandType;
   label: string;
   alias?: string;
-  icon: string | RadixIconType;
+  type: CommandType;
   metadata?: string | number;
+  icon: string | RadixIconType;
 }
 
 export interface ITab {
@@ -164,6 +164,8 @@ export type NoteBubblePos = 'bottom-left' | 'bottom-right';
 
 export interface IAppSettings {
   includeBookmarksInSearch: boolean;
+  isCommandPaletteDisabled: boolean;
+  isNotesDisabled: boolean;
   includeNotesInSearch: boolean;
   notesBubblePos: NoteBubblePos;
   showNotesBubbleForAllSites: boolean;

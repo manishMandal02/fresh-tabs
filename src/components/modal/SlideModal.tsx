@@ -33,7 +33,7 @@ const SlideModal = ({ children, isOpen, onClose, title }: Props) => {
         onClick={onClose}></motion.div>
       {/* modal card */}
       <div
-        className={`z-[99999] absolute bottom-0 flex flex-col left-0 w-full min-h-[28%] max-h-[90%] bg-brand-darkBg rounded-tl-3xl rounded-tr-3xl
+        className={`z-[99999] absolute bottom-0 flex flex-col left-0 w-full min-h-[28%] max-h-[91%] bg-brand-darkBg rounded-tl-3xl rounded-tr-3xl
                 border-t border-brand-darkBgAccent transition-all duration-300  ease-in-out pb-1 shadow-md shadow-brand-darkBgAccent/60`}>
         <div className="shadow-sm shadow-brand-darkBgAccent/50 relative  py-2.5 px-3.5 min-h-8 flex items-center justify-between">
           <span className="invisible"></span>

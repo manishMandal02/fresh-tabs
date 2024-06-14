@@ -42,7 +42,7 @@ const RadioGroup = <T = string,>({ options, value, onChange, disabled, defaultVa
             <label
               className={cn(
                 'text-slate-400 text-[11px] font-light leading-none pl-2 cursor-pointer select-text text-nowrap',
-                { 'cursor-not-allowed': disabled },
+                { 'cursor-not-allowed text-slate-500': disabled },
               )}
               htmlFor={v}
               dangerouslySetInnerHTML={{ __html: label }}>

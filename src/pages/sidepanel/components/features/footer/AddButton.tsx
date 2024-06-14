@@ -1,16 +1,17 @@
-import { useState , memo } from 'react';
-import { useSetAtom } from 'jotai';
 import { motion } from 'framer-motion';
+import { useState, memo } from 'react';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { PlusIcon } from '@radix-ui/react-icons';
 
 import KBD from '@root/src/components/kbd/KBD';
-import { PlusIcon } from '@radix-ui/react-icons';
 import Popover from '../../../../../components/popover';
 import Tooltip from '../../../../../components/tooltip';
 import { useCustomAnimation } from '../../../hooks/useCustomAnimation';
-import { showAddNewNoteModalAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
+import { appSettingsAtom, showAddNewNoteModalAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
 
 const AddButton = () => {
   // global state
+  const appSettings = useAtomValue(appSettingsAtom);
   const setNewSpaceModal = useSetAtom(showNewSpaceModalAtom);
   const setNewNoteModal = useSetAtom(showAddNewNoteModalAtom);
 
@@ -41,16 +42,18 @@ const AddButton = () => {
                 <KBD classes="text-[8px] shadow-brand-darkBgAccent/80">S</KBD>
               </span>
             </button>
-
-            <button
-              className="text-slate-300/80 text-[11px] bg-gradient-to-br from-brand-darkBgAccent/70 to-slate-900/90 border border-brand-darkBgAccent/30 px-3 py-[7px] rounded outline-none hover:text-slate-300 hover:border-brand-darkBgAccent/80  transition-all duration-300"
-              onClick={() => setNewNoteModal({ show: true, note: { text: '' } })}>
-              New Note
-              <span className="ml-1.5">
-                <KBD classes="text-[8px] shadow-brand-darkBgAccent/80">Shift</KBD>{' '}
-                <span className="text-slate-500">+</span> <KBD classes="text-[8px] shadow-brand-darkBgAccent/80">N</KBD>
-              </span>
-            </button>
+            {!appSettings.isNotesDisabled ? (
+              <button
+                className="text-slate-300/80 text-[11px] bg-gradient-to-br from-brand-darkBgAccent/70 to-slate-900/90 border border-brand-darkBgAccent/30 px-3 py-[7px] rounded outline-none hover:text-slate-300 hover:border-brand-darkBgAccent/80  transition-all duration-300"
+                onClick={() => setNewNoteModal({ show: true, note: { text: '' } })}>
+                New Note
+                <span className="ml-1.5">
+                  <KBD classes="text-[8px] shadow-brand-darkBgAccent/80">Shift</KBD>{' '}
+                  <span className="text-slate-500">+</span>{' '}
+                  <KBD classes="text-[8px] shadow-brand-darkBgAccent/80">N</KBD>
+                </span>
+              </button>
+            ) : null}
           </motion.div>
         }>
         <button

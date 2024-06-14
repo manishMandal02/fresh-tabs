@@ -763,6 +763,11 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
   // handle open command palette
   if (command === 'cmdPalette') {
+    const { isCommandPaletteDisabled } = await getAppSettings();
+
+    // do nothing if cmd palette feat disabled
+    if (isCommandPaletteDisabled) return;
+
     let currentTab = tab;
 
     if (!currentTab?.id) {
