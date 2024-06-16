@@ -29,7 +29,7 @@ const TextField = ({ name, label, placeholder, registerHook, error, onPasteHandl
     <Form>
       <Field name={name} className="flex flex-col">
         {label ? (
-          <Label className={`text-[12.5px] ml-px mb-[3px] ${!error ? 'text-slate-400/90' : 'text-rose-600'}`}>
+          <Label className={`text-[12.5px] ml-px mb-[2px] ${!error ? 'text-slate-400/90' : 'text-rose-600'}`}>
             {label}
           </Label>
         ) : null}

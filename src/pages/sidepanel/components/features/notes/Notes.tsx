@@ -78,7 +78,9 @@ const Notes = ({ space, notesSearchQuery }: Props) => {
 
   return (
     <div>
-      <div className="flex items-center px-2 py-1 bg-brand-darkBgAccent/40 rounded-md border border-brand-darkBgAccent/40 focus-within:border-slate-700/80">
+      <div
+        className={`flex top-[36px] w-[98%] z-[99] bg-brand-darkBg/85 sticky items-center ml-1 px-2 py-1
+                    rounded-md border border-brand-darkBgAccent/40 focus-within:border-slate-700/90`}>
         <MagnifyingGlassIcon className="text-slate-400/80" />
         <input
           type="text"
@@ -96,7 +98,7 @@ const Notes = ({ space, notesSearchQuery }: Props) => {
               key={note.id}
               onClick={() => handleNoteClick(note)}
               className="relative w-full bg-brand-darkBgAccent/25 px-3 py-[8px] rounded-[7px] mb-1.5 cursor-pointer group overflow-hidden">
-              <div className="group-hover:-translate-x-[34px]  transition-all duration-300 w-full">
+              <div>
                 <p className="text-slate-300/80 text-[14px] text-start">{limitCharLength(note.title, 42)}</p>
                 <div className="flex items-center justify-end mt-3">
                   {/*  note site */}
@@ -112,8 +114,8 @@ const Notes = ({ space, notesSearchQuery }: Props) => {
                   {note.domain ? (
                     <div className="flex items-center bg-brand-darkBgAccent/35 border border-brand-darkBg/30  w-fit px-1.5 py-[2.5px] rounded-md font- mr-1.5">
                       <GlobeIcon className="text-slate-500  mr-[2.5px]  scale-[0.7]" />
-                      <Tooltip label={note.domain}>
-                        <span className="font-light text-[9px] text-slate-400">{note.domain}</span>
+                      <Tooltip label={note.domain.length > 28 ? note.domain : ''}>
+                        <span className="font-light text-[9px] text-slate-400">{limitCharLength(note.domain, 28)}</span>
                       </Tooltip>
                     </div>
                   ) : null}
@@ -135,9 +137,9 @@ const Notes = ({ space, notesSearchQuery }: Props) => {
                   ev.stopPropagation();
                   setDeleteNoteId(note.id);
                 }}
-                className={`translate-x-[34px] group-hover:translate-x-0 flex items-center justify-center rounded-tr-md rounded-br-md
-                          bg-brand-darkBgAccent/30 hover:bg-rose-400/20 absolute w-[34px] h-full top-0 right-0  transition-all duration-300`}>
-                <TrashIcon className="text-rose-400 scale-[1] z-[99]" />
+                className={`translate-x-[34px] absolute group-hover:translate-x-0 flex items-center justify-center rounded-tr-md rounded-br-md
+                          bg-brand-darkBgAccent/30 hover:bg-rose-400/40  w-[25px] h-full top-0 right-0  transition-all duration-300`}>
+                <TrashIcon className="text-rose-400 scale-[0.95]" />
               </button>
             </button>
           ))

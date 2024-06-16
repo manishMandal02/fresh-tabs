@@ -161,7 +161,7 @@ const NotesModal = () => {
                 <TextField
                   name="note-domain"
                   placeholder="chat.openai.com"
-                  label="Site name"
+                  label="Domain"
                   onPasteHandler={handleOnPasteInDomainInput}
                   registerHook={inputFrom.register('domain')}
                   error={inputFrom.formState.errors.domain?.message || ''}
