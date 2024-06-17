@@ -2,9 +2,10 @@ import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useState, useEffect, useRef } from 'react';
+import { InfoCircledIcon } from '@radix-ui/react-icons';
 
 import { useNewNote } from './useNewNote';
-import { InfoCircledIcon } from '@radix-ui/react-icons';
+import { getReadableDate } from '@root/src/utils';
 import Tooltip from '../../../../../../components/tooltip';
 import Spinner from '../../../../../../components/spinner';
 import { showAddNewNoteModalAtom } from '@root/src/stores/app';
@@ -12,8 +13,8 @@ import { SlideModal } from '../../../../../../components/modal';
 import TextField from '../../../../../../components/form/text-field';
 import Checkbox from '../../../../../../components/checkbox/Checkbox';
 import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
-import { parseStringForDateTimeHint } from '@root/src/utils/date-time/naturalLanguageToDate';
 import RichTextEditor, { EDITOR_EMPTY_STATE } from '../../../../../../components/rich-text-editor/RichTextEditor';
+import { naturalLanguageToDate, parseStringForDateTimeHint } from '@root/src/utils/date-time/naturalLanguageToDate';
 
 const NotesModal = () => {
   console.log('NotesModal ~ 🔁 rendered');
@@ -91,6 +92,13 @@ const NotesModal = () => {
 
   const buttonText = modalGlobalState.note?.id ? 'Update Note' : 'Add Note';
 
+  // disables update note button if nothing has changed
+  const disableNoteUpdate = modalGlobalState.note?.id
+    ? modalGlobalState.note.text === note &&
+      modalGlobalState.note.title === inputFrom.getValues('title').trim() &&
+      modalGlobalState.note.domain === inputFrom.getValues('domain').trim()
+    : false;
+
   useHotkeys(
     'shift+N',
     () => {
@@ -140,16 +148,18 @@ const NotesModal = () => {
                 <label htmlFor="note-domain" className="text-slate-300/80 font-light text-[10px] ml-[4px] select-none">
                   Attach note to a site
                 </label>
-                <Tooltip label="This note will be attached to the site for quick access while browsing" delay={100}>
+                <Tooltip label="Notes with site/domain will be attached to the site for quick access while browsing">
                   <InfoCircledIcon className="ml-1 text-slate-500/80" />
                 </Tooltip>
               </div>
               {remainder ? (
-                <motion.div
-                  {...bounce}
-                  className="pl-1.5 pr-2 py-[1.75px] rounded-[4px] bg-brand-darkBgAccent/50  w-fit uppercase flex items-center">
-                  ⏰ <p className="ml-[5px] text-slate-400/90 font-semibold text-[8px]">{remainder}</p>
-                </motion.div>
+                <Tooltip label={getReadableDate(naturalLanguageToDate(remainder), true)}>
+                  <motion.div
+                    {...bounce}
+                    className="pl-1.5 pr-2 py-[1.75px] rounded-[4px] bg-brand-darkBgAccent/50  w-fit uppercase flex items-center">
+                    ⏰ <p className="ml-[5px] text-slate-400/90 font-semibold text-[8px]">{remainder}</p>
+                  </motion.div>
+                </Tooltip>
               ) : null}
             </div>
           </div>
@@ -169,14 +179,28 @@ const NotesModal = () => {
               </div>
             ) : null}
 
-            {/* add note */}
-            <button
-              onClick={inputFrom.handleSubmit(handleAddNote)}
-              disabled={!note || !inputFrom.watch('title') || (shouldAddDomain && !inputFrom.watch('domain'))}
-              className={`mt-4 mx-auto w-[65%] py-2.5 rounded-md text-brand-darkBg/70 font-semibold text-[13px] bg-brand-primary/90 hover:opacity-95 transition-all duration-200 
-                        border-none outline-none focus-within:outline-slate-600 disabled:bg-brand-darkBgAccent disabled:text-slate-300 disabled:cursor-not-allowed `}>
-              {snackbar.isLoading ? <Spinner size="sm" /> : buttonText}
-            </button>
+            <div className="mt-4 w-full relative flex flex-col justify-between items-center">
+              {/* remainder change alert if note updated */}
+              {remainder && modalGlobalState.note?.id && !disableNoteUpdate ? (
+                <span className="w-fit flex items-center mb-1.5 text-[10px] font-light text-slate-400/80 bg-brand-darkBgAccent/20 rounded py-[3.5px] px-2">
+                  <InfoCircledIcon className="text-slate-500/80 scale-[0.75] mr-[2px]" /> Remainder will be updated to
+                  the date/time mentioned above
+                </span>
+              ) : null}
+              {/* add note button */}
+              <button
+                onClick={inputFrom.handleSubmit(handleAddNote)}
+                disabled={
+                  !note ||
+                  !inputFrom.watch('title') ||
+                  (shouldAddDomain && !inputFrom.watch('domain')) ||
+                  disableNoteUpdate
+                }
+                className={`mx-auto w-[45%] max-w-[200px] py-2 rounded-md text-brand-darkBg/70 font-semibold text-[13.5px] bg-brand-primary/90 hover:opacity-95 transition-all duration-200 
+                            border-none outline-none focus-within:outline-slate-600 disabled:bg-brand-darkBgAccent disabled:text-slate-300 disabled:cursor-not-allowed `}>
+                {snackbar.isLoading ? <Spinner size="sm" /> : buttonText}
+              </button>
+            </div>
           </div>
         </div>
       ) : (

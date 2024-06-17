@@ -68,7 +68,7 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
 
       // find the date hint el and style it
       const span = rootDocumentToSearch.evaluate(
-        `//span[contains(., '${dateString}')]`,
+        `//span[contains(., '${dateString.replaceAll(' @ ', ' at ')}')]`,
         rootDocumentToSearch,
         null,
         XPathResult.ANY_TYPE,
@@ -115,18 +115,29 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
       return;
     }
 
-    const dateHintString = res.dateString.replaceAll('at', '@');
+    const dateHintString = res.dateString.replaceAll(' at ', ' @ ');
 
     console.log('⌛️ ~ handleEditorChange ~ dateHintString:', dateHintString);
 
     // highlight the date hint
-    const isHighlighted = addDateHighlightStyle(dateHintString);
+    let isHighlighted = false;
+
+    const textHighlighted = addDateHighlightStyle(dateHintString);
+
+    if (textHighlighted) {
+      isHighlighted = true;
+    } else {
+      const textHighlightedTry2 = addDateHighlightStyle(dateHintString.replace(' @ ', ' at '));
+      if (textHighlightedTry2) isHighlighted = true;
+    }
 
     console.log('⌛️ ~ handleEditorChange ~ isHighlighted:', isHighlighted);
 
+    if (!isHighlighted) return;
+
     // set the last occurrence of the date hint
 
-    if (isHighlighted) setRemainder(dateHintString);
+    setRemainder(dateHintString);
   };
 
   // check for data hint string for remainders

@@ -101,7 +101,7 @@ export const showUserAccountModalAtom = atom(false);
 
 // add new note modal
 export const showAddNewNoteModalAtom = atom<{ show: boolean; note: Partial<INote> }>({
-  show: false,
+  show: true,
   note: { text: '' },
 });
 

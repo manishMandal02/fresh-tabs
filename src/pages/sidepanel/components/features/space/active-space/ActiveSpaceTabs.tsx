@@ -598,14 +598,17 @@ const ActiveSpaceTabs = ({ space, onTabNotesClick }: Props) => {
               />
             )}
             <p
-              className={
-                'text-[13px] ml-px text-slate-300/80 max-w-[95%] z-10 whitespace-nowrap overflow-hidden text-ellipsis text-start'
-              }>
+              className={cn(
+                'text-[13px] ml-px text-slate-300/80 max-w-[95%] z-10 whitespace-nowrap overflow-hidden text-ellipsis text-start',
+                {
+                  'font-medium': item.isFolder,
+                },
+              )}>
               {title?.trim() || 'No title'}
             </p>
             {item.isFolder ? (
               <span
-                className="size-[10px] rounded-full block ml-2 -mb-px z-[20] opacity-90"
+                className="size-[9px] rounded-full block ml-2 -mb-px z-[20] opacity-95"
                 style={{ backgroundColor: ThemeColor[capitalize((item?.data as IGroup).theme)] }}></span>
             ) : null}
           </div>

@@ -72,9 +72,9 @@ export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteP
 
     const noteObj: INote = {
       id: generateId(),
-      title: data.title.trim(),
       text: note,
       spaceId: activeSpace.id,
+      title: data.title.trim(),
       createdAt: new Date().getTime(),
     };
 
@@ -88,7 +88,7 @@ export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteP
 
     // add note domain
     if (data.domain) {
-      noteObj.domain = data.domain;
+      noteObj.domain = data.domain.trim();
     }
 
     let res = false;
