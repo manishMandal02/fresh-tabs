@@ -76,7 +76,6 @@ const TabContextMenu = ({
     });
   };
 
-  // TODO - not syncing after moving tabs to groups
   // move tab/group to a group
   const handleMoveToGroup = async (groupId: number) => {
     // move tabs to group
@@ -282,7 +281,7 @@ const TabContextMenu = ({
                 </RadixContextMenu.Sub>
               </>
             ) : null}
-            {allGroups?.length > 1 ? (
+            {allGroups?.length >= 1 ? (
               <RadixContextMenu.Sub>
                 <RadixContextMenu.SubTrigger className="flex items-center text-[12px] font-normal text-slate-400 py-[7px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
                   <LayersIcon className="text-slate-500 mr-1 scale-[0.8]" />{' '}

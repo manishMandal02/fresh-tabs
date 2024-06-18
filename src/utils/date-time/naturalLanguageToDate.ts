@@ -7,7 +7,6 @@ export const naturalLanguageToDate = (dateString: string) => {
   const parsedData = parseDate(formattedDateString, null, {
     forwardDate: true,
   });
-  console.log('💰 ~ naturalLanguageToDate ~ parsedData:', parsedData);
 
   return parsedData?.getTime() || null;
 };
@@ -16,7 +15,7 @@ export const naturalLanguageToDate = (dateString: string) => {
 export const parseStringForDateTimeHint = (note: string) => {
   const parsedData = parse(note.replace(' @ ', ' at '), { instant: new Date() }, { forwardDate: true });
 
-  console.log('⌛️ ~ parseStringForDateTimeHint ~ parsedData:', parsedData);
+  // console.log('⌛️ ~ parseStringForDateTimeHint ~ parsedData:', parsedData);
 
   if (!parsedData || parsedData.length < 1) return null;
 

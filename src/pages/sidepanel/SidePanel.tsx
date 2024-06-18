@@ -74,8 +74,6 @@ const SidePanel = () => {
       const settings = await getAppSettings();
 
       setAppSetting(settings);
-      // const pinnedTabs = await getGlobalPinnedTabs();
-      // setGlobalPinnedTabs(pinnedTabs);
       setIsLoadingSpaces(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps

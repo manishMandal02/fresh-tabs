@@ -1,4 +1,4 @@
-// show notification
+// notification for when tab un-snoozed
 export const showUnSnoozedNotification = (
   spaceId: string,
   title: string,
@@ -19,6 +19,17 @@ export const showUnSnoozedNotification = (
     message,
     iconUrl,
     buttons,
+    type: 'basic',
+    silent: false,
+  });
+};
+
+// notification for notes remainder
+export const showNotesRemainderNotification = (noteId: string, title: string, message: string, iconUrl: string) => {
+  chrome.notifications.create(`notes-remainder-${noteId}`, {
+    title,
+    message,
+    iconUrl,
     type: 'basic',
     silent: false,
   });

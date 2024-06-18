@@ -3,7 +3,7 @@ import { logger } from '@root/src/utils/logger';
 // discard all other tabs (exclude audible tabs)
 export const discardAllTabs = async (autoDiscard = false) => {
   try {
-    //TODO - take user preferences into consideration (whitelisted sites, etc.)
+    //TODO - improvement - take user preferences into consideration (whitelisted sites, etc.)
     let tabs = await chrome.tabs.query({ active: false, audible: false, discarded: false, status: 'complete' });
 
     if (autoDiscard) {

@@ -217,7 +217,6 @@ type CommandIconProps = {
 };
 
 // TODO - fix - some icon appear too small
-// TODO - fix - chrome extension tab icon had url text
 const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
   if (type === CommandType.Note) Icon = FileTextIcon;
 
@@ -232,6 +231,8 @@ const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
     // emoji
     return <span className="w-[16px] mr-2.5 h-fit text-start">{Icon}</span>;
   } else if (typeof Icon === 'string') {
+    console.log('🌅 ~ Icon:', Icon);
+
     // favicon
     return (
       <>

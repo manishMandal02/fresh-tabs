@@ -43,6 +43,7 @@ export enum CommandType {
 export const ALARM_NAME_PREFiX = {
   deleteSpace: 'deleteSpace',
   snoozedTab: 'snoozedTab',
+  noteRemainder: 'noteRemainder',
 } as const;
 
 export const AlarmName = {
@@ -53,6 +54,8 @@ export const AlarmName = {
     `${ALARM_NAME_PREFiX.deleteSpace}-${spaceId}`,
   snoozedTab: (spaceId: string): `${typeof ALARM_NAME_PREFiX.snoozedTab}-${string}` =>
     `${ALARM_NAME_PREFiX.snoozedTab}-${spaceId}`,
+  noteRemainder: (noteId: string): `${typeof ALARM_NAME_PREFiX.noteRemainder}-${string}` =>
+    `${ALARM_NAME_PREFiX.noteRemainder}-${noteId}`,
 } as const;
 
 export const StorageKey = {

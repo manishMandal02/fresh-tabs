@@ -86,6 +86,7 @@ import {
   ALARM_NAME_PREFiX,
 } from '@root/src/constants/app';
 import { addGroup, removeGroup, updateGroup } from '@root/src/services/chrome-storage/groups';
+import { handleNotesRemainderAlarm } from './handler/alarm/notes-remainder';
 
 logger.info('🏁 background loaded');
 
@@ -586,7 +587,7 @@ chrome.runtime.onMessage.addListener(
           }
         }
 
-        // TODO - fix - bookmarks and other search res is not sent back tab instead true is being returned
+        // TODO - improvement - (sometimes) bookmarks and other search res is not sent back tab instead true is being returned
         // return the matched results if more than 6 (won't search history)
         if (matchedCommands.length > 6) return matchedCommands;
 
@@ -747,105 +748,117 @@ chrome.runtime.onSuspend.addListener(async () => {});
 
 // shortcut commands
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  //* new tab to right shortcut
-  if (command === 'newTab') {
-    const newTab = await createActiveTab('chrome://newtab', tab.index + 1);
+  try {
+    //* new tab to right shortcut
+    if (command === 'newTab') {
+      const newTab = await createActiveTab('chrome://newtab', tab.index + 1);
 
-    // TODO - temp fix: a additional new tab gets created when side panel is opened
-    const [nextTab] = await chrome.tabs.query({ index: newTab.index + 1 });
+      // TODO - temp fix: a additional new tab gets created when side panel is opened
+      const [nextTab] = await chrome.tabs.query({ index: newTab.index + 1 });
 
-    if (nextTab?.pendingUrl.startsWith('chrome://newtab')) {
-      await chrome.tabs.remove(nextTab.id);
+      if (nextTab?.pendingUrl?.startsWith('chrome://newtab')) {
+        await chrome.tabs.remove(nextTab.id);
+      }
+
+      return;
     }
 
-    return;
-  }
+    // handle open command palette
+    if (command === 'cmdPalette') {
+      const { isCommandPaletteDisabled } = await getAppSettings();
 
-  // handle open command palette
-  if (command === 'cmdPalette') {
-    const { isCommandPaletteDisabled } = await getAppSettings();
+      // do nothing if cmd palette feat disabled
+      if (isCommandPaletteDisabled) return;
 
-    // do nothing if cmd palette feat disabled
-    if (isCommandPaletteDisabled) return;
+      let currentTab = tab;
 
-    let currentTab = tab;
+      if (!currentTab?.id) {
+        const [activeTab] = await chrome.tabs.query({ currentWindow: true, active: true });
+        currentTab = activeTab;
+      }
 
-    if (!currentTab?.id) {
-      const [activeTab] = await chrome.tabs.query({ currentWindow: true, active: true });
-      currentTab = activeTab;
-    }
+      let activeTabId = currentTab?.id;
 
-    let activeTabId = currentTab?.id;
+      if (currentTab?.url && isChromeUrl(currentTab?.url)) {
+        // chrome url
+        // switch tab as content script doesn't work on chrome pages
 
-    if (currentTab?.url && isChromeUrl(currentTab?.url)) {
-      // chrome url
-      // switch tab as content script doesn't work on chrome pages
+        // get last visited url
+        const space = await getSpaceByWindow(tab.windowId);
+        const recentlyVisitedURL = await getSpaceHistory(space.id);
 
-      // get last visited url
-      const space = await getSpaceByWindow(tab.windowId);
-      const recentlyVisitedURL = await getSpaceHistory(space.id);
+        const tabs = await chrome.tabs.query({ currentWindow: true });
 
-      const tabs = await chrome.tabs.query({ currentWindow: true });
-
-      if (
-        tabs?.length < 2 ||
-        (tabs.filter(t => isChromeUrl(t.url)).length === tabs.length && isValidURL(recentlyVisitedURL[0].url))
-      ) {
-        // create new tab if one 1 tab exists
-        const newTab = await chrome.tabs.create({ url: recentlyVisitedURL[0].url, active: true });
-        activeTabId = newTab.id;
-      } else {
-        // find the tab based on the url
-        const [lastActiveTab] = await chrome.tabs.query({ title: recentlyVisitedURL[0].title, currentWindow: true });
-
-        if (lastActiveTab?.id) {
-          activeTabId = lastActiveTab.id;
+        if (
+          tabs?.length < 2 ||
+          (tabs.filter(t => isChromeUrl(t.url)).length === tabs.length && isValidURL(recentlyVisitedURL[0].url))
+        ) {
+          // create new tab if one 1 tab exists
+          const newTab = await chrome.tabs.create({ url: recentlyVisitedURL[0].url, active: true });
+          activeTabId = newTab.id;
         } else {
-          // get next tab if last active tab not found
-          const [nextTab] = await chrome.tabs.query({ index: currentTab.index + 1, currentWindow: true });
+          // find the tab based on the url
+          const [lastActiveTab] = await chrome.tabs.query({ title: recentlyVisitedURL[0].title, currentWindow: true });
 
-          if (nextTab) {
-            activeTabId = nextTab.id;
+          if (lastActiveTab?.id) {
+            activeTabId = lastActiveTab.id;
           } else {
-            // get first tab
-            const [previousTab] = await chrome.tabs.query({ index: currentTab.index - 1, currentWindow: true });
-            if (previousTab) {
-              activeTabId = previousTab.id;
+            // get next tab if last active tab not found
+            const [nextTab] = await chrome.tabs.query({ index: currentTab.index + 1, currentWindow: true });
+
+            if (nextTab) {
+              activeTabId = nextTab.id;
+            } else {
+              // get first tab
+              const [previousTab] = await chrome.tabs.query({ index: currentTab.index - 1, currentWindow: true });
+              if (previousTab) {
+                activeTabId = previousTab.id;
+              }
             }
           }
+          await goToTab(activeTabId);
         }
-        await goToTab(activeTabId);
       }
+
+      // checks if tab fully loaded
+      const res = await publishEventsTab(activeTabId, { event: 'CHECK_CONTENT_SCRIPT_LOADED' });
+
+      if (!res) {
+        // wait for 0.2s
+        await chrome.tabs.reload(activeTabId);
+        await wait(250);
+      }
+
+      await showCommandPaletteContentScript(activeTabId, currentTab.windowId);
     }
-
-    // checks if tab fully loaded
-    const res = await publishEventsTab(activeTabId, { event: 'CHECK_CONTENT_SCRIPT_LOADED' });
-
-    if (!res) {
-      // wait for 0.2s
-      await chrome.tabs.reload(activeTabId);
-      await wait(250);
-    }
-
-    await showCommandPaletteContentScript(activeTabId, currentTab.windowId);
+  } catch (error) {
+    logger.error({
+      error,
+      msg: 'Error in on command listener',
+      fileTrace: 'background.ts:753 ~ chrome.commands.onCommand.addListener() ~ catch block',
+    });
   }
 });
 
 // handle chrome alarm triggers
 chrome.alarms.onAlarm.addListener(async alarm => {
-  // handle delete unsaved space
+  // handle alarm names with prefix tag ex: deleteSpace-, snoozedTab-, etc.
   if (alarm.name.startsWith(ALARM_NAME_PREFiX.deleteSpace)) {
+    //  delete unsaved space
     const spaceId = alarm.name.split('-')[1];
     await deleteSpace(spaceId);
     await publishEvents({ id: generateId(), event: 'REMOVE_SPACE', payload: { spaceId } });
     logger.info(`⏰ Deleted Unsaved space: ${spaceId}`);
     return;
   } else if (alarm.name.startsWith(ALARM_NAME_PREFiX.snoozedTab)) {
-    //  handle un-snooze tab
+    // handle un-snooze tab
     await handleSnoozedTabAlarm(alarm.name);
+  } else if (alarm.name.startsWith(ALARM_NAME_PREFiX.noteRemainder)) {
+    //  handle note remainder trigger
+    await handleNotesRemainderAlarm(alarm.name);
   }
 
-  // handle other alarm types
+  // handle recurring alarms
   switch (alarm.name) {
     case AlarmName.autoSaveBM: {
       await syncSpacesToBookmark();

@@ -68,7 +68,7 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
 
       // find the date hint el and style it
       const span = rootDocumentToSearch.evaluate(
-        `//span[contains(., '${dateString.replaceAll(' @ ', ' at ')}')]`,
+        `//span[contains(., '${dateString}')]`,
         rootDocumentToSearch,
         null,
         XPathResult.ANY_TYPE,
@@ -76,7 +76,9 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
       );
       const spanEl = span.iterateNext() as HTMLSpanElement;
 
-      if (!spanEl) return;
+      console.log('⌛️ ~ addDateHighlightStyle:79 ~ spanEl:', spanEl);
+
+      if (!spanEl) return null;
 
       // check if the "remind" keyword exists in the span text
 
@@ -117,21 +119,26 @@ const RichTextEditor = ({ content, onChange, userSelectedText, setRemainder, roo
 
     const dateHintString = res.dateString.replaceAll(' at ', ' @ ');
 
-    console.log('⌛️ ~ handleEditorChange ~ dateHintString:', dateHintString);
+    console.log('⌛️ ~ handleEditorChange:122 ~ dateHintString:', dateHintString);
 
     // highlight the date hint
     let isHighlighted = false;
 
     const textHighlighted = addDateHighlightStyle(dateHintString);
 
+    console.log('⌛️ ~ handleEditorChange:129 ~ textHighlighted:', textHighlighted);
+
     if (textHighlighted) {
       isHighlighted = true;
     } else {
       const textHighlightedTry2 = addDateHighlightStyle(dateHintString.replace(' @ ', ' at '));
+
+      console.log('⌛️ ~ handleEditorChange:136 ~ textHighlightedTry2:', textHighlightedTry2);
+
       if (textHighlightedTry2) isHighlighted = true;
     }
 
-    console.log('⌛️ ~ handleEditorChange ~ isHighlighted:', isHighlighted);
+    console.log('⌛️ ~ handleEditorChange:141 ~ isHighlighted:', isHighlighted);
 
     if (!isHighlighted) return;
 

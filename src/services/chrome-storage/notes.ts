@@ -1,7 +1,8 @@
 import { logger } from '@root/src/utils';
 import { getStorage, setStorage } from './helpers';
-import { StorageKey } from '@root/src/constants/app';
 import { INote } from '@root/src/types/global.types';
+import { createAlarm, deleteAlarm, getAlarm } from '../chrome-alarms/helpers';
+import { AlarmName, StorageKey } from '@root/src/constants/app';
 
 // get all spaces
 export const getAllNotes = async () => await getStorage<INote[]>({ key: StorageKey.NOTES, type: 'local' });
@@ -16,6 +17,22 @@ export const addNewNote = async (note: INote) => {
     const allNotes = await getAllNotes();
 
     await setNotesToStorage([...(allNotes || []), note]);
+
+    if (!note?.remainderAt) return true;
+
+    //   create alarm for for remainder
+
+    // remainder trigger time
+    let triggerAfter = note.remainderAt - Date.now();
+
+    // time in minutes
+    triggerAfter = triggerAfter / 1000 / 60;
+
+    await createAlarm({
+      triggerAfter,
+      name: AlarmName.noteRemainder(note.id),
+    });
+
     return true;
   } catch (error) {
     logger.error({
@@ -43,6 +60,13 @@ export const deleteAllSpaceNotes = async (spaceId: string) => {
 
     await setNotesToStorage(newNotes);
 
+    //  delete remainders associated with notes deleted
+    const notesWithRemainder = allNotes?.filter(note => note.spaceId === spaceId && note.remainderAt);
+
+    const deleteAlarmPromises = notesWithRemainder?.map(note => deleteAlarm(AlarmName.noteRemainder(note.id)));
+
+    await Promise.allSettled(deleteAlarmPromises);
+
     return true;
   } catch (error) {
     logger.error({
@@ -57,7 +81,6 @@ export const deleteAllSpaceNotes = async (spaceId: string) => {
 export const getNote = async (id: string) => {
   const allNotes = await getAllNotes();
   const note = allNotes.find(note => note.id === id);
-
   return note;
 };
 
@@ -70,7 +93,7 @@ export const getNoteByDomain = async (domain: string) => {
 };
 
 // update note
-export const updateNote = async (id: string, note: Omit<INote, 'id'>) => {
+export const updateNote = async (id: string, note: Partial<Omit<INote, 'id'>>) => {
   try {
     const allNotes = await getAllNotes();
 
@@ -83,6 +106,25 @@ export const updateNote = async (id: string, note: Omit<INote, 'id'>) => {
       1,
       noteToUpdate,
     );
+
+    //  delete previous remainder trigger if any
+    const alarmTrigger = await getAlarm(AlarmName.noteRemainder(id));
+
+    if (alarmTrigger) {
+      await deleteAlarm(AlarmName.noteRemainder(id));
+    }
+
+    // new alarm trigger
+    // remainder trigger time
+    let triggerAfter = note.remainderAt - Date.now();
+
+    // time in minutes
+    triggerAfter = triggerAfter / 1000 / 60;
+
+    await createAlarm({
+      triggerAfter,
+      name: AlarmName.noteRemainder(id),
+    });
 
     await setNotesToStorage(allNotes);
     return true;
@@ -105,6 +147,9 @@ export const deleteNote = async (id: string) => {
       allNotes.findIndex(n => n.id === id),
       1,
     );
+
+    //  delete remainder alarm trigger if any
+    await deleteAlarm(AlarmName.noteRemainder(id));
 
     await setNotesToStorage(allNotes);
     return true;
