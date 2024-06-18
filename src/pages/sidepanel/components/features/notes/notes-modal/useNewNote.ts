@@ -24,6 +24,7 @@ type UseNewNoteProps = {
 export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteProps) => {
   // global state
   const [snackbar, setSnackbar] = useAtom(snackbarAtom);
+
   const activeSpace = useAtomValue(activeSpaceAtom);
 
   const formSchema = z.object({

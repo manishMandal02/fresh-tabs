@@ -5,6 +5,7 @@ import {
   IDailySpaceTimeChunks,
   IGroup,
   INote,
+  INotification,
   IPinnedTab,
   ISiteVisit,
   ISnoozedTab,
@@ -20,6 +21,7 @@ type StorageValue =
   | INote[]
   | ITab[]
   | IGroup[]
+  | INotification[]
   | ISnoozedTab[]
   | ISiteVisit[]
   | IDailySpaceTimeChunks[]

@@ -25,6 +25,12 @@ export enum ThemeColor {
   Grey = '#d1d5db',
 }
 
+export enum NOTIFICATION_TYPE {
+  NOTE_REMAINDER = 'note-remainder',
+  UN_SNOOZED_TAB = 'un-snoozed-tab',
+  ACCOUNT = 'account',
+}
+
 export enum CommandType {
   Link = 'link',
   // show note in search
@@ -63,6 +69,7 @@ export const StorageKey = {
   NOTES: 'NOTES',
   SETTINGS: 'SETTINGS',
   PINNED_TABS: 'PINNED_TABS',
+  NOTIFICATIONS: 'NOTIFICATIONS',
   DAILY_SPACE_TIME_CHUNKS: 'DAILY_SPACE_TIME_CHUNKS',
   tabs: (spaceId: string): `TABS-${string}` => `TABS-${spaceId}`,
   groups: (spaceId: string): `GROUPS-${string}` => `GROUPS-${spaceId}`,

@@ -3,7 +3,15 @@ import { atom } from 'jotai';
 import { DefaultAppSettings } from './../constants/app';
 import { getGroups } from '../services/chrome-storage/groups';
 import { getTabsInSpace } from '../services/chrome-storage/tabs';
-import { IAppSettings, IGroup, INote, ISpace, ISpaceWithTabsAndGroups, ITab } from '../types/global.types';
+import {
+  IAppSettings,
+  IGroup,
+  INote,
+  INotification,
+  ISpace,
+  ISpaceWithTabsAndGroups,
+  ITab,
+} from '../types/global.types';
 
 type SnackbarAtom = {
   show: boolean;
@@ -71,6 +79,9 @@ export const setActiveSpaceAtom = atom(null, async (_get, set, spaceId: string) 
 // selected tabs for dragging
 export const selectedTabsAtom = atom<number[]>([]);
 
+// global notification state
+export const userNotificationsAtom = atom<INotification[]>([]);
+
 // global dragging state
 export const dragStateAtom = atom<{ isDragging: boolean; type: 'space' | 'tabs' }>({
   isDragging: false,
@@ -94,7 +105,7 @@ export const appSettingsAtom = atom<IAppSettings>({ ...DefaultAppSettings });
 export const showSettingsModalAtom = atom(false);
 
 // notification
-export const showNotificationModalAtom = atom(false);
+export const showNotificationModalAtom = atom(true);
 
 // user account modal
 export const showUserAccountModalAtom = atom(false);

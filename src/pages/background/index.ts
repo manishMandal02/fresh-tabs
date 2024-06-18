@@ -144,8 +144,7 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 
 // TODO - backend - Use UTC date & time stamp for server & reset day @ 3am (save user timezone)
 
-// helpers for chrome event handlers
-
+//* helpers for chrome event handlers
 const createUnsavedSpacesOnInstall = async () => {
   try {
     const windows = await chrome.windows.getAll();
@@ -690,7 +689,6 @@ chrome.runtime.onMessage.addListener(
 chrome.runtime.onInstalled.addListener(async info => {
   if (info.reason === 'install') {
     //* initialize the app
-
     // save default settings to sync storage
     await saveSettings(DefaultAppSettings);
 
@@ -856,6 +854,7 @@ chrome.alarms.onAlarm.addListener(async alarm => {
   } else if (alarm.name.startsWith(ALARM_NAME_PREFiX.noteRemainder)) {
     //  handle note remainder trigger
     await handleNotesRemainderAlarm(alarm.name);
+    return;
   }
 
   // handle recurring alarms

@@ -23,6 +23,8 @@ const SlideModal = ({ children, isOpen, onClose, title }: Props) => {
 
   const { slide, fade } = useCustomAnimation();
 
+  // TODO - user framer motion animate presence to animate exits state
+
   return isOpen ? (
     <motion.div {...slide} className="fixed z-[999] h-screen w-screen top-0 left-0 !overflow-hidden">
       {/* backdrop */}

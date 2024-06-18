@@ -12,6 +12,9 @@ export const setNotesToStorage = async (notes: INote[]) => {
   return true;
 };
 
+// TODO - fix: 2 notes (duplicate) are getting created when created from command palette
+// TODO - fix: wrong note id is taken for alarm trigger
+
 export const addNewNote = async (note: INote) => {
   try {
     const allNotes = await getAllNotes();
@@ -93,19 +96,27 @@ export const getNoteByDomain = async (domain: string) => {
 };
 
 // update note
-export const updateNote = async (id: string, note: Partial<Omit<INote, 'id'>>) => {
+export const updateNote = async (id: string, note: Partial<Omit<INote, 'id'>>, removeRemainder = false) => {
   try {
     const allNotes = await getAllNotes();
 
-    let noteToUpdate = allNotes.find(note => note.id === id);
+    const noteToUpdate = allNotes.find(note => note.id === id);
 
-    noteToUpdate = { ...noteToUpdate, ...note };
+    console.log('🌅 ~ updateNote ~ noteToUpdate:', noteToUpdate);
+
+    if (!noteToUpdate?.id) return false;
+
+    const updatedNote = { ...noteToUpdate, ...note };
 
     allNotes.splice(
       allNotes.findIndex(n => n.id === id),
       1,
-      noteToUpdate,
+      updatedNote,
     );
+
+    await setNotesToStorage(allNotes);
+
+    if (removeRemainder) return true;
 
     //  delete previous remainder trigger if any
     const alarmTrigger = await getAlarm(AlarmName.noteRemainder(id));
@@ -126,7 +137,6 @@ export const updateNote = async (id: string, note: Partial<Omit<INote, 'id'>>) =
       name: AlarmName.noteRemainder(id),
     });
 
-    await setNotesToStorage(allNotes);
     return true;
   } catch (error) {
     logger.error({

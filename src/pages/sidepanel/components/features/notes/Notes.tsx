@@ -18,8 +18,9 @@ const Notes = ({ space, notesSearchQuery }: Props) => {
   // global sate
   const [, setNoteModal] = useAtom(showAddNewNoteModalAtom);
 
-  // local state
+  //TODO - create a global atom for notes
 
+  // local state
   const [notes, setNotes] = useState<INote[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteNoteId, setDeleteNoteId] = useState('');

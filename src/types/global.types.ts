@@ -1,5 +1,5 @@
 import { IconProps } from '@radix-ui/react-icons/dist/types';
-import { CommandType, ThemeColor } from '@root/src/constants/app';
+import { CommandType, NOTIFICATION_TYPE, ThemeColor } from '@root/src/constants/app';
 import { ForwardRefExoticComponent, HTMLProps } from 'react';
 
 export type RadixIconType = ForwardRefExoticComponent<IconProps & React.RefAttributes<SVGSVGElement>>;
@@ -19,6 +19,27 @@ export interface ICommand {
   metadata?: string | number;
   icon: string | RadixIconType;
 }
+
+interface AccountNotification {
+  type: NOTIFICATION_TYPE.ACCOUNT;
+  id: string;
+  timestamp: number;
+  message: string;
+}
+interface NoteRemainderNotification {
+  type: NOTIFICATION_TYPE.NOTE_REMAINDER;
+  id: string;
+  timestamp: number;
+  note: INote;
+}
+interface UnSnoozedTabNotification {
+  type: NOTIFICATION_TYPE.UN_SNOOZED_TAB;
+  id: string;
+  timestamp: number;
+  snoozedTab: ISnoozedTab;
+}
+
+export type INotification = AccountNotification | NoteRemainderNotification | UnSnoozedTabNotification;
 
 export interface ITab {
   id: number;

@@ -24,10 +24,12 @@ import { TAB_HEIGHT } from './components/features/space/active-space/ActiveSpace
 import {
   appSettingsAtom,
   dragStateAtom,
+  userNotificationsAtom,
   setActiveSpaceAtom,
   setSpacesAtom,
   showNotificationModalAtom,
 } from '@root/src/stores/app';
+import { getAllNotifications } from '@root/src/services/chrome-storage/user-notifications';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -38,7 +40,8 @@ const SidePanel = () => {
   const [{ isDragging: isDraggingGlobal, type: draggingType }] = useAtom(dragStateAtom);
 
   // global state - app settings
-  const [, setAppSetting] = useAtom(appSettingsAtom);
+  const setAppSetting = useSetAtom(appSettingsAtom);
+  const setUserNotifications = useSetAtom(userNotificationsAtom);
 
   const setSpaces = useSetAtom(setSpacesAtom);
 
@@ -73,7 +76,12 @@ const SidePanel = () => {
       // set app settings
       const settings = await getAppSettings();
 
+      const notifications = await getAllNotifications();
+
+      console.log('🌅 ~ notifications:', notifications);
+
       setAppSetting(settings);
+      setUserNotifications(notifications);
       setIsLoadingSpaces(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
