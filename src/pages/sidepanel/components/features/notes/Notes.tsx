@@ -4,7 +4,7 @@ import { CounterClockwiseClockIcon, GlobeIcon, MagnifyingGlassIcon, TrashIcon } 
 
 import DeleteNote from './DeleteNote';
 import Tooltip from '../../../../../components/tooltip';
-import { showAddNewNoteModalAtom } from '@root/src/stores/app';
+import { showNoteModalAtom } from '@root/src/stores/app';
 import { INote, ISpace } from '@root/src/types/global.types';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
 import { getNotesBySpace } from '@root/src/services/chrome-storage/notes';
@@ -16,7 +16,7 @@ type Props = {
 };
 const Notes = ({ space, notesSearchQuery }: Props) => {
   // global sate
-  const [, setNoteModal] = useAtom(showAddNewNoteModalAtom);
+  const [, setNoteModal] = useAtom(showNoteModalAtom);
 
   //TODO - create a global atom for notes
 
@@ -139,7 +139,7 @@ const Notes = ({ space, notesSearchQuery }: Props) => {
                   setDeleteNoteId(note.id);
                 }}
                 className={`translate-x-[34px] absolute group-hover:translate-x-0 flex items-center justify-center rounded-tr-md rounded-br-md
-                          bg-brand-darkBgAccent/30 hover:bg-rose-400/40  w-[25px] h-full top-0 right-0  transition-all duration-300`}>
+                          bg-brand-darkBgAccent/30 hover:bg-rose-400/50  w-[25px] h-full top-0 right-0  transition-all duration-300`}>
                 <TrashIcon className="text-rose-400 scale-[0.95]" />
               </button>
             </button>

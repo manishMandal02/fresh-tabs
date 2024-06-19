@@ -31,7 +31,7 @@ import {
   activeSpaceTabsAtom,
   appSettingsAtom,
   selectedTabsAtom,
-  showAddNewNoteModalAtom,
+  showNoteModalAtom,
   updateSpaceAtom,
 } from '@root/src/stores/app';
 import { getNotesBySpace } from '@root/src/services/chrome-storage/notes';
@@ -125,7 +125,7 @@ const ActiveSpaceTabs = ({ space, onTabNotesClick }: Props) => {
   const activeSpace = useAtomValue(activeSpaceAtom);
   const appSettings = useAtomValue(appSettingsAtom);
   const updateSpaceState = useSetAtom(updateSpaceAtom);
-  const showNotesModal = useSetAtom(showAddNewNoteModalAtom);
+  const showNotesModal = useSetAtom(showNoteModalAtom);
   const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
 
   const activeSpaceTabsSorted = useMemo(() => activeSpaceTabs.toSorted((a, b) => a.index - b.index), [activeSpaceTabs]);

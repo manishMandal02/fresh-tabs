@@ -7,13 +7,13 @@ import KBD from '@root/src/components/kbd/KBD';
 import Popover from '../../../../../components/popover';
 import Tooltip from '../../../../../components/tooltip';
 import { useCustomAnimation } from '../../../hooks/useCustomAnimation';
-import { appSettingsAtom, showAddNewNoteModalAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
+import { appSettingsAtom, showNoteModalAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
 
 const AddButton = () => {
   // global state
   const appSettings = useAtomValue(appSettingsAtom);
   const setNewSpaceModal = useSetAtom(showNewSpaceModalAtom);
-  const setNewNoteModal = useSetAtom(showAddNewNoteModalAtom);
+  const setNewNoteModal = useSetAtom(showNoteModalAtom);
 
   // local state
   const [showAddOption, setShowAddOptions] = useState(false);

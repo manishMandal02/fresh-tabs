@@ -24,19 +24,20 @@ interface AccountNotification {
   type: NOTIFICATION_TYPE.ACCOUNT;
   id: string;
   timestamp: number;
+  title: string;
   message: string;
 }
 interface NoteRemainderNotification {
   type: NOTIFICATION_TYPE.NOTE_REMAINDER;
   id: string;
   timestamp: number;
-  note: INote;
+  note: Pick<INote, 'id' | 'title' | 'domain'>;
 }
 interface UnSnoozedTabNotification {
   type: NOTIFICATION_TYPE.UN_SNOOZED_TAB;
   id: string;
   timestamp: number;
-  snoozedTab: ISnoozedTab;
+  snoozedTab: Pick<ISnoozedTab, 'url' | 'title' | 'faviconUrl'>;
 }
 
 export type INotification = AccountNotification | NoteRemainderNotification | UnSnoozedTabNotification;

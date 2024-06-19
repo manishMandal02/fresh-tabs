@@ -105,13 +105,13 @@ export const appSettingsAtom = atom<IAppSettings>({ ...DefaultAppSettings });
 export const showSettingsModalAtom = atom(false);
 
 // notification
-export const showNotificationModalAtom = atom(true);
+export const showNotificationModalAtom = atom(false);
 
 // user account modal
 export const showUserAccountModalAtom = atom(false);
 
 // add new note modal
-export const showAddNewNoteModalAtom = atom<{ show: boolean; note: Partial<INote> }>({
+export const showNoteModalAtom = atom<{ show: boolean; note: Partial<INote> }>({
   show: false,
   note: { text: '' },
 });

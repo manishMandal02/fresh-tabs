@@ -851,6 +851,7 @@ chrome.alarms.onAlarm.addListener(async alarm => {
   } else if (alarm.name.startsWith(ALARM_NAME_PREFiX.snoozedTab)) {
     // handle un-snooze tab
     await handleSnoozedTabAlarm(alarm.name);
+    return;
   } else if (alarm.name.startsWith(ALARM_NAME_PREFiX.noteRemainder)) {
     //  handle note remainder trigger
     await handleNotesRemainderAlarm(alarm.name);

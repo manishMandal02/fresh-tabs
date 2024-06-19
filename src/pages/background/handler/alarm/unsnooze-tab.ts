@@ -1,11 +1,12 @@
-import { SNOOZED_TAB_GROUP_TITLE } from '@root/src/constants/app';
+import { NOTIFICATION_TYPE, SNOOZED_TAB_GROUP_TITLE } from '@root/src/constants/app';
 import { ISpace } from '@root/src/types/global.types';
-import { logger } from '@root/src/utils';
+import { generateId, logger } from '@root/src/utils';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
 import { showUnSnoozedNotification } from '@root/src/services/chrome-notification/notification';
 import { getTabToUnSnooze, removeSnoozedTab } from '@root/src/services/chrome-storage/snooze-tabs';
 import { getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
 import { newTabGroup } from '@root/src/services/chrome-tabs/tabs';
+import { addNotification } from '@root/src/services/chrome-storage/user-notifications';
 
 export const handleSnoozedTabAlarm = async (alarmName: string) => {
   //  un-snooze tab
@@ -14,6 +15,18 @@ export const handleSnoozedTabAlarm = async (alarmName: string) => {
 
   // get the snoozed tab info
   const { url, title, faviconUrl, snoozedAt } = await getTabToUnSnooze(spaceId);
+
+  // add to user notifications
+  await addNotification({
+    timestamp: Date.now(),
+    id: generateId(),
+    type: NOTIFICATION_TYPE.UN_SNOOZED_TAB,
+    snoozedTab: {
+      url,
+      title,
+      faviconUrl,
+    },
+  });
 
   // check if snoozed tab's space is active
   // also check for multi space/window scenario
@@ -44,5 +57,6 @@ export const handleSnoozedTabAlarm = async (alarmName: string) => {
     // if not, show notification (open tab, open space)
     showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed ${getTimeAgo(snoozedAt)}`, title, faviconUrl, false);
   }
+
   logger.info('✅ un-snoozed tab successfully');
 };

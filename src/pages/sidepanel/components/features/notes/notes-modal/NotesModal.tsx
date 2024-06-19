@@ -8,7 +8,7 @@ import { useNewNote } from './useNewNote';
 import { getReadableDate } from '@root/src/utils';
 import Tooltip from '../../../../../../components/tooltip';
 import Spinner from '../../../../../../components/spinner';
-import { showAddNewNoteModalAtom } from '@root/src/stores/app';
+import { showNoteModalAtom } from '@root/src/stores/app';
 import { SlideModal } from '../../../../../../components/modal';
 import TextField from '../../../../../../components/form/text-field';
 import Checkbox from '../../../../../../components/checkbox/Checkbox';
@@ -20,7 +20,7 @@ const NotesModal = () => {
   console.log('NotesModal ~ 🔁 rendered');
 
   // global state
-  const [modalGlobalState, setModalGlobalState] = useAtom(showAddNewNoteModalAtom);
+  const [modalGlobalState, setModalGlobalState] = useAtom(showNoteModalAtom);
 
   // local state
   const [note, setNote] = useState('');

@@ -28,10 +28,14 @@ export const handleNotesRemainderAlarm = async (alarmName: string) => {
 
   // add to user notifications
   await addNotification({
-    note,
     id: generateId(),
     timestamp: Date.now(),
     type: NOTIFICATION_TYPE.NOTE_REMAINDER,
+    note: {
+      id: noteId,
+      title: note.title,
+      domain: note.domain,
+    },
   });
 
   // show notification

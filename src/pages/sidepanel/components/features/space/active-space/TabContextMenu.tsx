@@ -17,7 +17,7 @@ import {
 import { IGroup, ISpace, ITab } from '@root/src/types/global.types';
 import { discardTabs } from '@root/src/services/chrome-discard/discard';
 import { openTabsInTransferredSpace } from '@root/src/services/chrome-tabs/tabs';
-import { nonActiveSpacesAtom, showAddNewNoteModalAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
+import { nonActiveSpacesAtom, showNoteModalAtom, showNewSpaceModalAtom } from '@root/src/stores/app';
 import { getTabsInSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import { ThemeColor } from '@root/src/constants/app';
 import { ColorType } from '@root/src/components/color-picker/ColorPicker';
@@ -50,7 +50,7 @@ const TabContextMenu = ({
   // global state
   const nonActiveSpaces = useAtomValue(nonActiveSpacesAtom);
   const showNewSpaceModal = useSetAtom(showNewSpaceModalAtom);
-  const showNoteModal = useSetAtom(showAddNewNoteModalAtom);
+  const showNoteModal = useSetAtom(showNoteModalAtom);
 
   const isSelectedItemTab = useMemo(() => 'index' in selectedItem, [selectedItem]);
 

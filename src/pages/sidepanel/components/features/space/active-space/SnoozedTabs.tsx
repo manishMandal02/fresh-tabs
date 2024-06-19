@@ -150,8 +150,8 @@ const SnoozedTabs = ({ show, onClose }: Props) => {
         {/* no snoozed tabs */}
         {snoozedTabs?.length < 1 ? (
           <p className="text-slate-500 text-[14px] py-8 font-light my-auto mx-auto w-fit">
-            No snoozed tabs for &nbsp; {'  '}
-            {selectedFilter?.label || 'this space'}
+            No snoozed tabs &nbsp; {'  '}
+            {selectedFilter?.label === 'All' ? '' : `for  ${selectedFilter?.label}` || ''}
           </p>
         ) : null}
       </div>

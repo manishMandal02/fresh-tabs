@@ -20,8 +20,9 @@ import {
   selectedTabsAtom,
   snackbarAtom,
   updateSpaceAtom,
+  userNotificationsAtom,
 } from '@root/src/stores/app';
-import { getUrlDomain } from '@root/src/utils';
+import { cn, getUrlDomain } from '@root/src/utils';
 
 type Props = {
   space: ISpace;
@@ -34,6 +35,7 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
 
   // global state
   const appSettings = useAtomValue(appSettingsAtom);
+  const userNotifications = useAtomValue(userNotificationsAtom);
   const setSnackbar = useSetAtom(snackbarAtom);
   const setDeleteSpaceModal = useSetAtom(deleteSpaceModalAtom);
 
@@ -91,8 +93,15 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
           <button
             tabIndex={0}
             onClick={onNotificationClick}
-            className={`text-slate-500/90 hover:bg-brand-darkBgAccent/30  px-1.5 py-1.5 rounded-full transition-all duration-200 outline-none focus:bg-brand-darkBgAccent/60`}>
+            className={`text-slate-500/90 relative hover:bg-brand-darkBgAccent/30  px-1.5 py-1.5 rounded-full transition-all duration-200 outline-none focus:bg-brand-darkBgAccent/60`}>
             <BellIcon className="scale-[1.1]" />
+            <span
+              className={cn(
+                'absolute -top-[1px] -right-[0.75px] text-[8.5px] text-slate-300/80 font-semibold px-[3.5px] py-[0.5px] bg-brand-darkBgAccent/60 rounded-full ',
+                { 'bg-brand-primary/90 text-slate-800': userNotifications?.length > 0 },
+              )}>
+              {userNotifications?.length || 0}
+            </span>
           </button>
           {/* more options  */}
           <MoreOptions

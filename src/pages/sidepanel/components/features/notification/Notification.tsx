@@ -1,14 +1,45 @@
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import { useEffect, useState } from 'react';
-import { CounterClockwiseClockIcon, FileTextIcon, TrashIcon } from '@radix-ui/react-icons';
+import { CounterClockwiseClockIcon, GlobeIcon, Pencil1Icon, PersonIcon, TrashIcon } from '@radix-ui/react-icons';
 
+import Tooltip from '@root/src/components/tooltip';
+import { NOTIFICATION_TYPE } from '@root/src/constants/app';
 import { INotification } from '@root/src/types/global.types';
 import { SlideModal } from '../../../../../components/modal';
-import { userNotificationsAtom, showNotificationModalAtom } from '@root/src/stores/app';
-import { getISODate, getReadableDate, getTimeAgo, getWeekday, limitCharLength } from '@root/src/utils';
+import { deleteNotification } from '@root/src/services/chrome-storage/user-notifications';
+import {
+  userNotificationsAtom,
+  showNotificationModalAtom,
+  showNoteModalAtom,
+  showUserAccountModalAtom,
+} from '@root/src/stores/app';
+import {
+  generateId,
+  getISODate,
+  getReadableDate,
+  getTimeAgo,
+  getUrlDomain,
+  getWeekday,
+  limitCharLength,
+} from '@root/src/utils';
 
 const mapNotification = (notifications: INotification[]) => {
-  return notifications.reduce(
+  // TODO - testing...
+  const accountNotification: INotification = {
+    id: generateId(),
+    timestamp: new Date().getTime() - 1200000,
+    type: NOTIFICATION_TYPE.ACCOUNT,
+    title: '🚨 Trail expiring in 2 days 🚨',
+    message: 'This is a test account notification',
+  };
+
+  const sortedNotifications = [...notifications, accountNotification].sort((a, b) => {
+    if (a.timestamp < b.timestamp) return 1;
+    if (a.timestamp > b.timestamp) return -1;
+    return 0;
+  });
+
+  return sortedNotifications.reduce(
     (acc, curr) => {
       const dateKey = getISODate(curr.timestamp);
       if (!acc[dateKey]) {
@@ -25,11 +56,14 @@ const Notification = () => {
   console.log('Notification ~ 🔁 rendered');
 
   //  global state
+
   // notification modal state
   const [showModal, setShowModal] = useAtom(showNotificationModalAtom);
-
   // all user notification
-  const [allNotifications] = useAtom(userNotificationsAtom);
+  const [allNotifications, setAllNotifications] = useAtom(userNotificationsAtom);
+
+  const setShowUserAccountModal = useSetAtom(showUserAccountModalAtom);
+  const setShowNoteModal = useSetAtom(showNoteModalAtom);
 
   // local strate
   const [notifications, setNotifications] = useState<Record<string, INotification[]>>({});
@@ -45,25 +79,120 @@ const Notification = () => {
     setNotifications(mappedNotifications);
   }, [showModal, allNotifications]);
 
-  const handleNotificationClick = () => {};
-
-  const handleDeleteNotification = (id: string) => {
-    console.log('🚀 ~ handleDeleteNotification ~ id:', id);
+  //  delete notification
+  const handleDeleteNotification = async (id: string) => {
+    await deleteNotification(id);
+    setAllNotifications(allNotifications.filter(notification => notification.id !== id));
   };
 
-  // TODO - design the card to adapt to all the notification types note, tab and account
-  // TODO - make it scrollable like notes component
-  // TODO - click and delete/read action
-  // TODO - clear all notifications
+  // delete all notifications
+  const clearAllNotifications = async () => {
+    await deleteNotification(null, true);
+    setAllNotifications([]);
+  };
+
+  //  on notification click
+  const handleNotificationClick = async (notification: INotification) => {
+    switch (notification.type) {
+      case NOTIFICATION_TYPE.NOTE_REMAINDER: {
+        // open note
+        setShowNoteModal({ show: true, note: { id: notification.note.id } });
+        await deleteNotification(notification.id);
+        break;
+      }
+      case NOTIFICATION_TYPE.UN_SNOOZED_TAB: {
+        // go to/open tab
+        const [tab] = await chrome.tabs.query({ url: notification.snoozedTab.url, currentWindow: true });
+        if (tab) {
+          chrome.tabs.update(tab.id, { active: true });
+        } else {
+          chrome.tabs.create({ url: notification.snoozedTab.url, active: true });
+        }
+        await deleteNotification(notification.id);
+        break;
+      }
+      default: {
+        // open user account modal
+        setShowUserAccountModal(true);
+        await deleteNotification(notification.id);
+      }
+    }
+
+    // close notification modal
+    handleCloseModal();
+  };
+
+  // notification title based on type
+  const notificationTitle = (notification: INotification) => {
+    let title = '';
+    if (notification.type === NOTIFICATION_TYPE.ACCOUNT) title = notification.title;
+    if (notification.type === NOTIFICATION_TYPE.NOTE_REMAINDER) title = notification.note.title;
+    if (notification.type === NOTIFICATION_TYPE.UN_SNOOZED_TAB) title = notification.snoozedTab.title;
+
+    return limitCharLength(title, 42);
+  };
+
+  // notification icon based on type
+  const notificationIcon = (notification: INotification) => {
+    if (notification.type === NOTIFICATION_TYPE.NOTE_REMAINDER) {
+      return (
+        <Pencil1Icon className="scale-[2] text-slate-500/80 rounded-full bg-brand-darkBgAccent/40 p-[2.5px] border border-brand-darkBg/40" />
+      );
+    }
+
+    if (notification.type === NOTIFICATION_TYPE.UN_SNOOZED_TAB) {
+      return (
+        <img
+          src={notification.snoozedTab.faviconUrl}
+          alt="site-icon"
+          className="size-[14px] rounded-md bg-brand-darkBgAccent/15 object-center object-scale-down"
+        />
+      );
+    }
+
+    return (
+      <PersonIcon className="scale-[2] text-slate-500/80 rounded-full bg-brand-darkBgAccent/40 p-[2.5px] border border-brand-darkBg/40" />
+    );
+  };
+
+  // notification domain name for note remainder & snoozed tab
+  const notificationSiteDomain = (notification: INotification) => {
+    if (notification.type === NOTIFICATION_TYPE.ACCOUNT) return null;
+
+    const domain =
+      notification.type === NOTIFICATION_TYPE.NOTE_REMAINDER
+        ? notification.note.domain
+        : notification.type === NOTIFICATION_TYPE.UN_SNOOZED_TAB
+          ? getUrlDomain(notification.snoozedTab.url)
+          : '';
+
+    return (
+      <div className="flex items-center bg-brand-darkBgAccent/35 border border-brand-darkBg/30  w-fit px-1.5 py-[3px] rounded-md ml-1">
+        <GlobeIcon className="scale-[.7] text-slate-500 mr-[2px]" />
+        <Tooltip label={domain.length > 28 ? domain : ''}>
+          <span className="font-light text-[9px] text-slate-400">{limitCharLength(domain, 28)}</span>
+        </Tooltip>
+      </div>
+    );
+  };
 
   return (
     <SlideModal title="Your Notifications" isOpen={showModal} onClose={handleCloseModal}>
-      <div className="min-h-[35vh]">
+      <div className="relative min-h-[35vh] max-h-full overflow-y-auto cc-scrollbar pt-1.5">
+        {allNotifications.length > 0 ? (
+          <button
+            onClick={clearAllNotifications}
+            className={`absolute top-1.5 right-1.5 flex item-center text-[10px] text-slate-500 font-semibold rounded pl-[2.5px] pr-[8px] py-[2px]
+                    bg-brand-darkBgAccent/50 transition-colors duration-300 hover:bg-brand-darkBgAccent/40 hover:text-slate-400/70`}>
+            <TrashIcon className="scale-[0.75] text-slate-500/80 mr-[1px]" />
+            Clear All
+          </button>
+        ) : null}
         {allNotifications.length > 0 &&
           Object.entries(notifications).map(([date, dateNotification]) => {
             return (
-              <div key={date} className=" flex flex-col  w-full h-full py-1 px-4">
-                <p className="text-[12.5px] font-medium text-slate-400/90 my-1">
+              <div key={date} className=" flex flex-col  w-full h-full py-1 px-3.5">
+                <p className="text-[12px] font-medium text-slate-400/70 mb-[2.5px]">
                   {getISODate(date) === getISODate(new Date()) ? 'Today •' : ''} {'  '} {getWeekday(new Date(date))}
                   {'  '}
                   {getReadableDate(date)}{' '}
@@ -73,23 +202,23 @@ const Notification = () => {
                   <button
                     tabIndex={-1}
                     key={notification.id}
-                    onClick={() => handleNotificationClick()}
-                    className="relative w-full flex items-center bg-brand-darkBgAccent/25 px-3 py-[4px] rounded-lg mb-1.5 cursor-pointer group overflow-hidden shadow-sm shadow-brand-darkBgAccent/60">
-                    <div className="flex ml-px mr-1.5 ">
-                      <FileTextIcon className="scale-[2] text-slate-600/80 rounded-full bg-brand-darkBgAccent/50 p-[2.5px] border border-brand-darkBg/40" />
-                    </div>
-                    <div className="ml-1 pt-1 w-full">
-                      <p className="text-slate-300/70 text-[13px] text-start">
-                        {limitCharLength(notification.note.title, 42)}
-                      </p>
-                      <div className="flex items-center justify-end mt-3">
+                    onClick={() => handleNotificationClick(notification)}
+                    className="relative w-full flex items-center bg-brand-darkBgAccent/25 px-3 py-[3.5px] rounded-lg mb-2 cursor-pointer group overflow-hidden shadow-sm shadow-brand-darkBgAccent/60">
+                    <div className="flex w-[9%]">{notificationIcon(notification)}</div>
+                    <div className="pt-[2.5px] w-[92%] bg-indigo-00">
+                      <p className="text-slate-300/70 text-[12px] text-start">{notificationTitle(notification)}</p>
+                      <div className="flex items-center justify-end mt-[7px]">
+                        {/* notification time */}
+                        <Tooltip label={new Date(notification.timestamp).toLocaleString()}>
+                          <div className="flex items-center bg-brand-darkBgAccent/35 border border-brand-darkBg/30  w-fit px-1.5 py-[3px] rounded-md">
+                            <CounterClockwiseClockIcon className="scale-[.7] text-slate-500 mr-[2px]" />
+                            <span className="font-light text-[9px] text-slate-400">
+                              {getTimeAgo(notification.timestamp)}
+                            </span>
+                          </div>
+                        </Tooltip>
                         {/*  note site */}
-                        <div className="flex items-center bg-brand-darkBgAccent/35 border border-brand-darkBg/30  w-fit px-1.5 py-[3.5px] rounded-md mr-1">
-                          <CounterClockwiseClockIcon className="scale-[.7] text-slate-500" />
-                          <span className="font-light text-[9px] text-slate-400 mr-[2px]">
-                            {getTimeAgo(notification.timestamp)}
-                          </span>
-                        </div>
+                        {notificationSiteDomain(notification)}
                       </div>
                     </div>
 
@@ -100,7 +229,7 @@ const Notification = () => {
                         handleDeleteNotification(notification.id);
                       }}
                       className={`translate-x-[34px] absolute group-hover:translate-x-0 flex items-center justify-center rounded-tr-md rounded-br-md
-                               bg-brand-darkBgAccent/30 hover:bg-rose-400/40  w-[25px] h-full top-0 right-0  transition-all duration-300`}>
+                               bg-brand-darkBgAccent/30 hover:bg-rose-400/50  w-[22.5px] h-full top-0 right-0  transition-all duration-300`}>
                       <TrashIcon className="text-rose-400 scale-[0.95]" />
                     </button>
                   </button>
@@ -109,9 +238,11 @@ const Notification = () => {
             );
           })}
         {allNotifications.length < 1 ? (
-          <div className=" flex flex-col  w-full h-full py-1 px-4">
-            <p className="text-[14px] font-medium text-slate-400 my-1">Today </p>
-            <span className="text-[12px] font-light text-slate-400 mx-auto">No new notification</span>
+          <div className=" flex flex-col  w-full h-full py-2 px-4">
+            <p className="text-[12px] font-medium text-slate-400/70 ">
+              {`Today • ${getWeekday(new Date())} ${getISODate(new Date())}`}
+            </p>
+            <p className="mt-8 text-[14px] font-light text-slate-500 mx-auto ">No new notification</p>
           </div>
         ) : null}
       </div>
