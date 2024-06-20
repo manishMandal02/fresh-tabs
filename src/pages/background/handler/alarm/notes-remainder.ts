@@ -2,7 +2,7 @@ import { NOTIFICATION_TYPE } from '@root/src/constants/app';
 import { showNotesRemainderNotification } from '@root/src/services/chrome-notification/notification';
 import { getNote, updateNote } from '@root/src/services/chrome-storage/notes';
 import { addNotification } from '@root/src/services/chrome-storage/user-notifications';
-import { generateId } from '@root/src/utils';
+import { generateId, publishEvents } from '@root/src/utils';
 
 export const handleNotesRemainderAlarm = async (alarmName: string) => {
   // get note id
@@ -10,8 +10,6 @@ export const handleNotesRemainderAlarm = async (alarmName: string) => {
 
   // get note
   const note = await getNote(noteId);
-
-  console.log('🌅 ~ handleNotesRemainderAlarm ~ note:', note);
 
   // update note
   const res = await updateNote(
@@ -21,8 +19,6 @@ export const handleNotesRemainderAlarm = async (alarmName: string) => {
     },
     true,
   );
-
-  console.log('🌅 ~ handleNotesRemainderAlarm ~ res:', res);
 
   if (!res) return null;
 
@@ -35,6 +31,15 @@ export const handleNotesRemainderAlarm = async (alarmName: string) => {
       id: noteId,
       title: note.title,
       domain: note.domain,
+    },
+  });
+
+  // send send to side panel
+  await publishEvents({
+    id: generateId(),
+    event: 'UPDATE_NOTIFICATIONS',
+    payload: {
+      spaceId: note.spaceId,
     },
   });
 

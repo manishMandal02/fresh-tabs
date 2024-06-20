@@ -24,7 +24,7 @@ import {
 } from '@root/src/utils';
 
 const mapNotification = (notifications: INotification[]) => {
-  // TODO - testing...
+  // TODO - test data
   const accountNotification: INotification = {
     id: generateId(),
     timestamp: new Date().getTime() - 1200000,
@@ -80,9 +80,12 @@ const Notification = () => {
   }, [showModal, allNotifications]);
 
   //  delete notification
-  const handleDeleteNotification = async (id: string) => {
-    await deleteNotification(id);
+  const handleDeleteNotification = async (id: string, closeModal = false) => {
     setAllNotifications(allNotifications.filter(notification => notification.id !== id));
+    if (closeModal) {
+      handleCloseModal();
+    }
+    await deleteNotification(id);
   };
 
   // delete all notifications
@@ -97,29 +100,26 @@ const Notification = () => {
       case NOTIFICATION_TYPE.NOTE_REMAINDER: {
         // open note
         setShowNoteModal({ show: true, note: { id: notification.note.id } });
-        await deleteNotification(notification.id);
+        await handleDeleteNotification(notification.id, true);
         break;
       }
       case NOTIFICATION_TYPE.UN_SNOOZED_TAB: {
         // go to/open tab
         const [tab] = await chrome.tabs.query({ url: notification.snoozedTab.url, currentWindow: true });
         if (tab) {
-          chrome.tabs.update(tab.id, { active: true });
+          await chrome.tabs.update(tab.id, { active: true });
         } else {
-          chrome.tabs.create({ url: notification.snoozedTab.url, active: true });
+          await chrome.tabs.create({ url: notification.snoozedTab.url, active: true });
         }
-        await deleteNotification(notification.id);
+        await handleDeleteNotification(notification.id, true);
         break;
       }
       default: {
         // open user account modal
         setShowUserAccountModal(true);
-        await deleteNotification(notification.id);
+        await handleDeleteNotification(notification.id, true);
       }
     }
-
-    // close notification modal
-    handleCloseModal();
   };
 
   // notification title based on type
@@ -145,7 +145,7 @@ const Notification = () => {
         <img
           src={notification.snoozedTab.faviconUrl}
           alt="site-icon"
-          className="size-[14px] rounded-md bg-brand-darkBgAccent/15 object-center object-scale-down"
+          className="size-[16px] rounded-md bg-brand-darkBgAccent/15 object-center object-scale-down"
         />
       );
     }

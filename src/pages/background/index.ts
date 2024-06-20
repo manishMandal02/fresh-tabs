@@ -85,7 +85,7 @@ import {
   AlarmName,
   ALARM_NAME_PREFiX,
 } from '@root/src/constants/app';
-import { addGroup, removeGroup, updateGroup } from '@root/src/services/chrome-storage/groups';
+import { removeGroup, updateGroup } from '@root/src/services/chrome-storage/groups';
 import { handleNotesRemainderAlarm } from './handler/alarm/notes-remainder';
 
 logger.info('🏁 background loaded');
@@ -838,8 +838,10 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   }
 });
 
-// handle chrome alarm triggers
+// handle alarm triggers
 chrome.alarms.onAlarm.addListener(async alarm => {
+  console.log('⏰⏰⏰⏰ ~ onAlarm.addListener:843 ~ alarm:', alarm);
+
   // handle alarm names with prefix tag ex: deleteSpace-, snoozedTab-, etc.
   if (alarm.name.startsWith(ALARM_NAME_PREFiX.deleteSpace)) {
     //  delete unsaved space
@@ -1060,13 +1062,6 @@ chrome.tabGroups.onCreated.addListener(async group => {
       },
     });
   }
-
-  await addGroup(space.id, {
-    name: group.title,
-    id: group.id,
-    theme: group.color,
-    collapsed: group.collapsed,
-  });
 
   await syncTabsAndGroups(null, group.windowId, true);
 

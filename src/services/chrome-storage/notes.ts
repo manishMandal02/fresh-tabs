@@ -12,9 +12,6 @@ export const setNotesToStorage = async (notes: INote[]) => {
   return true;
 };
 
-// TODO - fix: 2 notes (duplicate) are getting created when created from command palette
-// TODO - fix: wrong note id is taken for alarm trigger
-
 export const addNewNote = async (note: INote) => {
   try {
     const allNotes = await getAllNotes();

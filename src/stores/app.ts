@@ -82,6 +82,12 @@ export const selectedTabsAtom = atom<number[]>([]);
 // global notification state
 export const userNotificationsAtom = atom<INotification[]>([]);
 
+// global notification state
+export const notesAtom = atom<INote[]>([]);
+
+// settings
+export const appSettingsAtom = atom<IAppSettings>({ ...DefaultAppSettings });
+
 // global dragging state
 export const dragStateAtom = atom<{ isDragging: boolean; type: 'space' | 'tabs' }>({
   isDragging: false,
@@ -97,9 +103,6 @@ export const snackbarAtom = atom<SnackbarAtom>({
   isLoading: false,
   isSuccess: false,
 });
-
-//  settings
-export const appSettingsAtom = atom<IAppSettings>({ ...DefaultAppSettings });
 
 // settings modal
 export const showSettingsModalAtom = atom(false);

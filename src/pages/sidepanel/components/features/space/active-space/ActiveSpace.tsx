@@ -97,7 +97,7 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
             <BellIcon className="scale-[1.1]" />
             <span
               className={cn(
-                'absolute -top-[1px] -right-[0.75px] text-[8.5px] text-slate-300/80 font-semibold px-[3.5px] py-[0.5px] bg-brand-darkBgAccent/60 rounded-full ',
+                'absolute -top-[1px] -right-[0.75px] text-[8.5px] text-slate-300/80 font-semibold px-[3.5px] py-[0.5px] bg-brand-darkBgAccent/70 rounded-full ',
                 { 'bg-brand-primary/90 text-slate-800': userNotifications?.length > 0 },
               )}>
               {userNotifications?.length || 0}

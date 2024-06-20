@@ -123,7 +123,8 @@ type MessageEventsSidePanel =
   | 'UPDATE_GROUPS'
   | 'REMOVE_SPACE'
   | 'ADD_SPACE'
-  | 'TABS_DISCARDED';
+  | 'TABS_DISCARDED'
+  | 'UPDATE_NOTIFICATIONS';
 
 interface IEventPayloadSidePanel {
   spaceId?: string;

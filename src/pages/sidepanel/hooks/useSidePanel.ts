@@ -13,21 +13,25 @@ import {
   dragStateAtom,
   removeSpaceAtom,
   updateSpaceAtom,
+  userNotificationsAtom,
 } from '@root/src/stores/app';
 import { IMessageEventSidePanel, ISpace } from '../../../types/global.types';
 import { getAllSpaces, getSpace, getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
 import type { OnDragEndResponder, OnBeforeDragStartResponder } from 'react-beautiful-dnd';
 import { getGroups } from '@root/src/services/chrome-storage/groups';
+import { getAllNotifications } from '@root/src/services/chrome-storage/user-notifications';
 
 export const useSidePanel = () => {
   // active space atom (global state)
   const activeSpace = useAtomValue(activeSpaceAtom);
-  const updateSpace = useSetAtom(updateSpaceAtom);
-  const addSpace = useSetAtom(addSpaceAtom);
-  const removeSpace = useSetAtom(removeSpaceAtom);
-  const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
 
+  const addSpace = useSetAtom(addSpaceAtom);
+  const updateSpace = useSetAtom(updateSpaceAtom);
+  const removeSpace = useSetAtom(removeSpaceAtom);
+  const setUserNotification = useSetAtom(userNotificationsAtom);
   const setActiveSpaceGroups = useSetAtom(activeSpaceGroupsAtom);
+
+  const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
 
   // dragging state
   const [, setDragging] = useAtom(dragStateAtom);
@@ -143,13 +147,20 @@ export const useSidePanel = () => {
 
           break;
         }
+        case 'UPDATE_NOTIFICATIONS': {
+          if (payload.spaceId !== activeSpaceRef.current?.id) return;
+
+          const allNotifications = await getAllNotifications();
+          setUserNotification(allNotifications);
+          break;
+        }
 
         default: {
-          logger.info(`Unknown event: ${event} `);
+          logger.info(`Unknown event: ${event}`);
         }
       }
     },
-    [addSpace, removeSpace, updateSpace, setActiveSpaceTabs, setActiveSpaceGroups],
+    [addSpace, removeSpace, updateSpace, setActiveSpaceTabs, setActiveSpaceGroups, setUserNotification],
   );
 
   return {

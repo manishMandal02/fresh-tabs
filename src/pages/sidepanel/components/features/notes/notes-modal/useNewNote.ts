@@ -72,11 +72,12 @@ export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteP
     ev.preventDefault();
 
     const noteObj: INote = {
-      id: generateId(),
       text: note,
-      spaceId: activeSpace.id,
       title: data.title.trim(),
+      spaceId: activeSpace.id,
       createdAt: new Date().getTime(),
+      id: noteId ? noteId : generateId(),
+      domain: data.domain ? data.domain.trim() : null,
     };
 
     // add note remainder
@@ -85,11 +86,6 @@ export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteP
       if (date) {
         noteObj.remainderAt = date;
       }
-    }
-
-    // add note domain
-    if (data.domain) {
-      noteObj.domain = data.domain.trim();
     }
 
     let res = false;

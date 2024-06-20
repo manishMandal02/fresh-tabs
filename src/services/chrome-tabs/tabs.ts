@@ -5,7 +5,7 @@ import { getTabToUnSnooze } from '../chrome-storage/snooze-tabs';
 import { getTabsInSpace, setTabsForSpace } from '../chrome-storage/tabs';
 import { getSpace, getSpaceByWindow, updateSpace } from '../chrome-storage/spaces';
 import { DISCARD_TAB_URL_PREFIX, SNOOZED_TAB_GROUP_TITLE } from '@root/src/constants/app';
-import { getGroups, setGroupsToSpace } from '../chrome-storage/groups';
+import { addGroup, getGroups, setGroupsToSpace } from '../chrome-storage/groups';
 import { generateId, logger, publishEvents, wait } from '@root/src/utils';
 
 type OpenSpaceProps = {
@@ -208,8 +208,6 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
   // group tabs if space has groups
   const groupsInSpace = await getGroups(space.id);
 
-  console.log('🌅 ~ openSpace:211 ~ groupsInSpace:', groupsInSpace);
-
   if (groupsInSpace?.length > 0) {
     // map tabs to previous groups
     const groupsToCreate: Record<string, number[]> = {};
@@ -222,8 +220,6 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
 
       groupsToCreate[tab.groupId].push(newTabId);
     });
-
-    console.log('🌅 ~ openSpace:223 ~ groupsToCreate:', groupsToCreate);
 
     if (Object.keys(groupsToCreate).length > 1) {
       for (const groupId in groupsToCreate) {
@@ -281,16 +277,20 @@ export const getCurrentWindowId = async () => {
 
 // new group with a tab
 export const newTabGroup = async (groupTitle: string, tabURL: string, windowId: number) => {
-  // create un-snoozed tab
+  // create tab with un-snoozed tab url
   const newTab = await chrome.tabs.create({ windowId, url: tabURL, active: false });
   // create a group for snoozed tab
-  const snoozedGroup = await chrome.tabs.group({
+  const newSnoozedGroupId = await chrome.tabs.group({
     tabIds: newTab.id,
     createProperties: { windowId },
   });
 
+  const space = await getSpaceByWindow(windowId);
+
+  addGroup(space.id, { id: newSnoozedGroupId, name: SNOOZED_TAB_GROUP_TITLE, theme: 'orange', collapsed: false });
+
   // update group info
-  await chrome.tabGroups.update(snoozedGroup, {
+  await chrome.tabGroups.update(newSnoozedGroupId, {
     title: groupTitle,
     color: 'orange',
     collapsed: false,
@@ -298,7 +298,6 @@ export const newTabGroup = async (groupTitle: string, tabURL: string, windowId: 
 };
 
 // open tabs in space when tabs moved to a space when it is opened in another window
-
 export const openTabsInTransferredSpace = async (spaceId: string, tabs: ITab[], group?: IGroup) => {
   try {
     const openWindows = await chrome.windows.getAll();

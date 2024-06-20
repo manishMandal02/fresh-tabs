@@ -105,7 +105,7 @@ export const removeGroup = async (spaceId: string, groupId: number) => {
     logger.error({
       error,
       msg: `Error deleting group groupId: ${groupId}.`,
-      fileTrace: ` ${'src/services/chrome-storage/groups.ts:65 updateGroup() ~ catch block'}`,
+      fileTrace: ` ${'src/services/chrome-storage/groups.ts:65 removeGroup() ~ catch block'}`,
     });
     return false;
   }

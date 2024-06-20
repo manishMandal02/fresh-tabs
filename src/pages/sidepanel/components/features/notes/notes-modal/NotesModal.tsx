@@ -15,6 +15,7 @@ import Checkbox from '../../../../../../components/checkbox/Checkbox';
 import { useCustomAnimation } from '../../../../hooks/useCustomAnimation';
 import RichTextEditor, { EDITOR_EMPTY_STATE } from '../../../../../../components/rich-text-editor/RichTextEditor';
 import { naturalLanguageToDate, parseStringForDateTimeHint } from '@root/src/utils/date-time/naturalLanguageToDate';
+import { getNote } from '@root/src/services/chrome-storage/notes';
 
 const NotesModal = () => {
   console.log('NotesModal ~ 🔁 rendered');
@@ -66,23 +67,29 @@ const NotesModal = () => {
       // }, 100);
     } else {
       // editing note
-      const noteToEdit = modalGlobalState.note;
+      (async () => {
+        let noteToEdit = modalGlobalState.note;
 
-      noteToEdit.text?.length > 0 ? setNote(noteToEdit.text) : setNote(EDITOR_EMPTY_STATE);
-
-      inputFrom.setValue('title', noteToEdit.title);
-
-      if (noteToEdit.domain) {
-        setShouldAddDomain(true);
-        inputFrom.setValue('domain', noteToEdit.domain);
-      }
-      if (noteToEdit.remainderAt) {
-        const dateHintString = parseStringForDateTimeHint(noteToEdit.text);
-
-        if (dateHintString?.dateString) {
-          setRemainder(dateHintString.dateString);
+        if (!noteToEdit.text) {
+          noteToEdit = await getNote(noteToEdit.id);
         }
-      }
+
+        noteToEdit.text?.length > 0 ? setNote(noteToEdit.text) : setNote(EDITOR_EMPTY_STATE);
+
+        inputFrom.setValue('title', noteToEdit.title);
+
+        if (noteToEdit.domain) {
+          setShouldAddDomain(true);
+          inputFrom.setValue('domain', noteToEdit.domain);
+        }
+        if (noteToEdit.remainderAt) {
+          const dateHintString = parseStringForDateTimeHint(noteToEdit.text);
+
+          if (dateHintString?.dateString) {
+            setRemainder(dateHintString.dateString);
+          }
+        }
+      })();
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps

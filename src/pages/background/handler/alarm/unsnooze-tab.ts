@@ -1,6 +1,6 @@
 import { NOTIFICATION_TYPE, SNOOZED_TAB_GROUP_TITLE } from '@root/src/constants/app';
 import { ISpace } from '@root/src/types/global.types';
-import { generateId, logger } from '@root/src/utils';
+import { generateId, logger, publishEvents } from '@root/src/utils';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
 import { showUnSnoozedNotification } from '@root/src/services/chrome-notification/notification';
 import { getTabToUnSnooze, removeSnoozedTab } from '@root/src/services/chrome-storage/snooze-tabs';
@@ -42,21 +42,29 @@ export const handleSnoozedTabAlarm = async (alarmName: string) => {
   }
 
   if (currentSpace?.id) {
-    // if yes open snoozed tab in group
+    //tab snoozed by current active space, open snoozed tab in new group
 
     // create a group for snoozed tab
     await newTabGroup(SNOOZED_TAB_GROUP_TITLE, url, currentSpace.windowId);
 
     // remove the tab from the snoozed storage
     await removeSnoozedTab(spaceId, snoozedAt);
-
-    // show notification with show tab button
-    showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed ${getTimeAgo(snoozedAt)}`, title, faviconUrl, true);
-    return;
-  } else {
-    // if not, show notification (open tab, open space)
-    showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed ${getTimeAgo(snoozedAt)}`, title, faviconUrl, false);
   }
 
+  const isSameSpace = !!currentSpace.id;
+
+  // show notification with show tab button or also show open tab/space button if not same space
+  showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed ${getTimeAgo(snoozedAt)}`, title, faviconUrl, isSameSpace);
+
+  // send send to side panel
+  await publishEvents({
+    id: generateId(),
+    event: 'UPDATE_NOTIFICATIONS',
+    payload: {
+      spaceId: spaceId,
+    },
+  });
+
   logger.info('✅ un-snoozed tab successfully');
+  return;
 };

@@ -95,8 +95,8 @@ const SnoozedTabs = ({ show, onClose }: Props) => {
               key={filter.value}
               onClick={() => setSelectedFilter(filter)}
               className={cn(
-                'border border-brand-darkBgAccent/80 rounded-lg px-[8px] py-[2px] text-[10px] text-slate-400/90 font-light w-fit cursor-pointer transition-colors duration-300 hover:opacity-95',
-                { 'bg-brand-darkBgAccent text-slate-300': selectedFilter?.value === filter?.value },
+                'border border-brand-darkBgAccent/70 rounded-lg px-[8px] py-[2px] text-[10px] text-slate-400/90 font-light w-fit cursor-pointer transition-colors duration-300 hover:opacity-95',
+                { 'bg-brand-darkBgAccent/80 text-slate-300': selectedFilter?.value === filter?.value },
               )}>
               {filter.label}
             </span>
