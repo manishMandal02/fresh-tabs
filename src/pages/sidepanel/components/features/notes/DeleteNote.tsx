@@ -1,6 +1,6 @@
-import { useAtom } from 'jotai';
+import { useSetAtom } from 'jotai';
 import { AlertModal } from '../../../../../components/modal';
-import { snackbarAtom } from '@root/src/stores/app';
+import { notesAtom, snackbarAtom } from '@root/src/stores/app';
 import { deleteNote } from '@root/src/services/chrome-storage/notes';
 
 type Props = {
@@ -9,10 +9,14 @@ type Props = {
 };
 
 const DeleteNote = ({ noteId, onClose }: Props) => {
-  const [, setSnackbar] = useAtom(snackbarAtom);
+  // global state
+  const setSnackbar = useSetAtom(snackbarAtom);
+  const setNotesGlobal = useSetAtom(notesAtom);
+
   const handleDelete = async () => {
     const res = await deleteNote(noteId);
     if (res) {
+      setNotesGlobal(notes => notes.filter(note => note.id !== noteId));
       setSnackbar({ show: true, isLoading: false, isSuccess: true, msg: 'Note deleted.' });
     } else {
       setSnackbar({ show: true, isLoading: false, isSuccess: false, msg: 'Failed to delete note.' });

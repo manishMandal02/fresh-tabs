@@ -193,7 +193,7 @@ const showNotes = async (spaceId: string, position: NoteBubblePos, reRender = fa
   // send delete note event to background
 
   const handleDeleteEvent = async (noteId: string) => {
-    await publishEvents({ event: 'DELETE_NOTE', payload: { noteId } });
+    await publishEvents({ event: 'DELETE_NOTE', payload: { noteId, spaceId } });
   };
 
   const handleRemoveDomainNotesBubble = () => {

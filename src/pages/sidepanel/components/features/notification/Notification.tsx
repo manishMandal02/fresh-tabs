@@ -7,33 +7,16 @@ import { NOTIFICATION_TYPE } from '@root/src/constants/app';
 import { INotification } from '@root/src/types/global.types';
 import { SlideModal } from '../../../../../components/modal';
 import { deleteNotification } from '@root/src/services/chrome-storage/user-notifications';
+import { getISODate, getReadableDate, getTimeAgo, getUrlDomain, getWeekday, limitCharLength } from '@root/src/utils';
 import {
-  userNotificationsAtom,
-  showNotificationModalAtom,
   showNoteModalAtom,
+  userNotificationsAtom,
   showUserAccountModalAtom,
+  showNotificationModalAtom,
 } from '@root/src/stores/app';
-import {
-  generateId,
-  getISODate,
-  getReadableDate,
-  getTimeAgo,
-  getUrlDomain,
-  getWeekday,
-  limitCharLength,
-} from '@root/src/utils';
 
 const mapNotification = (notifications: INotification[]) => {
-  // TODO - test data
-  const accountNotification: INotification = {
-    id: generateId(),
-    timestamp: new Date().getTime() - 1200000,
-    type: NOTIFICATION_TYPE.ACCOUNT,
-    title: '🚨 Trail expiring in 2 days 🚨',
-    message: 'This is a test account notification',
-  };
-
-  const sortedNotifications = [...notifications, accountNotification].sort((a, b) => {
+  const sortedNotifications = notifications.sort((a, b) => {
     if (a.timestamp < b.timestamp) return 1;
     if (a.timestamp > b.timestamp) return -1;
     return 0;

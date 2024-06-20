@@ -28,8 +28,10 @@ import {
   setActiveSpaceAtom,
   setSpacesAtom,
   showNotificationModalAtom,
+  notesAtom,
 } from '@root/src/stores/app';
 import { getAllNotifications } from '@root/src/services/chrome-storage/user-notifications';
+import { getAllNotes } from '@root/src/services/chrome-storage/notes';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -42,6 +44,7 @@ const SidePanel = () => {
   // global state - app settings
   const setAppSetting = useSetAtom(appSettingsAtom);
   const setUserNotifications = useSetAtom(userNotificationsAtom);
+  const setNotes = useSetAtom(notesAtom);
 
   const setSpaces = useSetAtom(setSpacesAtom);
 
@@ -73,14 +76,15 @@ const SidePanel = () => {
 
       setActiveSpaceId(currentSpace.id);
 
-      // set app settings
+      // set app settings, notifications and notes data from storage
       const settings = await getAppSettings();
+
+      const allNotes = await getAllNotes();
 
       const notifications = await getAllNotifications();
 
-      console.log('🌅 ~ notifications:', notifications);
-
       setAppSetting(settings);
+      setNotes(allNotes);
       setUserNotifications(notifications);
       setIsLoadingSpaces(false);
     })();

@@ -3,23 +3,25 @@ import { MutableRefObject, useCallback } from 'react';
 
 import { useTabsDnd } from './useTabsDnd';
 import { logger } from '../../../utils/logger';
+import { getGroups } from '@root/src/services/chrome-storage/groups';
+import { getAllNotes } from '@root/src/services/chrome-storage/notes';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
+import { IMessageEventSidePanel, ISpace } from '../../../types/global.types';
+import type { OnDragEndResponder, OnBeforeDragStartResponder } from 'react-beautiful-dnd';
+import { getAllNotifications } from '@root/src/services/chrome-storage/user-notifications';
+import { getAllSpaces, getSpace, getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
 import {
   activeSpaceAtom,
   activeSpaceGroupsAtom,
   activeSpaceTabsAtom,
   addSpaceAtom,
   dragStateAtom,
+  notesAtom,
   removeSpaceAtom,
   updateSpaceAtom,
   userNotificationsAtom,
 } from '@root/src/stores/app';
-import { IMessageEventSidePanel, ISpace } from '../../../types/global.types';
-import { getAllSpaces, getSpace, getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
-import type { OnDragEndResponder, OnBeforeDragStartResponder } from 'react-beautiful-dnd';
-import { getGroups } from '@root/src/services/chrome-storage/groups';
-import { getAllNotifications } from '@root/src/services/chrome-storage/user-notifications';
 
 export const useSidePanel = () => {
   // active space atom (global state)
@@ -29,6 +31,7 @@ export const useSidePanel = () => {
   const updateSpace = useSetAtom(updateSpaceAtom);
   const removeSpace = useSetAtom(removeSpaceAtom);
   const setUserNotification = useSetAtom(userNotificationsAtom);
+  const setAllNotes = useSetAtom(notesAtom);
   const setActiveSpaceGroups = useSetAtom(activeSpaceGroupsAtom);
 
   const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
@@ -154,13 +157,20 @@ export const useSidePanel = () => {
           setUserNotification(allNotifications);
           break;
         }
+        case 'UPDATE_NOTES': {
+          if (payload.spaceId !== activeSpaceRef.current?.id) return;
+
+          const notes = await getAllNotes();
+          setAllNotes(notes);
+          break;
+        }
 
         default: {
           logger.info(`Unknown event: ${event}`);
         }
       }
     },
-    [addSpace, removeSpace, updateSpace, setActiveSpaceTabs, setActiveSpaceGroups, setUserNotification],
+    [addSpace, removeSpace, updateSpace, setActiveSpaceTabs, setActiveSpaceGroups, setUserNotification, setAllNotes],
   );
 
   return {

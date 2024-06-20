@@ -113,8 +113,6 @@ export const updateNote = async (id: string, note: Partial<Omit<INote, 'id'>>, r
 
     await setNotesToStorage(allNotes);
 
-    if (removeRemainder) return true;
-
     //  delete previous remainder trigger if any
     const alarmTrigger = await getAlarm(AlarmName.noteRemainder(id));
 
@@ -122,9 +120,11 @@ export const updateNote = async (id: string, note: Partial<Omit<INote, 'id'>>, r
       await deleteAlarm(AlarmName.noteRemainder(id));
     }
 
+    if (removeRemainder || updatedNote?.remainderAt < 1) return true;
+
     // new alarm trigger
     // remainder trigger time
-    let triggerAfter = note.remainderAt - Date.now();
+    let triggerAfter = updatedNote.remainderAt - Date.now();
 
     // time in minutes
     triggerAfter = triggerAfter / 1000 / 60;

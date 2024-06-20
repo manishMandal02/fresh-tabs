@@ -139,8 +139,11 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
+// TODO - improvement - paginating larger data sets like notes for better performance and
+//+ query data when searched or for domain notes
+
 // TODO - feat - new tab (full app)
-//--- tab thumbnail views and also grid views
+//+ tab thumbnail views and also grid views
 
 // TODO - backend - Use UTC date & time stamp for server & reset day @ 3am (save user timezone)
 
@@ -241,7 +244,7 @@ const removeTabHandler = async (tabId: number, windowId: number) => {
   // remove tab
   await removeTabFromSpace(space, tabId);
 
-  // send send to side panel
+  // send to side panel
   await publishEvents({
     id: generateId(),
     event: 'UPDATE_TABS',
@@ -443,6 +446,15 @@ chrome.runtime.onMessage.addListener(
           payload: { activeSpace, notesBubblePos, snackbarMsg: 'Note Captured' },
         });
 
+        // send to side panel
+        await publishEvents({
+          id: generateId(),
+          event: 'UPDATE_NOTIFICATIONS',
+          payload: {
+            spaceId: activeSpace.id,
+          },
+        });
+
         return true;
       }
 
@@ -468,13 +480,30 @@ chrome.runtime.onMessage.addListener(
           payload: { activeSpace, notesBubblePos, snackbarMsg: 'Note Saved' },
         });
 
+        // send to side panel
+        await publishEvents({
+          id: generateId(),
+          event: 'UPDATE_NOTIFICATIONS',
+          payload: {
+            spaceId: activeSpace.id,
+          },
+        });
+
         return true;
       }
 
       case 'DELETE_NOTE': {
-        const { noteId } = payload;
+        const { noteId, spaceId } = payload;
         await deleteNote(noteId);
 
+        // send to side panel
+        await publishEvents({
+          id: generateId(),
+          event: 'UPDATE_NOTIFICATIONS',
+          payload: {
+            spaceId,
+          },
+        });
         return true;
       }
 
@@ -942,7 +971,7 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   // update spaces' active tab
   const updateSpace = await updateActiveTabInSpace(windowId, tab.index);
 
-  // send send to side panel
+  // send to side panel
   await publishEvents({
     id: generateId(),
     event: 'UPDATE_SPACE_ACTIVE_TAB',
@@ -976,7 +1005,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
     if (changeInfo?.discarded) {
       const space = await getSpaceByWindow(tab.windowId);
-      // send send to side panel
+      // send to side panel
       await publishEvents({
         id: generateId(),
         event: 'TABS_DISCARDED',
@@ -1065,7 +1094,7 @@ chrome.tabGroups.onCreated.addListener(async group => {
 
   await syncTabsAndGroups(null, group.windowId, true);
 
-  // send send to side panel
+  // send to side panel
   await publishEvents({
     id: generateId(),
     event: 'UPDATE_GROUPS',
@@ -1091,7 +1120,7 @@ chrome.tabGroups.onRemoved.addListener(async group => {
 
     await syncTabsAndGroups(null, group.windowId, true);
 
-    // send send to side panel
+    // send to side panel
     await publishEvents({
       id: generateId(),
       event: 'UPDATE_GROUPS',
@@ -1130,7 +1159,7 @@ chrome.tabGroups.onUpdated.addListener(async group => {
 
   await updateGroup(space.id, { id: group.id, name: group.title, theme: group.color, collapsed: group.collapsed });
 
-  // send send to side panel
+  // send to side panel
   await publishEvents({
     id: generateId(),
     event: 'UPDATE_GROUPS',
@@ -1198,7 +1227,7 @@ chrome.windows.onCreated.addListener(window => {
     // create new unsaved space
     const newUnsavedSpace = await createUnsavedSpace(window.id, tabs);
 
-    // send send to side panel
+    // send to side panel
     await publishEvents({
       id: generateId(),
       event: 'ADD_SPACE',
@@ -1233,7 +1262,7 @@ chrome.windows.onRemoved.addListener(async windowId => {
 
   console.log('✅ ~ windows.onRemoved ~ space deleted ~ res:', res);
 
-  // send send to side panel
+  // send to side panel
   await publishEvents({
     id: generateId(),
     event: 'REMOVE_SPACE',

@@ -1,13 +1,13 @@
 import { z } from 'zod';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { ClipboardEventHandler } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
-import { generateId, omitObjProps } from '@root/src/utils';
+import { generateId } from '@root/src/utils';
 import { isValidURL } from '@root/src/utils/url';
 import { INote } from '@root/src/types/global.types';
-import { snackbarAtom, activeSpaceAtom } from '@root/src/stores/app';
+import { snackbarAtom, activeSpaceAtom, notesAtom } from '@root/src/stores/app';
 import { addNewNote, updateNote } from '@root/src/services/chrome-storage/notes';
 import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';
 import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
@@ -18,12 +18,15 @@ type UseNewNoteProps = {
   remainder: string;
   note: string;
   noteId: string;
+  noteCreatedAt?: number;
   handleClose: () => void;
 };
 
-export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteProps) => {
+export const useNewNote = ({ remainder, note, noteId, noteCreatedAt, handleClose }: UseNewNoteProps) => {
   // global state
+
   const [snackbar, setSnackbar] = useAtom(snackbarAtom);
+  const setNotesGlobal = useSetAtom(notesAtom);
 
   const activeSpace = useAtomValue(activeSpaceAtom);
 
@@ -75,9 +78,9 @@ export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteP
       text: note,
       title: data.title.trim(),
       spaceId: activeSpace.id,
-      createdAt: new Date().getTime(),
       id: noteId ? noteId : generateId(),
       domain: data.domain ? data.domain.trim() : null,
+      createdAt: noteId ? noteCreatedAt : new Date().getTime(),
     };
 
     // add note remainder
@@ -90,9 +93,13 @@ export const useNewNote = ({ remainder, note, noteId, handleClose }: UseNewNoteP
 
     let res = false;
     if (!noteId) {
+      // update storage
       res = await addNewNote(noteObj);
+      // update global state
+      setNotesGlobal(notes => [noteObj, ...notes]);
     } else {
-      res = await updateNote(noteId, omitObjProps(noteObj, 'createdAt'));
+      setNotesGlobal(notes => notes.map(n => (n.id === noteId ? noteObj : n)));
+      res = await updateNote(noteId, noteObj);
     }
     if (res) {
       setSnackbar({ show: true, msg: `Note ${noteId ? 'updated' : 'added'}`, isSuccess: true });

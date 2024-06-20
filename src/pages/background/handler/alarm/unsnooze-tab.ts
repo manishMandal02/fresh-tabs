@@ -56,7 +56,7 @@ export const handleSnoozedTabAlarm = async (alarmName: string) => {
   // show notification with show tab button or also show open tab/space button if not same space
   showUnSnoozedNotification(spaceId, `⏰ Tab Snoozed ${getTimeAgo(snoozedAt)}`, title, faviconUrl, isSameSpace);
 
-  // send send to side panel
+  // send to side panel
   await publishEvents({
     id: generateId(),
     event: 'UPDATE_NOTIFICATIONS',

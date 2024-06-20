@@ -27,6 +27,8 @@ const NotesModal = () => {
   const [note, setNote] = useState('');
   const [remainder, setRemainder] = useState('');
   const [shouldAddDomain, setShouldAddDomain] = useState(false);
+  // used when editing note to preserve the original date
+  const [noteCreatedAt, setNoteCreatedAt] = useState(0);
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
@@ -41,6 +43,7 @@ const NotesModal = () => {
   const { inputFrom, snackbar, handleAddNote, handleOnPasteInDomainInput } = useNewNote({
     note,
     remainder,
+    noteCreatedAt,
     handleClose,
     noteId: modalGlobalState.note?.id || '',
   });
@@ -73,6 +76,8 @@ const NotesModal = () => {
         if (!noteToEdit.text) {
           noteToEdit = await getNote(noteToEdit.id);
         }
+
+        setNoteCreatedAt(noteToEdit.createdAt);
 
         noteToEdit.text?.length > 0 ? setNote(noteToEdit.text) : setNote(EDITOR_EMPTY_STATE);
 

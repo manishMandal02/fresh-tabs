@@ -11,6 +11,8 @@ export const handleNotesRemainderAlarm = async (alarmName: string) => {
   // get note
   const note = await getNote(noteId);
 
+  console.log('💰 ~ handleNotesRemainderAlarm ~ note:', note);
+
   // update note
   const res = await updateNote(
     noteId,
@@ -34,10 +36,19 @@ export const handleNotesRemainderAlarm = async (alarmName: string) => {
     },
   });
 
-  // send send to side panel
+  // send to side panel
   await publishEvents({
     id: generateId(),
     event: 'UPDATE_NOTIFICATIONS',
+    payload: {
+      spaceId: note.spaceId,
+    },
+  });
+
+  // send to side panel
+  await publishEvents({
+    id: generateId(),
+    event: 'UPDATE_NOTES',
     payload: {
       spaceId: note.spaceId,
     },

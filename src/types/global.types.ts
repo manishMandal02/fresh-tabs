@@ -121,6 +121,7 @@ type MessageEventsSidePanel =
   | 'UPDATE_SPACE_ACTIVE_TAB'
   | 'UPDATE_TABS'
   | 'UPDATE_GROUPS'
+  | 'UPDATE_NOTES'
   | 'REMOVE_SPACE'
   | 'ADD_SPACE'
   | 'TABS_DISCARDED'
