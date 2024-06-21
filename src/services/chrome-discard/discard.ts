@@ -35,12 +35,22 @@ export const discardAllTabs = async (autoDiscard = false) => {
 };
 
 export const discardTabs = async (tabIDs: number[]) => {
-  if (tabIDs?.length < 2) {
-    await chrome.tabs.discard(tabIDs[0]);
-    return;
+  try {
+    if (tabIDs?.length < 2) {
+      await chrome.tabs.discard(tabIDs[0]);
+      return true;
+    }
+
+    const tabsDiscardPromises = tabIDs.map(id => chrome.tabs.discard(id));
+
+    await Promise.allSettled(tabsDiscardPromises);
+    return true;
+  } catch (error) {
+    logger.error({
+      error,
+      msg: `Error discarding tabs`,
+      fileTrace: 'src/services/chrome-discard/discard.ts:51 ~ discardTabs() ~ catch block',
+    });
+    return false;
   }
-
-  const tabsDiscardPromises = tabIDs.map(id => chrome.tabs.discard(id));
-
-  await Promise.allSettled(tabsDiscardPromises);
 };

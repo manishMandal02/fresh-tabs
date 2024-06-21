@@ -3,7 +3,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import Tooltip from '@root/src/components/tooltip';
 import { ISpace } from '@root/src/types/global.types';
 import NonActiveSpaceContextMenu from './NonActiveSpaceContextMenu';
-import { getGroups } from '@root/src/services/chrome-storage/groups';
+import { getAllGroups } from '@root/src/services/chrome-storage/groups';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getSpace, mergeSpace } from '@root/src/services/chrome-storage/spaces';
 import { getCurrentWindowId, openSpace } from '@root/src/services/chrome-tabs/tabs';
@@ -39,7 +39,7 @@ const NonActiveSpace = ({ space, isDraggedOver, totalSpaces }: Props) => {
 
   const handleUpdateClick = async () => {
     const tabs = await getTabsInSpace(space.id);
-    const groups = await getGroups(space.id);
+    const groups = await getAllGroups(space.id);
 
     setUpdateModal({ ...space, tabs, groups });
   };

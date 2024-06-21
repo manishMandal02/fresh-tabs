@@ -41,8 +41,6 @@ type Props = {
   selectedNoteId?: string;
 };
 
-// TODO - add group helpers commands
-
 // ANCHOR - Working Currently
 // when typing fast and selecting command that opens sub commands, the sub command assumes that theres text in the input box while there isn't any.
 // its' because of the multi useEffect  updating the commands/search

@@ -23,13 +23,13 @@ export const useCustomAnimation = () => {
   };
 
   const slide = {
-    initial: { opacity: 0, y: 50 },
+    initial: { opacity: 0, y: 100 },
     whileInView: {
       opacity: 1,
       y: 0,
     },
-    exit: { opacity: 0, y: 50 },
-    transition: { type: 'spring', stiffness: 400, damping: 25, duration: 0.2 },
+    exit: { opacity: 0, y: 100 },
+    transition: { type: 'spring', stiffness: 400, damping: 25, duration: 0.3 },
   };
 
   const slideDown = {

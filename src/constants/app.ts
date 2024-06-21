@@ -25,15 +25,8 @@ export enum ThemeColor {
   Grey = '#d1d5db',
 }
 
-export enum NOTIFICATION_TYPE {
-  NOTE_REMAINDER = 'note-remainder',
-  UN_SNOOZED_TAB = 'un-snoozed-tab',
-  ACCOUNT = 'account',
-}
-
 export enum CommandType {
   Link = 'link',
-  // show note in search
   Note = 'note',
   NewSpace = 'new-space',
   NewNote = 'new-note',
@@ -44,6 +37,14 @@ export enum CommandType {
   AddToSpace = 'add-to-space',
   SwitchSpace = 'switch-space',
   DiscardTabs = 'discard-tabs',
+  NewGroup = 'new-group',
+  AddToGroup = 'add-to-group',
+}
+
+export enum NOTIFICATION_TYPE {
+  NOTE_REMAINDER = 'note-remainder',
+  UN_SNOOZED_TAB = 'un-snoozed-tab',
+  ACCOUNT = 'account',
 }
 
 export const ALARM_NAME_PREFiX = {

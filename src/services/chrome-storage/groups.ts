@@ -3,7 +3,7 @@ import { getStorage, setStorage } from './helpers';
 import { StorageKey } from '@root/src/constants/app';
 import { IGroup } from '@root/src/types/global.types';
 
-export const getGroups = async (spaceId: string) => {
+export const getAllGroups = async (spaceId: string) => {
   try {
     const groups = await getStorage<IGroup[]>({ key: StorageKey.groups(spaceId), type: 'local' });
 
@@ -12,7 +12,7 @@ export const getGroups = async (spaceId: string) => {
     logger.error({
       error,
       msg: 'Error getting groups.',
-      fileTrace: ` ${'src/services/chrome-storage/groups.ts:15 getGroups() ~ catch block'}`,
+      fileTrace: ` ${'src/services/chrome-storage/groups.ts:15 getAllGroups() ~ catch block'}`,
     });
     return [];
   }
@@ -33,7 +33,7 @@ export const setGroupsToSpace = async (spaceId: string, groups: IGroup[]) => {
 
 export const getGroup = async (spaceId: string, groupId: number) => {
   try {
-    const allGroups = await getGroups(spaceId);
+    const allGroups = await getAllGroups(spaceId);
 
     const group = allGroups.find(group => group.id === groupId);
     if (!group?.id) throw new Error('Group not found.');
@@ -50,7 +50,7 @@ export const getGroup = async (spaceId: string, groupId: number) => {
 
 export const addGroup = async (spaceId: string, newGroup: IGroup) => {
   try {
-    const allGroups = await getGroups(spaceId);
+    const allGroups = await getAllGroups(spaceId);
 
     await setGroupsToSpace(spaceId, [...(allGroups || []), newGroup]);
 
@@ -67,7 +67,7 @@ export const addGroup = async (spaceId: string, newGroup: IGroup) => {
 
 export const updateGroup = async (spaceId: string, group: IGroup) => {
   try {
-    const allGroups = await getGroups(spaceId);
+    const allGroups = await getAllGroups(spaceId);
 
     const groupToUpdateIndex = allGroups.findIndex(g => g.id === group.id);
 
@@ -90,7 +90,7 @@ export const updateGroup = async (spaceId: string, group: IGroup) => {
 
 export const removeGroup = async (spaceId: string, groupId: number) => {
   try {
-    const allGroups = await getGroups(spaceId);
+    const allGroups = await getAllGroups(spaceId);
 
     const groupToDeleteIndex = allGroups.findIndex(g => g.id === groupId);
 

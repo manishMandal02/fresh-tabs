@@ -5,7 +5,9 @@ import {
   MoveIcon,
   DesktopIcon,
   Cross1Icon,
+  LayersIcon,
   MagnifyingGlassIcon,
+  PlusIcon,
 } from '@radix-ui/react-icons';
 
 import { CommandType } from '@root/src/constants/app';
@@ -25,6 +27,20 @@ export const staticCommands: ICommand[] = [
     alias: 'Save memory',
   },
   { index: 6, type: CommandType.CloseTab, label: 'Close Tab', icon: Cross1Icon, alias: 'Close current tab' },
+  {
+    index: 7,
+    type: CommandType.NewGroup,
+    label: 'New Group',
+    icon: PlusIcon,
+    alias: 'Create group with this tab',
+  },
+  {
+    index: 8,
+    type: CommandType.AddToGroup,
+    label: 'Add to Group',
+    icon: LayersIcon,
+    alias: 'Move tab to a group',
+  },
 ];
 
 export const webSearchCommand = (query: string, index: number): ICommand => {

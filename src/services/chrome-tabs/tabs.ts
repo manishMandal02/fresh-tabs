@@ -5,7 +5,7 @@ import { getTabToUnSnooze } from '../chrome-storage/snooze-tabs';
 import { getTabsInSpace, setTabsForSpace } from '../chrome-storage/tabs';
 import { getSpace, getSpaceByWindow, updateSpace } from '../chrome-storage/spaces';
 import { DISCARD_TAB_URL_PREFIX, SNOOZED_TAB_GROUP_TITLE } from '@root/src/constants/app';
-import { addGroup, getGroups, setGroupsToSpace } from '../chrome-storage/groups';
+import { addGroup, getAllGroups, setGroupsToSpace } from '../chrome-storage/groups';
 import { generateId, logger, publishEvents, wait } from '@root/src/utils';
 
 type OpenSpaceProps = {
@@ -156,7 +156,7 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
     const currentSpace = await getSpaceByWindow(currentWindowId);
     // storage tabs/groups of the current (previous) space to add them back after the window is cleared for new space
     const tabsInSpaceBefore = await getTabsInSpace(currentSpace.id);
-    const groupsInSpace = await getGroups(currentSpace.id);
+    const groupsInSpace = await getAllGroups(currentSpace.id);
 
     // clear the current window
     await clearCurrentWindow(currentWindowId);
@@ -206,7 +206,7 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
   await chrome.tabs.remove(defaultWindowTabId);
 
   // group tabs if space has groups
-  const groupsInSpace = await getGroups(space.id);
+  const groupsInSpace = await getAllGroups(space.id);
 
   if (groupsInSpace?.length > 0) {
     // map tabs to previous groups

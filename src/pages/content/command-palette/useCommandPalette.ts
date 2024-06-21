@@ -11,6 +11,7 @@ import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { getAllGroups } from '@root/src/services/chrome-storage/groups';
 
 // default suggested time for snooze tab command
 const defaultSuggestedSnoozeTimeLabels = [
@@ -87,6 +88,7 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
 
           break;
         }
+
         case CommandType.NewSpace: {
           if (!subCommand) {
             setSuggestedCommandsForSubCommand([]);
@@ -114,20 +116,17 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
           if (!subCommand) {
             const allSpaces = await getAllSpaces();
 
-            const addToSpaceCommands = allSpaces
-              .filter(s => s.windowId !== activeSpace.windowId)
-              .map<ICommand>((space, idx) => ({
-                label: space.title,
-                type: CommandType.AddToSpace,
-                index: idx + 1,
-                icon: space.emoji,
-                metadata: space.id,
-              }));
+            const addToSpaceCommands = allSpaces.map<ICommand>((space, idx) => ({
+              label: space.title,
+              type: CommandType.AddToSpace,
+              index: idx + 1,
+              icon: space.theme,
+              metadata: space.id,
+            }));
 
             setSuggestedCommandsForSubCommand(addToSpaceCommands);
             setSubCommand(CommandType.AddToSpace);
-            // setSuggestedCommands(addToSpaceCommands);
-            setSearchQueryPlaceholder('Select space');
+            setSearchQueryPlaceholder('Select group');
             setFocusedCommandIndex(1);
           } else {
             await publishEvents({
@@ -138,12 +137,14 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
           }
           break;
         }
+
         case CommandType.NewNote: {
           // set sub command
           // note: handing create/save notes is done in create note (create-note > CreateNote.tsx)
           setSubCommand(CommandType.NewNote);
           break;
         }
+
         case CommandType.Note: {
           // open note
           setSubCommand(CommandType.NewNote);
@@ -168,11 +169,13 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
           handleCloseCommandPalette();
           break;
         }
+
         case CommandType.DiscardTabs: {
           await publishEvents({ event: 'DISCARD_TABS' });
           handleCloseCommandPalette();
           break;
         }
+
         case CommandType.SnoozeTab: {
           if (!subCommand && !focusedCommand.metadata) {
             const snoozeTabSubCommands = defaultSuggestedSnoozeTimeLabels.map<ICommand>((label, idx) => ({
@@ -199,6 +202,56 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
           }
           break;
         }
+
+        case CommandType.NewGroup: {
+          if (!subCommand) {
+            setSuggestedCommandsForSubCommand([]);
+            setSearchQueryPlaceholder('Enter group name...');
+            setSubCommand(CommandType.NewGroup);
+            setSuggestedCommands([
+              {
+                label: 'Create new tab group',
+                type: CommandType.NewGroup,
+                index: 1,
+                icon: PlusIcon,
+              },
+            ]);
+
+            setFocusedCommandIndex(1);
+          } else {
+            if (searchQuery?.length < 3) return;
+            await publishEvents({ event: 'NEW_GROUP', payload: { groupName: searchQuery } });
+            handleCloseCommandPalette();
+          }
+          break;
+        }
+
+        case CommandType.AddToGroup: {
+          if (!subCommand) {
+            const allGroups = await getAllGroups(activeSpace.id);
+
+            const addToGroupCommands = allGroups.map<ICommand>((group, idx) => ({
+              label: group.name,
+              type: CommandType.AddToGroup,
+              index: idx + 1,
+              icon: group.theme,
+              metadata: group.id,
+            }));
+
+            setSuggestedCommandsForSubCommand(addToGroupCommands);
+            setSubCommand(CommandType.AddToGroup);
+            setSearchQueryPlaceholder('Select group');
+            setFocusedCommandIndex(1);
+          } else {
+            await publishEvents({
+              event: 'ADD_TO_GROUP',
+              payload: { groupId: focusedCommand.metadata as number },
+            });
+            handleCloseCommandPalette();
+          }
+          break;
+        }
+
         case CommandType.CloseTab: {
           await publishEvents({ event: 'CLOSE_TAB' });
           handleCloseCommandPalette();

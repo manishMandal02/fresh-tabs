@@ -1,12 +1,12 @@
-import { NOTIFICATION_TYPE, SNOOZED_TAB_GROUP_TITLE } from '@root/src/constants/app';
 import { ISpace } from '@root/src/types/global.types';
-import { generateId, logger, publishEvents } from '@root/src/utils';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
+import { newTabGroup } from '@root/src/services/chrome-tabs/tabs';
+import { generateId, logger, publishEvents } from '@root/src/utils';
+import { getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
+import { NOTIFICATION_TYPE, SNOOZED_TAB_GROUP_TITLE } from '@root/src/constants/app';
+import { addNotification } from '@root/src/services/chrome-storage/user-notifications';
 import { showUnSnoozedNotification } from '@root/src/services/chrome-notification/notification';
 import { getTabToUnSnooze, removeSnoozedTab } from '@root/src/services/chrome-storage/snooze-tabs';
-import { getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
-import { newTabGroup } from '@root/src/services/chrome-tabs/tabs';
-import { addNotification } from '@root/src/services/chrome-storage/user-notifications';
 
 export const handleSnoozedTabAlarm = async (alarmName: string) => {
   //  un-snooze tab
@@ -14,7 +14,14 @@ export const handleSnoozedTabAlarm = async (alarmName: string) => {
   const spaceId = alarmName.split('-')[1];
 
   // get the snoozed tab info
-  const { url, title, faviconUrl, snoozedAt } = await getTabToUnSnooze(spaceId);
+  const snoozedTabInfo = await getTabToUnSnooze(spaceId);
+
+  if (!snoozedTabInfo?.url) return false;
+
+  const { url, title, faviconUrl, snoozedAt } = snoozedTabInfo;
+
+  // remove snoozed tab details from storage
+  await removeSnoozedTab(spaceId, snoozedAt);
 
   // add to user notifications
   await addNotification({
@@ -46,9 +53,6 @@ export const handleSnoozedTabAlarm = async (alarmName: string) => {
 
     // create a group for snoozed tab
     await newTabGroup(SNOOZED_TAB_GROUP_TITLE, url, currentSpace.windowId);
-
-    // remove the tab from the snoozed storage
-    await removeSnoozedTab(spaceId, snoozedAt);
   }
 
   const isSameSpace = !!currentSpace.id;

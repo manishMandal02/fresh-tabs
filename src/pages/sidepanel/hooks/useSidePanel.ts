@@ -3,7 +3,7 @@ import { MutableRefObject, useCallback } from 'react';
 
 import { useTabsDnd } from './useTabsDnd';
 import { logger } from '../../../utils/logger';
-import { getGroups } from '@root/src/services/chrome-storage/groups';
+import { getAllGroups } from '@root/src/services/chrome-storage/groups';
 import { getAllNotes } from '@root/src/services/chrome-storage/notes';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getCurrentWindowId } from '@root/src/services/chrome-tabs/tabs';
@@ -144,7 +144,7 @@ export const useSidePanel = () => {
           // get updated tabs from storage
           if (payload.spaceId !== activeSpaceRef.current?.id) return;
 
-          const updatedGroups = await getGroups(payload.spaceId);
+          const updatedGroups = await getAllGroups(payload.spaceId);
 
           setActiveSpaceGroups(updatedGroups);
 

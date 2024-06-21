@@ -78,8 +78,8 @@ export const getTabToUnSnooze = async (spaceId: string) => {
   // set the time 2 mins after to get better results
   now.setMinutes(now.getMinutes() + 2);
   const snoozedTab = snoozedTabs?.find(tab => tab.snoozedUntil < now.getTime());
-  if (snoozedTab) return snoozedTab;
-  return null;
+  if (!snoozedTab) return null;
+  return snoozedTab;
 };
 
 // remove a single snoozed tab

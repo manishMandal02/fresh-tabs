@@ -147,6 +147,8 @@ type MessageEventsContentScript =
   | 'SWITCH_TAB'
   | 'SWITCH_SPACE'
   | 'NEW_SPACE'
+  | 'NEW_GROUP'
+  | 'ADD_TO_GROUP'
   | 'NEW_NOTE'
   | 'EDIT_NOTE'
   | 'DELETE_NOTE'
@@ -165,6 +167,8 @@ interface IEventPayloadContentScript {
   noteId?: string;
   spaceId?: string;
   spaceTitle?: string;
+  groupId?: number;
+  groupName?: string;
   noteTitle?: string;
   snackbarMsg?: string;
   searchQuery?: string;

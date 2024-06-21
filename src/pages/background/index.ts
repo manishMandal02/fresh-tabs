@@ -28,7 +28,7 @@ import {
   getCurrentWindowId,
   goToTab,
   openSpace,
-  openTabsInTransferredSpace as openTabsInTransferredSpace,
+  openTabsInTransferredSpace,
   syncTabs,
 } from '@root/src/services/chrome-tabs/tabs';
 import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
@@ -396,7 +396,6 @@ chrome.runtime.onMessage.addListener(
       case 'NEW_SPACE': {
         const { spaceTitle } = payload;
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const tab = await getCurrentTab();
 
         const newSpace = await createNewSpace(
@@ -504,6 +503,30 @@ chrome.runtime.onMessage.addListener(
             spaceId,
           },
         });
+        return true;
+      }
+
+      case 'NEW_GROUP': {
+        const { groupName } = payload;
+        const tab = await getCurrentTab();
+
+        const newGroupId = await chrome.tabs.group({ tabIds: tab.id });
+
+        await chrome.tabGroups.update(newGroupId, {
+          title: groupName,
+          color: 'blue',
+          collapsed: false,
+        });
+
+        return true;
+      }
+
+      case 'ADD_TO_GROUP': {
+        const { groupId } = payload;
+        const tab = await getCurrentTab();
+
+        await chrome.tabs.group({ groupId, tabIds: tab.id });
+
         return true;
       }
 
@@ -869,54 +892,62 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
 // handle alarm triggers
 chrome.alarms.onAlarm.addListener(async alarm => {
-  console.log('⏰⏰⏰⏰ ~ onAlarm.addListener:843 ~ alarm:', alarm);
+  try {
+    console.log('⏰⏰⏰⏰ ~ onAlarm.addListener:843 ~ alarm:', alarm);
 
-  // handle alarm names with prefix tag ex: deleteSpace-, snoozedTab-, etc.
-  if (alarm.name.startsWith(ALARM_NAME_PREFiX.deleteSpace)) {
-    //  delete unsaved space
-    const spaceId = alarm.name.split('-')[1];
-    await deleteSpace(spaceId);
-    await publishEvents({ id: generateId(), event: 'REMOVE_SPACE', payload: { spaceId } });
-    logger.info(`⏰ Deleted Unsaved space: ${spaceId}`);
-    return;
-  } else if (alarm.name.startsWith(ALARM_NAME_PREFiX.snoozedTab)) {
-    // handle un-snooze tab
-    await handleSnoozedTabAlarm(alarm.name);
-    return;
-  } else if (alarm.name.startsWith(ALARM_NAME_PREFiX.noteRemainder)) {
-    //  handle note remainder trigger
-    await handleNotesRemainderAlarm(alarm.name);
-    return;
-  }
-
-  // handle recurring alarms
-  switch (alarm.name) {
-    case AlarmName.autoSaveBM: {
-      await syncSpacesToBookmark();
-      logger.info('⏰ 1day: Synced Spaces to Bookmark');
-      break;
+    // handle alarm names with prefix tag ex: deleteSpace-, snoozedTab-, etc.
+    if (alarm.name.startsWith(ALARM_NAME_PREFiX.deleteSpace)) {
+      //  delete unsaved space
+      const spaceId = alarm.name.split('-')[1];
+      await deleteSpace(spaceId);
+      await publishEvents({ id: generateId(), event: 'REMOVE_SPACE', payload: { spaceId } });
+      logger.info(`⏰ Deleted Unsaved space: ${spaceId}`);
+      return;
+    } else if (alarm.name.startsWith(ALARM_NAME_PREFiX.snoozedTab)) {
+      // handle un-snooze tab
+      await handleSnoozedTabAlarm(alarm.name);
+      return;
+    } else if (alarm.name.startsWith(ALARM_NAME_PREFiX.noteRemainder)) {
+      //  handle note remainder trigger
+      await handleNotesRemainderAlarm(alarm.name);
+      return;
     }
-    case AlarmName.autoDiscardTabs: {
-      await discardAllTabs(true);
-      logger.info('⏰ 10 mins: Auto discard tabs');
-      break;
+
+    // handle recurring alarms
+    switch (alarm.name) {
+      case AlarmName.autoSaveBM: {
+        await syncSpacesToBookmark();
+        logger.info('⏰ 1day: Synced Spaces to Bookmark');
+        break;
+      }
+      case AlarmName.autoDiscardTabs: {
+        await discardAllTabs(true);
+        logger.info('⏰ 10 mins: Auto discard tabs');
+        break;
+      }
+      case AlarmName.dailyMidnightTrigger: {
+        //  handle space analytics data
+
+        await handleMergeSpaceHistoryAlarm();
+
+        await handleMergeDailySpaceTimeChunksAlarm();
+
+        // delete space history older than 30 days
+
+        logger.info('⏰ Midnight: merge space history & usage data');
+
+        break;
+      }
+      default: {
+        logger.info(`⏰ ${alarm.name} alarm triggered, no handler attached ⚠️`);
+      }
     }
-    case AlarmName.dailyMidnightTrigger: {
-      //  handle space analytics data
-
-      await handleMergeSpaceHistoryAlarm();
-
-      await handleMergeDailySpaceTimeChunksAlarm();
-
-      // delete space history older than 30 days
-
-      logger.info('⏰ Midnight: merge space history & usage data');
-
-      break;
-    }
-    default: {
-      logger.info(`⏰ ${alarm.name} alarm triggered, no handler attached ⚠️`);
-    }
+  } catch (error) {
+    logger.error({
+      error,
+      msg: 'Error in onAlarm.addListener',
+      fileTrace: 'background.ts:926 ~ chrome.alarms.onAlarm.addListener() ~ catch block',
+    });
   }
 });
 

@@ -24,7 +24,7 @@ import { ColorType } from '@root/src/components/color-picker/ColorPicker';
 import { createPortal } from 'react-dom';
 import { SlideModal } from '@root/src/components/modal';
 import { capitalize, getUrlDomain, limitCharLength, wait } from '@root/src/utils';
-import { getGroups, setGroupsToSpace } from '@root/src/services/chrome-storage/groups';
+import { getAllGroups, setGroupsToSpace } from '@root/src/services/chrome-storage/groups';
 
 type Props = {
   selectedItem: ITab | IGroup;
@@ -94,7 +94,7 @@ const TabContextMenu = ({
   // move tabs to another space
   const handleMoveTabToSpace = async (newSpaceId: string) => {
     if ('name' in selectedItem) {
-      const groupsInSelectedSpace = await getGroups(newSpaceId);
+      const groupsInSelectedSpace = await getAllGroups(newSpaceId);
 
       setGroupsToSpace(newSpaceId, [...(groupsInSelectedSpace || []), selectedItem as IGroup]);
 

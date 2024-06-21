@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
 
 import { DefaultAppSettings } from './../constants/app';
-import { getGroups } from '../services/chrome-storage/groups';
+import { getAllGroups } from '../services/chrome-storage/groups';
 import { getTabsInSpace } from '../services/chrome-storage/tabs';
 import {
   IAppSettings,
@@ -71,7 +71,7 @@ export const setActiveSpaceAtom = atom(null, async (_get, set, spaceId: string) 
   set(activeSpaceIdAtom, spaceId);
   //  set tabs for active space
   const activeSpaceTabs = await getTabsInSpace(spaceId);
-  const activeSpaceGroups = await getGroups(spaceId);
+  const activeSpaceGroups = await getAllGroups(spaceId);
   set(activeSpaceTabsAtom, activeSpaceTabs);
   set(activeSpaceGroupsAtom, activeSpaceGroups);
 });
