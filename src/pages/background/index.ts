@@ -96,9 +96,9 @@ const checkExtensionBadgeEmoji = async () => {
   const activeSpace = await getSpaceByWindow(currentWindow);
   const currentBadge = await chrome.action.getBadgeText({});
 
-  if (currentBadge?.trim() !== activeSpace.emoji) {
+  if (currentBadge?.trim() !== activeSpace?.emoji) {
     await chrome.action.setBadgeBackgroundColor({ color: '#1e293b' });
-    await chrome.action.setBadgeText({ text: activeSpace.emoji });
+    await chrome.action.setBadgeText({ text: activeSpace?.emoji || '' });
   }
 };
 
@@ -277,6 +277,8 @@ const recordSiteVisit = async (windowId: number, tabId: number) => {
 
 // record a daily time spent in spaces in chunks
 const recordDailySpaceTime = async (windowId: number) => {
+  console.log('🚨 ~ recordDailySpaceTime ~ windowId:', windowId);
+
   const dailySpaceTimeChunks: IDailySpaceTimeChunks = {
     spaceId: null,
     time: Date.now(),
@@ -1348,8 +1350,32 @@ chrome.windows.onRemoved.addListener(async windowId => {
 
 // on window focus
 chrome.windows.onFocusChanged.addListener(async windowId => {
-  // record daily space time
-  await recordDailySpaceTime(windowId);
+  // check if the popup window (command palette popup) has lost focused
+  const lastFocusedWindow = await chrome.windows.getLastFocused();
+
+  console.log('🚨 ~ lastFocusedWindow:', lastFocusedWindow);
+
+  const focusedWindow = windowId > 0 ? await chrome.windows.get(windowId) : null;
+
+  if (focusedWindow?.type !== 'popup' || lastFocusedWindow.type !== 'popup') {
+    // record daily space time
+    await recordDailySpaceTime(windowId);
+  }
+
+  console.log('🚨 ~ focusedWindow:', focusedWindow);
+
+  if (
+    !lastFocusedWindow?.id ||
+    lastFocusedWindow.id < 1 ||
+    focusedWindow?.type === 'popup' ||
+    lastFocusedWindow.type !== 'popup'
+  )
+    return;
+
+  console.log('🚨 ~ window to delete ~ lastFocusedWindow.id:', lastFocusedWindow.id);
+
+  // remove popup window
+  await chrome.windows.remove(lastFocusedWindow.id);
 });
 
 // handle tabs changed

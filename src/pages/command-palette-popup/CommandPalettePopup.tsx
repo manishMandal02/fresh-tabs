@@ -39,6 +39,7 @@ const CommandPalettePopup = () => {
 
   const onCloseCommandPalette = () => {
     setCommandPaletteProps(null);
+    window.close();
   };
 
   return (
