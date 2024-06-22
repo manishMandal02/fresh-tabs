@@ -22,6 +22,7 @@ const manifest = {
     'tabGroups',
     'webNavigation',
     'notifications',
+    'system.display',
   ],
   commands: {
     cmdE: {
@@ -49,6 +50,9 @@ const manifest = {
       global: true,
     },
   },
+  // chrome_url_overrides: {
+  //   newtab: 'src/pages/new-tab/index.html',
+  // },
   side_panel: {
     default_path: 'src/pages/sidepanel/index.html',
   },

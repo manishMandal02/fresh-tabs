@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  width: 100vw;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+}
+
+#command-palette-popup-container {
+  height: 100%;
+  width: 100%;
+}
+
+/* styles for command palette */
+
+/* custom scroll bar */
+.cc-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* Track */
+.cc-scrollbar::-webkit-scrollbar-track {
+  background: #021326a6;
+}
+
+/* Handle */
+.cc-scrollbar::-webkit-scrollbar-thumb {
+  background: #293240cd;
+  border-radius: 16px;
+  cursor: default;
+}
+
+/* Handle on hover */
+.cc-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #212936cd;
+}
+
+/* glassmorphism bg */
+.glassmorphism-bg {
+  box-shadow: 0 8px 32px 0 #1f26875e;
+  background: #020b1ebd;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 8px;
+}
+
+/* notes editor styles */
+/* date highlight in notes editor */
+
+.add-note-date-highlight {
+  background-color: #21d4a1;
+  font-size: 13.5px;
+  caret-color: #10121f;
+  color: #10121f !important;
+  font-weight: 400;
+  padding: 2px 6px;
+  border-radius: 1.5px;
+}

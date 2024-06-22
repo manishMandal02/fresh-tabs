@@ -829,6 +829,41 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
       let activeTabId = currentTab?.id;
 
+      // TODO- testing... ---  new tab page
+      if (currentTab?.url?.startsWith('chrome://newtab')) {
+        // update tab content
+        // await chrome.tabs.update(currentTab.id, { url: chrome.runtime.getURL('src/pages/new-tab/index.html') });
+
+        const currentWindow = await chrome.windows.getCurrent();
+
+        console.log("🌅 ~ chrome.tabs.executeScript(activeTabId,{code:'w ~ currentWindow:", currentWindow);
+
+        const popupOffsetTop = Math.ceil(currentWindow.height + currentWindow.top) / 4;
+        const popupOffsetLeft = Math.ceil(currentWindow.width / 4 + currentWindow.left);
+
+        console.log('🌅 ~ popupOffsetLeft:', popupOffsetLeft);
+
+        console.log('🌅 ~ popupOffsetTop:', popupOffsetTop);
+
+        const window = await chrome.windows.create({
+          type: 'popup',
+          state: 'normal',
+          url: chrome.runtime.getURL(`src/pages/command-palette-popup/index.html?windowId=${currentWindow.id}`),
+          focused: true,
+          width: 750,
+          height: 550,
+          top: popupOffsetTop,
+          left: popupOffsetLeft,
+        });
+
+        console.log('🌅 ~ chrome.commands.onCommand.addListener ~ window:', window);
+        await wait(200);
+        await showCommandPaletteContentScript(activeTabId, currentWindow.id);
+
+        return;
+      }
+      //** --
+
       if (currentTab?.url && isChromeUrl(currentTab?.url)) {
         // chrome url
         // switch tab as content script doesn't work on chrome pages
@@ -989,6 +1024,10 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
   // get tab info
   const tab = await chrome.tabs.get(tabId);
 
+  const space = await getSpaceByWindow(windowId);
+
+  if (!space?.id) return;
+
   if (tab.url.startsWith(DISCARD_TAB_URL_PREFIX)) {
     // update tab with original url
     await chrome.tabs.update(tabId, {
@@ -1017,6 +1056,10 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
 // event listener for when tabs get updated
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   console.log('💰 ~ chrome.tabs.onUpdated.addListener ~ changeInfo:', changeInfo);
+
+  const space = await getSpaceByWindow(tab.windowId);
+
+  if (!space?.id) return;
 
   try {
     if (changeInfo?.url) {
@@ -1209,7 +1252,7 @@ chrome.tabGroups.onMoved.addListener(async group => {
 // window created/opened
 chrome.windows.onCreated.addListener(window => {
   // do nothing if incognito window
-  if (window.incognito) return;
+  if (window.incognito || window.type !== 'normal') return;
 
   (async () => {
     // wait for 1s
@@ -1275,7 +1318,7 @@ chrome.windows.onRemoved.addListener(async windowId => {
   const space = await getSpaceByWindow(windowId);
 
   // if the space is a saved space then do nothing
-  if (space?.isSaved) return;
+  if (!space?.id || space?.isSaved) return;
 
   // get user preference
   const { deleteUnsavedSpace } = await getAppSettings();
