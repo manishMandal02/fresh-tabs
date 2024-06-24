@@ -14,7 +14,6 @@ import { debounceWithEvents, generateId, wait } from '../../utils';
 import { retryAtIntervals } from '../../utils/retryAtIntervals';
 import { asyncMessageHandler } from '../../utils/asyncMessageHandler';
 import { handleSnoozedTabAlarm } from './handler/alarm/unsnooze-tab';
-import { getFaviconURL, getFaviconURLAsync, isChromeUrl, isValidURL, parseUrl } from '../../utils/url';
 import { discardAllTabs } from '@root/src/services/chrome-discard/discard';
 import { matchWordsInText } from '@root/src/utils/string/matchWordsInText';
 import { publishEvents, publishEventsTab } from '../../utils/publish-events';
@@ -22,6 +21,7 @@ import { handleMergeSpaceHistoryAlarm } from './handler/alarm/mergeSpaceHistory'
 import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers';
 import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';
 import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
+import { getFaviconURL, getFaviconURLAsync, isChromeUrl, parseUrl } from '../../utils/url';
 import {
   createActiveTab,
   getCurrentTab,
@@ -87,6 +87,7 @@ import {
 } from '@root/src/constants/app';
 import { removeGroup, updateGroup } from '@root/src/services/chrome-storage/groups';
 import { handleNotesRemainderAlarm } from './handler/alarm/notes-remainder';
+import { getStorage, setStorage } from '@root/src/services/chrome-storage/helpers';
 
 logger.info('🏁 background loaded');
 
@@ -277,8 +278,6 @@ const recordSiteVisit = async (windowId: number, tabId: number) => {
 
 // record a daily time spent in spaces in chunks
 const recordDailySpaceTime = async (windowId: number) => {
-  console.log('🚨 ~ recordDailySpaceTime ~ windowId:', windowId);
-
   const dailySpaceTimeChunks: IDailySpaceTimeChunks = {
     spaceId: null,
     time: Date.now(),
@@ -302,7 +301,7 @@ const recordDailySpaceTime = async (windowId: number) => {
 
 // find notes for this site
 const showNotesBubbleContentScript = async (url: string, tabId: number, windowId: number) => {
-  if (!url) return;
+  if (!url || isChromeUrl(url)) return;
 
   const { notesBubblePos, showNotesBubbleForAllSites } = await getAppSettings();
 
@@ -331,17 +330,55 @@ const showNotesBubbleContentScript = async (url: string, tabId: number, windowId
 };
 
 //  show command palette
-export const showCommandPaletteContentScript = async (tabId: number, windowId: number) => {
+export const showCommandPaletteContentScript = async (
+  tabId: number,
+  windowId: number,
+  shouldOpenInPopupWindow = false,
+) => {
+  //
+  let canOpenInContentScript = false;
+
+  if (!shouldOpenInPopupWindow) {
+    // checks if content script is loaded
+    const res = await publishEventsTab(tabId, { event: 'CHECK_CONTENT_SCRIPT_LOADED' });
+
+    if (res) canOpenInContentScript = true;
+  }
+
+  if (!canOpenInContentScript) {
+    // open command palette in new popup window
+    const currentWindow = await chrome.windows.getCurrent();
+
+    const popupOffsetTop = Math.ceil(currentWindow.height + currentWindow.top) / 4;
+    const popupOffsetLeft = Math.ceil(currentWindow.width / 4 + currentWindow.left);
+
+    const window = await chrome.windows.create({
+      type: 'popup',
+      state: 'normal',
+      url: chrome.runtime.getURL(`src/pages/command-palette-popup/index.html?windowId=${currentWindow.id}`),
+      focused: true,
+      width: 750,
+      height: 550,
+      top: popupOffsetTop,
+      left: popupOffsetLeft,
+    });
+
+    await setStorage({ type: 'session', key: 'TEMP_POPUP_WINDOW', value: window.id });
+
+    return;
+  }
+
+  // get command palette props data
   const recentSites = await getRecentlyVisitedSites();
 
   const activeSpace = await getSpaceByWindow(windowId);
 
   const preferences = await getAppSettings();
 
-  // send msg/event to content scr
+  // send msg/event to content script to open command palette
   await retryAtIntervals({
-    interval: 1000,
-    retries: 3,
+    interval: 500,
+    retries: 2,
     callback: async () => {
       return await publishEventsTab(tabId, {
         event: 'SHOW_COMMAND_PALETTE',
@@ -356,10 +393,10 @@ export const showCommandPaletteContentScript = async (tabId: number, windowId: n
       });
     },
   });
+  return;
 };
 
 // * chrome event listeners
-
 // handle events from content script (command palette)
 chrome.runtime.onMessage.addListener(
   asyncMessageHandler<IMessageEventContentScript, boolean | ICommand[]>(async request => {
@@ -805,9 +842,9 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
     if (command === 'newTab') {
       const newTab = await createActiveTab('chrome://newtab', tab.index + 1);
 
-      // TODO - temp fix: a additional new tab gets created when side panel is opened
       const [nextTab] = await chrome.tabs.query({ index: newTab.index + 1 });
 
+      // remove the a new tab if created duplicate new tab
       if (nextTab?.pendingUrl?.startsWith('chrome://newtab')) {
         await chrome.tabs.remove(nextTab.id);
       }
@@ -829,94 +866,9 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
         currentTab = activeTab;
       }
 
-      let activeTabId = currentTab?.id;
+      const shouldOpenInPopupWindow = !currentTab?.url || isChromeUrl(currentTab.url);
 
-      // TODO- testing... ---  new tab page
-      if (currentTab?.url?.startsWith('chrome://newtab')) {
-        // update tab content
-        // await chrome.tabs.update(currentTab.id, { url: chrome.runtime.getURL('src/pages/new-tab/index.html') });
-
-        const currentWindow = await chrome.windows.getCurrent();
-
-        console.log("🌅 ~ chrome.tabs.executeScript(activeTabId,{code:'w ~ currentWindow:", currentWindow);
-
-        const popupOffsetTop = Math.ceil(currentWindow.height + currentWindow.top) / 4;
-        const popupOffsetLeft = Math.ceil(currentWindow.width / 4 + currentWindow.left);
-
-        console.log('🌅 ~ popupOffsetLeft:', popupOffsetLeft);
-
-        console.log('🌅 ~ popupOffsetTop:', popupOffsetTop);
-
-        const window = await chrome.windows.create({
-          type: 'popup',
-          state: 'normal',
-          url: chrome.runtime.getURL(`src/pages/command-palette-popup/index.html?windowId=${currentWindow.id}`),
-          focused: true,
-          width: 750,
-          height: 550,
-          top: popupOffsetTop,
-          left: popupOffsetLeft,
-        });
-
-        console.log('🌅 ~ chrome.commands.onCommand.addListener ~ window:', window);
-        await wait(200);
-        await showCommandPaletteContentScript(activeTabId, currentWindow.id);
-
-        return;
-      }
-      //** --
-
-      if (currentTab?.url && isChromeUrl(currentTab?.url)) {
-        // chrome url
-        // switch tab as content script doesn't work on chrome pages
-
-        // get last visited url
-        const space = await getSpaceByWindow(tab.windowId);
-        const recentlyVisitedURL = await getSpaceHistory(space.id);
-
-        const tabs = await chrome.tabs.query({ currentWindow: true });
-
-        if (
-          tabs?.length < 2 ||
-          (tabs.filter(t => isChromeUrl(t.url)).length === tabs.length && isValidURL(recentlyVisitedURL[0].url))
-        ) {
-          // create new tab if one 1 tab exists
-          const newTab = await chrome.tabs.create({ url: recentlyVisitedURL[0].url, active: true });
-          activeTabId = newTab.id;
-        } else {
-          // find the tab based on the url
-          const [lastActiveTab] = await chrome.tabs.query({ title: recentlyVisitedURL[0].title, currentWindow: true });
-
-          if (lastActiveTab?.id) {
-            activeTabId = lastActiveTab.id;
-          } else {
-            // get next tab if last active tab not found
-            const [nextTab] = await chrome.tabs.query({ index: currentTab.index + 1, currentWindow: true });
-
-            if (nextTab) {
-              activeTabId = nextTab.id;
-            } else {
-              // get first tab
-              const [previousTab] = await chrome.tabs.query({ index: currentTab.index - 1, currentWindow: true });
-              if (previousTab) {
-                activeTabId = previousTab.id;
-              }
-            }
-          }
-          await goToTab(activeTabId);
-        }
-      }
-
-      // checks if tab fully loaded
-      const res = await publishEventsTab(activeTabId, { event: 'CHECK_CONTENT_SCRIPT_LOADED' });
-
-      if (!res) {
-        // wait for 0.2s
-        await chrome.tabs.reload(activeTabId);
-        await wait(250);
-      }
-
-      await showCommandPaletteContentScript(activeTabId, currentTab.windowId);
+      await showCommandPaletteContentScript(currentTab.id, currentTab.windowId, shouldOpenInPopupWindow);
     }
   } catch (error) {
     logger.error({
@@ -1316,6 +1268,14 @@ chrome.windows.onCreated.addListener(window => {
 
 // window removed/closed
 chrome.windows.onRemoved.addListener(async windowId => {
+  const tempPopupWindow = await getStorage<number>({ type: 'session', key: 'TEMP_POPUP_WINDOW' });
+
+  if (tempPopupWindow && tempPopupWindow === windowId) {
+    // a temp popup window was removed, clear window id from storage
+    await setStorage({ type: 'session', key: 'TEMP_POPUP_WINDOW', value: 0 });
+    return;
+  }
+
   // get space by window
   const space = await getSpaceByWindow(windowId);
 
@@ -1350,32 +1310,30 @@ chrome.windows.onRemoved.addListener(async windowId => {
 
 // on window focus
 chrome.windows.onFocusChanged.addListener(async windowId => {
-  // check if the popup window (command palette popup) has lost focused
-  const lastFocusedWindow = await chrome.windows.getLastFocused();
+  // record daily space time
+  await recordDailySpaceTime(windowId);
 
-  console.log('🚨 ~ lastFocusedWindow:', lastFocusedWindow);
+  // TODO - testing....
+  return;
 
-  const focusedWindow = windowId > 0 ? await chrome.windows.get(windowId) : null;
+  if (windowId > 0) {
+    const currentWindow = await chrome.windows.get(windowId);
 
-  if (focusedWindow?.type !== 'popup' || lastFocusedWindow.type !== 'popup') {
-    // record daily space time
-    await recordDailySpaceTime(windowId);
+    if (currentWindow.type === 'popup') return;
   }
 
-  console.log('🚨 ~ focusedWindow:', focusedWindow);
+  // remove temp pop window, if it was created for command palette of quick view
+  const popupWindowId = await getStorage<number>({ type: 'session', key: 'TEMP_POPUP_WINDOW' });
 
-  if (
-    !lastFocusedWindow?.id ||
-    lastFocusedWindow.id < 1 ||
-    focusedWindow?.type === 'popup' ||
-    lastFocusedWindow.type !== 'popup'
-  )
-    return;
+  if (!popupWindowId || popupWindowId < 1) return;
 
-  console.log('🚨 ~ window to delete ~ lastFocusedWindow.id:', lastFocusedWindow.id);
-
-  // remove popup window
-  await chrome.windows.remove(lastFocusedWindow.id);
+  try {
+    // remove popup window
+    await chrome.windows.remove(popupWindowId);
+  } finally {
+    // clear popup window id from storage
+    await setStorage({ type: 'session', key: 'TEMP_POPUP_WINDOW', value: 0 });
+  }
 });
 
 // handle tabs changed

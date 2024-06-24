@@ -32,6 +32,7 @@ import {
 } from '@root/src/stores/app';
 import { getAllNotifications } from '@root/src/services/chrome-storage/user-notifications';
 import { getAllNotes } from '@root/src/services/chrome-storage/notes';
+import { isChromeUrl } from '@root/src/utils';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -127,7 +128,10 @@ const SidePanel = () => {
 
   const handleShowCommandPalette = useCallback(async () => {
     const currentTab = await getCurrentTab();
-    await showCommandPaletteContentScript(currentTab.id, activeSpace?.windowId);
+
+    const shouldOpenInPopupWindow = isChromeUrl(currentTab.url);
+
+    await showCommandPaletteContentScript(currentTab.id, activeSpace?.windowId, shouldOpenInPopupWindow);
   }, [activeSpace]);
 
   const handleShowNotification = useCallback(() => {

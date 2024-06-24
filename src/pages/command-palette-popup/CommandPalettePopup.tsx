@@ -44,7 +44,7 @@ const CommandPalettePopup = () => {
 
   return (
     <div className="relative h-full w-full bg-slate-900 overflow-hidden">
-      <div className="mt-8">
+      <div className="mt-8 bg-red-500">
         {commandPaletteProps?.activeSpace?.id ? (
           <CommandPalette
             onClose={onCloseCommandPalette}

@@ -4,7 +4,7 @@ import { UnionTypeFromObjectValues } from '@root/src/types/utility.types';
 import { logger } from '@root/src/utils/logger';
 
 type GetStorageParams = {
-  type: 'local' | 'sync';
+  type: 'local' | 'sync' | 'session';
   key: UnionTypeFromObjectValues<typeof StorageKey>;
 };
 
@@ -24,6 +24,10 @@ export const getStorage = async <T = null | ISpace>({ key, type }: GetStoragePar
       storageData = await chrome.storage.sync.get(key);
     }
 
+    // session storage
+    if (type === 'session') {
+      storageData = await chrome.storage.session.get(key);
+    }
     if (storageData && typeof storageData[key] !== 'undefined') {
       return storageData[key];
     } else {

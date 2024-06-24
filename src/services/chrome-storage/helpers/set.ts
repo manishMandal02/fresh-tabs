@@ -28,11 +28,12 @@ type StorageValue =
   | IDailySpaceTime[]
   | IAppSettings
   | IPinnedTab[]
+  | number
   | number[]
   | string;
 
 type SetStorageParams = {
-  type: 'local' | 'sync';
+  type: 'local' | 'sync' | 'session';
   key: UnionTypeFromObjectValues<typeof StorageKey>;
   value: StorageValue;
 };
@@ -49,6 +50,12 @@ export const setStorage = async ({ key, value, type }: SetStorageParams) => {
     // sync storage
     if (type === 'sync') {
       await chrome.storage.sync.set({
+        [key]: value,
+      });
+    }
+    // session storage
+    if (type === 'session') {
+      await chrome.storage.session.set({
         [key]: value,
       });
     }

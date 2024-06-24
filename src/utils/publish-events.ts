@@ -27,16 +27,11 @@ export const publishEventsTab = async (tabId: number, event: IMessageEventConten
     await chrome.tabs.sendMessage(tabId, event);
     return true;
   } catch (error) {
-    if ((error as Error).message.includes('Receiving end does not exist')) {
-      // TODO - open command palette at alternate view (popup, new window frame popup, or something else)
-      // await chrome.tabs.reload(tabId);
-    } else {
-      logger.error({
-        error,
-        msg: 'Failed to send message to active tab',
-        fileTrace: 'src/pages/background/index.ts:31 ~ publishEventsTab() ~ catch block',
-      });
-    }
-    return false;
+    logger.error({
+      error,
+      msg: 'Failed to send message to active tab',
+      fileTrace: 'src/pages/background/index.ts:31 ~ publishEventsTab() ~ catch block',
+    });
   }
+  return false;
 };
