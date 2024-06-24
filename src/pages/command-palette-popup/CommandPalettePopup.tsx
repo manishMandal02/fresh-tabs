@@ -15,11 +15,11 @@ const CommandPalettePopup = () => {
 
     const recentSites = await getRecentlyVisitedSites();
 
-    console.log('💰 ~ getCommandPaletteData ~ recentSites:', recentSites);
-
     const activeSpace = await getSpaceByWindow(currentWindowId);
 
     const preferences = await getAppSettings();
+
+    document.title = `${activeSpace?.emoji || ''}  ${activeSpace?.title || ''}`;
 
     setCommandPaletteProps({
       activeSpace,
@@ -32,6 +32,7 @@ const CommandPalettePopup = () => {
   };
 
   useEffect(() => {
+    document.title = 'Command Palette';
     (async () => {
       await getCommandPaletteData();
     })();
@@ -44,16 +45,17 @@ const CommandPalettePopup = () => {
 
   return (
     <div className="relative h-full w-full bg-slate-900 overflow-hidden">
-      <div className="mt-8 bg-red-500">
+      <div className="mt-8">
         {commandPaletteProps?.activeSpace?.id ? (
           <CommandPalette
+            isOpenedInPopupWindow={true}
             onClose={onCloseCommandPalette}
             recentSites={commandPaletteProps.recentSites}
             activeSpace={commandPaletteProps.activeSpace}
             searchFiltersPreference={commandPaletteProps.searchFilterPreferences}
           />
         ) : (
-          <div className="text-[18px] text-center text-rose-500 font-semibold">Event not received</div>
+          <div className="text-[18px] text-center">.</div>
         )}
       </div>
     </div>

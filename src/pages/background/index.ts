@@ -407,9 +407,9 @@ chrome.runtime.onMessage.addListener(
     // handle events cases
     switch (event) {
       case 'SWITCH_TAB': {
-        const { tabId, shouldCloseCurrentTab } = payload;
+        const { tabId, shouldCloseCurrentTab, isOpenedInPopupWindow, activeSpace } = payload;
 
-        const currentTab = await getCurrentTab();
+        const currentTab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
 
         await goToTab(tabId);
 
@@ -433,9 +433,9 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'NEW_SPACE': {
-        const { spaceTitle } = payload;
+        const { spaceTitle, isOpenedInPopupWindow, activeSpace } = payload;
 
-        const tab = await getCurrentTab();
+        const tab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
 
         const newSpace = await createNewSpace(
           {
@@ -455,7 +455,7 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'NEW_NOTE': {
-        const { activeSpace, note, url, noteRemainder, noteTitle } = payload;
+        const { activeSpace, note, url, noteRemainder, noteTitle, isOpenedInPopupWindow } = payload;
 
         const currentTab = await getCurrentTab();
 
@@ -479,10 +479,12 @@ chrome.runtime.onMessage.addListener(
 
         const { notesBubblePos } = await getAppSettings();
 
-        await publishEventsTab(currentTab.id, {
-          event: 'SHOW_SNACKBAR',
-          payload: { activeSpace, notesBubblePos, snackbarMsg: 'Note Captured' },
-        });
+        if (!isOpenedInPopupWindow) {
+          await publishEventsTab(currentTab.id, {
+            event: 'SHOW_SNACKBAR',
+            payload: { activeSpace, notesBubblePos, snackbarMsg: 'Note Captured' },
+          });
+        }
 
         // send to side panel
         await publishEvents({
@@ -497,7 +499,7 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'EDIT_NOTE': {
-        const { note, url, activeSpace, noteRemainder, noteId, noteTitle } = payload;
+        const { note, url, activeSpace, noteRemainder, noteId, noteTitle, isOpenedInPopupWindow } = payload;
 
         const noteToEdit = await getNote(noteId);
 
@@ -513,10 +515,12 @@ chrome.runtime.onMessage.addListener(
 
         const { notesBubblePos } = await getAppSettings();
 
-        await publishEventsTab(currentTab.id, {
-          event: 'SHOW_SNACKBAR',
-          payload: { activeSpace, notesBubblePos, snackbarMsg: 'Note Saved' },
-        });
+        if (!isOpenedInPopupWindow) {
+          await publishEventsTab(currentTab.id, {
+            event: 'SHOW_SNACKBAR',
+            payload: { activeSpace, notesBubblePos, snackbarMsg: 'Note Saved' },
+          });
+        }
 
         // send to side panel
         await publishEvents({
@@ -546,8 +550,8 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'NEW_GROUP': {
-        const { groupName } = payload;
-        const tab = await getCurrentTab();
+        const { groupName, isOpenedInPopupWindow, activeSpace } = payload;
+        const tab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
 
         const newGroupId = await chrome.tabs.group({ tabIds: tab.id });
 
@@ -561,8 +565,8 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'ADD_TO_GROUP': {
-        const { groupId } = payload;
-        const tab = await getCurrentTab();
+        const { groupId, isOpenedInPopupWindow, activeSpace } = payload;
+        const tab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
 
         await chrome.tabs.group({ groupId, tabIds: tab.id });
 
@@ -570,17 +574,25 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'GO_TO_URL': {
-        const { url, shouldOpenInNewTab } = payload;
+        const { url, shouldOpenInNewTab, isOpenedInPopupWindow, activeSpace } = payload;
 
         // check if url already opened indifferent tab
-        const [openedTab] = await chrome.tabs.query({ url, currentWindow: true });
+        let openedTab = null;
+        if (isOpenedInPopupWindow) {
+          const [matchedTab] = await chrome.tabs.query({ url, windowId: activeSpace.windowId });
+          openedTab = matchedTab;
+        } else {
+          const [matchedTab] = await chrome.tabs.query({ url, currentWindow: true });
+          openedTab = matchedTab;
+        }
 
         if (openedTab?.id) {
           await goToTab(openedTab.id);
           return true;
         }
 
-        const { index, ...tab } = await getCurrentTab();
+        const { index, ...tab } = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
+
         if (!shouldOpenInNewTab) {
           await chrome.tabs.update(tab.id, { url: parseUrl(url) });
         } else {
@@ -591,11 +603,10 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'MOVE_TAB_TO_SPACE': {
-        const { spaceId } = payload;
+        const { spaceId, isOpenedInPopupWindow, activeSpace } = payload;
         const tabsInSpace = await getTabsInSpace(spaceId);
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const tab = await getCurrentTab();
+        const tab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
 
         await setTabsForSpace(spaceId, [...tabsInSpace, tab]);
 
@@ -708,20 +719,19 @@ chrome.runtime.onMessage.addListener(
             });
           }
         }
-        console.log('🚀 ~ SEARCH ~ matchedCommands:585', matchedCommands);
 
         return matchedCommands;
       }
 
       case 'WEB_SEARCH': {
-        const { searchQuery, shouldOpenInNewTab } = payload;
+        const { searchQuery, shouldOpenInNewTab, isOpenedInPopupWindow, activeSpace } = payload;
 
         if (!shouldOpenInNewTab) {
           // search in current tab
           await chrome.search.query({ text: searchQuery, disposition: 'CURRENT_TAB' });
         } else {
           // create new tab to search (as the default new tab search opens a new tab at the end to search)
-          const currentTab = await getCurrentTab();
+          const currentTab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
 
           const newTab = await createActiveTab('chrome://newtab', currentTab.index + 1);
 
@@ -736,12 +746,27 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'SNOOZE_TAB': {
-        const { snoozedUntil, spaceId } = payload;
+        const { snoozedUntil, spaceId, isOpenedInPopupWindow, activeSpace } = payload;
 
-        const [{ url, title, id, favIconUrl: faviconUrl }] = await chrome.tabs.query({
-          active: true,
-          currentWindow: true,
-        });
+        let activeTab: chrome.tabs.Tab = null;
+
+        if (isOpenedInPopupWindow) {
+          const [matchedTab] = await chrome.tabs.query({
+            active: true,
+            windowId: activeSpace.windowId,
+          });
+
+          activeTab = matchedTab;
+        } else {
+          const [matchedTab] = await chrome.tabs.query({
+            active: true,
+            currentWindow: true,
+          });
+
+          activeTab = matchedTab;
+        }
+
+        const { url, title, id, favIconUrl: faviconUrl } = activeTab;
 
         // add snooze tab to storage
         await addSnoozedTab(spaceId, {
@@ -762,7 +787,8 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'CLOSE_TAB': {
-        const currentTab = await getCurrentTab();
+        const { activeSpace, isOpenedInPopupWindow } = payload;
+        const currentTab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
 
         await chrome.tabs.remove(currentTab.id);
 

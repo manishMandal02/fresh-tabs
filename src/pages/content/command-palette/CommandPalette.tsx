@@ -20,6 +20,7 @@ import { useCustomAnimation } from '../../sidepanel/hooks/useCustomAnimation';
 import { staticCommands, useCommand, webSearchCommand } from './command/useCommand';
 import { ICommand, ISearchFilters, ISpace, ITab } from '../../../types/global.types';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
+import { getAllGroups } from '@root/src/services/chrome-storage/groups';
 
 export const COMMAND_PALETTE_SIZE = {
   HEIGHT: 500,
@@ -39,6 +40,7 @@ type Props = {
   searchFiltersPreference: ISearchFilters;
   userSelectedText?: string;
   selectedNoteId?: string;
+  isOpenedInPopupWindow?: boolean;
 };
 
 // ANCHOR - Working Currently
@@ -53,6 +55,7 @@ const CommandPalette = ({
   searchFiltersPreference,
   userSelectedText,
   selectedNoteId,
+  isOpenedInPopupWindow,
 }: Props) => {
   console.log('CommandPalette ~ 🔁 rendered');
 
@@ -88,6 +91,7 @@ const CommandPalette = ({
     setSuggestedCommandsForSubCommand,
   } = useCommandPalette({
     activeSpace,
+    isOpenedInPopupWindow,
     onClose: handleClose,
   });
 
@@ -128,9 +132,16 @@ const CommandPalette = ({
   }, [focusedCommandIndex, suggestedCommands]);
 
   // set default suggested commands
-  const setDefaultSuggestedCommands = useCallback(() => {
+  const setDefaultSuggestedCommands = useCallback(async () => {
+    let filteredStaticCommands = staticCommands;
+    const currentGroups = await getAllGroups(activeSpace.id);
+
+    if (currentGroups && currentGroups.length < 1) {
+      filteredStaticCommands = filteredStaticCommands.filter(cmd => cmd.type !== CommandType.AddToGroup);
+    }
+
     const recentSitesCommands = recentSites.map<ICommand>((site, idx) => ({
-      index: 1 + idx + staticCommands.length,
+      index: 1 + idx + filteredStaticCommands.length,
       type: CommandType.Link,
       label: site.title,
       icon: getFaviconURL(site.url),
@@ -138,9 +149,9 @@ const CommandPalette = ({
       alias: 'History',
     }));
 
-    setSuggestedCommands([...staticCommands, ...(recentSitesCommands || [])]);
+    setSuggestedCommands([...filteredStaticCommands, ...(recentSitesCommands || [])]);
     setFocusedCommandIndex(1);
-  }, [recentSites, setSuggestedCommands, setFocusedCommandIndex]);
+  }, [recentSites, setSuggestedCommands, setFocusedCommandIndex, activeSpace]);
 
   // search commands
   const handleGlobalSearch = useCallback(
@@ -149,8 +160,14 @@ const CommandPalette = ({
 
       const searchQueryLowerCase = searchQuery.toLowerCase().trim();
 
+      const currentGroups = await getAllGroups(activeSpace.id);
+      let filteredStaticCommands = staticCommands;
+      if (currentGroups && currentGroups.length < 1) {
+        filteredStaticCommands = staticCommands.filter(cmd => cmd.type !== CommandType.AddToGroup);
+      }
+
       // query static matchedCommands label
-      staticCommands
+      filteredStaticCommands
         .filter(
           cmd =>
             cmd.label.toLowerCase().includes(searchQueryLowerCase) ||
@@ -411,7 +428,7 @@ const CommandPalette = ({
           width: 'fit-content',
           maxWidth: COMMAND_PALETTE_SIZE.MAX_WIDTH + 'px',
         }}
-        className={cn(`flex items-center h-fit max-h-full outline-none flex-col justify-center m-0 p-0 overflow-hidden
+        className={cn(`flex items-center h-fit max-h-full outline-none flex-col justify-center mt-[18px] p-0 overflow-hidden
                        mx-auto backdrop:bg-transparent  bg-transparent rounded-lg shadow-2xl shadow-brand-darkBgAccent/80`)}>
         <div className="size-full relative overflow-hidden rounded-lg ">
           {subCommand !== CommandType.NewNote ? (
@@ -438,6 +455,7 @@ const CommandPalette = ({
               selectedNote={
                 selectedNoteId || (suggestedCommands?.length > 0 ? (suggestedCommands[0].metadata as string) : '')
               }
+              isOpenedInPopupWindow={isOpenedInPopupWindow}
               resetSuggestedCommand={() => setSuggestedCommands([])}
               userSelectedText={userSelectedText}
               activeSpace={activeSpace}

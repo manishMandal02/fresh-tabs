@@ -20,6 +20,7 @@ type Props = {
   onClose?: () => void;
   handleGoBack: () => void;
   selectedNote?: string;
+  isOpenedInPopupWindow: boolean;
   resetSuggestedCommand?: () => void;
 };
 
@@ -29,6 +30,7 @@ const CreateNote = ({
   onClose,
   activeSpace,
   handleGoBack,
+  isOpenedInPopupWindow,
   resetSuggestedCommand,
 }: Props) => {
   const { document: iFrameDoc } = useFrame();
@@ -68,6 +70,7 @@ const CreateNote = ({
       //  new note
       setTitle(document.title);
       setNote(EDITOR_EMPTY_STATE);
+      if (isOpenedInPopupWindow) return;
       setDomain(cleanDomainName(document.location.hostname));
     }
     // run on mount
@@ -81,17 +84,25 @@ const CreateNote = ({
     if (noteId) {
       await publishEvents({
         event: 'EDIT_NOTE',
-        payload: { note, noteId, activeSpace, noteTitle: title, url: domain, noteRemainder: remainder },
+        payload: {
+          note,
+          noteId,
+          activeSpace,
+          isOpenedInPopupWindow,
+          noteTitle: title,
+          url: domain,
+          noteRemainder: remainder,
+        },
       });
     } else {
       await publishEvents({
         event: 'NEW_NOTE',
-        payload: { note, activeSpace, noteTitle: title, url: domain, noteRemainder: remainder },
+        payload: { note, activeSpace, isOpenedInPopupWindow, noteTitle: title, url: domain, noteRemainder: remainder },
       });
     }
 
     onClose();
-  }, [note, title, activeSpace, onClose, remainder, domain, noteId]);
+  }, [note, title, activeSpace, onClose, remainder, domain, noteId, isOpenedInPopupWindow]);
 
   useHotkeys(
     'mod+enter',

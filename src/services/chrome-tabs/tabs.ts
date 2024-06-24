@@ -254,17 +254,25 @@ export const goToTab = async (id: number) => {
 };
 
 // get current tab
-export const getCurrentTab = async (): Promise<ITab> => {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+export const getCurrentTab = async (windowId = 0): Promise<ITab> => {
+  let currentTab = null;
 
-  if (!tab?.id) return null;
+  if (!windowId) {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    currentTab = tab;
+  } else {
+    const [tab] = await chrome.tabs.query({ active: true, windowId });
+    currentTab = tab;
+  }
+
+  if (!currentTab?.id) return null;
 
   return {
-    id: tab.id,
-    title: tab.title,
-    url: tab.url,
-    index: tab.index,
-    groupId: tab.groupId,
+    id: currentTab.id,
+    title: currentTab.title,
+    url: currentTab.url,
+    index: currentTab.index,
+    groupId: currentTab.groupId,
   };
 };
 

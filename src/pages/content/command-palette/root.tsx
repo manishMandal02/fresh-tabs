@@ -92,6 +92,7 @@ const appendCommandPaletteContainer = ({
         borderRadius: '12px',
         colorScheme: 'none',
         background: 'none',
+        marginTop: '-18px',
       }}
       id="fresh-tabs-command"
       title="fresh-tabs-iframe"
@@ -104,6 +105,7 @@ const appendCommandPaletteContainer = ({
           context.document.body.style.background = 'none';
           return (
             <CommandPalette
+              isOpenedInPopupWindow={false}
               recentSites={recentSites || []}
               activeSpace={activeSpace}
               onClose={handleCloseCommandPalette}

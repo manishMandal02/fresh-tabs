@@ -176,6 +176,7 @@ interface IEventPayloadContentScript {
   recentSites?: ITab[];
   activeSpace?: ISpace;
   noteRemainder?: string;
+  isOpenedInPopupWindow?: boolean;
   shouldOpenInNewTab?: boolean;
   shouldCloseCurrentTab?: boolean;
   shouldOpenInNewWindow?: boolean;

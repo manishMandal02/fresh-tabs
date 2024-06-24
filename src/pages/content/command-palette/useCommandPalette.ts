@@ -25,9 +25,10 @@ const defaultSuggestedSnoozeTimeLabels = [
 type UseCommandPaletteProps = {
   activeSpace: ISpace;
   onClose: () => void;
+  isOpenedInPopupWindow: boolean;
 };
 
-export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPaletteProps) => {
+export const useCommandPalette = ({ activeSpace, onClose, isOpenedInPopupWindow }: UseCommandPaletteProps) => {
   // local state
   // search/commands suggestions
   const [suggestedCommands, setSuggestedCommands] = useState<ICommand[]>([]);
@@ -69,7 +70,12 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
         case CommandType.SwitchTab: {
           await publishEvents({
             event: 'SWITCH_TAB',
-            payload: { shouldCloseCurrentTab: isMetaKeyPressed, tabId: focusedCommand.metadata as number },
+            payload: {
+              isOpenedInPopupWindow,
+              activeSpace,
+              shouldCloseCurrentTab: isMetaKeyPressed,
+              tabId: focusedCommand.metadata as number,
+            },
           });
 
           handleCloseCommandPalette();
@@ -106,7 +112,10 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
             setFocusedCommandIndex(1);
           } else {
             if (searchQuery?.length < 3) return;
-            await publishEvents({ event: 'NEW_SPACE', payload: { spaceTitle: searchQuery } });
+            await publishEvents({
+              event: 'NEW_SPACE',
+              payload: { activeSpace, isOpenedInPopupWindow, spaceTitle: searchQuery },
+            });
             handleCloseCommandPalette();
           }
           break;
@@ -116,13 +125,15 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
           if (!subCommand) {
             const allSpaces = await getAllSpaces();
 
-            const addToSpaceCommands = allSpaces.map<ICommand>((space, idx) => ({
-              label: space.title,
-              type: CommandType.AddToSpace,
-              index: idx + 1,
-              icon: space.theme,
-              metadata: space.id,
-            }));
+            const addToSpaceCommands = allSpaces
+              .filter(s => s.id !== activeSpace.id)
+              .map<ICommand>((space, idx) => ({
+                label: space.title,
+                type: CommandType.AddToSpace,
+                index: idx + 1,
+                icon: space.theme,
+                metadata: space.id,
+              }));
 
             setSuggestedCommandsForSubCommand(addToSpaceCommands);
             setSubCommand(CommandType.AddToSpace);
@@ -131,7 +142,11 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
           } else {
             await publishEvents({
               event: 'MOVE_TAB_TO_SPACE',
-              payload: { spaceId: focusedCommand.metadata as string },
+              payload: {
+                activeSpace,
+                isOpenedInPopupWindow,
+                spaceId: focusedCommand.metadata as string,
+              },
             });
             handleCloseCommandPalette();
           }
@@ -155,7 +170,12 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
         case CommandType.WebSearch: {
           await publishEvents({
             event: 'WEB_SEARCH',
-            payload: { searchQuery, shouldOpenInNewTab: isMetaKeyPressed },
+            payload: {
+              activeSpace,
+              isOpenedInPopupWindow,
+              searchQuery,
+              shouldOpenInNewTab: isMetaKeyPressed,
+            },
           });
           handleCloseCommandPalette();
           break;
@@ -164,7 +184,12 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
         case CommandType.Link: {
           await publishEvents({
             event: 'GO_TO_URL',
-            payload: { url: focusedCommand.metadata as string, shouldOpenInNewTab: isMetaKeyPressed },
+            payload: {
+              activeSpace,
+              isOpenedInPopupWindow,
+              url: focusedCommand.metadata as string,
+              shouldOpenInNewTab: isMetaKeyPressed,
+            },
           });
           handleCloseCommandPalette();
           break;
@@ -195,7 +220,12 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
           } else {
             await publishEvents({
               event: 'SNOOZE_TAB',
-              payload: { spaceId: activeSpace.id, snoozedUntil: focusedCommand.metadata as number },
+              payload: {
+                activeSpace,
+                isOpenedInPopupWindow,
+                spaceId: activeSpace.id,
+                snoozedUntil: focusedCommand.metadata as number,
+              },
             });
 
             handleCloseCommandPalette();
@@ -220,7 +250,14 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
             setFocusedCommandIndex(1);
           } else {
             if (searchQuery?.length < 3) return;
-            await publishEvents({ event: 'NEW_GROUP', payload: { groupName: searchQuery } });
+            await publishEvents({
+              event: 'NEW_GROUP',
+              payload: {
+                activeSpace,
+                isOpenedInPopupWindow,
+                groupName: searchQuery,
+              },
+            });
             handleCloseCommandPalette();
           }
           break;
@@ -245,7 +282,11 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
           } else {
             await publishEvents({
               event: 'ADD_TO_GROUP',
-              payload: { groupId: focusedCommand.metadata as number },
+              payload: {
+                activeSpace,
+                isOpenedInPopupWindow,
+                groupId: focusedCommand.metadata as number,
+              },
             });
             handleCloseCommandPalette();
           }
@@ -253,7 +294,7 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
         }
 
         case CommandType.CloseTab: {
-          await publishEvents({ event: 'CLOSE_TAB' });
+          await publishEvents({ event: 'CLOSE_TAB', payload: { activeSpace, isOpenedInPopupWindow } });
           handleCloseCommandPalette();
           break;
         }
@@ -262,13 +303,14 @@ export const useCommandPalette = ({ activeSpace, onClose }: UseCommandPalettePro
       setSearchQuery('');
     },
     [
-      activeSpace,
-      focusedCommandIndex,
-      suggestedCommands,
-      handleCloseCommandPalette,
-      searchQuery,
       subCommand,
+      searchQuery,
+      activeSpace,
       getCommandIcon,
+      suggestedCommands,
+      focusedCommandIndex,
+      isOpenedInPopupWindow,
+      handleCloseCommandPalette,
     ],
   );
 

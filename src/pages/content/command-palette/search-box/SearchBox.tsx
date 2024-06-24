@@ -51,7 +51,7 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
 
     return (
       <div
-        className={`relative w-full h-[32px] min-h-[32px] md:h-[50px] md:min-h-[50px] flex items-center bg-brand-darkBg rounded-tl-xl rounded-tr-xl
+        className={`relative w-full h-[50px] min-h-[50px] flex items-center bg-brand-darkBg rounded-tl-xl rounded-tr-xl
                     shadow-sm shadow-brand-darkBgAccent/60 border border-brand-darkBgAccent/70 border-collapse`}>
         {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events */}
         <button
@@ -59,7 +59,7 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
           tabIndex={-1}
           onClick={handleFocusSearchInput}>
           {!subCommand ? (
-            <MagnifyingGlassIcon className="text-slate-500/80 bg-transparent md:scale-[1.5] scale-[1] ml-[6px] mr-[4px] md:ml-3 md:mr-[9px]" />
+            <MagnifyingGlassIcon className="text-slate-500/80 bg-transparent scale-[1.5] ml-3 mr-[9px]" />
           ) : (
             <SubCommandIndicator subCommandType={subCommand} />
           )}
@@ -86,7 +86,7 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
             }
           }}
           value={searchQuery}
-          className={`text-[12px] md:text-[14px] text-slate-300 w-auto flex-grow px-px py-1.5 md:py-2.5  placeholder:text-slate-500/80 placeholder:font-light
+          className={`text-[14px] text-slate-300 w-auto flex-grow px-px py-2.5  placeholder:text-slate-500/80 placeholder:font-light
                 rounded-tr-xl caret-slate-300 caret rounded-br-xl outline-none border-none bg-transparent`}
         />
         {/* search filter */}
