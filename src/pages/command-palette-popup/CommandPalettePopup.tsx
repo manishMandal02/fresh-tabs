@@ -38,6 +38,8 @@ const CommandPalettePopup = () => {
     })();
   }, []);
 
+  // TODO - check and have - active tab details (title, url) for note and other commands
+
   const onCloseCommandPalette = () => {
     setCommandPaletteProps(null);
     window.close();

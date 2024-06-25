@@ -249,7 +249,7 @@ export const useCommandPalette = ({ activeSpace, onClose, isOpenedInPopupWindow 
 
             setFocusedCommandIndex(1);
           } else {
-            if (searchQuery?.length < 3) return;
+            if (searchQuery?.length < 1) return;
             await publishEvents({
               event: 'NEW_GROUP',
               payload: {

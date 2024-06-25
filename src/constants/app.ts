@@ -72,6 +72,7 @@ export const StorageKey = {
   PINNED_TABS: 'PINNED_TABS',
   NOTIFICATIONS: 'NOTIFICATIONS',
   TEMP_POPUP_WINDOW: 'TEMP_POPUP_WINDOW',
+  LINK_PREVIEW_POPUP_WINDOW_ID: 'LINK_PREVIEW_POPUP_WINDOW_ID',
   DAILY_SPACE_TIME_CHUNKS: 'DAILY_SPACE_TIME_CHUNKS',
   tabs: (spaceId: string): `TABS-${string}` => `TABS-${spaceId}`,
   groups: (spaceId: string): `GROUPS-${string}` => `GROUPS-${spaceId}`,

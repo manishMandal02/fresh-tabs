@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import Frame, { FrameContextConsumer } from 'react-frame-component';
 
 import DomainNotes from '../domain-notes';
-import { publishEvents } from '@root/src/utils';
+import { isValidURL, publishEvents } from '@root/src/utils';
 import injectedStyle from './injected.css?inline';
 import { SnackbarContentScript } from '../snackbar';
 import { getTime } from '@root/src/utils/date-time/get-time';
@@ -238,15 +238,61 @@ const showNotes = async (spaceId: string, position: NoteBubblePos, reRender = fa
   );
 };
 
+const appendOpenInTabBtnOverlay = () => {
+  const overlayBtn = document.createElement('button');
+
+  overlayBtn.id = 'fresh-tabs-button-overlay';
+
+  overlayBtn.style.position = 'fixed';
+  overlayBtn.style.zIndex = '9999999999';
+  overlayBtn.style.top = '14px';
+  overlayBtn.style.right = '16px';
+  overlayBtn.style.padding = '10px 18px';
+  overlayBtn.style.borderRadius = '4px';
+
+  overlayBtn.style.fontFamily = 'system-ui';
+  overlayBtn.style.fontSize = '12px';
+  overlayBtn.style.fontWeight = '500';
+  overlayBtn.style.color = '#151b21';
+  overlayBtn.style.backgroundColor = '#eaeaea';
+  overlayBtn.style.cursor = 'pointer';
+  overlayBtn.style.border = '2px solid  #151b21';
+
+  overlayBtn.innerText = 'Open as Tab ↗';
+
+  overlayBtn.addEventListener('click', async () => {
+    const spaceId = sessionStorage.getItem('activeSpaceId') || '';
+    await publishEvents({
+      event: 'OPEN_PREVIEW_LINK_AS_TAB',
+      payload: {
+        spaceId,
+        url: window.location.href,
+      },
+    });
+  });
+
+  document.body.appendChild(overlayBtn);
+};
+
 //  listen to events form background script
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   const event = msg as IMessageEventContentScript;
 
-  const { recentSites, activeSpace, snackbarMsg, searchFilterPreferences, notesBubblePos } = event.payload;
-
   const msgEvent = event.event;
 
-  console.log('🚀 ~ chrome.runtime.onMessage.addListener ~ msgEvent:', msgEvent);
+  if (msgEvent === 'POPUP_PREVIEW_BUTTON_OVERLAY') {
+    appendOpenInTabBtnOverlay();
+
+    if (event?.payload?.spaceId) {
+      sessionStorage.setItem('activeSpaceId', event.payload.spaceId);
+    }
+    sendResponse(true);
+    return;
+  }
+
+  const { recentSites, activeSpace, snackbarMsg, searchFilterPreferences, notesBubblePos } = event.payload;
+
+  console.log('🌅 ~ chrome.runtime.onMessage.addListener ~ msgEvent:', msgEvent);
 
   if (msgEvent === 'SHOW_COMMAND_PALETTE') {
     appendCommandPaletteContainer({
@@ -270,16 +316,34 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   sendResponse(true);
 });
 
-//  - testing - loads command palette on site load
-// (async () => {
-//   const activeSpace = await getSpace('61e549a192');
+// show link preview
+(async () => {
+  document.body.addEventListener('click', async ev => {
+    const clickedEl = ev.target as HTMLElement;
 
-//   console.log('🚀 ~ activeSpace:', activeSpace);
+    console.log('🌅 ~ clickedEl:', clickedEl);
 
-//   const selectedText = 'Transform your Gmail experience—say goodbye to clutter effortlessly';
-//   appendCommandPaletteContainer({
-//     activeSpace,
-//     selectedText,
-//     searchFilterPreferences: { searchBookmarks: false, searchNotes: false },
-//   });
-// })();
+    if (clickedEl.tagName !== 'A' && !clickedEl.closest('a')) return;
+
+    const hrefLink =
+      clickedEl.tagName === 'A' ? clickedEl.getAttribute('href') : clickedEl.closest('a').getAttribute('href') || '';
+
+    const isInternalLink = new URL(hrefLink).hostname === new URL(location.href).hostname;
+
+    if (!hrefLink || !isValidURL(hrefLink) || isInternalLink) return;
+
+    ev.preventDefault();
+
+    // do not allow to open external links, if in preview mode
+    if (sessionStorage.getItem('activeSpaceId')) return;
+
+    // send event to background script to create new popup window with the href link
+
+    await publishEvents({
+      event: 'OPEN_LINK_PREVIEW_POPUP',
+      payload: {
+        url: hrefLink,
+      },
+    });
+  });
+})();

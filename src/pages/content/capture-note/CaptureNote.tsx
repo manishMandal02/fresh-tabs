@@ -163,7 +163,7 @@ const CreateNote = ({
         className="relative bg-brand-darkBg rounded-lg">
         {/* editor */}
         <RichTextEditor
-          placeholder={`Note... \n\n press {cmd + backspace} to go back`}
+          placeholder={`Note... \n\n press "cmd + backspace" to go back`}
           content={note}
           onChange={setNote}
           userSelectedText={userSelectedText}

@@ -353,10 +353,11 @@ export const showCommandPaletteContentScript = async (
     const popupOffsetLeft = Math.ceil(currentWindow.width / 4 + currentWindow.left);
 
     const window = await chrome.windows.create({
+      focused: true,
+
       type: 'popup',
       state: 'normal',
       url: chrome.runtime.getURL(`src/pages/command-palette-popup/index.html?windowId=${currentWindow.id}`),
-      focused: true,
       width: 750,
       height: 550,
       top: popupOffsetTop,
@@ -553,6 +554,8 @@ chrome.runtime.onMessage.addListener(
         const { groupName, isOpenedInPopupWindow, activeSpace } = payload;
         const tab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
 
+        console.log('🚀 ~ tab:', tab);
+
         const newGroupId = await chrome.tabs.group({ tabIds: tab.id });
 
         await chrome.tabGroups.update(newGroupId, {
@@ -578,6 +581,7 @@ chrome.runtime.onMessage.addListener(
 
         // check if url already opened indifferent tab
         let openedTab = null;
+
         if (isOpenedInPopupWindow) {
           const [matchedTab] = await chrome.tabs.query({ url, windowId: activeSpace.windowId });
           openedTab = matchedTab;
@@ -598,6 +602,25 @@ chrome.runtime.onMessage.addListener(
         } else {
           await chrome.tabs.create({ index: index + 1, url, active: true });
         }
+
+        return true;
+      }
+
+      case 'OPEN_PREVIEW_LINK_AS_TAB': {
+        const { url, spaceId } = payload;
+
+        const space = await getSpace(spaceId);
+
+        console.log('🚀 ~ space:', space);
+
+        await chrome.tabs.create({ url, active: true, windowId: space.windowId });
+
+        //  close link preview (popup) window
+        const popupWindowId = await getStorage<number>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID' });
+
+        if (!popupWindowId || popupWindowId < 1) return false;
+
+        await chrome.windows.remove(popupWindowId);
 
         return true;
       }
@@ -795,6 +818,60 @@ chrome.runtime.onMessage.addListener(
         return true;
       }
 
+      case 'OPEN_LINK_PREVIEW_POPUP': {
+        const popupWindowId = await getStorage<number>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID' });
+
+        if (popupWindowId) {
+          try {
+            const popupWindow = await chrome.windows.get(popupWindowId);
+            if (popupWindow?.id) return true;
+          } catch {
+            await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID', value: 0 });
+          }
+        }
+        const { url } = payload;
+
+        // TODO - Close Preview if command palette is to be opened when in preview mode
+        // TODO - identify window/popup as link preview for Cmd + S (app shortcut to work)
+        // TODO - fix -  Error: Extension context invalidated
+        const currentWindow = await chrome.windows.getCurrent();
+
+        const popupOffsetTop = currentWindow.top + 120;
+        const popupOffsetLeft = Math.ceil(currentWindow.width / 6 + currentWindow.left);
+
+        const window = await chrome.windows.create({
+          url,
+          type: 'popup',
+          state: 'normal',
+          focused: true,
+          width: 1100,
+          height: 750,
+          top: popupOffsetTop,
+          left: popupOffsetLeft,
+        });
+
+        //  save popup window id to storage TEMP_..
+        await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID', value: window.id });
+
+        await wait(1500);
+
+        const space = await getSpaceByWindow(currentWindow.id);
+
+        if (!space?.id || window?.tabs?.length < 1) return false;
+
+        console.log('🌅 ~  window?.tabs:', window?.tabs);
+
+        // shows a "Open in Tab" button at top right in popup
+        await publishEventsTab(window.tabs[0].id, {
+          event: 'POPUP_PREVIEW_BUTTON_OVERLAY',
+          payload: {
+            spaceId: space.id,
+          },
+        });
+
+        return true;
+      }
+
       default: {
         return true;
       }
@@ -864,6 +941,21 @@ chrome.runtime.onSuspend.addListener(async () => {});
 // shortcut commands
 chrome.commands.onCommand.addListener(async (command, tab) => {
   try {
+    const popupWindowId = await getStorage<number>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID' });
+
+    if (popupWindowId) {
+      await chrome.windows.remove(popupWindowId);
+      await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID', value: 0 });
+
+      await wait(100);
+    }
+
+    let currentTab = tab;
+    if (popupWindowId) {
+      const [activeTab] = await chrome.tabs.query({ currentWindow: true, active: true });
+      currentTab = activeTab;
+    }
+
     //* new tab to right shortcut
     if (command === 'newTab') {
       const newTab = await createActiveTab('chrome://newtab', tab.index + 1);
@@ -884,13 +976,6 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
       // do nothing if cmd palette feat disabled
       if (isCommandPaletteDisabled) return;
-
-      let currentTab = tab;
-
-      if (!currentTab?.id) {
-        const [activeTab] = await chrome.tabs.query({ currentWindow: true, active: true });
-        currentTab = activeTab;
-      }
 
       const shouldOpenInPopupWindow = !currentTab?.url || isChromeUrl(currentTab.url);
 
@@ -1037,6 +1122,16 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   console.log('💰 ~ chrome.tabs.onUpdated.addListener ~ changeInfo:', changeInfo);
 
+  // checking if the updated tab is in popup window created for link preview
+  // if yes, show the button overlay
+  const linkPreviewPopupWindowId = await getStorage<number>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID' });
+
+  if (linkPreviewPopupWindowId && linkPreviewPopupWindowId === tab?.windowId) {
+    if (changeInfo.status === 'complete') {
+      await publishEventsTab(tabId, { event: 'POPUP_PREVIEW_BUTTON_OVERLAY' });
+    }
+    return;
+  }
   const space = await getSpaceByWindow(tab.windowId);
 
   if (!space?.id) return;
@@ -1339,8 +1434,8 @@ chrome.windows.onFocusChanged.addListener(async windowId => {
   // record daily space time
   await recordDailySpaceTime(windowId);
 
-  // TODO - testing....
-  return;
+  // // TODO - testing....
+  // return;
 
   if (windowId > 0) {
     const currentWindow = await chrome.windows.get(windowId);
@@ -1348,17 +1443,29 @@ chrome.windows.onFocusChanged.addListener(async windowId => {
     if (currentWindow.type === 'popup') return;
   }
 
-  // remove temp pop window, if it was created for command palette of quick view
-  const popupWindowId = await getStorage<number>({ type: 'session', key: 'TEMP_POPUP_WINDOW' });
-
-  if (!popupWindowId || popupWindowId < 1) return;
-
+  // remove temp pop windows if any
   try {
-    // remove popup window
-    await chrome.windows.remove(popupWindowId);
-  } finally {
-    // clear popup window id from storage
+    // remove popup window of command palette
+    const tempPopupWindowId = await getStorage<number>({ type: 'session', key: 'TEMP_POPUP_WINDOW' });
+
+    if (tempPopupWindowId && tempPopupWindowId > 0) {
+      // remove popup window
+      await chrome.windows.remove(tempPopupWindowId);
+      await setStorage({ type: 'session', key: 'TEMP_POPUP_WINDOW', value: 0 });
+    }
+
+    // remove link preview popup window
+    const linkPreviewPopupWindow = await getStorage<number>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID' });
+
+    if (linkPreviewPopupWindow && linkPreviewPopupWindow > 0) {
+      // remove popup window
+      await chrome.windows.remove(linkPreviewPopupWindow);
+      await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID', value: 0 });
+    }
+  } catch {
+    // clear both window id incase of an error
     await setStorage({ type: 'session', key: 'TEMP_POPUP_WINDOW', value: 0 });
+    await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID', value: 0 });
   }
 });
 
