@@ -6,9 +6,16 @@ export type RadixIconType = ForwardRefExoticComponent<IconProps & React.RefAttri
 
 export type CSSClasses = HTMLProps<HTMLElement>['className'];
 
-export interface ISearchFilters {
-  searchBookmarks: boolean;
-  searchNotes: boolean;
+export interface IAppSettings {
+  includeBookmarksInSearch: boolean;
+  isCommandPaletteDisabled: boolean;
+  isNotesDisabled: boolean;
+  includeNotesInSearch: boolean;
+  notesBubblePos: NoteBubblePos;
+  showNotesBubbleForAllSites: boolean;
+  deleteUnsavedSpace: 'immediately' | 'week';
+  openSpace: 'newWindow' | 'sameWindow';
+  autoSaveToBookmark: 'off' | 'daily' | 'weekly';
 }
 
 export interface ICommand {
@@ -117,6 +124,11 @@ export interface ISnoozedTab {
   snoozedAt: number;
 }
 
+export interface ISearchFilters {
+  searchBookmarks: boolean;
+  searchNotes: boolean;
+}
+
 type MessageEventsSidePanel =
   | 'UPDATE_SPACE_ACTIVE_TAB'
   | 'UPDATE_TABS'
@@ -145,6 +157,7 @@ type MessageEventsContentScript =
   | 'POPUP_PREVIEW_BUTTON_OVERLAY'
   | 'OPEN_PREVIEW_LINK_AS_TAB'
   | 'OPEN_APP_SIDEPANEL'
+  | 'OPEN_APP_SIDEPANEL_ACTION'
   | 'SHOW_COMMAND_PALETTE'
   | 'MOVE_TAB_TO_SPACE'
   | 'SHOW_DOMAIN_NOTES'
@@ -168,6 +181,7 @@ interface IEventPayloadContentScript {
   url?: string;
   note?: string;
   tabId?: number;
+  windowId?: number;
   noteId?: string;
   spaceId?: string;
   spaceTitle?: string;
@@ -194,15 +208,3 @@ export interface IMessageEventContentScript {
 }
 
 export type NoteBubblePos = 'bottom-left' | 'bottom-right';
-
-export interface IAppSettings {
-  includeBookmarksInSearch: boolean;
-  isCommandPaletteDisabled: boolean;
-  isNotesDisabled: boolean;
-  includeNotesInSearch: boolean;
-  notesBubblePos: NoteBubblePos;
-  showNotesBubbleForAllSites: boolean;
-  deleteUnsavedSpace: 'immediately' | 'week';
-  openSpace: 'newWindow' | 'sameWindow';
-  autoSaveToBookmark: 'off' | 'daily' | 'weekly';
-}

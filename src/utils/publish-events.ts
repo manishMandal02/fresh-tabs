@@ -11,8 +11,6 @@ export const publishEvents = async <T = boolean>(
     return res;
   } catch (error) {
     // if errored because of the side-panel not opened then do nothing
-    if (error instanceof Error && error.message.includes('Receiving end does not exist.')) return;
-
     logger.error({
       error,
       msg: 'Failed to send message to side panel',

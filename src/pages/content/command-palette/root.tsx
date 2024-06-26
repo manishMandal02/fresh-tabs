@@ -281,8 +281,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msgEvent === 'POPUP_PREVIEW_BUTTON_OVERLAY') {
     appendOpenInTabBtnOverlay();
 
-    if (event?.payload?.spaceId) {
-      sessionStorage.setItem('activeSpaceId', event.payload.spaceId);
+    if (event?.payload?.windowId) {
+      sessionStorage.setItem('activeWindowId', event.payload.windowId.toString());
     }
 
     // list for keyboard events for opening app in side panel
@@ -294,6 +294,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
         await publishEvents({
           event: 'OPEN_APP_SIDEPANEL',
+          payload: { windowId: Number(sessionStorage.getItem('activeWindowId') || 0) },
         });
       }
     });
@@ -360,7 +361,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     ev.preventDefault();
 
     // do not allow to open external links, if in preview mode
-    if (sessionStorage.getItem('activeSpaceId')) return;
+    if (sessionStorage.getItem('activeWindowId')) return;
 
     // send event to background script to create new popup window with the href link
 

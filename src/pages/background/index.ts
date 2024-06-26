@@ -140,6 +140,8 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
+// TODO - fix -  Error: Extension context invalidated
+
 // TODO - improvement - paginating larger data sets like notes for better performance and
 //+ query data when searched or for domain notes
 
@@ -397,6 +399,20 @@ export const showCommandPaletteContentScript = async (
 };
 
 // * chrome event listeners
+
+// handle open side panel event * can't be grouped with other events
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('🚨 ~ chrome.runtime.onMessage.addListener ~ request:', request);
+  (async () => {
+    if ((request as IMessageEventContentScript).event === 'OPEN_APP_SIDEPANEL_ACTION') {
+      const { windowId } = request.payload;
+      chrome.sidePanel.open({ windowId });
+    }
+  })();
+  sendResponse(true);
+  return true;
+});
+
 // handle events from content script (command palette)
 chrome.runtime.onMessage.addListener(
   asyncMessageHandler<IMessageEventContentScript, boolean | ICommand[]>(async request => {
@@ -626,12 +642,11 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'OPEN_APP_SIDEPANEL': {
-        const popupWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW' });
-        if (!popupWindow) return;
-        const spaceId = popupWindow.split('-')[0];
+        const { windowId } = payload;
 
-        const space = await getSpace(spaceId);
-        await chrome.sidePanel.open({ windowId: space.windowId });
+        await chrome.sidePanel.open({ windowId });
+
+        await chrome.windows.update(windowId, { focused: true });
 
         return true;
       }
@@ -841,9 +856,6 @@ chrome.runtime.onMessage.addListener(
           }
         }
         const { url } = payload;
-
-        // TODO - identify window/popup as link preview for Cmd + S (app shortcut to work)
-        // TODO - fix -  Error: Extension context invalidated
 
         const currentWindow = await chrome.windows.getCurrent();
 
@@ -1150,9 +1162,14 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (changeInfo.status === 'complete') {
       const spaceId = linkPreviewPopupWindow.split('-')[0];
 
+      const space = await getSpace(spaceId);
+
       await wait(300);
 
-      await publishEventsTab(tabId, { event: 'POPUP_PREVIEW_BUTTON_OVERLAY', payload: { spaceId } });
+      await publishEventsTab(tabId, {
+        event: 'POPUP_PREVIEW_BUTTON_OVERLAY',
+        payload: { windowId: space.windowId },
+      });
     }
     return;
   }
@@ -1478,7 +1495,7 @@ chrome.windows.onFocusChanged.addListener(async windowId => {
   try {
     // remove popup window of command palette
     const tempPopupWindow = await getStorage<string>({ type: 'session', key: 'TEMP_POPUP_WINDOW' });
-    const tempPopupWindowId = Number(tempPopupWindow?.split('-')[1] || 0);
+    const tempPopupWindowId = tempPopupWindow ? Number(tempPopupWindow.split('-')[1] || 0) : 0;
 
     if (tempPopupWindow && tempPopupWindowId > 0) {
       // remove popup window
@@ -1488,7 +1505,7 @@ chrome.windows.onFocusChanged.addListener(async windowId => {
 
     // remove link preview popup window
     const linkPreviewPopupWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW' });
-    const windowId = Number(linkPreviewPopupWindow?.split('-')[1] || 0);
+    const windowId = linkPreviewPopupWindow ? Number(linkPreviewPopupWindow.split('-')[1] || 0) : 0;
     if (linkPreviewPopupWindow && windowId > 0) {
       // remove popup window
       await chrome.windows.remove(windowId);
