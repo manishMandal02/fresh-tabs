@@ -284,6 +284,28 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (event?.payload?.spaceId) {
       sessionStorage.setItem('activeSpaceId', event.payload.spaceId);
     }
+
+    // list for keyboard events for opening app in side panel
+
+    document.body.addEventListener('keydown', async (ev: KeyboardEvent) => {
+      if (ev.key === 's' && ev.metaKey) {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        await publishEvents({
+          event: 'OPEN_APP_SIDEPANEL',
+        });
+      }
+    });
+
+    // close the preview window on escape press
+    document.body.addEventListener('keydown', (ev: KeyboardEvent) => {
+      console.log('🚀 ~ document.body.addEventListener ~ ev:', ev);
+
+      if (ev.key !== 'Escape') return;
+      window.close();
+    });
+
     sendResponse(true);
     return;
   }
@@ -326,9 +348,14 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     const hrefLink =
       clickedEl.tagName === 'A' ? clickedEl.getAttribute('href') : clickedEl.closest('a').getAttribute('href') || '';
 
+    const willOpenInNewTab =
+      clickedEl.tagName === 'A'
+        ? clickedEl.getAttribute('target') === '_blank'
+        : clickedEl.closest('a').getAttribute('target') === '_blank' || false;
+
     const isInternalLink = new URL(hrefLink).hostname === new URL(location.href).hostname;
 
-    if (!hrefLink || !isValidURL(hrefLink) || isInternalLink) return;
+    if (!hrefLink || !isValidURL(hrefLink) || (isInternalLink && !willOpenInNewTab)) return;
 
     ev.preventDefault();
 

@@ -608,19 +608,30 @@ chrome.runtime.onMessage.addListener(
       case 'OPEN_PREVIEW_LINK_AS_TAB': {
         const { url } = payload;
 
-        const popupWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID' });
-        if (popupWindow) return;
+        const popupWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW' });
+        if (!popupWindow) return;
 
         const spaceId = popupWindow.split('-')[0];
         const popupWindowId = Number(popupWindow.split('-')[1]);
 
         const space = await getSpace(spaceId);
 
-        await chrome.windows.update(space.windowId, { focused: true });
-
         await chrome.tabs.create({ url, active: true, windowId: space.windowId });
 
+        await chrome.windows.update(space.windowId, { focused: true });
+
         await chrome.windows.remove(popupWindowId);
+
+        return true;
+      }
+
+      case 'OPEN_APP_SIDEPANEL': {
+        const popupWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW' });
+        if (!popupWindow) return;
+        const spaceId = popupWindow.split('-')[0];
+
+        const space = await getSpace(spaceId);
+        await chrome.sidePanel.open({ windowId: space.windowId });
 
         return true;
       }
@@ -819,19 +830,18 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'OPEN_LINK_PREVIEW_POPUP': {
-        const popupWindowId = await getStorage<number>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID' });
+        const popupWindowId = await getStorage<number>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW' });
 
         if (popupWindowId) {
           try {
             const popupWindow = await chrome.windows.get(popupWindowId);
             if (popupWindow?.id) return true;
           } catch {
-            await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID', value: '' });
+            await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW', value: '' });
           }
         }
         const { url } = payload;
 
-        // TODO - Close Preview if command palette is to be opened when in preview mode
         // TODO - identify window/popup as link preview for Cmd + S (app shortcut to work)
         // TODO - fix -  Error: Extension context invalidated
 
@@ -858,7 +868,7 @@ chrome.runtime.onMessage.addListener(
         if (!space?.id || window?.tabs?.length < 1) return false;
 
         //  save popup window id to storage TEMP_..
-        await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID', value: `${space.id}-${window.id}` });
+        await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW', value: `${space.id}-${window.id}` });
 
         console.log('🌅 ~  window?.tabs:', window?.tabs);
 
@@ -935,22 +945,32 @@ chrome.runtime.onSuspend.addListener(async () => {});
 chrome.commands.onCommand.addListener(async (command, tab) => {
   try {
     // link preview popup window
-    const popupWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID' });
+    let popupWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW' });
 
-    const spaceId = popupWindow.split('-')[0];
-    const windowId = Number(popupWindow.split('-')[1]);
+    if (!popupWindow) {
+      popupWindow = await getStorage<string>({ type: 'session', key: 'TEMP_POPUP_WINDOW' });
+    }
 
     if (popupWindow) {
+      const spaceId = popupWindow.split('-')[0];
+
+      console.log('🚨 ~ chrome.commands.onCommand.addListener ~ spaceId:', spaceId);
+
+      const windowId = Number(popupWindow.split('-')[1]);
       const space = await getSpace(spaceId);
+
+      console.log('🚨 ~ chrome.commands.onCommand.addListener ~ space:', space);
+
       await chrome.windows.remove(windowId);
-      await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID', value: '' });
+      await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW', value: '' });
 
       await chrome.windows.update(space.windowId, { focused: true });
 
-      await wait(100);
+      await wait(200);
     }
 
     let currentTab = tab;
+
     if (popupWindow || !tab?.id) {
       const [activeTab] = await chrome.tabs.query({ currentWindow: true, active: true });
       currentTab = activeTab;
@@ -1120,15 +1140,18 @@ chrome.tabs.onActivated.addListener(async ({ tabId, windowId }) => {
 //* TODO - improvement - debounce handler
 // event listener for when tabs get updated
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  console.log('💰 ~ chrome.tabs.onUpdated.addListener ~ changeInfo:', changeInfo);
+  console.log('🔵 ~ chrome.tabs.onUpdated.addListener ~ changeInfo:', changeInfo);
 
   // checking if the updated tab is in popup window created for link preview
   // if yes, show the button overlay
-  const linkPreviewPopupWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID' });
-  const windowId = Number(linkPreviewPopupWindow.split('-')[1]);
-  if (linkPreviewPopupWindow && windowId === tab?.windowId) {
+  const linkPreviewPopupWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW' });
+
+  if (linkPreviewPopupWindow && tab?.windowId === Number(linkPreviewPopupWindow.split('-')[1])) {
     if (changeInfo.status === 'complete') {
-      const spaceId = await linkPreviewPopupWindow.split('-')[0];
+      const spaceId = linkPreviewPopupWindow.split('-')[0];
+
+      await wait(300);
+
       await publishEventsTab(tabId, { event: 'POPUP_PREVIEW_BUTTON_OVERLAY', payload: { spaceId } });
     }
     return;
@@ -1390,18 +1413,19 @@ chrome.windows.onCreated.addListener(window => {
 
 // window removed/closed
 chrome.windows.onRemoved.addListener(async windowId => {
-  const tempPopupWindow = await getStorage<string>({ type: 'session', key: 'TEMP_POPUP_WINDOW' });
-  const linkPreviewWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID' });
-
-  const windowId1 = Number(tempPopupWindow.split('-')[1]);
+  const linkPreviewWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW' });
   const windowId2 = Number(linkPreviewWindow.split('-')[1]);
-
-  if (tempPopupWindow && windowId1 === windowId) {
+  if (linkPreviewWindow && windowId2 === windowId) {
     // a temp popup window was removed, clear window id from storage
-    await setStorage({ type: 'session', key: 'TEMP_POPUP_WINDOW', value: '' });
+    await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW', value: '' });
     return;
   }
-  if (linkPreviewWindow && windowId2 === windowId) {
+
+  const tempPopupWindow = await getStorage<string>({ type: 'session', key: 'TEMP_POPUP_WINDOW' });
+
+  const windowId1 = Number(tempPopupWindow.split('-')[1]);
+
+  if (tempPopupWindow && windowId1 === windowId) {
     // a temp popup window was removed, clear window id from storage
     await setStorage({ type: 'session', key: 'TEMP_POPUP_WINDOW', value: '' });
     return;
@@ -1444,9 +1468,6 @@ chrome.windows.onFocusChanged.addListener(async windowId => {
   // record daily space time
   await recordDailySpaceTime(windowId);
 
-  // // TODO - testing....
-  // return;
-
   if (windowId > 0) {
     const currentWindow = await chrome.windows.get(windowId);
 
@@ -1456,26 +1477,27 @@ chrome.windows.onFocusChanged.addListener(async windowId => {
   // remove temp pop windows if any
   try {
     // remove popup window of command palette
-    const tempPopupWindowId = await getStorage<number>({ type: 'session', key: 'TEMP_POPUP_WINDOW' });
+    const tempPopupWindow = await getStorage<string>({ type: 'session', key: 'TEMP_POPUP_WINDOW' });
+    const tempPopupWindowId = Number(tempPopupWindow?.split('-')[1] || 0);
 
-    if (tempPopupWindowId && tempPopupWindowId > 0) {
+    if (tempPopupWindow && tempPopupWindowId > 0) {
       // remove popup window
       await chrome.windows.remove(tempPopupWindowId);
       await setStorage({ type: 'session', key: 'TEMP_POPUP_WINDOW', value: '' });
     }
 
     // remove link preview popup window
-    const linkPreviewPopupWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID' });
-    const windowId = Number(linkPreviewPopupWindow.split('-')[1]);
+    const linkPreviewPopupWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW' });
+    const windowId = Number(linkPreviewPopupWindow?.split('-')[1] || 0);
     if (linkPreviewPopupWindow && windowId > 0) {
       // remove popup window
       await chrome.windows.remove(windowId);
-      await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID', value: '' });
+      await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW', value: '' });
     }
   } catch {
     // clear both window id incase of an error
     await setStorage({ type: 'session', key: 'TEMP_POPUP_WINDOW', value: '' });
-    await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW_ID', value: '' });
+    await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW', value: '' });
   }
 });
 
