@@ -28,7 +28,6 @@ type StorageValue =
   | IDailySpaceTime[]
   | IAppSettings
   | IPinnedTab[]
-  | number
   | number[]
   | string;
 

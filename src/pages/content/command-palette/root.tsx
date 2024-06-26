@@ -261,11 +261,9 @@ const appendOpenInTabBtnOverlay = () => {
   overlayBtn.innerText = 'Open as Tab ↗';
 
   overlayBtn.addEventListener('click', async () => {
-    const spaceId = sessionStorage.getItem('activeSpaceId') || '';
     await publishEvents({
       event: 'OPEN_PREVIEW_LINK_AS_TAB',
       payload: {
-        spaceId,
         url: window.location.href,
       },
     });
