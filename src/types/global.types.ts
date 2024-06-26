@@ -9,12 +9,15 @@ export type CSSClasses = HTMLProps<HTMLElement>['className'];
 export interface IAppSettings {
   includeBookmarksInSearch: boolean;
   isCommandPaletteDisabled: boolean;
+  isLinkPreviewDisabled: boolean;
+  openLinkPreviewType: 'all-external' | 'shift-click';
+  linkPreviewSize: 'mobile' | 'tablet' | 'desktop';
   isNotesDisabled: boolean;
   includeNotesInSearch: boolean;
   notesBubblePos: NoteBubblePos;
   showNotesBubbleForAllSites: boolean;
-  deleteUnsavedSpace: 'immediately' | 'week';
   openSpace: 'newWindow' | 'sameWindow';
+  deleteUnsavedSpace: 'immediately' | 'week';
   autoSaveToBookmark: 'off' | 'daily' | 'weekly';
 }
 

@@ -17,6 +17,7 @@ import { getNoteByDomain } from '@root/src/services/chrome-storage/notes';
 import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { IMessageEventContentScript, ISearchFilters, ISpace, ITab, NoteBubblePos } from '../../../types/global.types';
+import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 
 // development: refresh content page on update
 refreshOnUpdate('pages/content');
@@ -339,6 +340,11 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
 // show link preview
 (async () => {
+  //  check if the link previews is disabled
+  const { isLinkPreviewDisabled, openLinkPreviewType } = await getAppSettings();
+
+  if (isLinkPreviewDisabled) return;
+
   document.body.addEventListener('click', async ev => {
     const clickedEl = ev.target as HTMLElement;
 
@@ -348,6 +354,22 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
     const hrefLink =
       clickedEl.tagName === 'A' ? clickedEl.getAttribute('href') : clickedEl.closest('a').getAttribute('href') || '';
+
+    // open link in preview window if user preference is set to Shift + Click and the shift key was pressed
+    if (openLinkPreviewType === 'shift-click') {
+      if (!ev.shiftKey || !isValidURL(hrefLink)) return;
+
+      ev.preventDefault();
+
+      await publishEvents({
+        event: 'OPEN_LINK_PREVIEW_POPUP',
+        payload: {
+          url: hrefLink,
+        },
+      });
+
+      return;
+    }
 
     const willOpenInNewTab =
       clickedEl.tagName === 'A'

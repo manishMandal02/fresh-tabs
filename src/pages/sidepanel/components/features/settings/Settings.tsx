@@ -22,13 +22,22 @@ const autoSaveToBookmark: RadioOptions[] = [
   { value: 'daily', label: 'Daily' },
   { value: 'weekly', label: 'Weekly' },
 ];
+const openLinkPreviewOptions: RadioOptions[] = [
+  { value: 'all-external', label: 'External Links' },
+  { value: 'shift-click', label: 'Shift + Click' },
+];
+const linkPreviewSizeOptions: RadioOptions[] = [
+  { value: 'mobile', label: 'Mobile' },
+  { value: 'tablet', label: 'Tablet' },
+  { value: 'desktop', label: 'Desktop' },
+];
 
 const deleteUnsavedSpacesOptions: RadioOptions[] = [
   { value: 'immediately', label: 'Immediately' },
   { value: 'week', label: 'After a week' },
 ];
 
-const openSpaceOption: RadioOptions[] = [
+const openSpaceOptions: RadioOptions[] = [
   { value: 'newWindow', label: 'New Window' },
   { value: 'sameWindow', label: 'Same Window' },
 ];
@@ -93,8 +102,6 @@ const Settings = () => {
   };
 
   const handleSaveSettings = async () => {
-    // show loading snackbar
-    setSnackbar({ show: true, msg: 'Creating new space', isLoading: true });
     // set to chrome storage
     await saveSettings(settingsUpdateData);
 
@@ -237,10 +244,55 @@ const Settings = () => {
               <div className="mt-2.5">
                 <span className="text-[12px]  font-light tracking-wide ml-1 ">Open space in</span>
                 <RadioGroup
-                  options={openSpaceOption}
+                  options={openSpaceOptions}
                   value={settingsUpdateData.openSpace}
-                  defaultValue={openSpaceOption[0].value}
+                  defaultValue={openSpaceOptions[0].value}
                   onChange={value => handleSettingsChange('openSpace', value)}
+                />
+              </div>
+            </BodyContainer>
+          </Accordion>
+          {/* command palette */}
+          <Accordion
+            id="link-preview"
+            classes={{
+              triggerContainer:
+                'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px',
+              triggerIcon: 'scale-[1.1] text-slate-700',
+              content:
+                'bg-brand-darkBgAccent/15 border-b  border-brand-darkBgAccent/30 rounded-br-md rounded-bl-md mb-1',
+            }}
+            trigger={<SettingsHeader heading="Link Preview" />}>
+            {/* accordion body */}
+            <BodyContainer>
+              {/* disable command palette */}
+              <div className="flex items-center justify-between pr-1 mb-2">
+                <p className="text-[12px]  font-light tracking-wide ml-1">Disable Link preview</p>
+                <Switch
+                  size="medium"
+                  id="include-bookmark-in-search"
+                  checked={settingsUpdateData.isLinkPreviewDisabled}
+                  onChange={checked => handleSettingsChange('isLinkPreviewDisabled', checked)}
+                />
+              </div>
+
+              <div className="mt-2.5">
+                <span className="text-[12px]  font-light tracking-wide ml-1 ">Open link preview for?</span>
+                <RadioGroup
+                  options={openLinkPreviewOptions}
+                  value={settingsUpdateData.openLinkPreviewType}
+                  defaultValue={openLinkPreviewOptions[0].value}
+                  onChange={value => handleSettingsChange('openLinkPreviewType', value)}
+                />
+              </div>
+
+              <div className="mt-2.5">
+                <span className="text-[12px]  font-light tracking-wide ml-1 ">Link preview window size</span>
+                <RadioGroup
+                  options={linkPreviewSizeOptions}
+                  value={settingsUpdateData.linkPreviewSize}
+                  defaultValue={linkPreviewSizeOptions[0].value}
+                  onChange={value => handleSettingsChange('linkPreviewSize', value)}
                 />
               </div>
             </BodyContainer>
@@ -261,7 +313,7 @@ const Settings = () => {
             <BodyContainer>
               {/* disable command palette */}
               <div className="flex items-center justify-between pr-1 mb-2">
-                <p className="text-[12px]  font-light tracking-wide ml-1">Disable command palette</p>
+                <p className="text-[12px]  font-light tracking-wide ml-1">Disable Command Palette</p>
                 <Switch
                   size="medium"
                   id="include-bookmark-in-search"
@@ -270,7 +322,6 @@ const Settings = () => {
                 />
               </div>
               {/* include bookmarks in search */}
-
               <div
                 className={cn('flex items-center justify-between pr-1 mb-2', {
                   'opacity-70 cursor-not-allowed': settingsUpdateData.isCommandPaletteDisabled,
@@ -330,7 +381,7 @@ const Settings = () => {
             <BodyContainer>
               {/* disable command palette */}
               <div className="flex items-center justify-between pr-1 mb-2">
-                <p className="text-[12px]  font-light tracking-wide ml-1">Disable notes</p>
+                <p className="text-[12px]  font-light tracking-wide ml-1">Disable Notes</p>
                 <Switch
                   size="medium"
                   id="include-bookmark-in-search"

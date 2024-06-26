@@ -859,18 +859,38 @@ chrome.runtime.onMessage.addListener(
 
         const currentWindow = await chrome.windows.getCurrent();
 
-        const popupOffsetTop = currentWindow.top + 120;
-        const popupOffsetLeft = Math.ceil(currentWindow.width / 6 + currentWindow.left);
+        const { linkPreviewSize } = await getAppSettings();
+
+        // calculate window size based on user preference
+        let windowWidth = 0;
+        let windowHeight = 0;
+        let popupOffsetLeft = 0;
+
+        if (linkPreviewSize === 'mobile') {
+          windowWidth = 500;
+          windowHeight = 750;
+          popupOffsetLeft = Math.ceil(currentWindow.width / 4 + currentWindow.left);
+        }
+        if (linkPreviewSize === 'tablet') {
+          windowWidth = 1100;
+          windowHeight = 750;
+          popupOffsetLeft = Math.ceil(currentWindow.left + currentWindow.width / 5);
+        }
+        if (linkPreviewSize === 'desktop') {
+          windowWidth = 1350;
+          windowHeight = 850;
+          popupOffsetLeft = Math.ceil(currentWindow.left + 80);
+        }
 
         const window = await chrome.windows.create({
           url,
           type: 'popup',
           state: 'normal',
           focused: true,
-          width: 1100,
-          height: 750,
-          top: popupOffsetTop,
+          width: windowWidth,
+          height: windowHeight,
           left: popupOffsetLeft,
+          top: currentWindow.top + 140,
         });
 
         await wait(100);
@@ -1431,8 +1451,8 @@ chrome.windows.onCreated.addListener(window => {
 // window removed/closed
 chrome.windows.onRemoved.addListener(async windowId => {
   const linkPreviewWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW' });
-  const windowId2 = Number(linkPreviewWindow.split('-')[1]);
-  if (linkPreviewWindow && windowId2 === windowId) {
+  const windowId1 = Number(linkPreviewWindow?.split('-')[1] || 0);
+  if (linkPreviewWindow && windowId1 === windowId) {
     // a temp popup window was removed, clear window id from storage
     await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW', value: '' });
     return;
@@ -1440,9 +1460,9 @@ chrome.windows.onRemoved.addListener(async windowId => {
 
   const tempPopupWindow = await getStorage<string>({ type: 'session', key: 'TEMP_POPUP_WINDOW' });
 
-  const windowId1 = Number(tempPopupWindow.split('-')[1]);
+  const windowId2 = Number(tempPopupWindow?.split('-')[1] || 0);
 
-  if (tempPopupWindow && windowId1 === windowId) {
+  if (tempPopupWindow && windowId2 === windowId) {
     // a temp popup window was removed, clear window id from storage
     await setStorage({ type: 'session', key: 'TEMP_POPUP_WINDOW', value: '' });
     return;

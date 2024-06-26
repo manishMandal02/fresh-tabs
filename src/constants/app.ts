@@ -87,6 +87,9 @@ export const StorageKey = {
 export const DefaultAppSettings: IAppSettings = {
   includeBookmarksInSearch: true,
   includeNotesInSearch: false,
+  isLinkPreviewDisabled: false,
+  openLinkPreviewType: 'shift-click',
+  linkPreviewSize: 'tablet',
   showNotesBubbleForAllSites: true,
   isCommandPaletteDisabled: false,
   isNotesDisabled: false,
