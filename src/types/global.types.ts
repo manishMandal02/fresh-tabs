@@ -10,14 +10,12 @@ export interface IUser {
   id: string;
   email: string;
   name: string;
-  refreshToken: string;
   profilePicUrl?: string;
-}
-
-export interface IUserPlan {
   plan: 'monthly' | 'lifetime';
   expiresAt: number;
 }
+
+export interface IUserPlan {}
 
 export interface IUserToken {
   token: string;

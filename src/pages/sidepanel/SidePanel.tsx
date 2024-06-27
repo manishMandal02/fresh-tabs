@@ -29,10 +29,13 @@ import {
   setSpacesAtom,
   showNotificationModalAtom,
   notesAtom,
+  userAtom,
 } from '@root/src/stores/app';
 import { getAllNotifications } from '@root/src/services/chrome-storage/user-notifications';
 import { getAllNotes } from '@root/src/services/chrome-storage/notes';
 import { isChromeUrl } from '@root/src/utils';
+import { getUser } from '@root/src/services/chrome-storage/user';
+import Auth from './components/features/user/auth';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -43,6 +46,7 @@ const SidePanel = () => {
   const [{ isDragging: isDraggingGlobal, type: draggingType }] = useAtom(dragStateAtom);
 
   // global state - app settings
+  const [user, setUser] = useAtom(userAtom);
   const setAppSetting = useSetAtom(appSettingsAtom);
   const setUserNotifications = useSetAtom(userNotificationsAtom);
   const setNotes = useSetAtom(notesAtom);
@@ -68,8 +72,15 @@ const SidePanel = () => {
 
   // init component
   useEffect(() => {
+    setIsLoadingSpaces(true);
     (async () => {
-      setIsLoadingSpaces(true);
+      // check if user authed or not
+      const user = await getUser();
+
+      if (!user) return;
+
+      // set user
+      setUser(user);
 
       const { currentSpace, allSpaces } = await getAllSpacesStorage();
 
@@ -147,81 +158,87 @@ const SidePanel = () => {
           <FavTabs tabs={globalPinnedTabs} isGlobal={true} setGlobalPinnedTabs={setGlobalPinnedTabs} />
         </div> */}
         <ErrorBoundary FallbackComponent={ErrorBoundaryUI}>
-          {/* dnd container */}
-          <div className="!size-full !h-screen -mt-4 ">
-            {/* un saved  */}
-            {isLoadingSpaces ? (
-              <Spinner size="md" />
-            ) : (
-              <DragDropContext onDragEnd={onTabsDragEnd} onBeforeCapture={onTabsDragStart}>
-                {/* Current space */}
-                <div className="h-[95%] relative px-1.5 ">
-                  <ActiveSpace
-                    space={activeSpace}
-                    onSearchClick={handleShowCommandPalette}
-                    onNotificationClick={handleShowNotification}
-                  />
+          {!user ? (
+            <Auth />
+          ) : (
+            <>
+              {/* dnd container */}
+              <div className="!size-full !h-screen -mt-4 ">
+                {/* un saved  */}
+                {isLoadingSpaces ? (
+                  <Spinner size="md" />
+                ) : (
+                  <DragDropContext onDragEnd={onTabsDragEnd} onBeforeCapture={onTabsDragStart}>
+                    {/* Current space */}
+                    <div className="h-[95%] relative px-1.5 ">
+                      <ActiveSpace
+                        space={activeSpace}
+                        onSearchClick={handleShowCommandPalette}
+                        onNotificationClick={handleShowNotification}
+                      />
 
-                  {/* dropzone for other space to open tabs in active space */}
-                  <Droppable droppableId="open-non-active-space-tabs" type="SPACE">
-                    {(provided2, { isDraggingOver }) => (
-                      <div
-                        ref={provided2.innerRef}
-                        className="flex-grow w-full absolute top-[70px] left-0 border-2 rounded-lg transition-all duration-300 ease-in-out "
-                        style={{
-                          borderColor: isDraggingOver ? '#05957f' : '#1e293b',
-                          height: `${activeSpaceTabs?.length * (TAB_HEIGHT * 1.15)}px`,
-                          visibility: isDraggingGlobal && draggingType === 'space' ? 'visible' : 'hidden',
-                          zIndex: isDraggingGlobal && draggingType === 'space' ? 200 : 1,
-                        }}>
-                        <motion.div
-                          animate={isDraggingGlobal && draggingType === 'space' ? 'visible' : 'hidden'}
-                          variants={animationVariants}
-                          transition={{ type: 'spring', stiffness: 900, damping: 40, duration: 0.2 }}
-                          style={{
-                            visibility: isDraggingGlobal && draggingType === 'space' ? 'visible' : 'hidden',
-                            zIndex: isDraggingGlobal && draggingType === 'space' ? 200 : 1,
-                          }}
-                          className="h-full w-full bg-gradient-to-tr from-brand-darkBgAccent/20
+                      {/* dropzone for other space to open tabs in active space */}
+                      <Droppable droppableId="open-non-active-space-tabs" type="SPACE">
+                        {(provided2, { isDraggingOver }) => (
+                          <div
+                            ref={provided2.innerRef}
+                            className="flex-grow w-full absolute top-[70px] left-0 border-2 rounded-lg transition-all duration-300 ease-in-out "
+                            style={{
+                              borderColor: isDraggingOver ? '#05957f' : '#1e293b',
+                              height: `${activeSpaceTabs?.length * (TAB_HEIGHT * 1.15)}px`,
+                              visibility: isDraggingGlobal && draggingType === 'space' ? 'visible' : 'hidden',
+                              zIndex: isDraggingGlobal && draggingType === 'space' ? 200 : 1,
+                            }}>
+                            <motion.div
+                              animate={isDraggingGlobal && draggingType === 'space' ? 'visible' : 'hidden'}
+                              variants={animationVariants}
+                              transition={{ type: 'spring', stiffness: 900, damping: 40, duration: 0.2 }}
+                              style={{
+                                visibility: isDraggingGlobal && draggingType === 'space' ? 'visible' : 'hidden',
+                                zIndex: isDraggingGlobal && draggingType === 'space' ? 200 : 1,
+                              }}
+                              className="h-full w-full bg-gradient-to-tr from-brand-darkBgAccent/20
                               z-[100] to-slate-800/30 flex items-center justify-center rounded-lg">
-                          <p
-                            className="text-slate-300 text-[13px] font-light bg-gradient-to-bl shadow shadow-brand-darkBgAccent/80 from-brand-darkBgAccent/90
+                              <p
+                                className="text-slate-300 text-[13px] font-light bg-gradient-to-bl shadow shadow-brand-darkBgAccent/80 from-brand-darkBgAccent/90
                           to-brand-darkBg/90 px-4 z-[100] py-2.5 rounded-md">
-                            {isDraggingOver ? 'Open tabs in this space' : 'Drop to open space tabs here'}
-                          </p>
-                        </motion.div>
-                      </div>
-                    )}
-                  </Droppable>
-                </div>
-                <Footer isDraggingSpace={isDraggingGlobal && draggingType === 'space'} />
-              </DragDropContext>
-            )}
-          </div>
+                                {isDraggingOver ? 'Open tabs in this space' : 'Drop to open space tabs here'}
+                              </p>
+                            </motion.div>
+                          </div>
+                        )}
+                      </Droppable>
+                    </div>
+                    <Footer isDraggingSpace={isDraggingGlobal && draggingType === 'space'} />
+                  </DragDropContext>
+                )}
+              </div>
 
-          {/* Edit/view space modal */}
-          <UpdateSpace />
+              {/* Edit/view space modal */}
+              <UpdateSpace />
 
-          {/* settings modal */}
-          <Settings />
+              {/* settings modal */}
+              <Settings />
 
-          {/* notification modal */}
-          <Notification />
+              {/* notification modal */}
+              <Notification />
 
-          {/* user account modal */}
-          <UserAccount />
+              {/* user account modal */}
+              <UserAccount />
 
-          {/* add new space */}
-          <CreateSpace />
+              {/* add new space */}
+              <CreateSpace />
 
-          {/* add new note */}
-          <AddNewNote />
+              {/* add new note */}
+              <AddNewNote />
 
-          {/* delete space alert modal */}
-          <DeleteSpaceModal />
+              {/* delete space alert modal */}
+              <DeleteSpaceModal />
 
-          {/* snackbar */}
-          <Snackbar />
+              {/* snackbar */}
+              <Snackbar />
+            </>
+          )}
         </ErrorBoundary>
       </main>
     </Geiger>

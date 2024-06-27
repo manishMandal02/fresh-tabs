@@ -66,6 +66,8 @@ export const AlarmName = {
 } as const;
 
 export const StorageKey = {
+  USER: 'USER',
+  USER_TOKEN: 'USER_TOKEN',
   SPACES: 'SPACES',
   NOTES: 'NOTES',
   SETTINGS: 'SETTINGS',

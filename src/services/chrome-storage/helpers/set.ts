@@ -11,11 +11,15 @@ import {
   ISnoozedTab,
   ISpace,
   ITab,
+  IUser,
+  IUserToken,
 } from '@root/src/types/global.types';
 import { UnionTypeFromObjectValues } from '@root/src/types/utility.types';
 import { logger } from '@root/src/utils/logger';
 
 type StorageValue =
+  | IUser
+  | IUserToken
   | ISpace
   | ISpace[]
   | INote[]

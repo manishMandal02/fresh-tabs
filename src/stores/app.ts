@@ -11,6 +11,7 @@ import {
   ISpace,
   ISpaceWithTabsAndGroups,
   ITab,
+  IUser,
 } from '../types/global.types';
 
 type SnackbarAtom = {
@@ -75,6 +76,10 @@ export const setActiveSpaceAtom = atom(null, async (_get, set, spaceId: string) 
   set(activeSpaceTabsAtom, activeSpaceTabs);
   set(activeSpaceGroupsAtom, activeSpaceGroups);
 });
+
+// *
+// user
+export const userAtom = atom<IUser>(null as IUser);
 
 // selected tabs for dragging
 export const selectedTabsAtom = atom<number[]>([]);
