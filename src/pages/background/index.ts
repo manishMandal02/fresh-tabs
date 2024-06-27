@@ -13,7 +13,7 @@ import { logger } from '../../utils/logger';
 import { debounceWithEvents, generateId, wait } from '../../utils';
 import { retryAtIntervals } from '../../utils/retryAtIntervals';
 import { asyncMessageHandler } from '../../utils/asyncMessageHandler';
-import { handleSnoozedTabAlarm } from './handler/alarm/unsnooze-tab';
+import { handleSnoozedTabAlarm } from './handler/alarm/un-snooze-tab';
 import { discardAllTabs } from '@root/src/services/chrome-discard/discard';
 import { matchWordsInText } from '@root/src/utils/string/matchWordsInText';
 import { publishEvents, publishEventsTab } from '../../utils/publish-events';
@@ -140,13 +140,13 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - fix -  Error: Extension context invalidated
-
 // TODO - improvement - paginating larger data sets like notes for better performance and
 //+ query data when searched or for domain notes
 
 // TODO - feat - new tab (full app)
 //+ tab thumbnail views and also grid views
+
+// TODO - feat - add screenshots/image to notes (allow pasting images, capture screen and quick create note)
 
 // TODO - backend - Use UTC date & time stamp for server & reset day @ 3am (save user timezone)
 
@@ -337,14 +337,28 @@ export const showCommandPaletteContentScript = async (
   windowId: number,
   shouldOpenInPopupWindow = false,
 ) => {
-  //
   let canOpenInContentScript = false;
 
+  // TODO - testing... the re-adding of content script incase the content script is not responding
   if (!shouldOpenInPopupWindow) {
     // checks if content script is loaded
     const res = await publishEventsTab(tabId, { event: 'CHECK_CONTENT_SCRIPT_LOADED' });
 
-    if (res) canOpenInContentScript = true;
+    if (res) {
+      // will open in content script
+      canOpenInContentScript = true;
+    } else {
+      // content script not responding, add the content script to this tab and
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        files: ['src/pages/content/index.js'],
+      });
+
+      await wait(250);
+      // check if content script is responding
+      const res = await publishEventsTab(tabId, { event: 'CHECK_CONTENT_SCRIPT_LOADED' });
+      if (res) canOpenInContentScript = true;
+    }
   }
 
   if (!canOpenInContentScript) {
@@ -395,8 +409,11 @@ export const showCommandPaletteContentScript = async (
       });
     },
   });
-  return;
 };
+
+// chrome.runtime.connect().onDisconnect.addListener(() => {
+//   console.log('🚫 ~ chrome.runtime.connect().onDisconnect.addListener:415 ~ Disconnected!!! 🚫');
+// });
 
 // * chrome event listeners
 

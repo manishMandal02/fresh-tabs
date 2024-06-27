@@ -355,10 +355,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     const hrefLink =
       clickedEl.tagName === 'A' ? clickedEl.getAttribute('href') : clickedEl.closest('a').getAttribute('href') || '';
 
+    console.log('🚀 ~ openLinkPreviewType:', openLinkPreviewType);
     // open link in preview window if user preference is set to Shift + Click and the shift key was pressed
-    if (openLinkPreviewType === 'shift-click') {
-      if (!ev.shiftKey || !isValidURL(hrefLink)) return;
-
+    if (openLinkPreviewType === 'shift-click' && isValidURL(hrefLink) && !sessionStorage.getItem('activeWindowId')) {
+      if (!ev.shiftKey) return;
       ev.preventDefault();
 
       await publishEvents({

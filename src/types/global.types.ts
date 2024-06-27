@@ -6,6 +6,24 @@ export type RadixIconType = ForwardRefExoticComponent<IconProps & React.RefAttri
 
 export type CSSClasses = HTMLProps<HTMLElement>['className'];
 
+export interface IUser {
+  id: string;
+  email: string;
+  name: string;
+  refreshToken: string;
+  profilePicUrl?: string;
+}
+
+export interface IUserPlan {
+  plan: 'monthly' | 'lifetime';
+  expiresAt: number;
+}
+
+export interface IUserToken {
+  token: string;
+  expiresAt: number;
+}
+
 export interface IAppSettings {
   includeBookmarksInSearch: boolean;
   isCommandPaletteDisabled: boolean;
