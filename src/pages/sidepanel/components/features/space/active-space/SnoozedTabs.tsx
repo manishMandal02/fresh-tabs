@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { motion } from 'framer-motion';
-import { TrashIcon } from '@radix-ui/react-icons';
-import { useState, useEffect, memo } from 'react';
+import { GlobeIcon, TrashIcon } from '@radix-ui/react-icons';
+import { useState, useEffect, memo , ReactEventHandler } from 'react';
 
 import { cn } from '@root/src/utils/cn';
 import Tooltip from '../../../../../../components/tooltip';
@@ -84,6 +84,13 @@ const SnoozedTabs = ({ show, onClose }: Props) => {
 
   const { bounce } = useCustomAnimation();
 
+  // handle fallback image for favicon icons
+  const handleImageLoadError: ReactEventHandler<HTMLImageElement> = ev => {
+    ev.stopPropagation();
+    ev.currentTarget.style.display = 'none';
+    (ev.currentTarget.nextElementSibling as SVGAElement).style.display = 'block';
+  };
+
   return (
     <SlideModal isOpen={show} onClose={onClose} title={`Snoozed Tabs`}>
       <div className="px-1.5 py-1.5 min-h-[50vh] h-fit ">
@@ -114,9 +121,11 @@ const SnoozedTabs = ({ show, onClose }: Props) => {
                 <div className="w-[9%] flex items-center">
                   <img
                     src={tab.faviconUrl}
+                    onError={handleImageLoadError}
                     alt="icon"
                     className="w-[1.7rem] h-[1.7rem] rounded-md opacity-90 object-scale-down object-center"
                   />
+                  <GlobeIcon className="hidden text-slate-400 scale-[1.4] ml-[3px]" />
                 </div>
                 {/* right */}
                 <div className="flex flex-col justify-center w-[90%] pl-1.5 mt-[3.5px]">

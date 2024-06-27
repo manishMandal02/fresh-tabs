@@ -84,6 +84,8 @@ import {
   SNOOZED_TAB_GROUP_TITLE,
   AlarmName,
   ALARM_NAME_PREFiX,
+  ContextMenuItem,
+  ContextMenuSnoozeOptions,
 } from '@root/src/constants/app';
 import { removeGroup, updateGroup } from '@root/src/services/chrome-storage/groups';
 import { handleNotesRemainderAlarm } from './handler/alarm/notes-remainder';
@@ -106,6 +108,8 @@ const checkExtensionBadgeEmoji = async () => {
 //* IIFE - checks for alarms, its not guaranteed to persist
 (async () => {
   await checkExtensionBadgeEmoji();
+
+  initializeContextMenuItems();
 
   const autoSaveToBMAlarm = await getAlarm(AlarmName.autoSaveBM);
 
@@ -193,6 +197,44 @@ const createUnsavedSpacesOnInstall = async () => {
       fileTrace: 'src/pages/background/index.ts:195 ~ createUnsavedSpacesOnInstall() ~ catch block',
     });
     return false;
+  }
+};
+
+const initializeContextMenuItems = () => {
+  for (const item in ContextMenuItem) {
+    chrome.contextMenus.create(
+      {
+        id: ContextMenuItem[item],
+        title: ContextMenuItem[item],
+        contexts: ['all'],
+      },
+      () => {
+        if (chrome.runtime.lastError) {
+          logger.error({
+            error: new Error(chrome.runtime.lastError?.message),
+            msg: 'Error at chrome.contextMenus.create()',
+            fileTrace: 'src/pages/background/index.ts:213 ~ initializeContextMenuItems()',
+          });
+          return;
+        }
+
+        if (ContextMenuItem[item] !== ContextMenuItem.SNOOZE_TAB) return;
+
+        // add sub-menu items for snooze tab
+
+        ContextMenuSnoozeOptions.forEach(option => {
+          chrome.contextMenus.create(
+            {
+              parentId: ContextMenuItem[item],
+              id: `${item}-${option}`,
+              title: option,
+              contexts: ['all'],
+            },
+            () => {},
+          );
+        });
+      },
+    );
   }
 };
 
@@ -1117,6 +1159,50 @@ chrome.alarms.onAlarm.addListener(async alarm => {
       msg: 'Error in onAlarm.addListener',
       fileTrace: 'background.ts:926 ~ chrome.alarms.onAlarm.addListener() ~ catch block',
     });
+  }
+});
+
+// on context menu item clicked
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  console.log('🌅 ~ chrome.contextMenus.onClicked.addListener ~ info:', info);
+
+  if (info.parentMenuItemId === ContextMenuItem.SNOOZE_TAB) {
+    // snooze tab option clicked
+    const optionSelected = info.menuItemId.toString()?.split('-')[1] || '';
+
+    // get time for the selected option
+    const time = naturalLanguageToDate(optionSelected);
+
+    const space = await getSpaceByWindow(tab.windowId);
+
+    // add snooze tab to storage
+    await addSnoozedTab(space.id, {
+      snoozedUntil: time,
+      url: parseUrl(tab.url),
+      title: tab.title,
+      faviconUrl: tab.favIconUrl,
+      snoozedAt: Date.now(),
+    });
+
+    const triggerTimeInMinutes = Math.ceil((time - Date.now()) / 1000 / 60);
+
+    // create a alarm trigger
+    await createAlarm({ name: AlarmName.snoozedTab(space.id), triggerAfter: triggerTimeInMinutes });
+    // close the tab
+    await chrome.tabs.remove(tab.id);
+    return;
+  }
+
+  if (info.menuItemId === ContextMenuItem.OPEN_APP) {
+    // open side panel
+    await chrome.sidePanel.open({ tabId: tab.id });
+    return;
+  }
+
+  if (info.menuItemId === ContextMenuItem.DISCARD_TABS) {
+    // open options page
+    await discardAllTabs();
+    return;
   }
 });
 

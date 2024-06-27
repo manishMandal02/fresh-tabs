@@ -1,3 +1,4 @@
+import { EnvelopeClosedIcon, LayersIcon } from '@radix-ui/react-icons';
 import TextInput from '@root/src/components/TextInput/TextInput';
 import { useState } from 'react';
 
@@ -5,7 +6,7 @@ const GoogleIcon = () => (
   <svg
     version="1.1"
     xmlns="http://www.w3.org/2000/svg"
-    className="size-[20px] mr-3"
+    className="size-[18.5px] mr-3"
     viewBox="0 0 48 48"
     xmlnsXlink="http://www.w3.org/1999/xlink">
     <path
@@ -30,30 +31,42 @@ const emailRegex =
 const Auth = () => {
   const [email, setEmail] = useState('');
 
+  const handleSendMagicLink = () => {
+    if (!emailRegex.test(email)) return;
+  };
+
+  const handleGoogleAuth = () => {};
+
   return (
     <div className="h-screen w-screen text-slate-300/90 p-6 flex flex-col items-center justify-start overflow-hidden">
-      <h1 className="text-[22px] font-light text-slate-500 tracking-[0.3] mt-6">FreshTabs</h1>
+      <h1 className="flex items-center text-[22px] font-light text-slate-500/70 tracking-[0.5] mt-6 select-none">
+        <LayersIcon className="text-slate-600 scale-[1.2] mr-2 select-none" /> FreshTabs
+      </h1>
 
       <div className="mt-12 flex flex-col items-center justify-center w-full">
-        <h2 className="text-[18px] font-light text-slate-500 tracking-[0.35] mb-6">SingIn</h2>
-        <div className="flex flex-col items-start justify-center w-[75%]">
+        <h2 className="text-[18px] font-light text-slate-500/90 tracking-[0.4] mb-6 select-none">SingIn</h2>
+        <div className="flex flex-col items-start justify-center w-[80%]">
           <label htmlFor="user-email" className="text-[13.5px] text-slate-400/90 font-light mb-1.5">
             SingIn with magic link
           </label>
           <TextInput onChange={setEmail} placeholder="Email..." value={email} id={'user-email'} />
           <button
+            onClick={handleSendMagicLink}
             disabled={email.length > 4 ? !emailRegex.test(email.trim()) : true}
-            className={`mt-5 py-2 w-full text-[13.5px] text-slate-800/90 font-semibold flex items-center justify-center bg-brand-primary/95 rounded mx-auto
-                        hover:opacity-95 duration-300  transition-all disabled:bg-slate-700 disabled:text-slate-300/70 disabled:cursor-default 
-                         outline-none border-[2px] border-transparent focus-within:border-slate-300
+            className={`mt-5 py-1.5 w-[87%] max-w-[70vw] text-[13.5px] text-slate-800/90 font-semibold flex items-center justify-center bg-brand-primary rounded mx-auto
+                        hover:opacity-90 duration-300  transition-all disabled:hover:opacity-100 disabled:bg-slate-700 disabled:text-slate-300/70 disabled:cursor-default group
+                         outline-none border-[2px] border-transparent focus-within:border-slate-300 select-none
                         `}>
-            Send Link
+            <EnvelopeClosedIcon className="mr-2 text-slate-900 group-disabled:text-slate-400/80" /> Email Link
           </button>
         </div>
 
-        <div className="text-[13px] text-slate-500/90 font-light my-3 text-center">---- or ----</div>
+        <div className="text-[13px] text-slate-500/80 font-light my-3 text-center select-none">---- or ----</div>
 
-        <button className="px-[18px] py-2 text-[13.5px] flex items-center font-semibold text-slate-800/90 bg-slate-100/90 rounded outline-none border-[2px] border-transparent focus-within:border-gray-400">
+        <button
+          onClick={handleGoogleAuth}
+          className={`px-[18px] py-1.5 text-[13.5px] flex items-center font-semibold text-slate-800/90 bg-slate-100/85 select-none
+                      rounded outline-none border-[2px] border-transparent focus-within:border-gray-400 hover:opacity-95 duration-300  transition-opacity`}>
           <GoogleIcon />
           Continue with Google
         </button>

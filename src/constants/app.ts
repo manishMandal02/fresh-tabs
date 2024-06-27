@@ -84,7 +84,13 @@ export const StorageKey = {
   spaceHistoryToday: (spaceId: string): `SPACE_HISTORY_TODAY-${string}` => `SPACE_HISTORY_TODAY-${spaceId}`,
 } as const;
 
-// union type of all storage value (SPACES, TABS-${string}, etc.)
+export const ContextMenuItem = {
+  OPEN_APP: 'Open App',
+  SNOOZE_TAB: 'Snooze tab ⏰',
+  DISCARD_TABS: 'Discard other tabs',
+} as const;
+
+export const ContextMenuSnoozeOptions = ['2 hr', '6 hr', '1 day', '2 day', '1 week'];
 
 export const DefaultAppSettings: IAppSettings = {
   includeBookmarksInSearch: true,

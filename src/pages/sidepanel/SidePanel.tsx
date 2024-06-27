@@ -34,7 +34,6 @@ import {
 import { getAllNotifications } from '@root/src/services/chrome-storage/user-notifications';
 import { getAllNotes } from '@root/src/services/chrome-storage/notes';
 import { isChromeUrl } from '@root/src/utils';
-import { getUser } from '@root/src/services/chrome-storage/user';
 import Auth from './components/features/user/auth';
 
 // event ids of processed events
@@ -74,10 +73,11 @@ const SidePanel = () => {
   useEffect(() => {
     setIsLoadingSpaces(true);
     (async () => {
+      // TODO - temp
       // check if user authed or not
-      const user = await getUser();
+      // const user = await getUser();
 
-      if (!user) return;
+      // if (!user) return;
 
       // set user
       setUser(user);
@@ -158,7 +158,7 @@ const SidePanel = () => {
           <FavTabs tabs={globalPinnedTabs} isGlobal={true} setGlobalPinnedTabs={setGlobalPinnedTabs} />
         </div> */}
         <ErrorBoundary FallbackComponent={ErrorBoundaryUI}>
-          {!user ? (
+          {user ? (
             <Auth />
           ) : (
             <>

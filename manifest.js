@@ -20,6 +20,7 @@ const manifest = {
     'history',
     'search',
     'tabGroups',
+    'contextMenus',
     'webNavigation',
     'notifications',
     'system.display',
