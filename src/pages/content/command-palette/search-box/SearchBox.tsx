@@ -81,6 +81,8 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
               onClearSearch();
             }
 
+            console.log('✅ ~ ev:', ev);
+
             if (ev.key.includes('ArrowDown') || ev.key.includes('ArrowUp')) {
               ev.preventDefault();
             }

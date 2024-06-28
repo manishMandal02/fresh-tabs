@@ -10,6 +10,7 @@ reloadOnUpdate('pages/content/style.scss');
 // ***
 
 import { logger } from '../../utils/logger';
+
 import { debounceWithEvents, generateId, wait } from '../../utils';
 import { retryAtIntervals } from '../../utils/retryAtIntervals';
 import { asyncMessageHandler } from '../../utils/asyncMessageHandler';
@@ -59,12 +60,7 @@ import {
   ISpace,
   ITab,
 } from '../../types/global.types';
-import {
-  getTabsInSpace,
-  removeTabFromSpace,
-  saveGlobalPinnedTabs,
-  setTabsForSpace,
-} from '@root/src/services/chrome-storage/tabs';
+import { getTabsInSpace, removeTabFromSpace, setTabsForSpace } from '@root/src/services/chrome-storage/tabs';
 import {
   checkNewWindowTabs,
   createNewSpace,
@@ -80,7 +76,6 @@ import {
   ThemeColor,
   DISCARD_TAB_URL_PREFIX,
   DefaultAppSettings,
-  DefaultPinnedTabs,
   SNOOZED_TAB_GROUP_TITLE,
   AlarmName,
   ALARM_NAME_PREFiX,
@@ -108,8 +103,6 @@ const checkExtensionBadgeEmoji = async () => {
 //* IIFE - checks for alarms, its not guaranteed to persist
 (async () => {
   await checkExtensionBadgeEmoji();
-
-  initializeContextMenuItems();
 
   const autoSaveToBMAlarm = await getAlarm(AlarmName.autoSaveBM);
 
@@ -146,6 +139,8 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 
 // TODO - improvement - paginating larger data sets like notes for better performance and
 //+ query data when searched or for domain notes
+
+// TODO - fix/improve - command palette search for history, bookmarks, etc. (sometimes it shows no results)
 
 // TODO - feat - new tab (full app)
 //+ tab thumbnail views and also grid views
@@ -452,10 +447,6 @@ export const showCommandPaletteContentScript = async (
     },
   });
 };
-
-// chrome.runtime.connect().onDisconnect.addListener(() => {
-//   console.log('🚫 ~ chrome.runtime.connect().onDisconnect.addListener:415 ~ Disconnected!!! 🚫');
-// });
 
 // * chrome event listeners
 
@@ -975,58 +966,60 @@ chrome.runtime.onMessage.addListener(
 
 // on extension installed
 chrome.runtime.onInstalled.addListener(async info => {
-  if (info.reason === 'install') {
-    //* initialize the app
-    // save default settings to sync storage
-    await saveSettings(DefaultAppSettings);
+  if (info.reason !== 'install') return;
+  //* initialize the app
+  // save default settings to sync storage
+  await saveSettings(DefaultAppSettings);
 
-    // save default pinned tabs
-    await saveGlobalPinnedTabs(DefaultPinnedTabs);
+  // save default pinned tabs
+  // await saveGlobalPinnedTabs(DefaultPinnedTabs);
 
-    //-- check for saved spaces in bookmarks
+  // set context menu items
+  initializeContextMenuItems();
 
-    // 1. check if parent/root folder exists in bookmarks
-    const rootBMFolderId = await checkParentBMFolder();
+  //-- check for saved spaces in bookmarks
 
-    if (!rootBMFolderId) {
-      // new user
-      // 2.a. create unsaved spaces for current opened windows
-      await createUnsavedSpacesOnInstall();
-      // 2.b. create sample spaces
-      await createSampleSpaces();
-    } else {
-      // app's root folder found
+  // 1. check if parent/root folder exists in bookmarks
+  const rootBMFolderId = await checkParentBMFolder();
 
-      // 2.b. get spaces from the root folder
-      const spacesWithTabs = await syncSpacesFromBookmarks(rootBMFolderId);
-
-      if (spacesWithTabs?.length < 1) {
-        // could not sync spaces from bookmarks
-
-        // create sample space
-        await createSampleSpaces();
-      }
-    }
-
-    // create unsaved spaces for current opened windows
+  if (!rootBMFolderId) {
+    // new user
+    // 2.a. create unsaved spaces for current opened windows
     await createUnsavedSpacesOnInstall();
+    // 2.b. create sample spaces
+    await createSampleSpaces();
+  } else {
+    // app's root folder found
 
-    // set alarm schedules to save space to bookmark,
-    // default preference is save daily (1d = 1440m)
-    await createAlarm({ name: AlarmName.autoSaveBM, triggerAfter: 1440, isRecurring: true });
-    // auto discard  tabs (if non-active for more than 10 minutes)
-    await createAlarm({ name: AlarmName.autoDiscardTabs, triggerAfter: 5, isRecurring: true });
+    // 2.b. get spaces from the root folder
+    const spacesWithTabs = await syncSpacesFromBookmarks(rootBMFolderId);
 
-    // merge space history everyday at midnight
-    await createAlarm({
-      name: AlarmName.dailyMidnightTrigger,
-      triggerAfter: 1440,
-      isRecurring: true,
-      shouldTriggerAtMidnight: true,
-    });
+    if (spacesWithTabs?.length < 1) {
+      // could not sync spaces from bookmarks
 
-    logger.info('✅ Successfully initialized app.');
+      // create sample space
+      await createSampleSpaces();
+    }
   }
+
+  // create unsaved spaces for current opened windows
+  await createUnsavedSpacesOnInstall();
+
+  // set alarm schedules to save space to bookmark,
+  // default preference is save daily (1d = 1440m)
+  await createAlarm({ name: AlarmName.autoSaveBM, triggerAfter: 1440, isRecurring: true });
+  // auto discard  tabs (if non-active for more than 10 minutes)
+  await createAlarm({ name: AlarmName.autoDiscardTabs, triggerAfter: 5, isRecurring: true });
+
+  // merge space history everyday at midnight
+  await createAlarm({
+    name: AlarmName.dailyMidnightTrigger,
+    triggerAfter: 1440,
+    isRecurring: true,
+    shouldTriggerAtMidnight: true,
+  });
+
+  logger.info('✅ Successfully initialized app.');
 });
 
 // on extension installed
@@ -1040,6 +1033,9 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
     if (!popupWindow) {
       popupWindow = await getStorage<string>({ type: 'session', key: 'TEMP_POPUP_WINDOW' });
+
+      // do nothing is command palette is already opened
+      if (popupWindow && command === 'cmdPalette') return;
     }
 
     if (popupWindow) {
@@ -1164,8 +1160,6 @@ chrome.alarms.onAlarm.addListener(async alarm => {
 
 // on context menu item clicked
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  console.log('🌅 ~ chrome.contextMenus.onClicked.addListener ~ info:', info);
-
   if (info.parentMenuItemId === ContextMenuItem.SNOOZE_TAB) {
     // snooze tab option clicked
     const optionSelected = info.menuItemId.toString()?.split('-')[1] || '';

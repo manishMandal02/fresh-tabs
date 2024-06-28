@@ -54,6 +54,7 @@ const manifest = {
   // chrome_url_overrides: {
   //   newtab: 'src/pages/new-tab/index.html',
   // },
+  host_permissions: ['*://*/*'],
   side_panel: {
     default_path: 'src/pages/sidepanel/index.html',
   },

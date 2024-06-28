@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { motion } from 'framer-motion';
 import { GlobeIcon, TrashIcon } from '@radix-ui/react-icons';
-import { useState, useEffect, memo , ReactEventHandler } from 'react';
+import { useState, useEffect, memo, ReactEventHandler } from 'react';
 
 import { cn } from '@root/src/utils/cn';
 import Tooltip from '../../../../../../components/tooltip';

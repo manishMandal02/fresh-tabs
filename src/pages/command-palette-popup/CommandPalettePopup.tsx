@@ -4,6 +4,7 @@ import CommandPalette from '../content/command-palette';
 import { getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
+import { publishEvents } from '@root/src/utils';
 
 const CommandPalettePopup = () => {
   const [commandPaletteProps, setCommandPaletteProps] = useState(null);
@@ -29,6 +30,15 @@ const CommandPalettePopup = () => {
         searchNotes: preferences.includeNotesInSearch,
       },
     });
+
+    // add event listener to listen to main app shortcut
+    document.body.addEventListener('keydown', async ev => {
+      if (ev.key === 's' && ev.metaKey) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        await publishEvents({ event: 'OPEN_APP_SIDEPANEL', payload: { windowId: currentWindowId } });
+      }
+    });
   };
 
   useEffect(() => {
@@ -38,7 +48,7 @@ const CommandPalettePopup = () => {
     })();
   }, []);
 
-  // TODO - check and have - active tab details (title, url) for note and other commands
+  // TODO - improvement - check and have - active tab details (title, url) for note and other commands
 
   const onCloseCommandPalette = () => {
     setCommandPaletteProps(null);
