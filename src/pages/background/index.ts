@@ -137,6 +137,8 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
+// TODO - improvement - whitelist list for discarding tabs, also add cmd to do the same
+
 // TODO - improvement - paginating larger data sets like notes for better performance and
 //+ query data when searched or for domain notes
 
@@ -447,6 +449,10 @@ export const showCommandPaletteContentScript = async (
     },
   });
 };
+
+// chrome.runtime.connect().onDisconnect.addListener(() => {
+//   console.log('🚫 ~ chrome.runtime.connect().onDisconnect.addListener:415 ~ Disconnected!!! 🚫');
+// });
 
 // * chrome event listeners
 
