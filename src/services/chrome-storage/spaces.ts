@@ -3,10 +3,10 @@ import { getStorage } from './helpers/get';
 import { ISpace, ISpaceWithoutId, ITab } from '@root/src/types/global.types';
 import { logger } from '@root/src/utils/logger';
 import { setStorage } from './helpers/set';
-import { generateId } from '@root/src/utils/generateId';
 import { getTabsInSpace, setTabsForSpace } from './tabs';
 import { deleteAllSpaceNotes } from './notes';
 import { openTabsInTransferredSpace } from '../chrome-tabs/tabs';
+import { generateId } from '@root/src/utils';
 
 // get all spaces
 export const getAllSpaces = async () => await getStorage<ISpace[]>({ key: StorageKey.SPACES, type: 'sync' });

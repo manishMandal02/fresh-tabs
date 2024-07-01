@@ -66,8 +66,8 @@ export const AlarmName = {
 } as const;
 
 export const StorageKey = {
-  USER: 'USER',
   USER_TOKEN: 'USER_TOKEN',
+  USER: 'USER',
   SPACES: 'SPACES',
   NOTES: 'NOTES',
   SETTINGS: 'SETTINGS',
@@ -78,6 +78,7 @@ export const StorageKey = {
   DAILY_SPACE_TIME_CHUNKS: 'DAILY_SPACE_TIME_CHUNKS',
   tabs: (spaceId: string): `TABS-${string}` => `TABS-${spaceId}`,
   groups: (spaceId: string): `GROUPS-${string}` => `GROUPS-${spaceId}`,
+  spaceContainer: (spaceId: string): `SPACE_CONTAINER-${string}` => `SPACE_CONTAINER-${spaceId}`,
   snoozed: (spaceId: string): `SNOOZED-${string}` => `SNOOZED-${spaceId}`,
   dailySpaceTimeAll: (spaceId: string): `DAILY_SPACE_TIME_ALL-${string}` => `DAILY_SPACE_TIME_ALL-${spaceId}`,
   spaceHistoryAll: (spaceId: string): `SPACE_HISTORY_ALL-${string}` => `SPACE_HISTORY_ALL-${spaceId}`,

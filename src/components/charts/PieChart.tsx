@@ -2,7 +2,7 @@
 import { VictoryPie, VictoryLabel } from 'victory';
 
 import { ThemeColor } from '@root/src/constants/app';
-import { formatNumTo2Digits } from '@root/src/utils/formatNumTo2Digits';
+import { formatNumTo2Digits } from '@root/src/utils';
 
 export type PieChartData = {
   icon: string;

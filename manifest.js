@@ -23,6 +23,8 @@ const manifest = {
     'contextMenus',
     'webNavigation',
     'notifications',
+    // TODO - add cookies to optional permission
+    'cookies',
     'system.display',
   ],
   commands: {

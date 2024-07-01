@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import Frame, { FrameContextConsumer } from 'react-frame-component';
 
 import DomainNotes from '../domain-notes';
-import { isValidURL, publishEvents } from '@root/src/utils';
+import { getUserSelectionText, isValidURL, publishEvents } from '@root/src/utils';
 import injectedStyle from './injected.css?inline';
 import { SnackbarContentScript } from '../snackbar';
 import { getTime } from '@root/src/utils/date-time/get-time';
@@ -14,7 +14,6 @@ import { ContentScriptContainerIds } from '@root/src/constants/app';
 import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
 import CommandPalette, { COMMAND_PALETTE_SIZE } from './CommandPalette';
 import { getNoteByDomain } from '@root/src/services/chrome-storage/notes';
-import { getUserSelectionText } from '@root/src/utils/getUserSelectedText';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { IMessageEventContentScript, ISearchFilters, ISpace, ITab, NoteBubblePos } from '../../../types/global.types';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';

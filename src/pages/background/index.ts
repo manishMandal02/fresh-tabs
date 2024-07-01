@@ -11,33 +11,32 @@ reloadOnUpdate('pages/content/style.scss');
 
 import { logger } from '../../utils/logger';
 
+import { retryAtIntervals } from '../../utils/retry-at-intervals';
 import { debounceWithEvents, generateId, wait } from '../../utils';
-import { retryAtIntervals } from '../../utils/retryAtIntervals';
-import { asyncMessageHandler } from '../../utils/asyncMessageHandler';
 import { handleSnoozedTabAlarm } from './handler/alarm/un-snooze-tab';
+import { asyncMessageHandler } from '../../utils/async-message-handler';
 import { discardAllTabs } from '@root/src/services/chrome-discard/discard';
 import { matchWordsInText } from '@root/src/utils/string/matchWordsInText';
+import { handleNotesRemainderAlarm } from './handler/alarm/notes-remainder';
 import { publishEvents, publishEventsTab } from '../../utils/publish-events';
 import { handleMergeSpaceHistoryAlarm } from './handler/alarm/mergeSpaceHistory';
 import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers';
 import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';
+import { getStorage, setStorage } from '@root/src/services/chrome-storage/helpers';
+import { removeGroup, updateGroup } from '@root/src/services/chrome-storage/groups';
 import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
-import { getFaviconURL, getFaviconURLAsync, isChromeUrl, parseUrl } from '../../utils/url';
-import {
-  createActiveTab,
-  getCurrentTab,
-  getCurrentWindowId,
-  goToTab,
-  openSpace,
-  openTabsInTransferredSpace,
-  syncTabs,
-} from '@root/src/services/chrome-tabs/tabs';
 import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
+import { getFaviconURL, getFaviconURLAsync, isChromeUrl, parseUrl } from '../../utils/url';
 import { addSnoozedTab, getTabToUnSnooze } from '@root/src/services/chrome-storage/snooze-tabs';
 import { handleMergeDailySpaceTimeChunksAlarm } from './handler/alarm/mergeDailySpaceTimeChunks';
 import { getSpaceHistory, setSpaceHistory } from '@root/src/services/chrome-storage/space-history';
 import { getDailySpaceTime, setDailySpaceTime } from '@root/src/services/chrome-storage/space-analytics';
+import {
+  checkParentBMFolder,
+  syncSpacesFromBookmarks,
+  syncSpacesToBookmark,
+} from '@root/src/services/chrome-bookmarks/bookmarks';
 import {
   addNewNote,
   deleteNote,
@@ -47,10 +46,14 @@ import {
   updateNote,
 } from '@root/src/services/chrome-storage/notes';
 import {
-  checkParentBMFolder,
-  syncSpacesFromBookmarks,
-  syncSpacesToBookmark,
-} from '@root/src/services/chrome-bookmarks/bookmarks';
+  createActiveTab,
+  getCurrentTab,
+  getCurrentWindowId,
+  goToTab,
+  openSpace,
+  openTabsInTransferredSpace,
+  syncTabs,
+} from '@root/src/services/chrome-tabs/tabs';
 import {
   ICommand,
   IDailySpaceTimeChunks,
@@ -82,9 +85,6 @@ import {
   ContextMenuItem,
   ContextMenuSnoozeOptions,
 } from '@root/src/constants/app';
-import { removeGroup, updateGroup } from '@root/src/services/chrome-storage/groups';
-import { handleNotesRemainderAlarm } from './handler/alarm/notes-remainder';
-import { getStorage, setStorage } from '@root/src/services/chrome-storage/helpers';
 
 logger.info('🏁 background loaded');
 
@@ -103,6 +103,8 @@ const checkExtensionBadgeEmoji = async () => {
 //* IIFE - checks for alarms, its not guaranteed to persist
 (async () => {
   await checkExtensionBadgeEmoji();
+
+  initializeContextMenuItems();
 
   const autoSaveToBMAlarm = await getAlarm(AlarmName.autoSaveBM);
 
@@ -378,7 +380,7 @@ export const showCommandPaletteContentScript = async (
 ) => {
   let canOpenInContentScript = false;
 
-  // TODO - testing... the re-adding of content script incase the content script is not responding
+  // the re-adding of content script incase the content script is not responding
   if (!shouldOpenInPopupWindow) {
     // checks if content script is loaded
     const res = await publishEventsTab(tabId, { event: 'CHECK_CONTENT_SCRIPT_LOADED' });
@@ -395,8 +397,8 @@ export const showCommandPaletteContentScript = async (
 
       await wait(250);
       // check if content script is responding
-      const res = await publishEventsTab(tabId, { event: 'CHECK_CONTENT_SCRIPT_LOADED' });
-      if (res) canOpenInContentScript = true;
+      const res2 = await publishEventsTab(tabId, { event: 'CHECK_CONTENT_SCRIPT_LOADED' });
+      if (res2) canOpenInContentScript = true;
     }
   }
 
@@ -1106,8 +1108,6 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 // handle alarm triggers
 chrome.alarms.onAlarm.addListener(async alarm => {
   try {
-    console.log('⏰⏰⏰⏰ ~ onAlarm.addListener:843 ~ alarm:', alarm);
-
     // handle alarm names with prefix tag ex: deleteSpace-, snoozedTab-, etc.
     if (alarm.name.startsWith(ALARM_NAME_PREFiX.deleteSpace)) {
       //  delete unsaved space
@@ -1296,6 +1296,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     }
     return;
   }
+
   const space = await getSpaceByWindow(tab.windowId);
 
   if (!space?.id) return;

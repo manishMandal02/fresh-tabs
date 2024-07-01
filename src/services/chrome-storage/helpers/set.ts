@@ -1,6 +1,7 @@
 import { StorageKey } from '@root/src/constants/app';
 import {
   IAppSettings,
+  IContainer,
   IDailySpaceTime,
   IDailySpaceTimeChunks,
   IGroup,
@@ -21,6 +22,7 @@ type StorageValue =
   | IUser
   | IUserToken
   | ISpace
+  | IContainer
   | ISpace[]
   | INote[]
   | ITab[]

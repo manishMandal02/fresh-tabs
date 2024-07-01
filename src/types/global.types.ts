@@ -103,6 +103,20 @@ export interface INote {
   remainderAt?: number;
 }
 
+export interface IContainerData {
+  domain: string;
+  cookie: string;
+  localStorage: unknown;
+}
+
+export interface IContainer {
+  id: string;
+  spaceId: string;
+  type: 'space' | 'group';
+  // domain is the key
+  data: Record<string, IContainerData>;
+}
+
 export interface IPinnedTab {
   url: string;
   title?: string;
