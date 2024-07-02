@@ -666,11 +666,11 @@ const ActiveSpaceTabs = ({ space, onTabNotesClick }: Props) => {
                   'relative w-full cursor-default bg-emerald-70 flex mb-[1px] items-center justify-between text-slate-300/70 text-[13px] px-2 group z-20 rounded-lg outline-none',
                   {
                     // group's style
-                    'bg-brand-darkBgAccent/60  px-2 border border-brand-darkBg/80 ': item.isFolder,
+                    'bg-brand-darkBgAccent/60  px-2 border border-brand-darkBg/80  border-l-[1.5px]': item.isFolder,
                   },
                   {
                     // group expanded
-                    'rounded-b-none border-b-0': item.isFolder && context?.isExpanded,
+                    'rounded-b-none': item.isFolder && context?.isExpanded,
                   },
                   {
                     // discarded tab
@@ -815,7 +815,7 @@ const ActiveSpaceTabs = ({ space, onTabNotesClick }: Props) => {
                   open: {
                     opacity: 1,
                     height: 'auto',
-                    borderLeft: `1px solid ${ThemeColor[capitalize((groupedTabs[parentId].data as IGroup).theme)]}`,
+                    borderLeft: `1.3px solid ${ThemeColor[capitalize((groupedTabs[parentId].data as IGroup).theme)]}`,
                   },
                   collapsed: {
                     opacity: 0,
@@ -828,7 +828,7 @@ const ActiveSpaceTabs = ({ space, onTabNotesClick }: Props) => {
                   damping: 25,
                   duration: 0.5,
                 }}
-                className={cn('w-full ', {
+                className={cn('w-full', {
                   'bg-brand-darkBgAccent/40 rounded-b-md  pl-[5px] pr-[2px] border-b mb-[2px] border-brand-darkBgAccent':
                     parentId !== 'root',
                 })}

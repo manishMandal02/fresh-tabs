@@ -71,7 +71,7 @@ const Notes = ({ space, notesSearchQuery }: Props) => {
     <div>
       <div
         className={`flex top-[36px] w-[98%] z-[99] bg-brand-darkBg/85 sticky items-center ml-1 px-2 py-1
-                    rounded-md border border-brand-darkBgAccent/40 focus-within:border-slate-700/90`}>
+                    rounded-md border border-brand-darkBgAccent/55 focus-within:border-slate-700/90`}>
         <MagnifyingGlassIcon className="text-slate-400/80" />
         <input
           type="text"
@@ -82,7 +82,7 @@ const Notes = ({ space, notesSearchQuery }: Props) => {
         />
       </div>
       <div className="py-1.5 px-1 w-full">
-        {notes.length > 0 ? (
+        {notes?.length > 0 ? (
           notes.toReversed().map(note => (
             <button
               tabIndex={-1}

@@ -70,6 +70,8 @@ const Command = ({
     (type === CommandType.AddToSpace ||
       type === CommandType.SnoozeTab ||
       type === CommandType.DiscardTabs ||
+      type === CommandType.NewGroup ||
+      type === CommandType.AddToGroup ||
       type === CommandType.WebSearch)
   ) {
     commandAlias = alias;
@@ -179,7 +181,7 @@ const Command = ({
             searchWords={[...escapedSearchTerm.split(' ')]}
             textToHighlight={type !== CommandType.WebSearch ? `(${commandAlias})` : commandAlias}
             highlightClassName="bg-transparent font-semibold text-slate-400"
-            className="ml-1.5 text-[11px] text-slate-500/90 min-w-fit whitespace-nowrap"
+            className="ml-1.5 text-[10px] text-slate-500/90 min-w-fit whitespace-nowrap"
           />
         ) : null}
       </div>

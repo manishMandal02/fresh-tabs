@@ -321,18 +321,30 @@ const Settings = () => {
                   onChange={checked => handleSettingsChange('isCommandPaletteDisabled', checked)}
                 />
               </div>
-              {/* include bookmarks in search */}
               <div
                 className={cn('flex items-center justify-between pr-1 mb-2', {
                   'opacity-70 cursor-not-allowed': settingsUpdateData.isCommandPaletteDisabled,
                 })}>
-                <p className="text-[12px]  font-light tracking-wide ml-1">Include Bookmarks in Search</p>
+                <p className="text-[12px]  font-light tracking-wide ml-1">Include Bookmarks in search</p>
                 <Switch
                   size="medium"
                   id="include-bookmark-in-search"
-                  checked={settingsUpdateData.includeBookmarksInSearch}
                   disabled={settingsUpdateData.isCommandPaletteDisabled}
+                  checked={settingsUpdateData.includeBookmarksInSearch}
                   onChange={checked => handleSettingsChange('includeBookmarksInSearch', checked)}
+                />
+              </div>
+              <div
+                className={cn('flex items-center justify-between pr-1 mb-2', {
+                  'opacity-70 cursor-not-allowed': settingsUpdateData.isCommandPaletteDisabled,
+                })}>
+                <p className="text-[12px]  font-light tracking-wide ml-1">Include Notes in search</p>
+                <Switch
+                  size="medium"
+                  id="include-notes-in-search"
+                  disabled={settingsUpdateData.isCommandPaletteDisabled}
+                  checked={settingsUpdateData.includeNotesInSearch}
+                  onChange={checked => handleSettingsChange('includeNotesInSearch', checked)}
                 />
               </div>
 

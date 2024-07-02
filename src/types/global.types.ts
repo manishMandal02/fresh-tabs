@@ -24,12 +24,12 @@ export interface IUserToken {
 
 export interface IAppSettings {
   includeBookmarksInSearch: boolean;
+  includeNotesInSearch: boolean;
   isCommandPaletteDisabled: boolean;
   isLinkPreviewDisabled: boolean;
   openLinkPreviewType: 'all-external' | 'shift-click';
   linkPreviewSize: 'mobile' | 'tablet' | 'desktop';
   isNotesDisabled: boolean;
-  includeNotesInSearch: boolean;
   notesBubblePos: NoteBubblePos;
   showNotesBubbleForAllSites: boolean;
   openSpace: 'newWindow' | 'sameWindow';
@@ -190,7 +190,6 @@ type MessageEventsContentScript =
   | 'POPUP_PREVIEW_BUTTON_OVERLAY'
   | 'OPEN_PREVIEW_LINK_AS_TAB'
   | 'OPEN_APP_SIDEPANEL'
-  | 'OPEN_APP_SIDEPANEL_ACTION'
   | 'SHOW_COMMAND_PALETTE'
   | 'MOVE_TAB_TO_SPACE'
   | 'SHOW_DOMAIN_NOTES'

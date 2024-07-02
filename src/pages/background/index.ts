@@ -139,12 +139,16 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
+// TODO - fix/improve - command palette search for history, bookmarks, etc. (sometimes it shows no results)
+
 // TODO - improvement - whitelist list for discarding tabs, also add cmd to do the same
+
+// TODO - new cmd to add - rename groups if command palette within a group
+
+//! ----
 
 // TODO - improvement - paginating larger data sets like notes for better performance and
 //+ query data when searched or for domain notes
-
-// TODO - fix/improve - command palette search for history, bookmarks, etc. (sometimes it shows no results)
 
 // TODO - feat - new tab (full app)
 //+ tab thumbnail views and also grid views
@@ -414,7 +418,7 @@ export const showCommandPaletteContentScript = async (
       type: 'popup',
       state: 'normal',
       url: chrome.runtime.getURL(`src/pages/command-palette-popup/index.html?windowId=${currentWindow.id}`),
-      width: 750,
+      width: 700,
       height: 550,
       top: popupOffsetTop,
       left: popupOffsetLeft,
@@ -457,19 +461,6 @@ export const showCommandPaletteContentScript = async (
 // });
 
 // * chrome event listeners
-
-// handle open side panel event * can't be grouped with other events
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('🚨 ~ chrome.runtime.onMessage.addListener ~ request:', request);
-  (async () => {
-    if ((request as IMessageEventContentScript).event === 'OPEN_APP_SIDEPANEL_ACTION') {
-      const { windowId } = request.payload;
-      chrome.sidePanel.open({ windowId });
-    }
-  })();
-  sendResponse(true);
-  return true;
-});
 
 // handle events from content script (command palette)
 chrome.runtime.onMessage.addListener(
@@ -625,11 +616,17 @@ chrome.runtime.onMessage.addListener(
 
       case 'NEW_GROUP': {
         const { groupName, isOpenedInPopupWindow, activeSpace } = payload;
+
+        console.log('🚨 ~ event:NEW_GROUP ~ payload:', payload);
+
         const tab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
 
         console.log('🚀 ~ tab:', tab);
 
-        const newGroupId = await chrome.tabs.group({ tabIds: tab.id });
+        const newGroupId = await chrome.tabs.group({
+          tabIds: tab.id,
+          ...(isOpenedInPopupWindow ? { createProperties: { windowId: activeSpace.windowId } } : {}),
+        });
 
         await chrome.tabGroups.update(newGroupId, {
           title: groupName,
@@ -731,7 +728,6 @@ chrome.runtime.onMessage.addListener(
 
         if (searchFilterPreferences.searchNotes) {
           let notes = await getAllNotes();
-
           notes = notes?.filter(note => {
             // match query with  domain
             if (note.domain.includes(searchQuery)) return true;
@@ -743,22 +739,24 @@ chrome.runtime.onMessage.addListener(
             return false;
           });
 
-          // do not show more than 6 notes results
-          notes.length > 8 && notes.splice(8);
+          if (notes?.length > 0) {
+            // do not show more than 6 notes results
+            notes.length > 8 && notes.splice(8);
 
-          notes?.forEach((note, idx) => {
-            if (!note?.text || !note?.title) return;
+            notes?.forEach((note, idx) => {
+              if (!note?.text || !note?.title) return;
 
-            matchedCommands.push({
-              index: idx,
-              type: CommandType.Note,
-              label: note.title,
-              // icon will be added in Command component
-              icon: null,
-              metadata: note.id,
-              alias: 'Note',
+              matchedCommands.push({
+                index: idx,
+                type: CommandType.Note,
+                label: note.title,
+                // icon will be added in Command component
+                icon: null,
+                metadata: note.id,
+                alias: 'Note',
+              });
             });
-          });
+          }
         }
 
         // return the matched results if more than 6 (won't search bookmark & history)
