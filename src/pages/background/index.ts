@@ -406,7 +406,23 @@ export const showCommandPaletteContentScript = async (
     }
   }
 
+  console.log('🚨 ~ show command palette fired!! ~ shouldOpenInPopupWindow:', shouldOpenInPopupWindow);
+
   if (!canOpenInContentScript) {
+    // check if popup window is already open
+
+    const popupWindow = await getStorage<string>({ type: 'local', key: 'TEMP_POPUP_WINDOW' });
+
+    console.log('🚨 ~ exists or not ~ popupWindow:', popupWindow);
+
+    if (popupWindow) {
+      // if popup already created then focus the window
+      const popupId = popupWindow.split('-')[1];
+
+      await chrome.windows.update(Number(popupId), { focused: true });
+      return;
+    }
+
     // open command palette in new popup window
     const currentWindow = await chrome.windows.getCurrent();
 
@@ -424,7 +440,30 @@ export const showCommandPaletteContentScript = async (
       left: popupOffsetLeft,
     });
 
+    console.log('🚨 ~ created window ~ window:', window);
+
     await setStorage({ type: 'session', key: 'TEMP_POPUP_WINDOW', value: `${currentWindow.id}-${window.id}` });
+
+    await wait(350);
+    // bug:temp-fix: sometimes 2 popup window with cmd palette are opened when trigged (via shortcut) from side panel
+    // close the other popup windows
+
+    const allWindows = await chrome.windows.getAll();
+
+    allWindows.forEach(async popup => {
+      if (popup.type !== 'popup') return;
+
+      const tempPopupWindow = await getStorage<string>({ type: 'session', key: 'TEMP_POPUP_WINDOW' });
+
+      console.log('🚨 ~ all windows loop ~ tempPopupWindow:', tempPopupWindow);
+
+      if (popup.id === Number(tempPopupWindow?.split('-')[1] || 0)) {
+        await chrome.windows.update(window.id, { focused: true });
+        return;
+      }
+      // making sure that it is a command palette widow before removing
+      await chrome.windows.remove(popup.id);
+    });
 
     return;
   }
@@ -467,7 +506,7 @@ chrome.runtime.onMessage.addListener(
   asyncMessageHandler<IMessageEventContentScript, boolean | ICommand[]>(async request => {
     const { event, payload } = request;
 
-    logger.info(`Event received at background:: ${event}`);
+    logger.info(`Event received at runtime.onMessage:: ${event}`);
 
     // handle events cases
     switch (event) {
@@ -1607,14 +1646,14 @@ chrome.windows.onFocusChanged.addListener(async windowId => {
   // record daily space time
   await recordDailySpaceTime(windowId);
 
-  if (windowId > 0) {
-    const currentWindow = await chrome.windows.get(windowId);
-
-    if (currentWindow.type === 'popup') return;
-  }
-
   // remove temp pop windows if any
   try {
+    if (windowId > 0) {
+      const currentWindow = await chrome.windows.get(windowId);
+
+      if (currentWindow.type === 'popup') return;
+    }
+
     // remove popup window of command palette
     const tempPopupWindow = await getStorage<string>({ type: 'session', key: 'TEMP_POPUP_WINDOW' });
     const tempPopupWindowId = tempPopupWindow ? Number(tempPopupWindow.split('-')[1] || 0) : 0;
@@ -1627,16 +1666,22 @@ chrome.windows.onFocusChanged.addListener(async windowId => {
 
     // remove link preview popup window
     const linkPreviewPopupWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW' });
-    const windowId = linkPreviewPopupWindow ? Number(linkPreviewPopupWindow.split('-')[1] || 0) : 0;
-    if (linkPreviewPopupWindow && windowId > 0) {
+    const previewWindowId = linkPreviewPopupWindow ? Number(linkPreviewPopupWindow.split('-')[1] || 0) : 0;
+    if (linkPreviewPopupWindow && previewWindowId > 0) {
       // remove popup window
-      await chrome.windows.remove(windowId);
+      await chrome.windows.remove(previewWindowId);
       await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW', value: '' });
     }
-  } catch {
+  } catch (error) {
     // clear both window id incase of an error
     await setStorage({ type: 'session', key: 'TEMP_POPUP_WINDOW', value: '' });
     await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW', value: '' });
+
+    logger.error({
+      error,
+      msg: 'Error while removing temp popup window',
+      fileTrace: 'background/index.ts ~ chrome.windows.onFocusChanged():1667',
+    });
   }
 });
 
