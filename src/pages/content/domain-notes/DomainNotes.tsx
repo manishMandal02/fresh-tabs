@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
+import { useState, useEffect } from 'react';
 import {
   CounterClockwiseClockIcon,
   Cross1Icon,
@@ -11,7 +11,7 @@ import {
   TrashIcon,
 } from '@radix-ui/react-icons';
 
-import { INote } from '../../../types/global.types';
+import { INote, NoteBubblePos } from '../../../types/global.types';
 import injectedStyle from './domain-notes.css?inline';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
 import { ContentScriptContainerIds } from '@root/src/constants/app';
@@ -21,13 +21,14 @@ const AllNotesContainerId = 'all-notes-container';
 
 type Props = {
   domainNotes: INote[];
+  position: NoteBubblePos;
   onNoteClick: (noteId: string, spaceId: string) => void;
   onNewNoteClick: () => void;
   onDeleteNoteClick: (noteId: string) => void;
   onClose: () => void;
 };
 
-const DomainNotes = ({ domainNotes, onNoteClick, onNewNoteClick, onDeleteNoteClick, onClose }: Props) => {
+const DomainNotes = ({ domainNotes, position, onNoteClick, onNewNoteClick, onDeleteNoteClick, onClose }: Props) => {
   // local state
   const [notes, setNotes] = useState<INote[]>([]);
   const [showNotes, setShowNotes] = useState(false);
@@ -79,8 +80,8 @@ const DomainNotes = ({ domainNotes, onNoteClick, onNewNoteClick, onDeleteNoteCli
 
           setShowNotes(prev => !prev);
         }}
-        className={`relative flex items-center justify-center size-[55px] rounded-full border border-brand-darkBgAccent group
-                    bg-gradient-to-br from-brand-darkBgAccent/90 to-brand-darkBg/95 shadow-md shadow-brand-darkBgAccent/50 cursor-pointer select-none`}>
+        className={`relative flex items-center justify-center size-[55px] rounded-full border border-brand-darkBgAccent group cursor-pointer
+                    bg-gradient-to-br from-brand-darkBgAccent/90 to-brand-darkBg/95 shadow-md shadow-brand-darkBgAccent/50 select-none`}>
         <div>
           {notes.length > 0 ? (
             <FileTextIcon className="text-slate-600 scale-[1.8] group-hover:opacity-80 duration-300 transition-opacity" />
@@ -120,7 +121,12 @@ const DomainNotes = ({ domainNotes, onNoteClick, onNewNoteClick, onDeleteNoteCli
       {/* notes list view */}
       {showNotes
         ? createPortal(
-            <motion.div {...bounce} className="notes-container cc-scrollbar">
+            <motion.div
+              {...bounce}
+              className="notes-container cc-scrollbar"
+              style={{
+                ...(position === 'bottom-left' ? { left: '24px' } : { right: '24px' }),
+              }}>
               {/* new note button */}
               {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
               <div

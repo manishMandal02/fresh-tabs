@@ -97,7 +97,7 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
           {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <motion.div
             whileTap={{ scale: '1.1', width: '100%' }}
-            transition={{ type: 'spring', duration: '0.1', damping: 20, stiffness: 200 }}
+            transition={{ type: 'spring', duration: '0.1', damping: 15, stiffness: 250 }}
             tabIndex={-1}
             onClick={() => {
               setSearchFilters(prev => ({ ...prev, searchBookmarks: !prev.searchBookmarks }));
@@ -116,7 +116,7 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
           {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <motion.span
             whileTap={{ scale: '1.1', width: '100%' }}
-            transition={{ type: 'spring', duration: '0.1', damping: 20, stiffness: 200 }}
+            transition={{ type: 'spring', duration: '0.1', damping: 15, stiffness: 200 }}
             tabIndex={-1}
             onClick={() => {
               setSearchFilters(prev => ({ ...prev, searchNotes: !prev.searchNotes }));

@@ -85,6 +85,7 @@ import {
   ContextMenuItem,
   ContextMenuSnoozeOptions,
 } from '@root/src/constants/app';
+import { removeOlderSpaceHistory } from './handler/alarm/removeOlderSpaceHistory';
 
 logger.info('🏁 background loaded');
 
@@ -141,9 +142,17 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 
 // TODO - fix/improve - command palette search for history, bookmarks, etc. (sometimes it shows no results)
 
-// TODO - improvement - whitelist list for discarding tabs, also add cmd to do the same
+// TODO - preference - whitelist list for discarding tabs, turn on/off auto discarding with time setting
 
-// TODO - new cmd to add - rename groups if command palette within a group
+// TODO - new commands to add
+//-- whitelist sites from discarding tabs
+//-- rename groups if command palette within a group
+//-- open side panel
+//-- open preferences/settings modal
+//-- open analytics modal
+//-- open space history
+//-- open snoozed tabs modal
+//-- open notifications
 
 //! ----
 
@@ -434,7 +443,7 @@ export const showCommandPaletteContentScript = async (
       type: 'popup',
       state: 'normal',
       url: chrome.runtime.getURL(`src/pages/command-palette-popup/index.html?windowId=${currentWindow.id}`),
-      width: 700,
+      width: 740,
       height: 550,
       top: popupOffsetTop,
       left: popupOffsetLeft,
@@ -962,7 +971,7 @@ chrome.runtime.onMessage.addListener(
         let popupOffsetLeft = 0;
 
         if (linkPreviewSize === 'mobile') {
-          windowWidth = 500;
+          windowWidth = 480;
           windowHeight = 750;
           popupOffsetLeft = Math.ceil(currentWindow.width / 4 + currentWindow.left);
         }
@@ -1183,6 +1192,12 @@ chrome.alarms.onAlarm.addListener(async alarm => {
         await handleMergeDailySpaceTimeChunksAlarm();
 
         // delete space history older than 30 days
+        await removeOlderSpaceHistory();
+
+        // remove history from browser of temp popup window created for command palette
+        await chrome.history.deleteUrl({
+          url: `chrome-extension://${chrome.runtime.id}/src/pages/command-palette-popup/index.html`,
+        });
 
         logger.info('⏰ Midnight: merge space history & usage data');
 

@@ -230,6 +230,7 @@ const showNotes = async (spaceId: string, position: NoteBubblePos, reRender = fa
               onNewNoteClick={handleCaptureNewNote}
               onDeleteNoteClick={handleDeleteEvent}
               onClose={handleRemoveDomainNotesBubble}
+              position={position}
             />
           );
         }}
@@ -258,7 +259,7 @@ const appendOpenInTabBtnOverlay = () => {
   overlayBtn.style.cursor = 'pointer';
   overlayBtn.style.border = '2px solid  #151b21';
 
-  overlayBtn.innerText = 'Open as Tab ↗';
+  overlayBtn.innerText = 'Open in Tab ↗';
 
   overlayBtn.addEventListener('click', async () => {
     await publishEvents({
@@ -351,14 +352,16 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
     if (clickedEl.tagName !== 'A' && !clickedEl.closest('a')) return;
 
-    const hrefLink =
+    let hrefLink =
       clickedEl.tagName === 'A' ? clickedEl.getAttribute('href') : clickedEl.closest('a').getAttribute('href') || '';
 
-    console.log('🚀 ~ openLinkPreviewType:', openLinkPreviewType);
+    hrefLink = !hrefLink.startsWith(window.location.origin) ? window.location.origin + hrefLink : hrefLink;
+
     // open link in preview window if user preference is set to Shift + Click and the shift key was pressed
     if (openLinkPreviewType === 'shift-click' && isValidURL(hrefLink) && !sessionStorage.getItem('activeWindowId')) {
       if (!ev.shiftKey) return;
       ev.preventDefault();
+      ev.stopPropagation();
 
       await publishEvents({
         event: 'OPEN_LINK_PREVIEW_POPUP',
@@ -380,6 +383,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (!hrefLink || !isValidURL(hrefLink) || (isInternalLink && !willOpenInNewTab)) return;
 
     ev.preventDefault();
+    ev.stopPropagation();
 
     // do not allow to open external links, if in preview mode
     if (sessionStorage.getItem('activeWindowId')) return;

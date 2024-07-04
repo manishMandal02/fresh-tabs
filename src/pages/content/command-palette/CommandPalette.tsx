@@ -337,7 +337,7 @@ const CommandPalette = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, subCommand, searchFilters]);
 
-  // on search during sub command
+  // on search in sub command
   useEffect(() => {
     // filter the suggested sub commands based on search query, also update the index
     if (subCommand && searchQuery.trim() && suggestedCommandsForSubCommand.length > 0) {
@@ -542,12 +542,12 @@ const CommandPalette = ({
                       rounded-bl-md rounded-br-md border-t border-brand-darkBgAccent/60`}
               // focuses on the search input box if clicked
               onClick={handleFocusSearchInput}>
-              <div className="text-slate-500 text-[10.5px] ml-1">FreshTabs</div>
+              <div className="text-slate-500/90 text-[10.5px] ml-1">FreshTabs</div>
               <div className="flex items-center gap-x-[7px]">
-                <KBD upArrowKey />
-                <KBD downArrowKey />
-                <KBD modifierKey />
-                <KBD enterKey />
+                <KBD upArrowKey classes="text-slate-500" />
+                <KBD downArrowKey classes="text-slate-500" />
+                <KBD modifierKey classes="text-slate-500" />
+                <KBD enterKey classes="text-slate-500" />
               </div>
             </div>
           ) : null}

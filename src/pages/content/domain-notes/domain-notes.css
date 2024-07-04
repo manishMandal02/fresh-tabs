@@ -23,7 +23,6 @@
 .notes-container {
   position: fixed;
   bottom: 100px;
-  right: 24px;
   width: 350px;
   padding: 12px 12px;
   min-height: fit-content;

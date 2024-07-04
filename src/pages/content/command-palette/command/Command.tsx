@@ -122,6 +122,24 @@ const Command = ({
         </>
       );
 
+    if (type === CommandType.WebSearch) {
+      if (isMetaKeyPressed) {
+        return (
+          <>
+            {'Search in new tab'}
+            <ExternalLinkIcon className={classes} />
+          </>
+        );
+      }
+
+      return (
+        <>
+          {'Search here'}
+          <Link2Icon className={classes} />
+        </>
+      );
+    }
+
     if (isMetaKeyPressed)
       return (
         <>
@@ -201,8 +219,8 @@ const Command = ({
       ) : null}
 
       {/* command type label/sticker */}
-      {!isStaticCommand && !isSubCommand ? (
-        <div className="flex items-center absolute right-3 top-1 bg-brand-darkBgAccent/90 rounded-[5px] text-[10px]  text-slate-400/80 px-2.5 py-1.5 capitalize select-none">
+      {!isStaticCommand && !isSubCommand && isFocused ? (
+        <div className="flex items-center absolute right-2.5 top-1 bg-brand-darkBg/95 rounded-[5px] text-[10px] font-medium text-slate-400 px-2.5 py-2 capitalize select-none">
           <CommandTypeIcon classes="ml-1 text-slate-400/80 scale-[0.9]" />
         </div>
       ) : null}
