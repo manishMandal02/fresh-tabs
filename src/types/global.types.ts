@@ -22,16 +22,38 @@ export interface IUserToken {
   expiresAt: number;
 }
 
-export interface IAppSettings {
+// user preferences and setting
+type CommandPaletteSettings = {
+  isDisabled: boolean;
   includeBookmarksInSearch: boolean;
   includeNotesInSearch: boolean;
-  isCommandPaletteDisabled: boolean;
-  isLinkPreviewDisabled: boolean;
-  openLinkPreviewType: 'all-external' | 'shift-click';
-  linkPreviewSize: 'mobile' | 'tablet' | 'desktop';
-  isNotesDisabled: boolean;
-  notesBubblePos: NoteBubblePos;
-  showNotesBubbleForAllSites: boolean;
+};
+
+type LinkPreviewSettings = {
+  isDisabled: boolean;
+  openTrigger: 'all-external' | 'shift-click';
+  size: 'mobile' | 'tablet' | 'desktop';
+};
+
+export type NoteBubblePos = 'bottom-left' | 'bottom-right';
+
+type NoteSettings = {
+  isDisabled: boolean;
+  bubblePos: NoteBubblePos;
+  showOnAllSites: boolean;
+};
+
+type DiscardTabSettings = {
+  autoDiscard: boolean;
+  autoDiscardIntervalTime: number;
+  whitelistedDomains: string[];
+};
+
+export interface IAppSettings {
+  cmdPalette: CommandPaletteSettings;
+  linkPreview: LinkPreviewSettings;
+  notes: NoteSettings;
+  discardTabs: DiscardTabSettings;
   openSpace: 'newWindow' | 'sameWindow';
   deleteUnsavedSpace: 'immediately' | 'week';
   autoSaveToBookmark: 'off' | 'daily' | 'weekly';
@@ -47,22 +69,22 @@ export interface ICommand {
 }
 
 interface AccountNotification {
-  type: NOTIFICATION_TYPE.ACCOUNT;
   id: string;
   timestamp: number;
+  type: NOTIFICATION_TYPE.ACCOUNT;
   title: string;
   message: string;
 }
 interface NoteRemainderNotification {
-  type: NOTIFICATION_TYPE.NOTE_REMAINDER;
   id: string;
   timestamp: number;
+  type: NOTIFICATION_TYPE.NOTE_REMAINDER;
   note: Pick<INote, 'id' | 'title' | 'domain'>;
 }
 interface UnSnoozedTabNotification {
-  type: NOTIFICATION_TYPE.UN_SNOOZED_TAB;
   id: string;
   timestamp: number;
+  type: NOTIFICATION_TYPE.UN_SNOOZED_TAB;
   snoozedTab: Pick<ISnoozedTab, 'url' | 'title' | 'faviconUrl'>;
 }
 
@@ -238,5 +260,3 @@ export interface IMessageEventContentScript {
   event: MessageEventsContentScript;
   payload?: IEventPayloadContentScript;
 }
-
-export type NoteBubblePos = 'bottom-left' | 'bottom-right';

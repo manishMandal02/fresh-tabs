@@ -110,7 +110,7 @@ export const snackbarAtom = atom<SnackbarAtom>({
 });
 
 // settings modal
-export const showSettingsModalAtom = atom(false);
+export const showSettingsModalAtom = atom(true);
 
 // notification
 export const showNotificationModalAtom = atom(false);

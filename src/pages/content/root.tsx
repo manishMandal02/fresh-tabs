@@ -3,20 +3,20 @@ import refreshOnUpdate from 'virtual:reload-on-update-in-view';
 import { createRoot } from 'react-dom/client';
 import Frame, { FrameContextConsumer } from 'react-frame-component';
 
-import DomainNotes from '../domain-notes';
-import { getUserSelectionText, isValidURL, publishEvents } from '@root/src/utils';
+import DomainNotes from './domain-notes';
 import injectedStyle from './injected.css?inline';
-import { SnackbarContentScript } from '../snackbar';
+import { SnackbarContentScript } from './snackbar';
 import { getTime } from '@root/src/utils/date-time/get-time';
 import { getWeekday } from '@root/src/utils/date-time/get-weekday';
 import { getSpace } from '@root/src/services/chrome-storage/spaces';
 import { ContentScriptContainerIds } from '@root/src/constants/app';
 import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
-import CommandPalette, { COMMAND_PALETTE_SIZE } from './CommandPalette';
 import { getNoteByDomain } from '@root/src/services/chrome-storage/notes';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
-import { IMessageEventContentScript, ISearchFilters, ISpace, ITab, NoteBubblePos } from '../../../types/global.types';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
+import { getUserSelectionText, isValidURL, publishEvents } from '@root/src/utils';
+import CommandPalette, { COMMAND_PALETTE_SIZE } from './command-palette/CommandPalette';
+import { IMessageEventContentScript, ISearchFilters, ISpace, ITab, NoteBubblePos } from '../../types/global.types';
 
 // development: refresh content page on update
 refreshOnUpdate('pages/content');
@@ -164,6 +164,7 @@ const showNotes = async (spaceId: string, position: NoteBubblePos, reRender = fa
   notesContainer.style.zIndex = '2147483647';
   notesContainer.style.position = 'fixed';
   notesContainer.style.bottom = '16px';
+  notesContainer.style.userSelect = 'none';
 
   if (!position || position === 'bottom-right') {
     notesContainer.style.right = '20px';
@@ -341,9 +342,9 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 // show link preview
 (async () => {
   //  check if the link previews is disabled
-  const { isLinkPreviewDisabled, openLinkPreviewType } = await getAppSettings();
+  const { linkPreview } = await getAppSettings();
 
-  if (isLinkPreviewDisabled) return;
+  if (linkPreview.isDisabled) return;
 
   document.body.addEventListener('click', async ev => {
     const clickedEl = ev.target as HTMLElement;
@@ -358,7 +359,11 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     hrefLink = !hrefLink.startsWith(window.location.origin) ? window.location.origin + hrefLink : hrefLink;
 
     // open link in preview window if user preference is set to Shift + Click and the shift key was pressed
-    if (openLinkPreviewType === 'shift-click' && isValidURL(hrefLink) && !sessionStorage.getItem('activeWindowId')) {
+    if (
+      linkPreview.openTrigger === 'shift-click' &&
+      isValidURL(hrefLink) &&
+      !sessionStorage.getItem('activeWindowId')
+    ) {
       if (!ev.shiftKey) return;
       ev.preventDefault();
       ev.stopPropagation();

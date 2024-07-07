@@ -1,21 +1,23 @@
 import { useAtom } from 'jotai';
-import { OpenInNewWindowIcon } from '@radix-ui/react-icons';
 import { motion } from 'framer-motion';
 import { useState, useEffect, memo, ReactNode, FC } from 'react';
+import { Cross2Icon, OpenInNewWindowIcon } from '@radix-ui/react-icons';
 
 import Spinner from '../../../../../components/spinner';
 import { IAppSettings } from '@root/src/types/global.types';
-import Switch from '../../../../../components/switch/Switch';
 import { SlideModal } from '../../../../../components/modal';
-import { cn, parseUrl, retryAtIntervals, wait } from '@root/src/utils';
+import Switch from '../../../../../components/switch/Switch';
 import Accordion from '../../../../../components/accordion/Accordion';
+import { cn, parseUrl, retryAtIntervals, wait } from '@root/src/utils';
+import { useCustomAnimation } from '../../../hooks/useCustomAnimation';
 import { AlarmName, DefaultAppSettings } from '@root/src/constants/app';
 import { saveSettings } from '@root/src/services/chrome-storage/settings';
 import { discardAllTabs } from '@root/src/services/chrome-discard/discard';
 import { createAlarm, deleteAlarm } from '@root/src/services/chrome-alarms/helpers';
 import RadioGroup, { RadioOptions } from '../../../../../components/radio-group/RadioGroup';
 import { appSettingsAtom, showSettingsModalAtom, snackbarAtom } from '@root/src/stores/app';
-import { useCustomAnimation } from '../../../hooks/useCustomAnimation';
+
+const domainWithSubdomainRegex = /^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,10}$/;
 
 const autoSaveToBookmark: RadioOptions[] = [
   { value: 'off', label: 'Off' },
@@ -47,6 +49,13 @@ const notesBubblePositionOptions: RadioOptions[] = [
   { value: 'bottom-right', label: 'Bottom Right' },
 ];
 
+const autoDiscardIntervalTimeOptions: RadioOptions[] = [
+  { value: '5', label: '5 min' },
+  { value: '10', label: '10 min' },
+  { value: '15', label: '15 min' },
+  { value: '30', label: '30 min' },
+];
+
 type IAppSettingsKeys = keyof IAppSettings;
 
 const Settings = () => {
@@ -56,6 +65,8 @@ const Settings = () => {
   const [settingsUpdateData, setSettingsUpdateData] = useState<IAppSettings>(DefaultAppSettings);
 
   const [openAppShortcut, setOpenAppShortcut] = useState('');
+
+  const [whitelistDomainInput, setWhitelistDomainInput] = useState('');
 
   const [commandPaletteShortcut, setCommandPaletteShortcut] = useState('');
 
@@ -71,7 +82,7 @@ const Settings = () => {
   // set local settings data state
   useEffect(() => {
     setSettingsUpdateData(appSettings);
-    getAppShortcut();
+    getAppShortcuts();
   }, [appSettings]);
 
   // on settings change
@@ -80,11 +91,13 @@ const Settings = () => {
 
     // disable sub features if main feat is turned off
 
-    if (key === 'isCommandPaletteDisabled') {
-      updatedSettings.includeBookmarksInSearch = !value;
+    if (key === 'cmdPalette' && updatedSettings.cmdPalette.isDisabled !== settingsUpdateData.cmdPalette.isDisabled) {
+      updatedSettings.cmdPalette.includeBookmarksInSearch = !updatedSettings.cmdPalette.isDisabled;
+      updatedSettings.cmdPalette.includeNotesInSearch = !updatedSettings.cmdPalette.isDisabled;
     }
-    if (key === 'isNotesDisabled') {
-      updatedSettings.showNotesBubbleForAllSites = !value;
+
+    if (key === 'notes' && updatedSettings.notes.isDisabled !== settingsUpdateData.notes.isDisabled) {
+      updatedSettings.notes.showOnAllSites = !updatedSettings.notes.isDisabled;
     }
 
     setSettingsUpdateData(updatedSettings);
@@ -117,6 +130,8 @@ const Settings = () => {
       }
     }
 
+    // TODO - update auto discard tabs alarm if preference has been changed
+
     // set global state
     setAppSetting(settingsUpdateData);
 
@@ -129,7 +144,31 @@ const Settings = () => {
     setSnackbar({ show: true, msg: 'Preferences saved', isSuccess: true });
   };
 
-  const getAppShortcut = async () => {
+  // save whitelist site
+  const handleAddWhitelistDomain = async () => {
+    if (!whitelistDomainInput) return;
+    // save to storage
+    await saveSettings({
+      ...appSettings,
+      discardTabs: {
+        ...appSettings.discardTabs,
+        whitelistedDomains: [...appSettings.discardTabs.whitelistedDomains, whitelistDomainInput],
+      },
+    });
+
+    setWhitelistDomainInput('');
+
+    // save to global (ui) state
+    setAppSetting({
+      ...appSettings,
+      discardTabs: {
+        ...appSettings.discardTabs,
+        whitelistedDomains: [...appSettings.discardTabs.whitelistedDomains, whitelistDomainInput],
+      },
+    });
+  };
+
+  const getAppShortcuts = async () => {
     const chromeShortcuts = await chrome.commands.getAll();
 
     let openSidePanelShortcut = chromeShortcuts.find(s => s.name == '_execute_action')?.shortcut || '⌘E';
@@ -151,6 +190,7 @@ const Settings = () => {
   const SettingsHeader: FC<{ heading: string }> = ({ heading }) => (
     <p className="text-[14px] text-slate-400 font-light my-1 ml-1">{heading}</p>
   );
+
   const BodyContainer: FC<{ children?: ReactNode }> = ({ children }) => <div className="py-2 px-2">{children}</div>;
 
   // activate tabs discarded via discarded url
@@ -198,7 +238,7 @@ const Settings = () => {
             id="general"
             classes={{
               triggerContainer:
-                'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px',
+                'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px mb-[3px]',
               triggerIcon: 'scale-[1.1] text-slate-700',
               content:
                 'bg-brand-darkBgAccent/15 border-b  border-brand-darkBgAccent/30 rounded-br-md rounded-bl-md mb-1',
@@ -252,12 +292,14 @@ const Settings = () => {
               </div>
             </BodyContainer>
           </Accordion>
-          {/* command palette */}
+
+          {/* link preview */}
           <Accordion
             id="link-preview"
+            defaultCollapsed
             classes={{
               triggerContainer:
-                'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px',
+                'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px mb-[3px]',
               triggerIcon: 'scale-[1.1] text-slate-700',
               content:
                 'bg-brand-darkBgAccent/15 border-b  border-brand-darkBgAccent/30 rounded-br-md rounded-bl-md mb-1',
@@ -270,9 +312,11 @@ const Settings = () => {
                 <p className="text-[12px]  font-light tracking-wide ml-1">Disable Link preview</p>
                 <Switch
                   size="medium"
-                  id="include-bookmark-in-search"
-                  checked={settingsUpdateData.isLinkPreviewDisabled}
-                  onChange={checked => handleSettingsChange('isLinkPreviewDisabled', checked)}
+                  id="disable-link-preview"
+                  checked={settingsUpdateData.linkPreview.isDisabled}
+                  onChange={checked =>
+                    handleSettingsChange('linkPreview', { ...settingsUpdateData.linkPreview, isDisabled: checked })
+                  }
                 />
               </div>
 
@@ -280,9 +324,11 @@ const Settings = () => {
                 <span className="text-[12px]  font-light tracking-wide ml-1 ">Open link preview for?</span>
                 <RadioGroup
                   options={openLinkPreviewOptions}
-                  value={settingsUpdateData.openLinkPreviewType}
+                  value={settingsUpdateData.linkPreview.openTrigger}
                   defaultValue={openLinkPreviewOptions[0].value}
-                  onChange={value => handleSettingsChange('openLinkPreviewType', value)}
+                  onChange={value =>
+                    handleSettingsChange('linkPreview', { ...settingsUpdateData.linkPreview, openTrigger: value })
+                  }
                 />
               </div>
 
@@ -290,9 +336,11 @@ const Settings = () => {
                 <span className="text-[12px]  font-light tracking-wide ml-1 ">Link preview window size</span>
                 <RadioGroup
                   options={linkPreviewSizeOptions}
-                  value={settingsUpdateData.linkPreviewSize}
+                  value={settingsUpdateData.linkPreview.size}
                   defaultValue={linkPreviewSizeOptions[0].value}
-                  onChange={value => handleSettingsChange('linkPreviewSize', value)}
+                  onChange={value =>
+                    handleSettingsChange('linkPreview', { ...settingsUpdateData.linkPreview, size: value })
+                  }
                 />
               </div>
             </BodyContainer>
@@ -301,9 +349,10 @@ const Settings = () => {
           {/* command palette */}
           <Accordion
             id="command-palette"
+            defaultCollapsed
             classes={{
               triggerContainer:
-                'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px',
+                'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px mb-[3px]',
               triggerIcon: 'scale-[1.1] text-slate-700',
               content:
                 'bg-brand-darkBgAccent/15 border-b  border-brand-darkBgAccent/30 rounded-br-md rounded-bl-md mb-1',
@@ -317,34 +366,46 @@ const Settings = () => {
                 <Switch
                   size="medium"
                   id="include-bookmark-in-search"
-                  checked={settingsUpdateData.isCommandPaletteDisabled}
-                  onChange={checked => handleSettingsChange('isCommandPaletteDisabled', checked)}
+                  checked={settingsUpdateData.cmdPalette.isDisabled}
+                  onChange={checked =>
+                    handleSettingsChange('cmdPalette', { ...settingsUpdateData.cmdPalette, isDisabled: checked })
+                  }
                 />
               </div>
               <div
                 className={cn('flex items-center justify-between pr-1 mb-2', {
-                  'opacity-70 cursor-not-allowed': settingsUpdateData.isCommandPaletteDisabled,
+                  'opacity-70 cursor-not-allowed': settingsUpdateData.cmdPalette.isDisabled,
                 })}>
                 <p className="text-[12px]  font-light tracking-wide ml-1">Include Bookmarks in search</p>
                 <Switch
                   size="medium"
                   id="include-bookmark-in-search"
-                  disabled={settingsUpdateData.isCommandPaletteDisabled}
-                  checked={settingsUpdateData.includeBookmarksInSearch}
-                  onChange={checked => handleSettingsChange('includeBookmarksInSearch', checked)}
+                  disabled={settingsUpdateData.cmdPalette.isDisabled}
+                  checked={settingsUpdateData.cmdPalette.includeBookmarksInSearch}
+                  onChange={checked =>
+                    handleSettingsChange('cmdPalette', {
+                      ...settingsUpdateData.cmdPalette,
+                      includeBookmarksInSearch: checked,
+                    })
+                  }
                 />
               </div>
               <div
                 className={cn('flex items-center justify-between pr-1 mb-2', {
-                  'opacity-70 cursor-not-allowed': settingsUpdateData.isCommandPaletteDisabled,
+                  'opacity-70 cursor-not-allowed': settingsUpdateData.cmdPalette.isDisabled,
                 })}>
                 <p className="text-[12px]  font-light tracking-wide ml-1">Include Notes in search</p>
                 <Switch
                   size="medium"
                   id="include-notes-in-search"
-                  disabled={settingsUpdateData.isCommandPaletteDisabled}
-                  checked={settingsUpdateData.includeNotesInSearch}
-                  onChange={checked => handleSettingsChange('includeNotesInSearch', checked)}
+                  disabled={settingsUpdateData.cmdPalette.isDisabled}
+                  checked={settingsUpdateData.cmdPalette.includeNotesInSearch}
+                  onChange={checked =>
+                    handleSettingsChange('cmdPalette', {
+                      ...settingsUpdateData.cmdPalette,
+                      includeNotesInSearch: checked,
+                    })
+                  }
                 />
               </div>
 
@@ -352,13 +413,13 @@ const Settings = () => {
 
               <p
                 className={cn('text-[12px] font-light tracking-wide ml-1', {
-                  'opacity-70 cursor-not-allowed': settingsUpdateData.isCommandPaletteDisabled,
+                  'opacity-70 cursor-not-allowed': settingsUpdateData.cmdPalette.isDisabled,
                 })}>
                 Shortcut to open command palette
               </p>
               <div
                 className={cn('flex items-center mt-[2.5px]', {
-                  'opacity-70 cursor-not-allowed': settingsUpdateData.isCommandPaletteDisabled,
+                  'opacity-70 cursor-not-allowed': settingsUpdateData.cmdPalette.isDisabled,
                 })}>
                 <RadioGroup
                   options={[{ label: commandPaletteShortcut, value: commandPaletteShortcut }]}
@@ -371,7 +432,7 @@ const Settings = () => {
                   className={`ml-2.5 flex items-center justify-between gap-x-1 px-2.5 py-1 text-slate-500 text-[10px] font-light rounded
                           bg-brand-darkBg border border-brand-darkBgAccent/40 transition-colors duration-200 hover:text-slate-400/80 disabled:cursor-not-allowed`}
                   onClick={openChromeShortcutSettings}
-                  disabled={settingsUpdateData.isCommandPaletteDisabled}>
+                  disabled={settingsUpdateData.cmdPalette.isDisabled}>
                   Change Shortcut In Chrome <OpenInNewWindowIcon className="text-slate-600/80" />
                 </button>
               </div>
@@ -381,9 +442,10 @@ const Settings = () => {
           {/* notes */}
           <Accordion
             id="notes"
+            defaultCollapsed
             classes={{
               triggerContainer:
-                'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px',
+                'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px mb-[3px]',
               triggerIcon: 'scale-[1.1] text-slate-700',
               content:
                 'bg-brand-darkBgAccent/15 border-b  border-brand-darkBgAccent/30 rounded-br-md rounded-bl-md mb-1',
@@ -396,23 +458,27 @@ const Settings = () => {
                 <p className="text-[12px]  font-light tracking-wide ml-1">Disable Notes</p>
                 <Switch
                   size="medium"
-                  id="include-bookmark-in-search"
-                  checked={settingsUpdateData.isNotesDisabled}
-                  onChange={checked => handleSettingsChange('isNotesDisabled', checked)}
+                  id="disable-notes"
+                  checked={settingsUpdateData.notes.isDisabled}
+                  onChange={checked =>
+                    handleSettingsChange('notes', { ...settingsUpdateData.notes, isDisabled: checked })
+                  }
                 />
               </div>
               {/* notes bubble */}
               <div
                 className={cn('flex items-center justify-between pr-1 mb-2', {
-                  'opacity-70 cursor-not-allowed': settingsUpdateData.isNotesDisabled,
+                  'opacity-70 cursor-not-allowed': settingsUpdateData.notes.isDisabled,
                 })}>
                 <p className="text-[12px]  font-light tracking-wide ml-1">{'Show notes bubble for all sites'}</p>
                 <Switch
                   size="medium"
-                  id="include-bookmark-in-search"
-                  checked={settingsUpdateData.showNotesBubbleForAllSites}
-                  disabled={settingsUpdateData.isNotesDisabled}
-                  onChange={checked => handleSettingsChange('showNotesBubbleForAllSites', checked)}
+                  id="show-notes-on-all-sites"
+                  checked={settingsUpdateData.notes.showOnAllSites}
+                  disabled={settingsUpdateData.notes.isDisabled}
+                  onChange={checked =>
+                    handleSettingsChange('notes', { ...settingsUpdateData.notes, showOnAllSites: checked })
+                  }
                 />
               </div>
 
@@ -421,21 +487,126 @@ const Settings = () => {
               {/* notes position */}
               <p
                 className={cn('text-[12px] font-light tracking-wide ml-1', {
-                  'opacity-70 cursor-not-allowed': settingsUpdateData.isNotesDisabled,
+                  'opacity-70 cursor-not-allowed': settingsUpdateData.notes.isDisabled,
                 })}>
                 Notes bubble position on sites
               </p>
               <div
                 className={cn('flex items-center mt-[2.5px]', {
-                  'opacity-70 cursor-not-allowed': settingsUpdateData.isNotesDisabled,
+                  'opacity-70 cursor-not-allowed': settingsUpdateData.notes.isDisabled,
                 })}>
                 <RadioGroup
                   options={notesBubblePositionOptions}
-                  value={settingsUpdateData.notesBubblePos}
+                  value={settingsUpdateData.notes.bubblePos}
                   defaultValue={notesBubblePositionOptions[1].value}
-                  disabled={settingsUpdateData.isNotesDisabled}
-                  onChange={value => handleSettingsChange('notesBubblePos', value)}
+                  disabled={settingsUpdateData.notes.isDisabled}
+                  onChange={value =>
+                    handleSettingsChange('notes', {
+                      ...settingsUpdateData.notes,
+                      bubblePos: value,
+                    })
+                  }
                 />
+              </div>
+            </BodyContainer>
+          </Accordion>
+
+          {/* auto discard tabs */}
+          <Accordion
+            id="notes"
+            // defaultCollapsed
+            classes={{
+              triggerContainer:
+                'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px mb-[3px]',
+              triggerIcon: 'scale-[1.1] text-slate-700',
+              content:
+                'bg-brand-darkBgAccent/15 border-b  border-brand-darkBgAccent/30 rounded-br-md rounded-bl-md mb-1',
+            }}
+            trigger={<SettingsHeader heading="Discard Tabs" />}>
+            {/* accordion body */}
+            <BodyContainer>
+              <div className="flex items-center justify-between pr-1 mb-2">
+                <p className="text-[12px]  font-light tracking-wide ml-1">Auto discard tabs</p>
+                <Switch
+                  size="medium"
+                  id="include-bookmark-in-search"
+                  checked={settingsUpdateData.discardTabs.autoDiscard}
+                  onChange={checked =>
+                    handleSettingsChange('discardTabs', { ...settingsUpdateData.discardTabs, autoDiscard: checked })
+                  }
+                />
+              </div>
+
+              <p
+                className={cn('text-[12px] font-light tracking-wide ml-1', {
+                  'opacity-70 cursor-not-allowed': !settingsUpdateData.discardTabs.autoDiscard,
+                })}>
+                {"Auto discard tabs after they're inactive for x minutes"}
+              </p>
+              <div
+                className={cn('flex items-center mt-[2.5px]', {
+                  'opacity-70 cursor-not-allowed': !settingsUpdateData.discardTabs.autoDiscard,
+                })}>
+                <RadioGroup
+                  options={autoDiscardIntervalTimeOptions}
+                  value={settingsUpdateData.discardTabs.autoDiscardIntervalTime + ''}
+                  defaultValue={autoDiscardIntervalTimeOptions[1].value}
+                  disabled={!settingsUpdateData.discardTabs.autoDiscard}
+                  onChange={value =>
+                    handleSettingsChange('discardTabs', {
+                      ...settingsUpdateData.discardTabs,
+                      autoDiscardIntervalTime: Number(value),
+                    })
+                  }
+                />
+              </div>
+
+              <hr className="h-[1px] w-full my-2  bg-brand-darkBgAccent/25 rounded-lg border-none" />
+
+              <div className="flex flex-col items-star px-1">
+                <p className="text-[12px] mb-1 font-light tracking-wide ml-1">
+                  Whitelist Sites ({settingsUpdateData.discardTabs.whitelistedDomains.length})
+                </p>
+                {/* input box */}
+                {/*  eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+                <form
+                  onSubmit={e => {
+                    e.preventDefault();
+                    // validate domain name
+                    if (!whitelistDomainInput || !domainWithSubdomainRegex.test(whitelistDomainInput)) return;
+                    // whitelist domain
+                    handleAddWhitelistDomain();
+                  }}>
+                  <input
+                    type="text"
+                    value={whitelistDomainInput}
+                    onChange={e => {
+                      e.stopPropagation();
+                      setWhitelistDomainInput(e.target.value);
+                      e.target.focus();
+                    }}
+                    placeholder="Enter site name"
+                    className={`w-[85%] text-[11px] text-slate-300 border border-brand-darkBgAccent/50 rounded-md px-2 py-1 bg-brand-darkBgAccent/40 
+                        outline-none focus-within:border-slate-600 transition-colors duration-200 placeholder:text-slate-500/80`}
+                  />
+                </form>
+                {/* domain chips */}
+                <div className="ml-1 flex items-start justify-start flex-grow flex-wrap max-w-full mt-1.5 overflow-x-hidden overflow-y-auto cc-scrollbar max-h-[100px]">
+                  {settingsUpdateData.discardTabs.whitelistedDomains.length > 0 ? (
+                    settingsUpdateData.discardTabs.whitelistedDomains.map((domain, index) => (
+                      <div
+                        className="w-fit  flex items-center justify-between px-2 py-1 bg-brand-darkBgAccent/40 rounded-lg mb-1 mr-1"
+                        key={index}>
+                        <span className="text-[9px] font-light text-slate-400 ">{domain}</span>
+                        <button className=" ">
+                          <Cross2Icon className="text-slate-500 ml-1 scale-[0.9]" />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-slate-500 text-[10px] font-light">No whitelisted sites</p>
+                  )}
+                </div>
               </div>
             </BodyContainer>
           </Accordion>

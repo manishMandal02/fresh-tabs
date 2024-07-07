@@ -107,6 +107,9 @@ const checkExtensionBadgeEmoji = async () => {
 
   initializeContextMenuItems();
 
+  //TODO - testing... save default settings to sync storage
+  // await saveSettings(DefaultAppSettings);
+
   const autoSaveToBMAlarm = await getAlarm(AlarmName.autoSaveBM);
 
   const autoDiscardTabsAlarm = await getAlarm(AlarmName.autoDiscardTabs);
@@ -140,8 +143,6 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - fix/improve - command palette search for history, bookmarks, etc. (sometimes it shows no results)
-
 // TODO - preference - whitelist list for discarding tabs, turn on/off auto discarding with time setting
 
 // TODO - new commands to add
@@ -149,10 +150,11 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 //-- rename groups if command palette within a group
 //-- open side panel
 //-- open preferences/settings modal
-//-- open analytics modal
 //-- open space history
 //-- open snoozed tabs modal
 //-- open notifications
+
+// TODO - save tab's favicon url with tab data
 
 //! ----
 
@@ -359,9 +361,9 @@ const recordDailySpaceTime = async (windowId: number) => {
 const showNotesBubbleContentScript = async (url: string, tabId: number, windowId: number) => {
   if (!url || isChromeUrl(url)) return;
 
-  const { notesBubblePos, showNotesBubbleForAllSites } = await getAppSettings();
+  const { notes } = await getAppSettings();
 
-  if (!showNotesBubbleForAllSites) {
+  if (!notes.showOnAllSites) {
     // show notes bubble only for sites with notes
     const domain = cleanDomainName(getUrlDomain(url));
     const notes = await getNoteByDomain(domain);
@@ -379,7 +381,7 @@ const showNotesBubbleContentScript = async (url: string, tabId: number, windowId
     callback: async () => {
       return await publishEventsTab(tabId, {
         event: 'SHOW_DOMAIN_NOTES',
-        payload: { activeSpace, notesBubblePos },
+        payload: { activeSpace, notesBubblePos: notes.bubblePos },
       });
     },
   });
@@ -495,8 +497,8 @@ export const showCommandPaletteContentScript = async (
           activeSpace,
           recentSites,
           searchFilterPreferences: {
-            searchBookmarks: preferences.includeBookmarksInSearch,
-            searchNotes: preferences.includeNotesInSearch,
+            searchBookmarks: preferences.cmdPalette.includeBookmarksInSearch,
+            searchNotes: preferences.cmdPalette.includeNotesInSearch,
           },
         },
       });
@@ -505,7 +507,7 @@ export const showCommandPaletteContentScript = async (
 };
 
 // chrome.runtime.connect().onDisconnect.addListener(() => {
-//   console.log('🚫 ~ chrome.runtime.connect().onDisconnect.addListener:415 ~ Disconnected!!! 🚫');
+//   console.log('🚫 ~ chrome.runtime.connect().onDisconnect ~ Disconnected!! ');
 // });
 
 // * chrome event listeners
@@ -590,12 +592,12 @@ chrome.runtime.onMessage.addListener(
         // create note
         await addNewNote(newNote);
 
-        const { notesBubblePos } = await getAppSettings();
+        const { notes } = await getAppSettings();
 
         if (!isOpenedInPopupWindow) {
           await publishEventsTab(currentTab.id, {
             event: 'SHOW_SNACKBAR',
-            payload: { activeSpace, notesBubblePos, snackbarMsg: 'Note Captured' },
+            payload: { activeSpace, notesBubblePos: notes.bubblePos, snackbarMsg: 'Note Captured' },
           });
         }
 
@@ -626,12 +628,12 @@ chrome.runtime.onMessage.addListener(
 
         const currentTab = await getCurrentTab();
 
-        const { notesBubblePos } = await getAppSettings();
+        const { notes } = await getAppSettings();
 
         if (!isOpenedInPopupWindow) {
           await publishEventsTab(currentTab.id, {
             event: 'SHOW_SNACKBAR',
-            payload: { activeSpace, notesBubblePos, snackbarMsg: 'Note Saved' },
+            payload: { activeSpace, notesBubblePos: notes.bubblePos, snackbarMsg: 'Note Saved' },
           });
         }
 
@@ -963,24 +965,24 @@ chrome.runtime.onMessage.addListener(
 
         const currentWindow = await chrome.windows.getCurrent();
 
-        const { linkPreviewSize } = await getAppSettings();
+        const { linkPreview } = await getAppSettings();
 
         // calculate window size based on user preference
         let windowWidth = 0;
         let windowHeight = 0;
         let popupOffsetLeft = 0;
 
-        if (linkPreviewSize === 'mobile') {
+        if (linkPreview.size === 'mobile') {
           windowWidth = 480;
           windowHeight = 750;
           popupOffsetLeft = Math.ceil(currentWindow.width / 4 + currentWindow.left);
         }
-        if (linkPreviewSize === 'tablet') {
+        if (linkPreview.size === 'tablet') {
           windowWidth = 1100;
           windowHeight = 750;
           popupOffsetLeft = Math.ceil(currentWindow.left + currentWindow.width / 5);
         }
-        if (linkPreviewSize === 'desktop') {
+        if (linkPreview.size === 'desktop') {
           windowWidth = 1350;
           windowHeight = 850;
           popupOffsetLeft = Math.ceil(currentWindow.left + 80);
@@ -1133,10 +1135,10 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
     // handle open command palette
     if (command === 'cmdPalette') {
-      const { isCommandPaletteDisabled } = await getAppSettings();
+      const { cmdPalette } = await getAppSettings();
 
       // do nothing if cmd palette feat disabled
-      if (isCommandPaletteDisabled) return;
+      if (cmdPalette.isDisabled) return;
 
       const shouldOpenInPopupWindow = !currentTab?.url || isChromeUrl(currentTab.url);
 

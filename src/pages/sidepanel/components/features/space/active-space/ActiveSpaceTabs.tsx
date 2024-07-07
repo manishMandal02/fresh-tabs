@@ -177,7 +177,7 @@ const ActiveSpaceTabs = ({ space, onTabNotesClick }: Props) => {
 
   // get notes for tabs in active space
   useEffect(() => {
-    if (appSettings.isNotesDisabled) return;
+    if (appSettings.notes?.isDisabled) return;
     (async () => {
       // check if notes exists for the tabs in active space
       const notes = await getNotesBySpace(space.id);
@@ -773,7 +773,7 @@ const ActiveSpaceTabs = ({ space, onTabNotesClick }: Props) => {
                   </>
                 ) : null}
                 {/* notes */}
-                {!appSettings.isNotesDisabled && tabNotes[item.data.id]?.length > 0 ? (
+                {!appSettings.notes?.isDisabled && tabNotes[item.data.id]?.length > 0 ? (
                   // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
                   <span
                     className={`flex z-20 mr-1 items-center px-[2px] py-px bg-brand-darkBg/80 border border-brand-darkBgAccent/60 rounded

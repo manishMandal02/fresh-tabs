@@ -94,18 +94,13 @@ export const ContextMenuItem = {
 export const ContextMenuSnoozeOptions = ['2 hr', '6 hr', '1 day', '2 day', '1 week'];
 
 export const DefaultAppSettings: IAppSettings = {
-  includeBookmarksInSearch: true,
-  includeNotesInSearch: false,
-  isLinkPreviewDisabled: false,
-  openLinkPreviewType: 'shift-click',
-  linkPreviewSize: 'tablet',
-  showNotesBubbleForAllSites: true,
-  isCommandPaletteDisabled: false,
-  isNotesDisabled: false,
-  notesBubblePos: 'bottom-right',
-  deleteUnsavedSpace: 'immediately',
   openSpace: 'newWindow',
   autoSaveToBookmark: 'daily',
+  deleteUnsavedSpace: 'immediately',
+  discardTabs: { autoDiscard: true, autoDiscardIntervalTime: 10, whitelistedDomains: [] },
+  cmdPalette: { isDisabled: false, includeBookmarksInSearch: true, includeNotesInSearch: false },
+  linkPreview: { isDisabled: false, openTrigger: 'shift-click', size: 'tablet' },
+  notes: { isDisabled: false, showOnAllSites: true, bubblePos: 'bottom-left' },
 };
 
 export const DefaultPinnedTabs: IPinnedTab[] = [
