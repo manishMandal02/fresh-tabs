@@ -21,7 +21,7 @@ import { handleNotesRemainderAlarm } from './handler/alarm/notes-remainder';
 import { publishEvents, publishEventsTab } from '../../utils/publish-events';
 import { handleMergeSpaceHistoryAlarm } from './handler/alarm/mergeSpaceHistory';
 import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers';
-import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';
+import { removeWWWPrefix, getUrlDomain } from '@root/src/utils/url/get-url-domain';
 import { getStorage, setStorage } from '@root/src/services/chrome-storage/helpers';
 import { removeGroup, updateGroup } from '@root/src/services/chrome-storage/groups';
 import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
@@ -143,10 +143,7 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - preference - whitelist list for discarding tabs, turn on/off auto discarding with time setting
-
 // TODO - new commands to add
-//-- whitelist sites from discarding tabs
 //-- rename groups if command palette within a group
 //-- open side panel
 //-- open preferences/settings modal
@@ -365,7 +362,7 @@ const showNotesBubbleContentScript = async (url: string, tabId: number, windowId
 
   if (!notes.showOnAllSites) {
     // show notes bubble only for sites with notes
-    const domain = cleanDomainName(getUrlDomain(url));
+    const domain = removeWWWPrefix(getUrlDomain(url));
     const notes = await getNoteByDomain(domain);
 
     // do nothing if no notes found for this domain
@@ -417,14 +414,10 @@ export const showCommandPaletteContentScript = async (
     }
   }
 
-  console.log('🚨 ~ show command palette fired!! ~ shouldOpenInPopupWindow:', shouldOpenInPopupWindow);
-
   if (!canOpenInContentScript) {
     // check if popup window is already open
 
     const popupWindow = await getStorage<string>({ type: 'local', key: 'TEMP_POPUP_WINDOW' });
-
-    console.log('🚨 ~ exists or not ~ popupWindow:', popupWindow);
 
     if (popupWindow) {
       // if popup already created then focus the window
@@ -446,12 +439,10 @@ export const showCommandPaletteContentScript = async (
       state: 'normal',
       url: chrome.runtime.getURL(`src/pages/command-palette-popup/index.html?windowId=${currentWindow.id}`),
       width: 740,
-      height: 550,
+      height: 528,
       top: popupOffsetTop,
       left: popupOffsetLeft,
     });
-
-    console.log('🚨 ~ created window ~ window:', window);
 
     await setStorage({ type: 'session', key: 'TEMP_POPUP_WINDOW', value: `${currentWindow.id}-${window.id}` });
 
@@ -465,8 +456,6 @@ export const showCommandPaletteContentScript = async (
       if (popup.type !== 'popup') return;
 
       const tempPopupWindow = await getStorage<string>({ type: 'session', key: 'TEMP_POPUP_WINDOW' });
-
-      console.log('🚨 ~ all windows loop ~ tempPopupWindow:', tempPopupWindow);
 
       if (popup.id === Number(tempPopupWindow?.split('-')[1] || 0)) {
         await chrome.windows.update(window.id, { focused: true });
@@ -574,7 +563,7 @@ chrome.runtime.onMessage.addListener(
 
         const currentTab = await getCurrentTab();
 
-        const domain = cleanDomainName(url) || '';
+        const domain = removeWWWPrefix(url) || '';
 
         const title = noteTitle || currentTab.title;
 
@@ -897,7 +886,28 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'DISCARD_TABS': {
-        return await discardAllTabs();
+        const { shouldIgnoreDiscardWhitelist } = payload;
+        return await discardAllTabs(false, shouldIgnoreDiscardWhitelist);
+      }
+
+      case 'WHITE_LIST_DOMAIN_FOR_AUTO_DISCARD': {
+        const { activeSpace, isOpenedInPopupWindow } = payload;
+
+        const currentTab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
+
+        const domainToWhitelist = getUrlDomain(currentTab.url);
+
+        const appSettings = await getAppSettings();
+
+        await saveSettings({
+          ...appSettings,
+          autoDiscardTabs: {
+            ...appSettings.autoDiscardTabs,
+            whitelistedDomains: [...(appSettings.autoDiscardTabs.whitelistedDomains || []), domainToWhitelist],
+          },
+        });
+
+        return;
       }
 
       case 'SNOOZE_TAB': {
@@ -1178,12 +1188,12 @@ chrome.alarms.onAlarm.addListener(async alarm => {
     switch (alarm.name) {
       case AlarmName.autoSaveBM: {
         await syncSpacesToBookmark();
-        logger.info('⏰ 1day: Synced Spaces to Bookmark');
+        logger.info('⏰🔃 1day: Synced Spaces to Bookmark');
         break;
       }
       case AlarmName.autoDiscardTabs: {
         await discardAllTabs(true);
-        logger.info('⏰ 10 mins: Auto discard tabs');
+        logger.info('⏰🔃 5 mins: Auto discarded tabs based on idle time set by user');
         break;
       }
       case AlarmName.dailyMidnightTrigger: {
@@ -1201,7 +1211,7 @@ chrome.alarms.onAlarm.addListener(async alarm => {
           url: `chrome-extension://${chrome.runtime.id}/src/pages/command-palette-popup/index.html`,
         });
 
-        logger.info('⏰ Midnight: merge space history & usage data');
+        logger.info('⏰🔃 Midnight: merge space history & usage data');
 
         break;
       }

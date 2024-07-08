@@ -63,20 +63,6 @@ const NonActiveSpaceContextMenu = ({
 
           <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
 
-          <RadixContextMenu.Item
-            onClick={onUpdate}
-            className=" flex items-center text-[11px] font-normal text-slate-400 py-[6px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-            <Pencil1Icon className="text-slate-500 mr-1 scale-[0.8]" /> View/Update
-          </RadixContextMenu.Item>
-
-          <RadixContextMenu.Item
-            onClick={onDelete}
-            className=" flex items-center text-[11px] font-normal text-slate-400 py-[6px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
-            <TrashIcon className="text-slate-500 mr-1 scale-[0.8]" /> Delete
-          </RadixContextMenu.Item>
-
-          <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
-
           <RadixContextMenu.Sub>
             <RadixContextMenu.SubTrigger className="relative flex items-center text-[11px] font-normal text-slate-400 py-[6px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
               <StackIcon className="text-slate-500 mr-1 scale-[0.8]" /> Merge space
@@ -96,6 +82,20 @@ const NonActiveSpaceContextMenu = ({
               </RadixContextMenu.SubContent>
             </RadixContextMenu.Portal>
           </RadixContextMenu.Sub>
+
+          <RadixContextMenu.Separator className="h-[1px] bg-brand-darkBgAccent/50 my-[2px]" />
+
+          <RadixContextMenu.Item
+            onClick={onUpdate}
+            className=" flex items-center text-[11px] font-normal text-slate-400 py-[6px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+            <Pencil1Icon className="text-slate-500 mr-1 scale-[0.8]" /> View/Update
+          </RadixContextMenu.Item>
+
+          <RadixContextMenu.Item
+            onClick={onDelete}
+            className=" flex items-center text-[11px] font-normal text-slate-400 py-[6px] px-2.5 hover:bg-brand-darkBgAccent/40 transition-colors duration-300 cursor-pointer">
+            <TrashIcon className="text-slate-500 mr-1 scale-[0.8]" /> Delete
+          </RadixContextMenu.Item>
         </RadixContextMenu.Content>
       </RadixContextMenu.Portal>
     </RadixContextMenu.Root>

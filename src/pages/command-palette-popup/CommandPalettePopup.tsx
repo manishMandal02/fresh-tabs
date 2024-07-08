@@ -26,8 +26,8 @@ const CommandPalettePopup = () => {
       activeSpace,
       recentSites: recentSites || [],
       searchFilterPreferences: {
-        searchBookmarks: preferences.includeBookmarksInSearch,
-        searchNotes: preferences.includeNotesInSearch,
+        searchBookmarks: preferences.cmdPalette.includeBookmarksInSearch,
+        searchNotes: preferences.cmdPalette.includeNotesInSearch,
       },
     });
 
@@ -57,7 +57,7 @@ const CommandPalettePopup = () => {
 
   return (
     <div className="relative h-full w-full bg-slate-900 overflow-hidden">
-      <div className="mt-8">
+      <div className="mt-6">
         {commandPaletteProps?.activeSpace?.id ? (
           <CommandPalette
             isOpenedInPopupWindow={true}

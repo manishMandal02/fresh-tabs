@@ -62,98 +62,100 @@ const Command = ({
 
   const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  let commandAlias = '';
+  const commandAlias = alias;
 
   // show alias/desc only for selected commands
-  if (
-    alias &&
-    (type === CommandType.AddToSpace ||
-      type === CommandType.SnoozeTab ||
-      type === CommandType.DiscardTabs ||
-      type === CommandType.NewGroup ||
-      type === CommandType.AddToGroup ||
-      type === CommandType.WebSearch)
-  ) {
-    commandAlias = alias;
-  }
+  // if (alias) {
+  //   commandAlias = alias;
+  // }
 
   const CommandTypeIcon: FC<{ classes: string }> = ({ classes }) => {
-    if (isStaticCommand && isSubCommand) return null;
+    if ((isStaticCommand && type !== CommandType.DiscardTabs) || isSubCommand) return undefined;
 
-    if (type === CommandType.SwitchTab) {
-      if (isMetaKeyPressed)
+    switch (type) {
+      case CommandType.SwitchTab: {
+        if (isMetaKeyPressed) {
+          return (
+            <>
+              Close & Switch Tab
+              <Cross1Icon className={classes} />
+            </>
+          );
+        }
         return (
           <>
-            {'Close & Switch Tab'}
-            <Cross1Icon className={classes} />
-          </>
-        );
-      return (
-        <>
-          {type.replaceAll('-', ' ')}
-          <PinRightIcon className={classes} />
-        </>
-      );
-    }
-
-    if (type === CommandType.SwitchSpace) {
-      if (isMetaKeyPressed) {
-        return (
-          <>
-            {'Open Space in New Window'}
-            <OpenInNewWindowIcon className={classes} />
+            {type.replaceAll('-', ' ')}
+            <PinRightIcon className={classes} />
           </>
         );
       }
-
-      return (
-        <>
-          {type.replaceAll('-', ' ')}
-          <EnterIcon className={classes} />
-        </>
-      );
-    }
-
-    if (type === CommandType.Note)
-      return (
-        <>
-          {'Note'}
-          <FileTextIcon className={classes} />
-        </>
-      );
-
-    if (type === CommandType.WebSearch) {
-      if (isMetaKeyPressed) {
+      case CommandType.SwitchSpace: {
+        if (isMetaKeyPressed) {
+          return (
+            <>
+              Open Space in New Window
+              <OpenInNewWindowIcon className={classes} />
+            </>
+          );
+        }
         return (
           <>
-            {'Search in new tab'}
-            <ExternalLinkIcon className={classes} />
+            {type.replaceAll('-', ' ')}
+            <EnterIcon className={classes} />
           </>
         );
       }
+      case CommandType.Note: {
+        return (
+          <>
+            Note
+            <FileTextIcon className={classes} />
+          </>
+        );
+      }
+      case CommandType.DiscardTabs: {
+        if (isMetaKeyPressed) {
+          return <>Discard All</>;
+        }
 
-      return (
-        <>
-          {'Search here'}
-          <Link2Icon className={classes} />
-        </>
-      );
+        return <>Except whitelisted site</>;
+      }
+      case CommandType.WebSearch: {
+        if (isMetaKeyPressed) {
+          return (
+            <>
+              Search in new tab
+              <ExternalLinkIcon className={classes} />
+            </>
+          );
+        }
+        return (
+          <>
+            Search here
+            <Link2Icon className={classes} />
+          </>
+        );
+      }
+      case CommandType.Link: {
+        if (isMetaKeyPressed)
+          return (
+            <>
+              New tab
+              <ExternalLinkIcon className={classes} />
+            </>
+          );
+
+        return (
+          <>
+            Open here
+            <Link2Icon className={classes} />
+          </>
+        );
+      }
+      default: {
+        return undefined;
+      }
     }
-
-    if (isMetaKeyPressed)
-      return (
-        <>
-          {'New tab'}
-          <ExternalLinkIcon className={classes} />
-        </>
-      );
-
-    return (
-      <>
-        {'Open here'}
-        <Link2Icon className={classes} />
-      </>
-    );
   };
 
   // show link indicator for link type before title
@@ -219,7 +221,7 @@ const Command = ({
       ) : null}
 
       {/* command type label/sticker */}
-      {!isStaticCommand && !isSubCommand && isFocused ? (
+      {typeof CommandTypeIcon({ classes: '' }) !== 'undefined' && !isSubCommand && isFocused ? (
         <div className="flex items-center absolute right-2.5 top-1 bg-brand-darkBg/95 rounded-[5px] text-[10px] font-medium text-slate-400 px-2.5 py-2 capitalize select-none">
           <CommandTypeIcon classes="ml-1 text-slate-400/80 scale-[0.9]" />
         </div>
@@ -227,6 +229,7 @@ const Command = ({
     </button>
   );
 };
+
 export default Command;
 
 // sub component

@@ -28,7 +28,7 @@ const getSitesFromHistory = async (maxResults: number) => {
 };
 
 // recent visited sites
-export const getRecentlyVisitedSites = async (maxResults = 4): Promise<ITab[]> => {
+export const getRecentlyVisitedSites = async (maxResults = 3): Promise<ITab[]> => {
   try {
     let sites = [];
 

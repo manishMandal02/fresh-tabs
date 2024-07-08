@@ -8,6 +8,7 @@ import {
   LayersIcon,
   MagnifyingGlassIcon,
   PlusIcon,
+  CheckIcon,
 } from '@radix-ui/react-icons';
 
 import { CommandType } from '@root/src/constants/app';
@@ -15,31 +16,70 @@ import { ICommand } from '@root/src/types/global.types';
 
 // default static commands
 export const staticCommands: ICommand[] = [
-  { index: 1, type: CommandType.NewNote, label: 'New Note', icon: FileTextIcon, alias: 'Create note' },
-  { index: 2, type: CommandType.NewSpace, label: 'New Space', icon: DesktopIcon, alias: 'Create space' },
-  { index: 3, type: CommandType.AddToSpace, label: 'Move Tab', icon: MoveIcon, alias: 'Send Tab to other space' },
-  { index: 4, type: CommandType.SnoozeTab, label: 'Snooze Tab', icon: ClockIcon, alias: 'Remind later' },
+  {
+    index: 1,
+    type: CommandType.NewNote,
+    label: 'New Note',
+    icon: FileTextIcon,
+    alias: 'Create note',
+    isFeatured: true,
+  },
+  {
+    index: 2,
+    type: CommandType.NewSpace,
+    label: 'New Space',
+    icon: DesktopIcon,
+    alias: 'Create space',
+    isFeatured: true,
+  },
+  {
+    index: 3,
+    type: CommandType.AddToSpace,
+    label: 'Move Tab',
+    icon: MoveIcon,
+    alias: 'Send Tab to other space',
+    isFeatured: true,
+  },
+  {
+    index: 4,
+    type: CommandType.SnoozeTab,
+    label: 'Snooze Tab',
+    icon: ClockIcon,
+    alias: 'Remind later',
+    isFeatured: true,
+  },
   {
     index: 5,
     type: CommandType.DiscardTabs,
     label: 'Discard Tabs',
     icon: MoonIcon,
     alias: 'Save memory',
+    isFeatured: true,
   },
-  { index: 6, type: CommandType.CloseTab, label: 'Close Tab', icon: Cross1Icon, alias: 'Close current tab' },
   {
-    index: 7,
+    index: 6,
+    type: CommandType.WhitelistDomainForAutoDiscard,
+    label: 'Whitelist site',
+    icon: CheckIcon,
+    alias: 'Prevent this site from being discarded',
+    isFeatured: true,
+  },
+  { index: 7, type: CommandType.CloseTab, label: 'Close Tab', icon: Cross1Icon, alias: 'Close current tab' },
+  {
+    index: 8,
     type: CommandType.NewGroup,
     label: 'New Group',
     icon: PlusIcon,
     alias: 'Create group with this tab',
+    isFeatured: true,
   },
   {
-    index: 8,
+    index: 9,
     type: CommandType.AddToGroup,
     label: 'Add to Group',
     icon: LayersIcon,
     alias: 'Move tab to a group',
+    isFeatured: true,
   },
 ];
 

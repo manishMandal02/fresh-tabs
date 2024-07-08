@@ -43,17 +43,17 @@ type NoteSettings = {
   showOnAllSites: boolean;
 };
 
-type DiscardTabSettings = {
-  autoDiscard: boolean;
-  autoDiscardIntervalTime: number;
+type AutoDiscardTabSettings = {
+  isEnabled: boolean;
+  discardTabAfterIdleTime: number;
   whitelistedDomains: string[];
 };
 
 export interface IAppSettings {
+  notes: NoteSettings;
   cmdPalette: CommandPaletteSettings;
   linkPreview: LinkPreviewSettings;
-  notes: NoteSettings;
-  discardTabs: DiscardTabSettings;
+  autoDiscardTabs: AutoDiscardTabSettings;
   openSpace: 'newWindow' | 'sameWindow';
   deleteUnsavedSpace: 'immediately' | 'week';
   autoSaveToBookmark: 'off' | 'daily' | 'weekly';
@@ -66,6 +66,7 @@ export interface ICommand {
   type: CommandType;
   metadata?: string | number;
   icon: string | RadixIconType;
+  isFeatured?: boolean;
 }
 
 interface AccountNotification {
@@ -213,6 +214,7 @@ type MessageEventsContentScript =
   | 'OPEN_PREVIEW_LINK_AS_TAB'
   | 'OPEN_APP_SIDEPANEL'
   | 'SHOW_COMMAND_PALETTE'
+  | 'WHITE_LIST_DOMAIN_FOR_AUTO_DISCARD'
   | 'MOVE_TAB_TO_SPACE'
   | 'SHOW_DOMAIN_NOTES'
   | 'SHOW_SNACKBAR'
@@ -253,6 +255,7 @@ interface IEventPayloadContentScript {
   shouldCloseCurrentTab?: boolean;
   shouldOpenInNewWindow?: boolean;
   notesBubblePos?: NoteBubblePos;
+  shouldIgnoreDiscardWhitelist?: boolean;
   searchFilterPreferences?: ISearchFilters;
 }
 

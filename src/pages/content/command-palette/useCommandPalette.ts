@@ -22,6 +22,8 @@ const defaultSuggestedSnoozeTimeLabels = [
   'After 1 week',
 ];
 
+export const DEFAULT_SEARCH_PLACEHOLDER = 'Search notes, bookmarks, history, commands...';
+
 type UseCommandPaletteProps = {
   activeSpace: ISpace;
   onClose: () => void;
@@ -44,7 +46,7 @@ export const useCommandPalette = ({ activeSpace, onClose, isOpenedInPopupWindow 
   // current focused command index
   const [subCommand, setSubCommand] = useState<CommandType | null>(null);
 
-  const [searchQueryPlaceholder, setSearchQueryPlaceholder] = useState('Search...');
+  const [searchQueryPlaceholder, setSearchQueryPlaceholder] = useState(DEFAULT_SEARCH_PLACEHOLDER);
 
   // current focused command index
   const [focusedCommandIndex, setFocusedCommandIndex] = useState(1);
@@ -196,7 +198,16 @@ export const useCommandPalette = ({ activeSpace, onClose, isOpenedInPopupWindow 
         }
 
         case CommandType.DiscardTabs: {
-          await publishEvents({ event: 'DISCARD_TABS' });
+          await publishEvents({ event: 'DISCARD_TABS', payload: { shouldIgnoreDiscardWhitelist: isMetaKeyPressed } });
+          handleCloseCommandPalette();
+          break;
+        }
+
+        case CommandType.WhitelistDomainForAutoDiscard: {
+          await publishEvents({
+            event: 'WHITE_LIST_DOMAIN_FOR_AUTO_DISCARD',
+            payload: { activeSpace, isOpenedInPopupWindow },
+          });
           handleCloseCommandPalette();
           break;
         }

@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
-import { useState, useEffect, memo, ReactNode, FC , useRef } from 'react';
+import { useState, useEffect, memo, ReactNode, FC, useRef } from 'react';
 import { Cross2Icon, OpenInNewWindowIcon } from '@radix-ui/react-icons';
 
 import Spinner from '../../../../../components/spinner';
@@ -8,7 +8,6 @@ import { IAppSettings } from '@root/src/types/global.types';
 import { SlideModal } from '../../../../../components/modal';
 import Switch from '../../../../../components/switch/Switch';
 import Accordion from '../../../../../components/accordion/Accordion';
-import { cn, parseUrl, retryAtIntervals, wait } from '@root/src/utils';
 import { useCustomAnimation } from '../../../hooks/useCustomAnimation';
 import { AlarmName, DefaultAppSettings } from '@root/src/constants/app';
 import { saveSettings } from '@root/src/services/chrome-storage/settings';
@@ -16,6 +15,7 @@ import { discardAllTabs } from '@root/src/services/chrome-discard/discard';
 import { createAlarm, deleteAlarm } from '@root/src/services/chrome-alarms/helpers';
 import RadioGroup, { RadioOptions } from '../../../../../components/radio-group/RadioGroup';
 import { appSettingsAtom, showSettingsModalAtom, snackbarAtom } from '@root/src/stores/app';
+import { removeWWWPrefix, cn, getUrlDomain, parseUrl, retryAtIntervals, wait, isValidURL } from '@root/src/utils';
 
 const domainWithSubdomainRegex = /^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,10}$/;
 
@@ -130,7 +130,19 @@ const Settings = () => {
       }
     }
 
-    // TODO - update auto discard tabs alarm if preference has been changed
+    //  update auto discard tabs alarm if preference has been changed
+    if (settingsUpdateData.autoDiscardTabs.isEnabled !== appSettings.autoDiscardTabs.isEnabled) {
+      // clear the previous trigger
+      await deleteAlarm(AlarmName.autoDiscardTabs);
+      // create new trigger ( 1d = 1440m)
+      if (settingsUpdateData.autoDiscardTabs.isEnabled) {
+        await createAlarm({
+          isRecurring: true,
+          name: AlarmName.autoDiscardTabs,
+          triggerAfter: 5 * 60 * 1000, // 5 minutes
+        });
+      }
+    }
 
     // set global state
     setAppSetting(settingsUpdateData);
@@ -146,18 +158,29 @@ const Settings = () => {
 
   // save whitelist site
   const handleAddWhitelistDomain = async () => {
-    const domainInput = whitelistInputRef.current.value;
+    let domainInput = whitelistInputRef.current.value;
 
     console.log('🌅 ~ handleAddWhitelistDomain ~ domainInput:', domainInput);
 
-    if (!domainInput || !domainWithSubdomainRegex.test(domainInput)) return;
+    if (!domainInput) return;
 
-    const updatedWhitelist = [...appSettings.discardTabs.whitelistedDomains, domainInput];
+    if (!domainWithSubdomainRegex.test(domainInput) && !isValidURL(domainInput)) {
+      whitelistInputRef.current.setAttribute('data-invalid-domain', 'true');
+      return;
+    }
+
+    if (!domainWithSubdomainRegex.test(domainInput)) {
+      domainInput = getUrlDomain(domainInput);
+    }
+
+    domainInput = removeWWWPrefix(domainInput);
+
+    const updatedWhitelist = [...appSettings.autoDiscardTabs.whitelistedDomains, domainInput];
     // save to storage
     await saveSettings({
       ...appSettings,
-      discardTabs: {
-        ...appSettings.discardTabs,
+      autoDiscardTabs: {
+        ...appSettings.autoDiscardTabs,
         whitelistedDomains: updatedWhitelist,
       },
     });
@@ -167,8 +190,8 @@ const Settings = () => {
     // save to global (ui) state
     setAppSetting({
       ...appSettings,
-      discardTabs: {
-        ...appSettings.discardTabs,
+      autoDiscardTabs: {
+        ...appSettings.autoDiscardTabs,
         whitelistedDomains: updatedWhitelist,
       },
     });
@@ -176,13 +199,13 @@ const Settings = () => {
 
   // remove whitelist site
   const handleRemoveWhitelistDomain = async (domain: string) => {
-    const updatedWhitelist = appSettings.discardTabs.whitelistedDomains.filter(d => d !== domain);
+    const updatedWhitelist = appSettings.autoDiscardTabs.whitelistedDomains.filter(d => d !== domain);
 
     // save to storage
     await saveSettings({
       ...appSettings,
-      discardTabs: {
-        ...appSettings.discardTabs,
+      autoDiscardTabs: {
+        ...appSettings.autoDiscardTabs,
         whitelistedDomains: updatedWhitelist,
       },
     });
@@ -190,8 +213,8 @@ const Settings = () => {
     // save to global (ui) state
     setAppSetting({
       ...appSettings,
-      discardTabs: {
-        ...appSettings.discardTabs,
+      autoDiscardTabs: {
+        ...appSettings.autoDiscardTabs,
         whitelistedDomains: updatedWhitelist,
       },
     });
@@ -543,7 +566,7 @@ const Settings = () => {
           {/* auto discard tabs */}
           <Accordion
             id="notes"
-            // defaultCollapsed
+            defaultCollapsed
             classes={{
               triggerContainer:
                 'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px mb-[3px]',
@@ -559,32 +582,35 @@ const Settings = () => {
                 <Switch
                   size="medium"
                   id="include-bookmark-in-search"
-                  checked={settingsUpdateData.discardTabs.autoDiscard}
+                  checked={settingsUpdateData.autoDiscardTabs.isEnabled}
                   onChange={checked =>
-                    handleSettingsChange('discardTabs', { ...settingsUpdateData.discardTabs, autoDiscard: checked })
+                    handleSettingsChange('autoDiscardTabs', {
+                      ...settingsUpdateData.autoDiscardTabs,
+                      isEnabled: checked,
+                    })
                   }
                 />
               </div>
 
               <p
                 className={cn('text-[12px] font-light tracking-wide ml-1', {
-                  'opacity-70 cursor-not-allowed': !settingsUpdateData.discardTabs.autoDiscard,
+                  'opacity-70 cursor-not-allowed': !settingsUpdateData.autoDiscardTabs.isEnabled,
                 })}>
                 {"Auto discard tabs after they're inactive for x minutes"}
               </p>
               <div
                 className={cn('flex items-center mt-[2.5px]', {
-                  'opacity-70 cursor-not-allowed': !settingsUpdateData.discardTabs.autoDiscard,
+                  'opacity-70 cursor-not-allowed': !settingsUpdateData.autoDiscardTabs.isEnabled,
                 })}>
                 <RadioGroup
                   options={autoDiscardIntervalTimeOptions}
-                  value={settingsUpdateData.discardTabs.autoDiscardIntervalTime + ''}
+                  value={settingsUpdateData.autoDiscardTabs.discardTabAfterIdleTime + ''}
                   defaultValue={autoDiscardIntervalTimeOptions[1].value}
-                  disabled={!settingsUpdateData.discardTabs.autoDiscard}
+                  disabled={!settingsUpdateData.autoDiscardTabs.isEnabled}
                   onChange={value =>
-                    handleSettingsChange('discardTabs', {
-                      ...settingsUpdateData.discardTabs,
-                      autoDiscardIntervalTime: Number(value),
+                    handleSettingsChange('autoDiscardTabs', {
+                      ...settingsUpdateData.autoDiscardTabs,
+                      discardTabAfterIdleTime: Number(value),
                     })
                   }
                 />
@@ -593,8 +619,8 @@ const Settings = () => {
               <hr className="h-[1px] w-full my-2  bg-brand-darkBgAccent/25 rounded-lg border-none" />
 
               <div className="flex flex-col items-star px-1">
-                <p className="text-[12px] mb-1 font-light tracking-wide ml-1">
-                  Whitelist Sites ({settingsUpdateData.discardTabs.whitelistedDomains.length})
+                <p className="text-[12px] mb-1 font-light tracking-wide ml-px">
+                  Whitelist Sites ({settingsUpdateData.autoDiscardTabs.whitelistedDomains.length})
                 </p>
                 {/* input box */}
                 {/*  eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
@@ -603,19 +629,24 @@ const Settings = () => {
                   type="text"
                   ref={whitelistInputRef}
                   onKeyDown={ev => {
-                    if (ev.code !== 'Enter') return;
-                    handleAddWhitelistDomain();
+                    if (ev.code === 'Enter') {
+                      handleAddWhitelistDomain();
+                    } else {
+                      if ((ev.target as HTMLInputElement).getAttribute('data-invalid-domain')) {
+                        (ev.target as HTMLInputElement).setAttribute('data-invalid-domain', 'false');
+                      }
+                    }
                   }}
                   placeholder="Enter site name"
-                  className={`w-[85%] text-[11px] text-slate-300 border border-brand-darkBgAccent/50 rounded-md px-2 py-1 bg-brand-darkBgAccent/40 
-                        outline-none focus-within:border-slate-600 transition-colors duration-200 placeholder:text-slate-500/80`}
+                  className={`w-[90%] text-[11px] text-slate-300 border border-brand-darkBgAccent/50 rounded-md px-2 py-1 bg-brand-darkBgAccent/40 
+                               data-[invalid-domain=true]:!bg-rose-400/20 outline-none focus-within:border-slate-600 transition-colors duration-200 placeholder:text-slate-500/80`}
                 />
                 {/* domain chips */}
                 <div className="ml-1 flex items-start justify-start flex-grow flex-wrap max-w-full mt-1.5 overflow-x-hidden overflow-y-auto cc-scrollbar max-h-[100px]">
-                  {settingsUpdateData.discardTabs.whitelistedDomains.length > 0 ? (
-                    settingsUpdateData.discardTabs.whitelistedDomains.map((domain, index) => (
+                  {settingsUpdateData.autoDiscardTabs.whitelistedDomains.length > 0 ? (
+                    settingsUpdateData.autoDiscardTabs.whitelistedDomains.map((domain, index) => (
                       <div
-                        className="w-fit flex items-center justify-between pl-2.5 pr-1 py-1 bg-brand-darkBgAccent/30 shadow shadow-brand-darkBg/60 rounded-xl mb-1 mr-1 select-text"
+                        className="w-fit flex items-center justify-between pl-2.5 pr-1 py-[2.5px] bg-brand-darkBgAccent/30 shadow shadow-brand-darkBg/60 rounded-xl mb-1 mr-1 select-text"
                         key={index}>
                         <span className="text-[9px] text-slate-400/90">{domain}</span>
                         <button

@@ -9,7 +9,7 @@ import { isValidURL } from '@root/src/utils/url';
 import { INote } from '@root/src/types/global.types';
 import { snackbarAtom, activeSpaceAtom, notesAtom } from '@root/src/stores/app';
 import { addNewNote, updateNote } from '@root/src/services/chrome-storage/notes';
-import { cleanDomainName, getUrlDomain } from '@root/src/utils/url/get-url-domain';
+import { removeWWWPrefix, getUrlDomain } from '@root/src/utils/url/get-url-domain';
 import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
 
 const domainWithSubdomainRegex = /^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,10}$/;
@@ -52,15 +52,14 @@ export const useNewNote = ({ remainder, note, noteId, noteCreatedAt, handleClose
   });
 
   const handleOnPasteInDomainInput: ClipboardEventHandler<HTMLInputElement> = ev => {
-    // check if pasted text is a sub domain
-
     // don't allow default paste value
     ev.preventDefault();
 
     const pastedText = ev.clipboardData.getData('text');
-    // if yes - do nothing
+    // check if pasted text is a sub domain
     if (domainWithSubdomainRegex.test(pastedText)) {
-      inputFrom.setValue('domain', cleanDomainName(pastedText));
+      // if yes - do nothing
+      inputFrom.setValue('domain', removeWWWPrefix(pastedText));
       return;
     }
 
@@ -68,7 +67,7 @@ export const useNewNote = ({ remainder, note, noteId, noteCreatedAt, handleClose
     if (!isValidURL(pastedText)) return;
 
     // valid url, extract domain including subdomain and paste to input field
-    inputFrom.setValue('domain', cleanDomainName(getUrlDomain(pastedText)));
+    inputFrom.setValue('domain', removeWWWPrefix(getUrlDomain(pastedText)));
   };
 
   const handleAddNote: SubmitHandler<FormSchema> = async (data, ev) => {

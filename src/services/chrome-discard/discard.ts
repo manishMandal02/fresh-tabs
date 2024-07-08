@@ -1,20 +1,39 @@
 import { logger } from '@root/src/utils/logger';
+import { getAppSettings } from '../chrome-storage/settings';
+import { getUrlDomain } from '@root/src/utils';
 
 // discard all other tabs (exclude audible tabs)
-export const discardAllTabs = async (autoDiscard = false) => {
+export const discardAllTabs = async (autoDiscard = false, ignoreWhitelist = true) => {
   try {
-    //TODO - improvement - take user preferences into consideration (whitelisted sites, etc.)
-    let tabs = await chrome.tabs.query({ active: false, audible: false, discarded: false, status: 'complete' });
+    let tabs = await chrome.tabs.query({
+      active: false,
+      discarded: false,
+      status: 'complete',
+      ...(autoDiscard && { audible: false }),
+    });
+
+    console.log('✅ ~ discardAllTabs ~ tabs:', tabs);
 
     if (autoDiscard) {
-      //@ts-expect-error - lastAccesses is a newly added feature (the types are not updated)
-      tabs = tabs.filter(tab => tab?.lastAccessed);
+      const { autoDiscardTabs } = await getAppSettings();
+
+      tabs = tabs.filter(
+        //@ts-expect-error - lastAccesses is a newly added feature (the types are not updated)
+        tab => !!tab?.lastAccessed && !autoDiscardTabs.whitelistedDomains.includes(getUrlDomain(tab.url)),
+      );
 
       if (tabs.length > 0) {
-        const TENMinutes = 600000;
+        // calculate minimum idle time for tabs to be discarded as per user preference
+        const minimumIdleTime = autoDiscardTabs.discardTabAfterIdleTime * 60 * 1000;
         //@ts-expect-error - new feature (the types are not updated)
-        tabs = tabs.filter(tab => tab?.lastAccessed <= Date.now() - TENMinutes);
+        tabs = tabs.filter(tab => tab?.lastAccessed <= Date.now() - minimumIdleTime);
       }
+    }
+
+    if (!ignoreWhitelist) {
+      const { autoDiscardTabs } = await getAppSettings();
+
+      tabs = tabs.filter(tab => !autoDiscardTabs.whitelistedDomains.includes(getUrlDomain(tab.url)));
     }
 
     if (tabs.length < 1) return true;

@@ -9,7 +9,7 @@ import KBD from '@root/src/components/kbd/KBD';
 import { getFaviconURL } from '../../../utils/url';
 import { CommandType } from '@root/src/constants/app';
 import CommandDivider from './command/CommandDivider';
-import { useCommandPalette } from './useCommandPalette';
+import { DEFAULT_SEARCH_PLACEHOLDER, useCommandPalette } from './useCommandPalette';
 import { getTime } from '@root/src/utils/date-time/get-time';
 import { publishEvents } from '../../../utils/publish-events';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
@@ -134,18 +134,23 @@ const CommandPalette = ({
   // set default suggested commands
   const setDefaultSuggestedCommands = useCallback(async () => {
     let filteredStaticCommands = staticCommands;
+
+    // filter out featured command
+    filteredStaticCommands = filteredStaticCommands.filter(cmd => !!cmd?.isFeatured);
+
     const currentGroups = await getAllGroups(activeSpace.id);
 
     if (currentGroups && currentGroups.length < 1) {
       filteredStaticCommands = filteredStaticCommands.filter(cmd => cmd.type !== CommandType.AddToGroup);
     }
+    filteredStaticCommands = filteredStaticCommands.map((cmd, idx) => ({ ...cmd, index: idx + 1 }));
 
-    const recentSitesCommands = recentSites.map<ICommand>((site, idx) => ({
-      index: 1 + idx + filteredStaticCommands.length,
-      type: CommandType.Link,
-      label: site.title,
+    const recentSitesCommands = recentSites.slice(0, 3).map<ICommand>((site, idx) => ({
+      index: filteredStaticCommands.length + idx + 1,
       icon: getFaviconURL(site.url),
+      type: CommandType.Link,
       metadata: site.url,
+      label: site.title,
       alias: 'History',
     }));
 
@@ -222,10 +227,10 @@ const CommandPalette = ({
 
         const allSpacesMatchWords = [
           'space',
+          'switch',
           'spaces',
           'all space',
           'all spaces',
-          'switch',
           'switch space',
           'switch spaces',
         ];
@@ -264,8 +269,6 @@ const CommandPalette = ({
         return matchedCommands;
       }
 
-      console.log('🚀 ~ handleGlobalSearch ~ searchQuery:', searchQuery);
-
       // search for links, notes and more from background script
       const res = await publishEvents<ICommand[]>({
         event: 'SEARCH',
@@ -287,7 +290,6 @@ const CommandPalette = ({
         matchedCommands.push(webSearchCommand(searchQuery, matchedCommands.length + 1));
       }
 
-      console.log('🔵 ~ handleGlobalSearch():294 ~ matchedCommands:', matchedCommands);
       return matchedCommands;
     },
 
@@ -331,7 +333,7 @@ const CommandPalette = ({
     } else if (!searchQuery.trim() && !subCommand) {
       // reset search
       setDefaultSuggestedCommands();
-      setSearchQueryPlaceholder('Switch...');
+      setSearchQueryPlaceholder(DEFAULT_SEARCH_PLACEHOLDER);
       setFocusedCommandIndex(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -544,10 +546,10 @@ const CommandPalette = ({
               onClick={handleFocusSearchInput}>
               <div className="text-slate-500/90 text-[10.5px] ml-1">FreshTabs</div>
               <div className="flex items-center gap-x-[7px]">
-                <KBD upArrowKey classes="text-slate-500" />
-                <KBD downArrowKey classes="text-slate-500" />
-                <KBD modifierKey classes="text-slate-500" />
-                <KBD enterKey classes="text-slate-500" />
+                <KBD upArrowKey classes="text-slate-500 bg-brand-darkBgAccent/35 text-[8px] font-extralight" />
+                <KBD downArrowKey classes="text-slate-500 bg-brand-darkBgAccent/35 text-[8px] font-extralight" />
+                <KBD modifierKey classes="text-slate-500 bg-brand-darkBgAccent/35 text-[13px]" />
+                <KBD enterKey classes="text-slate-500 bg-brand-darkBgAccent/35 text-[13px]" />
               </div>
             </div>
           ) : null}

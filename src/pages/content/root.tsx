@@ -10,7 +10,7 @@ import { getTime } from '@root/src/utils/date-time/get-time';
 import { getWeekday } from '@root/src/utils/date-time/get-weekday';
 import { getSpace } from '@root/src/services/chrome-storage/spaces';
 import { ContentScriptContainerIds } from '@root/src/constants/app';
-import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
+import { removeWWWPrefix } from '@root/src/utils/url/get-url-domain';
 import { getNoteByDomain } from '@root/src/services/chrome-storage/notes';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
@@ -150,7 +150,7 @@ const showNotes = async (spaceId: string, position: NoteBubblePos, reRender = fa
     }
   }
 
-  const siteDomain = cleanDomainName(location.hostname);
+  const siteDomain = removeWWWPrefix(location.hostname);
 
   const siteNotes = await getNoteByDomain(siteDomain);
 

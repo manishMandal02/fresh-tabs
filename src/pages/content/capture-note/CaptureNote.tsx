@@ -8,7 +8,7 @@ import KBD from '@root/src/components/kbd/KBD';
 import { publishEvents } from '@root/src/utils';
 import { ISpace } from '@root/src/types/global.types';
 import { getNote } from '@root/src/services/chrome-storage/notes';
-import { cleanDomainName } from '@root/src/utils/url/get-url-domain';
+import { removeWWWPrefix } from '@root/src/utils/url/get-url-domain';
 import { COMMAND_PALETTE_SIZE } from '../command-palette/CommandPalette';
 import { useCustomAnimation } from '@root/src/pages/sidepanel/hooks/useCustomAnimation';
 import { parseStringForDateTimeHint } from '@root/src/utils/date-time/naturalLanguageToDate';
@@ -71,7 +71,7 @@ const CreateNote = ({
       setTitle(document.title);
       setNote(EDITOR_EMPTY_STATE);
       if (isOpenedInPopupWindow) return;
-      setDomain(cleanDomainName(document.location.hostname));
+      setDomain(removeWWWPrefix(document.location.hostname));
     }
     // run on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps

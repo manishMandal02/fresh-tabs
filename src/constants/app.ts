@@ -37,6 +37,7 @@ export enum CommandType {
   AddToSpace = 'add-to-space',
   SwitchSpace = 'switch-space',
   DiscardTabs = 'discard-tabs',
+  WhitelistDomainForAutoDiscard = 'whitelist-domain-auto-discard',
   NewGroup = 'new-group',
   AddToGroup = 'add-to-group',
 }
@@ -97,7 +98,7 @@ export const DefaultAppSettings: IAppSettings = {
   openSpace: 'newWindow',
   autoSaveToBookmark: 'daily',
   deleteUnsavedSpace: 'immediately',
-  discardTabs: { autoDiscard: true, autoDiscardIntervalTime: 10, whitelistedDomains: [] },
+  autoDiscardTabs: { isEnabled: true, discardTabAfterIdleTime: 10, whitelistedDomains: [] },
   cmdPalette: { isDisabled: false, includeBookmarksInSearch: true, includeNotesInSearch: false },
   linkPreview: { isDisabled: false, openTrigger: 'shift-click', size: 'tablet' },
   notes: { isDisabled: false, showOnAllSites: true, bubblePos: 'bottom-left' },
