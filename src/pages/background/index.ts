@@ -105,7 +105,7 @@ const checkExtensionBadgeEmoji = async () => {
 (async () => {
   await checkExtensionBadgeEmoji();
 
-  initializeContextMenuItems();
+  // initializeContextMenuItems();
 
   //TODO - testing... save default settings to sync storage
   // await saveSettings(DefaultAppSettings);

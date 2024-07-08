@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
-import { useState, useEffect, memo, ReactNode, FC } from 'react';
+import { useState, useEffect, memo, ReactNode, FC , useRef } from 'react';
 import { Cross2Icon, OpenInNewWindowIcon } from '@radix-ui/react-icons';
 
 import Spinner from '../../../../../components/spinner';
@@ -66,7 +66,7 @@ const Settings = () => {
 
   const [openAppShortcut, setOpenAppShortcut] = useState('');
 
-  const [whitelistDomainInput, setWhitelistDomainInput] = useState('');
+  const whitelistInputRef = useRef<HTMLInputElement>(null);
 
   const [commandPaletteShortcut, setCommandPaletteShortcut] = useState('');
 
@@ -146,24 +146,53 @@ const Settings = () => {
 
   // save whitelist site
   const handleAddWhitelistDomain = async () => {
-    if (!whitelistDomainInput) return;
+    const domainInput = whitelistInputRef.current.value;
+
+    console.log('🌅 ~ handleAddWhitelistDomain ~ domainInput:', domainInput);
+
+    if (!domainInput || !domainWithSubdomainRegex.test(domainInput)) return;
+
+    const updatedWhitelist = [...appSettings.discardTabs.whitelistedDomains, domainInput];
     // save to storage
     await saveSettings({
       ...appSettings,
       discardTabs: {
         ...appSettings.discardTabs,
-        whitelistedDomains: [...appSettings.discardTabs.whitelistedDomains, whitelistDomainInput],
+        whitelistedDomains: updatedWhitelist,
       },
     });
 
-    setWhitelistDomainInput('');
+    whitelistInputRef.current.value = '';
 
     // save to global (ui) state
     setAppSetting({
       ...appSettings,
       discardTabs: {
         ...appSettings.discardTabs,
-        whitelistedDomains: [...appSettings.discardTabs.whitelistedDomains, whitelistDomainInput],
+        whitelistedDomains: updatedWhitelist,
+      },
+    });
+  };
+
+  // remove whitelist site
+  const handleRemoveWhitelistDomain = async (domain: string) => {
+    const updatedWhitelist = appSettings.discardTabs.whitelistedDomains.filter(d => d !== domain);
+
+    // save to storage
+    await saveSettings({
+      ...appSettings,
+      discardTabs: {
+        ...appSettings.discardTabs,
+        whitelistedDomains: updatedWhitelist,
+      },
+    });
+
+    // save to global (ui) state
+    setAppSetting({
+      ...appSettings,
+      discardTabs: {
+        ...appSettings.discardTabs,
+        whitelistedDomains: updatedWhitelist,
       },
     });
   };
@@ -569,37 +598,30 @@ const Settings = () => {
                 </p>
                 {/* input box */}
                 {/*  eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
-                <form
-                  onSubmit={e => {
-                    e.preventDefault();
-                    // validate domain name
-                    if (!whitelistDomainInput || !domainWithSubdomainRegex.test(whitelistDomainInput)) return;
-                    // whitelist domain
+
+                <input
+                  type="text"
+                  ref={whitelistInputRef}
+                  onKeyDown={ev => {
+                    if (ev.code !== 'Enter') return;
                     handleAddWhitelistDomain();
-                  }}>
-                  <input
-                    type="text"
-                    value={whitelistDomainInput}
-                    onChange={e => {
-                      e.stopPropagation();
-                      setWhitelistDomainInput(e.target.value);
-                      e.target.focus();
-                    }}
-                    placeholder="Enter site name"
-                    className={`w-[85%] text-[11px] text-slate-300 border border-brand-darkBgAccent/50 rounded-md px-2 py-1 bg-brand-darkBgAccent/40 
+                  }}
+                  placeholder="Enter site name"
+                  className={`w-[85%] text-[11px] text-slate-300 border border-brand-darkBgAccent/50 rounded-md px-2 py-1 bg-brand-darkBgAccent/40 
                         outline-none focus-within:border-slate-600 transition-colors duration-200 placeholder:text-slate-500/80`}
-                  />
-                </form>
+                />
                 {/* domain chips */}
                 <div className="ml-1 flex items-start justify-start flex-grow flex-wrap max-w-full mt-1.5 overflow-x-hidden overflow-y-auto cc-scrollbar max-h-[100px]">
                   {settingsUpdateData.discardTabs.whitelistedDomains.length > 0 ? (
                     settingsUpdateData.discardTabs.whitelistedDomains.map((domain, index) => (
                       <div
-                        className="w-fit  flex items-center justify-between px-2 py-1 bg-brand-darkBgAccent/40 rounded-lg mb-1 mr-1"
+                        className="w-fit flex items-center justify-between pl-2.5 pr-1 py-1 bg-brand-darkBgAccent/30 shadow shadow-brand-darkBg/60 rounded-xl mb-1 mr-1 select-text"
                         key={index}>
-                        <span className="text-[9px] font-light text-slate-400 ">{domain}</span>
-                        <button className=" ">
-                          <Cross2Icon className="text-slate-500 ml-1 scale-[0.9]" />
+                        <span className="text-[9px] text-slate-400/90">{domain}</span>
+                        <button
+                          onClick={() => handleRemoveWhitelistDomain(domain)}
+                          className="bg-brand-darkBgAccent/60 border border-brand-darkBg/40 rounded-full ml-[2.5px] hover:bg-brand-darkBg/10 transition-colors duration-200">
+                          <Cross2Icon className="text-slate-500 scale-[0.8]" />
                         </button>
                       </div>
                     ))
