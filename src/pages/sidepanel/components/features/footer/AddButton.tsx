@@ -42,7 +42,7 @@ const AddButton = () => {
                 <KBD classes="text-[8px] shadow-brand-darkBgAccent/80">S</KBD>
               </span>
             </button>
-            {!appSettings.isNotesDisabled ? (
+            {!appSettings?.notes.isDisabled ? (
               <button
                 className="text-slate-300/80 text-[11px] bg-gradient-to-br from-brand-darkBgAccent/70 to-slate-900/90 border border-brand-darkBgAccent/30 px-3 py-[7px] rounded outline-none hover:text-slate-300 hover:border-brand-darkBgAccent/80  transition-all duration-300"
                 onClick={() => setNewNoteModal({ show: true, note: { text: '' } })}>

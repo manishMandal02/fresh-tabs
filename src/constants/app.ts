@@ -34,12 +34,18 @@ export enum CommandType {
   SwitchTab = 'switch-tab',
   WebSearch = 'web-search',
   SnoozeTab = 'snooze-tab',
+  NewGroup = 'new-group',
+  AddToGroup = 'add-to-group',
+  RenameGroup = 'rename-group',
   AddToSpace = 'add-to-space',
   SwitchSpace = 'switch-space',
   DiscardTabs = 'discard-tabs',
+  OpenSidePanel = 'open-side-panel',
+  OpenPreferencesModal = 'open-preferences-modal',
+  OpenSnoozedTabsModal = 'open-snoozed-tabs-modal',
+  OpenSpaceHistoryModal = 'open-space-history-modal',
+  OpenNotificationsModal = 'open-notifications-modal',
   WhitelistDomainForAutoDiscard = 'whitelist-domain-auto-discard',
-  NewGroup = 'new-group',
-  AddToGroup = 'add-to-group',
 }
 
 export enum NOTIFICATION_TYPE {

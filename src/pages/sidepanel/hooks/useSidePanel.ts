@@ -21,11 +21,17 @@ import {
   removeSpaceAtom,
   updateSpaceAtom,
   userNotificationsAtom,
+  showNotificationModalAtom,
+  showSettingsModalAtom,
+  showSpaceHistoryModalAtom,
+  showSnoozedTabsModalAtom,
 } from '@root/src/stores/app';
 
 export const useSidePanel = () => {
-  // active space atom (global state)
+  // global states
   const activeSpace = useAtomValue(activeSpaceAtom);
+
+  const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
 
   const addSpace = useSetAtom(addSpaceAtom);
   const updateSpace = useSetAtom(updateSpaceAtom);
@@ -33,8 +39,11 @@ export const useSidePanel = () => {
   const setUserNotification = useSetAtom(userNotificationsAtom);
   const setAllNotes = useSetAtom(notesAtom);
   const setActiveSpaceGroups = useSetAtom(activeSpaceGroupsAtom);
-
-  const [activeSpaceTabs, setActiveSpaceTabs] = useAtom(activeSpaceTabsAtom);
+  // modals
+  const setShowSettingsModal = useSetAtom(showSettingsModalAtom);
+  const showSnoozedTabsModal = useSetAtom(showSnoozedTabsModalAtom);
+  const showSpaceHistoryModal = useSetAtom(showSpaceHistoryModalAtom);
+  const setShowNotificationsModal = useSetAtom(showNotificationModalAtom);
 
   // dragging state
   const [, setDragging] = useAtom(dragStateAtom);
@@ -165,12 +174,42 @@ export const useSidePanel = () => {
           break;
         }
 
+        case 'OPEN_MODAL': {
+          const { openSidePanelModal } = payload;
+          if (openSidePanelModal === 'notifications') {
+            setShowNotificationsModal(true);
+          }
+          if (openSidePanelModal === 'preferences') {
+            setShowSettingsModal(true);
+          }
+          if (openSidePanelModal === 'snoozed-tabs') {
+            showSnoozedTabsModal(true);
+          }
+          if (openSidePanelModal === 'space-history') {
+            showSpaceHistoryModal(true);
+          }
+
+          break;
+        }
+
         default: {
           logger.info(`Unknown event: ${event}`);
         }
       }
     },
-    [addSpace, removeSpace, updateSpace, setActiveSpaceTabs, setActiveSpaceGroups, setUserNotification, setAllNotes],
+    [
+      addSpace,
+      removeSpace,
+      updateSpace,
+      setAllNotes,
+      setActiveSpaceTabs,
+      setUserNotification,
+      setShowSettingsModal,
+      setActiveSpaceGroups,
+      showSnoozedTabsModal,
+      showSpaceHistoryModal,
+      setShowNotificationsModal,
+    ],
   );
 
   return {

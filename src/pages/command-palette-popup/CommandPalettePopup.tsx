@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react';
 
+import { publishEvents } from '@root/src/utils';
 import CommandPalette from '../content/command-palette';
+import { ISearchFilters, ISpace } from '@root/src/types/global.types';
 import { getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
-import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
-import { publishEvents } from '@root/src/utils';
 
 const CommandPalettePopup = () => {
-  const [commandPaletteProps, setCommandPaletteProps] = useState(null);
+  const [commandPaletteProps, setCommandPaletteProps] = useState<{
+    activeSpace: ISpace;
+    groupId: number;
+    searchFilterPreferences: ISearchFilters;
+  }>(null);
 
   const getCommandPaletteData = async () => {
     const currentWindowId = Number(location.search.split('=')[1]) || 0;
 
     if (!currentWindowId) return;
-
-    const recentSites = await getRecentlyVisitedSites();
 
     const activeSpace = await getSpaceByWindow(currentWindowId);
 
@@ -22,9 +24,14 @@ const CommandPalettePopup = () => {
 
     document.title = `${activeSpace?.emoji || ''}  ${activeSpace?.title || ''}`;
 
+    const [activeTab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+
     setCommandPaletteProps({
       activeSpace,
-      recentSites: recentSites || [],
+      groupId: activeTab.groupId || 0,
       searchFilterPreferences: {
         searchBookmarks: preferences.cmdPalette.includeBookmarksInSearch,
         searchNotes: preferences.cmdPalette.includeNotesInSearch,
@@ -60,9 +67,10 @@ const CommandPalettePopup = () => {
       <div className="mt-6">
         {commandPaletteProps?.activeSpace?.id ? (
           <CommandPalette
+            groupId={commandPaletteProps.groupId}
             isOpenedInPopupWindow={true}
             onClose={onCloseCommandPalette}
-            recentSites={commandPaletteProps.recentSites}
+            recentSites={[]}
             activeSpace={commandPaletteProps.activeSpace}
             searchFiltersPreference={commandPaletteProps.searchFilterPreferences}
           />

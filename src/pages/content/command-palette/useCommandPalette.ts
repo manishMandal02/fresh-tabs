@@ -1,4 +1,4 @@
-import { PlusIcon } from '@radix-ui/react-icons';
+import { Pencil1Icon, PlusIcon } from '@radix-ui/react-icons';
 import { useState, useCallback } from 'react';
 import { useFrame } from 'react-frame-component';
 
@@ -11,7 +11,7 @@ import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { getAllGroups } from '@root/src/services/chrome-storage/groups';
+import { getAllGroups, getGroup } from '@root/src/services/chrome-storage/groups';
 
 // default suggested time for snooze tab command
 const defaultSuggestedSnoozeTimeLabels = [
@@ -26,11 +26,12 @@ export const DEFAULT_SEARCH_PLACEHOLDER = 'Search notes, bookmarks, history, com
 
 type UseCommandPaletteProps = {
   activeSpace: ISpace;
+  groupId: number;
   onClose: () => void;
   isOpenedInPopupWindow: boolean;
 };
 
-export const useCommandPalette = ({ activeSpace, onClose, isOpenedInPopupWindow }: UseCommandPaletteProps) => {
+export const useCommandPalette = ({ activeSpace, groupId, onClose, isOpenedInPopupWindow }: UseCommandPaletteProps) => {
   // local state
   // search/commands suggestions
   const [suggestedCommands, setSuggestedCommands] = useState<ICommand[]>([]);
@@ -244,6 +245,13 @@ export const useCommandPalette = ({ activeSpace, onClose, isOpenedInPopupWindow 
           break;
         }
 
+        case CommandType.CloseTab: {
+          await publishEvents({ event: 'CLOSE_TAB', payload: { activeSpace, isOpenedInPopupWindow } });
+          handleCloseCommandPalette();
+          break;
+        }
+
+        // group commands
         case CommandType.NewGroup: {
           if (!subCommand) {
             setSuggestedCommandsForSubCommand([]);
@@ -304,8 +312,77 @@ export const useCommandPalette = ({ activeSpace, onClose, isOpenedInPopupWindow 
           break;
         }
 
-        case CommandType.CloseTab: {
-          await publishEvents({ event: 'CLOSE_TAB', payload: { activeSpace, isOpenedInPopupWindow } });
+        case CommandType.RenameGroup: {
+          if (!subCommand) {
+            const group = await getGroup(activeSpace.id, groupId);
+
+            setSuggestedCommandsForSubCommand([]);
+            setSearchQueryPlaceholder(group?.name || 'Enter new name...');
+            setSubCommand(CommandType.RenameGroup);
+            setSuggestedCommands([
+              {
+                label: 'Rename group',
+                type: CommandType.RenameGroup,
+                index: 1,
+                icon: Pencil1Icon,
+              },
+            ]);
+
+            setFocusedCommandIndex(1);
+          } else {
+            if (searchQuery?.length < 1) return;
+            await publishEvents({
+              event: 'RENAME_GROUP',
+              payload: {
+                groupId,
+                activeSpace,
+                isOpenedInPopupWindow,
+                groupName: searchQuery,
+              },
+            });
+            handleCloseCommandPalette();
+          }
+          break;
+        }
+
+        // side panel commands
+        case CommandType.OpenSidePanel: {
+          await publishEvents({
+            event: 'OPEN_APP_SIDEPANEL',
+            payload: { isOpenedInPopupWindow, windowId: activeSpace.windowId },
+          });
+          handleCloseCommandPalette();
+          break;
+        }
+        case CommandType.OpenNotificationsModal: {
+          await publishEvents({
+            event: 'OPEN_APP_SIDEPANEL',
+            payload: { isOpenedInPopupWindow, windowId: activeSpace.windowId, openSidePanelModal: 'notifications' },
+          });
+          handleCloseCommandPalette();
+          break;
+        }
+        case CommandType.OpenPreferencesModal: {
+          await publishEvents({
+            event: 'OPEN_APP_SIDEPANEL',
+            payload: { isOpenedInPopupWindow, windowId: activeSpace.windowId, openSidePanelModal: 'preferences' },
+          });
+          handleCloseCommandPalette();
+          break;
+        }
+        case CommandType.OpenSnoozedTabsModal: {
+          await publishEvents({
+            event: 'OPEN_APP_SIDEPANEL',
+            payload: { isOpenedInPopupWindow, windowId: activeSpace.windowId, openSidePanelModal: 'snoozed-tabs' },
+          });
+          handleCloseCommandPalette();
+          break;
+        }
+        case CommandType.OpenSpaceHistoryModal: {
+          await publishEvents({
+            event: 'OPEN_APP_SIDEPANEL',
+            payload: { isOpenedInPopupWindow, windowId: activeSpace.windowId, openSidePanelModal: 'space-history' },
+          });
           handleCloseCommandPalette();
           break;
         }
@@ -314,6 +391,7 @@ export const useCommandPalette = ({ activeSpace, onClose, isOpenedInPopupWindow 
       setSearchQuery('');
     },
     [
+      groupId,
       subCommand,
       searchQuery,
       activeSpace,

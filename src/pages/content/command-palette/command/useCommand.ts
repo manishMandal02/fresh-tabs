@@ -9,6 +9,10 @@ import {
   MagnifyingGlassIcon,
   PlusIcon,
   CheckIcon,
+  Pencil1Icon,
+  BellIcon,
+  GearIcon,
+  CounterClockwiseClockIcon,
 } from '@radix-ui/react-icons';
 
 import { CommandType } from '@root/src/constants/app';
@@ -65,6 +69,7 @@ export const staticCommands: ICommand[] = [
     isFeatured: true,
   },
   { index: 7, type: CommandType.CloseTab, label: 'Close Tab', icon: Cross1Icon, alias: 'Close current tab' },
+  // group cmd
   {
     index: 8,
     type: CommandType.NewGroup,
@@ -79,7 +84,49 @@ export const staticCommands: ICommand[] = [
     label: 'Add to Group',
     icon: LayersIcon,
     alias: 'Move tab to a group',
-    isFeatured: true,
+  },
+  {
+    index: 10,
+    type: CommandType.RenameGroup,
+    label: 'Rename Group',
+    icon: Pencil1Icon,
+    alias: '',
+  },
+  // quick access side panel menu items
+  {
+    index: 11,
+    type: CommandType.OpenSidePanel,
+    label: 'Open FreshTab',
+    icon: LayersIcon,
+    alias: 'open in side pane',
+  },
+  {
+    index: 12,
+    type: CommandType.OpenNotificationsModal,
+    label: 'Show Notifications',
+    icon: BellIcon,
+    alias: 'open in side panel',
+  },
+  {
+    index: 13,
+    type: CommandType.OpenPreferencesModal,
+    label: 'Show Preferences',
+    icon: GearIcon,
+    alias: 'open in side panel',
+  },
+  {
+    index: 14,
+    type: CommandType.OpenSnoozedTabsModal,
+    label: 'Show Snoozed Tabs',
+    icon: ClockIcon,
+    alias: 'open in side panel',
+  },
+  {
+    index: 15,
+    type: CommandType.OpenSpaceHistoryModal,
+    label: 'Show Space History',
+    icon: CounterClockwiseClockIcon,
+    alias: 'open in side panel',
   },
 ];
 

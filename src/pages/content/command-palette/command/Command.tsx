@@ -196,7 +196,7 @@ const Command = ({
             unhighlightClassName="bg-transparent"
           />
         </span>
-        {commandAlias ? (
+        {commandAlias && type !== CommandType.Link ? (
           <Highlighter
             searchWords={[...escapedSearchTerm.split(' ')]}
             textToHighlight={type !== CommandType.WebSearch ? `(${commandAlias})` : commandAlias}
@@ -254,8 +254,6 @@ const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
     // emoji
     return <span className="w-[16px] mr-2.5 h-fit text-start">{Icon}</span>;
   } else if (typeof Icon === 'string') {
-    console.log('🌅 ~ Icon:', Icon);
-
     // favicon
     return (
       <>

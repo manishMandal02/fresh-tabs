@@ -36,6 +36,7 @@ const SUGGESTED_COMMANDS_MAX_HEIGHT = 400;
 type Props = {
   activeSpace: ISpace;
   recentSites: ITab[];
+  groupId: number;
   onClose?: () => void;
   searchFiltersPreference: ISearchFilters;
   userSelectedText?: string;
@@ -52,6 +53,7 @@ const CommandPalette = ({
   activeSpace,
   recentSites,
   onClose,
+  groupId,
   searchFiltersPreference,
   userSelectedText,
   selectedNoteId,
@@ -91,6 +93,7 @@ const CommandPalette = ({
     setSuggestedCommandsForSubCommand,
   } = useCommandPalette({
     activeSpace,
+    groupId,
     isOpenedInPopupWindow,
     onClose: handleClose,
   });
@@ -133,16 +136,15 @@ const CommandPalette = ({
 
   // set default suggested commands
   const setDefaultSuggestedCommands = useCallback(async () => {
-    let filteredStaticCommands = staticCommands;
-
     // filter out featured command
-    filteredStaticCommands = filteredStaticCommands.filter(cmd => !!cmd?.isFeatured);
+    let filteredStaticCommands = staticCommands.filter(cmd => !!cmd?.isFeatured);
 
     const currentGroups = await getAllGroups(activeSpace.id);
 
     if (currentGroups && currentGroups.length < 1) {
       filteredStaticCommands = filteredStaticCommands.filter(cmd => cmd.type !== CommandType.AddToGroup);
     }
+
     filteredStaticCommands = filteredStaticCommands.map((cmd, idx) => ({ ...cmd, index: idx + 1 }));
 
     const recentSitesCommands = recentSites.slice(0, 3).map<ICommand>((site, idx) => ({
@@ -167,8 +169,15 @@ const CommandPalette = ({
 
       const currentGroups = await getAllGroups(activeSpace.id);
       let filteredStaticCommands = staticCommands;
-      if (currentGroups && currentGroups.length < 1) {
-        filteredStaticCommands = staticCommands.filter(cmd => cmd.type !== CommandType.AddToGroup);
+
+      // do not include add to group cmd if no group exists
+      if (!currentGroups || currentGroups.length < 1) {
+        filteredStaticCommands = filteredStaticCommands.filter(cmd => cmd.type !== CommandType.AddToGroup);
+      }
+
+      // do not add rename group cmd if tab not not in a group
+      if (!groupId || groupId < 0) {
+        filteredStaticCommands = filteredStaticCommands.filter(cmd => cmd.type !== CommandType.RenameGroup);
       }
 
       // query static matchedCommands label
@@ -293,28 +302,28 @@ const CommandPalette = ({
       return matchedCommands;
     },
 
-    [activeSpace, searchFilters],
+    [activeSpace, searchFilters, groupId],
   );
 
   let timeoutId: NodeJS.Timeout;
-
+  // TODO - fix - search term is not the latest always, it's a one back sometimes
+  // TODO - fix - ☝️.. also, it mostly shows 1 static command even when it should've matched 2-3 commands (maybe because the static cmd is not enough)
   const debounceGlobalSearch = (searchTerm: string) => {
     clearTimeout(timeoutId);
 
-    timeoutId = setTimeout(() => {
-      console.log('⏳ ~ ~ setTimeout called:', setTimeout);
-      (async () => {
-        // Perform the search request here
-        const commands = await handleGlobalSearch(searchTerm);
+    timeoutId = setTimeout(async () => {
+      // Perform the search request here
+      const commands = await handleGlobalSearch(searchTerm);
 
-        console.log('✅ ~ setTimeout: 306 ~ commands:', commands);
+      console.log('🌅 ~ debounceGlobalSearch:319 ~ searchTerm:', searchTerm);
 
-        setSuggestedCommands(commands);
-        setIsLoadingResults(false);
+      console.log('🌅 ~ debounceGlobalSearch:319 ~ commands:', commands);
 
-        setFocusedCommandIndex(1);
-      })();
-    }, 300);
+      setSuggestedCommands(commands);
+      setIsLoadingResults(false);
+
+      setFocusedCommandIndex(1);
+    }, 350);
   };
 
   // on global search
@@ -337,7 +346,7 @@ const CommandPalette = ({
       setFocusedCommandIndex(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, subCommand, searchFilters]);
+  }, [searchQuery, subCommand, searchFilters, groupId]);
 
   // on search in sub command
   useEffect(() => {

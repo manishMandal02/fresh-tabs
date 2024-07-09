@@ -193,11 +193,15 @@ type MessageEventsSidePanel =
   | 'REMOVE_SPACE'
   | 'ADD_SPACE'
   | 'TABS_DISCARDED'
+  | 'OPEN_MODAL'
   | 'UPDATE_NOTIFICATIONS';
+
+type OpenSidePanelModal = 'notifications' | 'preferences' | 'space-history' | 'snoozed-tabs';
 
 interface IEventPayloadSidePanel {
   spaceId?: string;
   space?: ISpace | ISpaceWithTabs;
+  openSidePanelModal?: OpenSidePanelModal;
   newActiveIndex?: number;
 }
 
@@ -222,6 +226,7 @@ type MessageEventsContentScript =
   | 'NEW_SPACE'
   | 'NEW_GROUP'
   | 'ADD_TO_GROUP'
+  | 'RENAME_GROUP'
   | 'SWITCH_TAB'
   | 'NEW_NOTE'
   | 'EDIT_NOTE'
@@ -254,6 +259,7 @@ interface IEventPayloadContentScript {
   shouldOpenInNewTab?: boolean;
   shouldCloseCurrentTab?: boolean;
   shouldOpenInNewWindow?: boolean;
+  openSidePanelModal?: OpenSidePanelModal;
   notesBubblePos?: NoteBubblePos;
   shouldIgnoreDiscardWhitelist?: boolean;
   searchFilterPreferences?: ISearchFilters;

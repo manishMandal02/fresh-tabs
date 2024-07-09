@@ -40,6 +40,7 @@ type AppendContainerProps = {
   activeSpace: ISpace;
   recentSites?: ITab[];
   selectedText?: string;
+  groupId?: number;
   selectedNoteId?: string;
   searchFilterPreferences?: ISearchFilters;
 };
@@ -47,6 +48,7 @@ type AppendContainerProps = {
 const appendCommandPaletteContainer = ({
   recentSites,
   activeSpace,
+  groupId,
   selectedText,
   selectedNoteId,
   searchFilterPreferences,
@@ -108,6 +110,7 @@ const appendCommandPaletteContainer = ({
               isOpenedInPopupWindow={false}
               recentSites={recentSites || []}
               activeSpace={activeSpace}
+              groupId={groupId}
               onClose={handleCloseCommandPalette}
               userSelectedText={userSelectedText?.trim() || ''}
               selectedNoteId={selectedNoteId}
@@ -288,7 +291,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     }
 
     // list for keyboard events for opening app in side panel
-
     document.body.addEventListener('keydown', async (ev: KeyboardEvent) => {
       if (ev.key === 's' && ev.metaKey) {
         ev.preventDefault();
@@ -308,28 +310,27 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       if (ev.key !== 'Escape') return;
       window.close();
     });
-
-    sendResponse(true);
-    return;
   }
 
-  const { recentSites, activeSpace, snackbarMsg, searchFilterPreferences, notesBubblePos } = event.payload;
+  if (msgEvent === 'SHOW_DOMAIN_NOTES') {
+    const { activeSpace, notesBubblePos } = event.payload;
 
-  console.log('🌅 ~ chrome.runtime.onMessage.addListener ~ msgEvent:', msgEvent);
+    showNotes(activeSpace.id, notesBubblePos);
+  }
 
   if (msgEvent === 'SHOW_COMMAND_PALETTE') {
+    const { activeSpace, recentSites, searchFilterPreferences, groupId } = event.payload;
     appendCommandPaletteContainer({
+      groupId,
       recentSites,
       activeSpace,
       searchFilterPreferences,
     });
   }
 
-  if (msgEvent === 'SHOW_DOMAIN_NOTES') {
-    showNotes(activeSpace.id, notesBubblePos);
-  }
-
   if (msgEvent === 'SHOW_SNACKBAR') {
+    const { activeSpace, snackbarMsg, notesBubblePos } = event.payload;
+
     handleShowSnackbar(snackbarMsg);
     if (snackbarMsg.toLowerCase().startsWith('note')) {
       showNotes(activeSpace.id, notesBubblePos, true);

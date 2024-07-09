@@ -4,12 +4,11 @@ import { BellIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons';
 
 import { Notes } from '../../notes';
 import SpaceTitle from './SpaceTitle';
-import SnoozedTabs from './SnoozedTabs';
 import MoreOptions from '../more-options';
 import ActiveSpaceTabs from './ActiveSpaceTabs';
-import SpaceHistory from '../history/SpaceHistory';
-import Tabs from '../../../../../../components/tabs/Tabs';
+import { cn, getUrlDomain } from '@root/src/utils';
 import { ISpace } from '@root/src/types/global.types';
+import Tabs from '../../../../../../components/tabs/Tabs';
 import { syncTabs } from '@root/src/services/chrome-tabs/tabs';
 import { updateSpace } from '@root/src/services/chrome-storage/spaces';
 import {
@@ -18,11 +17,12 @@ import {
   appSettingsAtom,
   deleteSpaceModalAtom,
   selectedTabsAtom,
+  showSnoozedTabsModalAtom,
+  showSpaceHistoryModalAtom,
   snackbarAtom,
   updateSpaceAtom,
   userNotificationsAtom,
 } from '@root/src/stores/app';
-import { cn, getUrlDomain } from '@root/src/utils';
 
 type Props = {
   space: ISpace;
@@ -38,6 +38,8 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
   const userNotifications = useAtomValue(userNotificationsAtom);
   const setSnackbar = useSetAtom(snackbarAtom);
   const setDeleteSpaceModal = useSetAtom(deleteSpaceModalAtom);
+  const setShowSpaceHistoryModal = useSetAtom(showSpaceHistoryModalAtom);
+  const setShowSnoozedTabsModal = useSetAtom(showSnoozedTabsModalAtom);
 
   const updateSpaceState = useSetAtom(updateSpaceAtom);
   const setActSpaceTabs = useSetAtom(activeSpaceTabsAtom);
@@ -45,8 +47,6 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
   const setSelectedTabs = useSetAtom(selectedTabsAtom);
 
   // local state
-  const [showSpaceHistory, setShowSpaceHistory] = useState(false);
-  const [showSnoozedTabs, setShowSnoozedTabs] = useState(false);
   const [selectedNavTab, setSelectedNavTab] = useState(1);
   const [notesSearchQuery, setNotesSearchQuery] = useState('');
 
@@ -109,8 +109,8 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
             isSpaceActive={true}
             onSyncClick={handleSyncTabs}
             onDeleteClick={() => setDeleteSpaceModal({ show: true, spaceId: space.id })}
-            onHistoryClick={() => setShowSpaceHistory(true)}
-            onSnoozedTabsClick={() => setShowSnoozedTabs(true)}
+            onHistoryClick={() => setShowSpaceHistoryModal(true)}
+            onSnoozedTabsClick={() => setShowSnoozedTabsModal(true)}
           />
         </div>
       </div>
@@ -119,7 +119,7 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
       <div
         id="active-space-scrollable-container"
         className="relative max-h-[90%]  cc-scrollbar min-h-fit overflow-x-hidden overflow-y-auto border-b border-brand-darkBgAccent/20 pb-1">
-        {!appSettings.isNotesDisabled ? (
+        {!appSettings?.notes.isDisabled ? (
           <Tabs
             tabs={[`Tabs`, 'Notes']}
             defaultTab={selectedNavTab}
@@ -132,11 +132,6 @@ const ActiveSpace = ({ space, onSearchClick, onNotificationClick }: Props) => {
           <ActiveSpaceTabs space={space} onTabNotesClick={handleTabNotesClick} />
         )}
       </div>
-
-      {/* space history modal */}
-      <SpaceHistory show={showSpaceHistory} onClose={() => setShowSpaceHistory(false)} />
-      {/* snoozed tabs modal */}
-      <SnoozedTabs show={showSnoozedTabs} onClose={() => setShowSnoozedTabs(false)} />
     </div>
   ) : null;
 };

@@ -5,22 +5,28 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import { useState, useEffect, useCallback, useRef } from 'react';
 
+import { isChromeUrl } from '@root/src/utils';
 import Spinner from '../../components/spinner';
 import Snackbar from '../../components/snackbar';
 import Footer from './components/features/footer';
+import Auth from './components/features/user/auth';
 import { useSidePanel } from './hooks/useSidePanel';
 import Settings from './components/features/settings/Settings';
 import { showCommandPaletteContentScript } from '../background';
 import UserAccount from './components/features/user/UserAccount';
 import { IMessageEventSidePanel } from '../../types/global.types';
 import { getCurrentTab } from '@root/src/services/chrome-tabs/tabs';
+import { SnoozedTabs } from './components/features/space/active-space';
+import { getAllNotes } from '@root/src/services/chrome-storage/notes';
 import Notification from './components/features/notification/Notification';
+import SpaceHistory from './components/features/space/history/SpaceHistory';
 import AddNewNote from './components/features/notes/notes-modal/NotesModal';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 import ErrorBoundaryUI from '../../components/error-boundary/ErrorBoundaryUI';
 import DeleteSpaceModal from './components/features/space/delete/DeleteSpaceModal';
 import { ActiveSpace, CreateSpace, UpdateSpace } from './components/features/space';
 import { TAB_HEIGHT } from './components/features/space/active-space/ActiveSpaceTabs';
+import { getAllNotifications } from '@root/src/services/chrome-storage/user-notifications';
 import {
   appSettingsAtom,
   dragStateAtom,
@@ -31,10 +37,6 @@ import {
   notesAtom,
   userAtom,
 } from '@root/src/stores/app';
-import { getAllNotifications } from '@root/src/services/chrome-storage/user-notifications';
-import { getAllNotes } from '@root/src/services/chrome-storage/notes';
-import { isChromeUrl } from '@root/src/utils';
-import Auth from './components/features/user/auth';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -213,6 +215,11 @@ const SidePanel = () => {
                   </DragDropContext>
                 )}
               </div>
+
+              {/* space history modal */}
+              <SpaceHistory />
+              {/* snoozed tabs modal */}
+              <SnoozedTabs />
 
               {/* Edit/view space modal */}
               <UpdateSpace />

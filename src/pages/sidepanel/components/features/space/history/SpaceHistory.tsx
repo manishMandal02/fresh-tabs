@@ -1,10 +1,10 @@
-import { useAtomValue } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { motion } from 'framer-motion';
 import { useState, useEffect, useRef, memo } from 'react';
 
 import { Tab } from '../tab';
 import { SlideModal } from '../../../../../../components/modal';
-import { getActiveSpaceIdAtom } from '@root/src/stores/app';
+import { getActiveSpaceIdAtom, showSpaceHistoryModalAtom } from '@root/src/stores/app';
 import Accordion from '../../../../../../components/accordion/Accordion';
 import { ISiteVisit } from '@root/src/types/global.types';
 import { getTime } from '@root/src/utils/date-time/get-time';
@@ -66,12 +66,11 @@ const mapVisitsByDays = (siteVisits: ISiteVisit[]) => {
 };
 
 // * component
-type Props = { show: boolean; onClose: () => void };
 
-const SpaceHistory = ({ show, onClose }: Props) => {
+const SpaceHistory = () => {
   // global state
-  // active space id
   const spaceId = useAtomValue(getActiveSpaceIdAtom);
+  const [showSpaceHistoryModal, setShowSpaceHistoryModal] = useAtom(showSpaceHistoryModalAtom);
 
   const [spaceHistory, setSpaceHistory] = useState<Sessions[]>([]);
 
@@ -82,7 +81,7 @@ const SpaceHistory = ({ show, onClose }: Props) => {
 
   // init component
   useEffect(() => {
-    if (!spaceId || !show) return;
+    if (!showSpaceHistoryModal) return;
     (async () => {
       const fullHistory = await getSpaceHistory(spaceId, true);
       const todayHistory = await getSpaceHistory(spaceId);
@@ -92,7 +91,7 @@ const SpaceHistory = ({ show, onClose }: Props) => {
       const sessionsByDate = mapVisitsByDays(combinedHistory);
       setSpaceHistory(sessionsByDate);
     })();
-  }, [spaceId, show]);
+  }, [showSpaceHistoryModal, spaceId]);
 
   // check if date heading is hidden whiles scrolling
   const handleContainerScroll = ev => {
@@ -123,10 +122,14 @@ const SpaceHistory = ({ show, onClose }: Props) => {
     };
   });
 
+  const handleClose = () => {
+    setShowSpaceHistoryModal(false);
+  };
+
   const { bounce } = useCustomAnimation();
 
-  return show ? (
-    <SlideModal isOpen={show} onClose={onClose} title={'History'}>
+  return showSpaceHistoryModal ? (
+    <SlideModal isOpen={showSpaceHistoryModal} onClose={handleClose} title={'History'}>
       <div id="space-history-container" className="max-h-[95%] cc-scrollbar min-h-fit overflow-x-hidden py-2">
         {/* date info while scrolling */}
         {floatingDate ? (

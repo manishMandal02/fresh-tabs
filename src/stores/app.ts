@@ -112,6 +112,12 @@ export const snackbarAtom = atom<SnackbarAtom>({
 // settings modal
 export const showSettingsModalAtom = atom(false);
 
+// space history modal
+export const showSpaceHistoryModalAtom = atom(false);
+
+// snoozed tabs modal
+export const showSnoozedTabsModalAtom = atom(false);
+
 // notification
 export const showNotificationModalAtom = atom(false);
 

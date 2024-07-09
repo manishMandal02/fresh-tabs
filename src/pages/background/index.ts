@@ -143,14 +143,6 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - new commands to add
-//-- rename groups if command palette within a group
-//-- open side panel
-//-- open preferences/settings modal
-//-- open space history
-//-- open snoozed tabs modal
-//-- open notifications
-
 // TODO - save tab's favicon url with tab data
 
 //! ----
@@ -475,6 +467,10 @@ export const showCommandPaletteContentScript = async (
 
   const preferences = await getAppSettings();
 
+  const currentTab = await chrome.tabs.get(tabId);
+
+  const tabGroupId = currentTab?.groupId || 0;
+
   // send msg/event to content script to open command palette
   await retryAtIntervals({
     interval: 500,
@@ -485,6 +481,7 @@ export const showCommandPaletteContentScript = async (
         payload: {
           activeSpace,
           recentSites,
+          groupId: tabGroupId,
           searchFilterPreferences: {
             searchBookmarks: preferences.cmdPalette.includeBookmarksInSearch,
             searchNotes: preferences.cmdPalette.includeNotesInSearch,
@@ -685,6 +682,14 @@ chrome.runtime.onMessage.addListener(
         return true;
       }
 
+      case 'RENAME_GROUP': {
+        const { groupId, groupName } = payload;
+
+        await chrome.tabGroups.update(groupId, { title: groupName });
+
+        return true;
+      }
+
       case 'GO_TO_URL': {
         const { url, shouldOpenInNewTab, isOpenedInPopupWindow, activeSpace } = payload;
 
@@ -740,7 +745,27 @@ chrome.runtime.onMessage.addListener(
 
         await chrome.sidePanel.open({ windowId });
 
-        await chrome.windows.update(windowId, { focused: true });
+        if (payload?.isOpenedInPopupWindow) {
+          await chrome.windows.update(windowId, { focused: true });
+        }
+
+        if (payload?.openSidePanelModal) {
+          setTimeout(async () => {
+            // retry until side panel loaded
+            await retryAtIntervals({
+              retries: 3,
+              interval: 250,
+              callback: async () => {
+                // open modal based on command selected
+                return await publishEvents({
+                  id: generateId(),
+                  event: 'OPEN_MODAL',
+                  payload: { openSidePanelModal: payload.openSidePanelModal },
+                });
+              },
+            });
+          }, 250);
+        }
 
         return true;
       }

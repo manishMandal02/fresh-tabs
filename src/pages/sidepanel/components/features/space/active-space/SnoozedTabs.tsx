@@ -1,4 +1,4 @@
-import { useAtomValue } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { motion } from 'framer-motion';
 import { GlobeIcon, TrashIcon } from '@radix-ui/react-icons';
 import { useState, useEffect, memo, ReactEventHandler } from 'react';
@@ -15,7 +15,7 @@ import {
   getSnoozedTabs,
   removeSnoozedTab,
 } from '@root/src/services/chrome-storage/snooze-tabs';
-import { getActiveSpaceIdAtom } from '@root/src/stores/app';
+import { getActiveSpaceIdAtom, showSnoozedTabsModalAtom } from '@root/src/stores/app';
 
 const createFilterOptions = async () => {
   const allSpaces = await getAllSpaces();
@@ -24,15 +24,10 @@ const createFilterOptions = async () => {
   return [{ label: 'All', value: 'all' }, ...filters];
 };
 
-type Props = {
-  show: boolean;
-  onClose: () => void;
-};
-
-const SnoozedTabs = ({ show, onClose }: Props) => {
+const SnoozedTabs = () => {
   // global state
-  // active space id
   const spaceId = useAtomValue(getActiveSpaceIdAtom);
+  const [showSnoozedTabsModal, setShowSnoozedTabsModal] = useAtom(showSnoozedTabsModalAtom);
 
   const [snoozedTabs, setSnoozedTabs] = useState<ISnoozedTab[]>([]);
 
@@ -42,7 +37,7 @@ const SnoozedTabs = ({ show, onClose }: Props) => {
 
   // init component
   useEffect(() => {
-    if (!show || !spaceId) return;
+    if (!showSnoozedTabsModal || !spaceId) return;
     (async () => {
       // create filter options
       const filters = await createFilterOptions();
@@ -60,7 +55,7 @@ const SnoozedTabs = ({ show, onClose }: Props) => {
     })();
     // run on initial mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [show]);
+  }, [showSnoozedTabsModal, spaceId]);
 
   useEffect(() => {
     if (!selectedFilter?.value) return;
@@ -82,6 +77,10 @@ const SnoozedTabs = ({ show, onClose }: Props) => {
     await removeSnoozedTab(spaceId, snoozedAt);
   };
 
+  const handleCloseModal = () => {
+    setShowSnoozedTabsModal(false);
+  };
+
   const { bounce } = useCustomAnimation();
 
   // handle fallback image for favicon icons
@@ -91,8 +90,8 @@ const SnoozedTabs = ({ show, onClose }: Props) => {
     (ev.currentTarget.nextElementSibling as SVGAElement).style.display = 'block';
   };
 
-  return (
-    <SlideModal isOpen={show} onClose={onClose} title={`Snoozed Tabs`}>
+  return showSnoozedTabsModal ? (
+    <SlideModal isOpen={showSnoozedTabsModal} onClose={handleCloseModal} title={`Snoozed Tabs`}>
       <div className="px-1.5 py-1.5 min-h-[50vh] h-fit ">
         {/* filter options */}
         <div className="px-px py-1 w-full flex flex-wrap justify-center gap-x-1.5 gap-y-1 mb-2 select-none overflow-x-hidden overflow-y-auto h-fit max-h-[50px] cc-scrollbar rounded-md border border-brand-darkBgAccent/25">
@@ -165,6 +164,8 @@ const SnoozedTabs = ({ show, onClose }: Props) => {
         ) : null}
       </div>
     </SlideModal>
+  ) : (
+    <></>
   );
 };
 
