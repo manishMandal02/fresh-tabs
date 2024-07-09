@@ -17,8 +17,8 @@ import { cn } from '@root/src/utils/cn';
 import { isValidURL } from '@root/src/utils/url';
 import { useFrame } from 'react-frame-component';
 import { COMMAND_HEIGHT } from '../CommandPalette';
-import { RadixIconType } from '@root/src/types/global.types';
 import { CommandType } from '@root/src/constants/app';
+import { RadixIconType } from '@root/src/types/global.types';
 import { useMetaKeyPressed } from '@root/src/pages/sidepanel/hooks/use-key-shortcuts';
 
 type CommandIcon = RadixIconType | string;
@@ -38,15 +38,15 @@ type Props = {
 };
 
 const Command = ({
-  index,
-  label,
   Icon,
-  isFocused,
   type,
-  searchTerm,
-  onClick,
+  label,
+  index,
   alias,
+  onClick,
   metadata,
+  isFocused,
+  searchTerm,
   isSubCommand,
   isStaticCommand,
 }: Props) => {

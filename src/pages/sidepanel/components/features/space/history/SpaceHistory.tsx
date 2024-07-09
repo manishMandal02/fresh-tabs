@@ -202,7 +202,7 @@ const SpaceHistory = () => {
                                 hideIcon
                                 showVisitTime={getTime(v.timestamp)}
                                 showURL
-                                tabData={{ url: v.url, title: v.title, id: 0, index: 0 }}
+                                tabData={{ url: v.url, title: v.title, id: 0, index: 0, faviconUrl: '' }}
                                 isSpaceActive={false}
                                 showHoverOption={true}
                                 showDeleteOption={false}

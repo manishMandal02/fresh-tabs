@@ -75,6 +75,7 @@ const Tab = ({
         {!hideIcon ? (
           <>
             <SiteIcon
+              faviconUrl={tabData.faviconUrl}
               siteURl={tabData.url}
               classes={cn(
                 'size-[17px] max-w-[17px] z-10 border-none',

@@ -591,6 +591,7 @@ const ActiveSpaceTabs = ({ space, onTabNotesClick }: Props) => {
               <></>
             ) : (
               <SiteIcon
+                faviconUrl={(item?.data as ITab).faviconUrl}
                 siteURl={(item?.data as ITab).url}
                 classes={cn('size-[17px] max-w-[17px] z-10 border-none', {
                   grayscale: isTabDiscarded(item.data.id, (item.data as ITab)?.url),

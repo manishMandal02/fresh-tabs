@@ -1,4 +1,3 @@
-import { getFaviconURL } from '@root/src/utils/url';
 import { parseUrl } from '@root/src/utils/url/parse-url';
 import { IGroup, ISpace, ITab } from '@root/src/types/global.types';
 import { getTabToUnSnooze } from '../chrome-storage/snooze-tabs';
@@ -32,7 +31,7 @@ export const createDiscardedTabs = async (tabs: ITab[], windowId?: number, shoul
       <!DOCTYPE html>
       <html>
       <head>
-      <link rel="icon" href="${getFaviconURL(parseUrl(tab.url))}">
+      <link rel="icon" href="${tab.faviconUrl}">
       <title>${tab.title}</title>
       <link href="//{[${tab.url}]}//">
       </head>
@@ -138,6 +137,7 @@ export const openSpace = async ({ space, tabs, onNewWindowCreated, shouldOpenInN
   const activeTab: ITab = {
     url: tabs[activeTabIndex]?.url || 'chrome://newtab',
     title: tabs[activeTabIndex]?.title || 'New Tab',
+    faviconUrl: tabs[activeTabIndex]?.faviconUrl || '',
     id: 0,
     index: activeTabIndex,
   };
@@ -270,6 +270,7 @@ export const getCurrentTab = async (windowId = 0): Promise<ITab> => {
   return {
     id: currentTab.id,
     title: currentTab.title,
+    faviconUrl: currentTab.favIconUrl,
     url: currentTab.url,
     index: currentTab.index,
     groupId: currentTab.groupId,
@@ -371,6 +372,7 @@ export const syncTabs = async (
       title: t.title,
       url: parseUrl(t.url) || parseUrl(t.pendingUrl),
       id: t.id,
+      faviconUrl: t.favIconUrl,
       index: t.index,
       groupId: t.groupId,
     }));

@@ -91,21 +91,6 @@ interface UnSnoozedTabNotification {
 
 export type INotification = AccountNotification | NoteRemainderNotification | UnSnoozedTabNotification;
 
-export interface ITab {
-  id: number;
-  url: string;
-  title: string;
-  index: number;
-  groupId?: number;
-}
-
-export interface IGroup {
-  id: number;
-  name: string;
-  collapsed: boolean;
-  theme: chrome.tabGroups.ColorEnum;
-}
-
 export interface ISpace {
   id: string;
   isSaved: boolean;
@@ -114,6 +99,21 @@ export interface ISpace {
   windowId: number;
   theme: ThemeColor;
   activeTabIndex: number;
+}
+export interface ITab {
+  id: number;
+  url: string;
+  title: string;
+  index: number;
+  faviconUrl: string;
+  groupId?: number;
+}
+
+export interface IGroup {
+  id: number;
+  name: string;
+  collapsed: boolean;
+  theme: chrome.tabGroups.ColorEnum;
 }
 
 export interface INote {

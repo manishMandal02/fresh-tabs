@@ -27,7 +27,7 @@ import { removeGroup, updateGroup } from '@root/src/services/chrome-storage/grou
 import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
 import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
-import { getFaviconURL, getFaviconURLAsync, isChromeUrl, parseUrl } from '../../utils/url';
+import { getFaviconURLAsync, isChromeUrl, parseUrl } from '../../utils/url';
 import { addSnoozedTab, getTabToUnSnooze } from '@root/src/services/chrome-storage/snooze-tabs';
 import { handleMergeDailySpaceTimeChunksAlarm } from './handler/alarm/mergeDailySpaceTimeChunks';
 import { getSpaceHistory, setSpaceHistory } from '@root/src/services/chrome-storage/space-history';
@@ -179,6 +179,7 @@ const createUnsavedSpacesOnInstall = async () => {
       const tabs: ITab[] = tabsInWindow.map(tab => ({
         id: tab.id,
         title: tab.title,
+        faviconUrl: tab.favIconUrl,
         url: parseUrl(tab.url),
         index: tab.index,
         groupId: tab.groupId,
@@ -430,8 +431,8 @@ export const showCommandPaletteContentScript = async (
       type: 'popup',
       state: 'normal',
       url: chrome.runtime.getURL(`src/pages/command-palette-popup/index.html?windowId=${currentWindow.id}`),
-      width: 740,
-      height: 528,
+      width: 730,
+      height: 460,
       top: popupOffsetTop,
       left: popupOffsetLeft,
     });
@@ -842,7 +843,7 @@ chrome.runtime.onMessage.addListener(
 
           if (bookmarks?.length > 0) {
             bookmarks.forEach(async (item, idx) => {
-              if (!item.url) return;
+              if (!item) return;
               const icon = await getFaviconURLAsync(item.url);
 
               matchedCommands.push({
@@ -1600,10 +1601,10 @@ chrome.windows.onCreated.addListener(window => {
     if (window?.tabs?.length > 0) {
       tabs = window.tabs.map(t => ({
         url: t.url,
-        faviconUrl: getFaviconURL(t.url),
         id: t.id,
         title: t.title,
         index: t.index,
+        faviconUrl: t.favIconUrl,
       }));
     } else {
       // if tabs not found, then query for tabs in this window
@@ -1612,10 +1613,10 @@ chrome.windows.onCreated.addListener(window => {
       if (queriedTabs?.length < 1) return;
       tabs = queriedTabs.map(t => ({
         url: t.url,
-        faviconUrl: getFaviconURL(t.url),
         id: t.id,
         title: t.title,
         index: t.index,
+        faviconUrl: t.favIconUrl,
       }));
     }
 

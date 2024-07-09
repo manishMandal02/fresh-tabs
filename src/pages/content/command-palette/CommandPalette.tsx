@@ -9,18 +9,18 @@ import KBD from '@root/src/components/kbd/KBD';
 import { getFaviconURL } from '../../../utils/url';
 import { CommandType } from '@root/src/constants/app';
 import CommandDivider from './command/CommandDivider';
-import { DEFAULT_SEARCH_PLACEHOLDER, useCommandPalette } from './useCommandPalette';
 import { getTime } from '@root/src/utils/date-time/get-time';
 import { publishEvents } from '../../../utils/publish-events';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
 import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
+import { getAllGroups } from '@root/src/services/chrome-storage/groups';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { useCustomAnimation } from '../../sidepanel/hooks/useCustomAnimation';
+import { DEFAULT_SEARCH_PLACEHOLDER, useCommandPalette } from './useCommandPalette';
 import { staticCommands, useCommand, webSearchCommand } from './command/useCommand';
 import { ICommand, ISearchFilters, ISpace, ITab } from '../../../types/global.types';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
-import { getAllGroups } from '@root/src/services/chrome-storage/groups';
 
 export const COMMAND_PALETTE_SIZE = {
   HEIGHT: 500,
@@ -205,7 +205,7 @@ const CommandPalette = ({
                 index: matchedCommands.length + 1,
                 type: CommandType.SwitchTab,
                 label: tab.title,
-                icon: getFaviconURL(tab.url),
+                icon: tab.faviconUrl,
                 metadata: tab.id,
                 alias: 'Opened tabs',
               });
@@ -219,7 +219,7 @@ const CommandPalette = ({
                 index: matchedCommands.length + 1,
                 type: CommandType.SwitchTab,
                 label: tab.title,
-                icon: getFaviconURL(tab.url),
+                icon: tab.faviconUrl,
                 metadata: tab.id,
                 alias: 'Opened tabs',
               });

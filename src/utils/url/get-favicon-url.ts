@@ -1,19 +1,22 @@
 import { isChromeUrl } from './check-chrome-url';
 import { parseUrl } from './parse-url';
+import { isValidURL } from './validate-url';
 
-const createChromeFaviconURL = (url: URL) => `${chrome.runtime.getURL('/_favicon/')}?pageUrl=${url.origin}/&size=32`;
+const createChromeFaviconURL = (url: URL | string) =>
+  `${chrome.runtime.getURL('/_favicon/')}?pageUrl=${typeof url === 'string' ? url : url.origin}/&size=32`;
 
 export const getFaviconURL = (siteUrl: string, size = 32) => {
+  if (isChromeUrl(siteUrl) || !isValidURL(siteUrl)) return createChromeFaviconURL(new URL(siteUrl));
+
   const parsedUrl = parseUrl(siteUrl);
 
   const url = new URL(parsedUrl) || new URL(siteUrl) || new URL('https://freshinbox.com');
-
-  if (!url.hostname || isChromeUrl(parsedUrl)) return createChromeFaviconURL(url);
 
   return `https://www.google.com/s2/favicons?domain=https://${url.hostname}/${url.pathname.split('/')[1]}&sz=${size}`;
 };
 
 export const getAlternativeFaviconUrl = (siteUrl: string, size = 32) => {
+  if (isChromeUrl(siteUrl) || !isValidURL(siteUrl)) return createChromeFaviconURL(new URL(siteUrl));
   const parsedUrl = parseUrl(siteUrl);
 
   const url = new URL(parsedUrl);
@@ -24,17 +27,21 @@ export const getAlternativeFaviconUrl = (siteUrl: string, size = 32) => {
 
 // validates favicon urls and returns an alternate src url if google favicon url is not correct
 export const getFaviconURLAsync = async (siteUrl: string, size = 32) => {
+  if (!siteUrl) return siteUrl;
+
+  if (isChromeUrl(siteUrl) || !isValidURL(siteUrl)) return createChromeFaviconURL(new URL(siteUrl) || siteUrl);
+
   const parsedUrl = parseUrl(siteUrl);
 
   const url = new URL(parsedUrl) || new URL(siteUrl);
-
-  if (!url.hostname || isChromeUrl(parsedUrl)) return createChromeFaviconURL(url);
 
   const googleFaviconURL = `https://www.google.com/s2/favicons?domain=${url.hostname}/${
     url.pathname.split('/')[1]
   }&sz=${size}`;
 
   const res = await fetch(googleFaviconURL);
+
+  console.log('🚨 ~ getFaviconURLAsync ~ res:', res);
 
   if (res.ok) {
     return googleFaviconURL;

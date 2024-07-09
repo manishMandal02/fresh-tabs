@@ -5,6 +5,8 @@ import CommandPalette from '../content/command-palette';
 import { ISearchFilters, ISpace } from '@root/src/types/global.types';
 import { getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
+import { ErrorBoundary } from 'react-error-boundary';
+import ErrorBoundaryUI from '@root/src/components/error-boundary/ErrorBoundaryUI';
 
 const CommandPalettePopup = () => {
   const [commandPaletteProps, setCommandPaletteProps] = useState<{
@@ -64,20 +66,22 @@ const CommandPalettePopup = () => {
 
   return (
     <div className="relative h-full w-full bg-slate-900 overflow-hidden">
-      <div className="mt-6">
-        {commandPaletteProps?.activeSpace?.id ? (
-          <CommandPalette
-            groupId={commandPaletteProps.groupId}
-            isOpenedInPopupWindow={true}
-            onClose={onCloseCommandPalette}
-            recentSites={[]}
-            activeSpace={commandPaletteProps.activeSpace}
-            searchFiltersPreference={commandPaletteProps.searchFilterPreferences}
-          />
-        ) : (
-          <div className="text-[18px] text-center">.</div>
-        )}
-      </div>
+      <ErrorBoundary FallbackComponent={ErrorBoundaryUI}>
+        <div className="mt-6">
+          {commandPaletteProps?.activeSpace?.id ? (
+            <CommandPalette
+              groupId={commandPaletteProps.groupId}
+              isOpenedInPopupWindow={true}
+              onClose={onCloseCommandPalette}
+              recentSites={[]}
+              activeSpace={commandPaletteProps.activeSpace}
+              searchFiltersPreference={commandPaletteProps.searchFilterPreferences}
+            />
+          ) : (
+            <div className="text-[18px] text-center">.</div>
+          )}
+        </div>
+      </ErrorBoundary>
     </div>
   );
 };

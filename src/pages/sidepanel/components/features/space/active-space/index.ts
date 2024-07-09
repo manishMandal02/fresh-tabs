@@ -9,5 +9,3 @@ export { default as DraggingOverNudge } from './DraggingOverNudge';
 export { default as SnoozedTabs } from './SnoozedTabs';
 
 export { default as SpaceTitle } from './SpaceTitle';
-
-export { default as TabDraggedOutsideActiveSpace } from './TabDraggedOutsideActiveSpace';
