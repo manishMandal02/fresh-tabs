@@ -26,8 +26,6 @@ const Notes = ({ space, notesSearchQuery }: Props) => {
 
   // init component
   useEffect(() => {
-    console.log('💰 ~ Notes:29 ~ useEffect ~ allNotes:', allNotes);
-
     setNotes(allNotes);
   }, [allNotes]);
 

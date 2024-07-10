@@ -37,12 +37,10 @@ export const getRecentlyVisitedSites = async (maxResults = 3): Promise<ITab[]> =
     while (sites.length < maxResults) {
       sites = await getSitesFromHistory(Math.ceil((maxResults * i) / 2));
 
-      console.log('🚀 ~ getRecentlyVisitedSites ~ sites:', sites);
-
       i++;
     }
 
-    return sites.map<ITab>(site => ({ url: site.url, title: site.title, id: 0, index: 0 }));
+    return sites.map<ITab>(site => ({ url: site.url, title: site.title, faviconUrl: '', id: 0, index: 0 }));
   } catch (error) {
     logger.error({
       error,

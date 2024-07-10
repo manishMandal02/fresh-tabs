@@ -75,7 +75,7 @@ const SidePanel = () => {
   useEffect(() => {
     setIsLoadingSpaces(true);
     (async () => {
-      // TODO - temp
+      // TODO - temp - no auth check
       // check if user authed or not
       // const user = await getUser();
 

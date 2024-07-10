@@ -15,8 +15,6 @@ export const naturalLanguageToDate = (dateString: string) => {
 export const parseStringForDateTimeHint = (note: string) => {
   const parsedData = parse(note.replace(' @ ', ' at '), { instant: new Date() }, { forwardDate: true });
 
-  // console.log('⌛️ ~ parseStringForDateTimeHint ~ parsedData:', parsedData);
-
   if (!parsedData || parsedData.length < 1) return null;
 
   const lastOccurrence = parsedData.pop();

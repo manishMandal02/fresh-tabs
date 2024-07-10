@@ -26,7 +26,7 @@ type Props = {
 };
 
 const NonActiveSpace = ({ space, isDraggedOver, totalSpaces }: Props) => {
-  console.log('🚀 ~ NonActiveSpace ~ 🔁 rendered');
+  console.log('NonActiveSpace ~ 🔁 rendered');
 
   // global state/atom
   const activeSpace = useAtomValue(activeSpaceAtom);

@@ -143,9 +143,19 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - save tab's favicon url with tab data
+// TODO - improvement - search
+// 1. limit number res cmd
+// 2. get the limit num from content script
 
-//! ----
+// TODO - improve fix link preview
+// 1. some link not opening + (error: extension context invalidated error)
+// 2. some link opening, my personal site links with no-referrer not opening
+
+// TODO - improve - add cmd palette preference option to remove cmd
+
+// TODO - complete auth UI and logic for FE
+
+//!------
 
 // TODO - improvement - paginating larger data sets like notes for better performance and
 //+ query data when searched or for domain notes
@@ -421,7 +431,7 @@ export const showCommandPaletteContentScript = async (
     }
 
     // open command palette in new popup window
-    const currentWindow = await chrome.windows.getCurrent();
+    const currentWindow = await chrome.windows.get(windowId);
 
     const popupOffsetTop = Math.ceil(currentWindow.height + currentWindow.top) / 4;
     const popupOffsetLeft = Math.ceil(currentWindow.width / 4 + currentWindow.left);
@@ -431,7 +441,7 @@ export const showCommandPaletteContentScript = async (
       type: 'popup',
       state: 'normal',
       url: chrome.runtime.getURL(`src/pages/command-palette-popup/index.html?windowId=${currentWindow.id}`),
-      width: 730,
+      width: 700,
       height: 460,
       top: popupOffsetTop,
       left: popupOffsetLeft,
@@ -654,11 +664,7 @@ chrome.runtime.onMessage.addListener(
       case 'NEW_GROUP': {
         const { groupName, isOpenedInPopupWindow, activeSpace } = payload;
 
-        console.log('🚨 ~ event:NEW_GROUP ~ payload:', payload);
-
         const tab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
-
-        console.log('🚀 ~ tab:', tab);
 
         const newGroupId = await chrome.tabs.group({
           tabIds: tab.id,
@@ -1044,8 +1050,6 @@ chrome.runtime.onMessage.addListener(
         //  save popup window id to storage TEMP_..
         await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW', value: `${space.id}-${window.id}` });
 
-        console.log('🌅 ~  window?.tabs:', window?.tabs);
-
         return true;
       }
 
@@ -1133,12 +1137,8 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
     if (popupWindow) {
       const spaceId = popupWindow.split('-')[0];
 
-      console.log('🚨 ~ chrome.commands.onCommand.addListener ~ spaceId:', spaceId);
-
       const windowId = Number(popupWindow.split('-')[1]);
       const space = await getSpace(spaceId);
-
-      console.log('🚨 ~ chrome.commands.onCommand.addListener ~ space:', space);
 
       await chrome.windows.remove(windowId);
       await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW', value: '' });
@@ -1152,7 +1152,20 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
     if (popupWindow || !tab?.id) {
       const [activeTab] = await chrome.tabs.query({ currentWindow: true, active: true });
-      currentTab = activeTab;
+
+      if (!activeTab) {
+        const window = await chrome.windows.getLastFocused({ populate: true });
+
+        currentTab = window.tabs.find(t => t.active);
+
+        if (!currentTab) {
+          const [otherActiveTab] = await chrome.tabs.query({ active: true });
+
+          currentTab = otherActiveTab;
+        }
+      } else {
+        currentTab = activeTab;
+      }
     }
 
     //* new tab to right shortcut

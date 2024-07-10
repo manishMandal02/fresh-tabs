@@ -120,8 +120,6 @@ export const removeTabFromSpace = async (
 
     const updatedTabs = tabs.filter(t => t.id !== tabToDelete.id);
 
-    console.log('🚀 ~ updatedTabs:', updatedTabs);
-
     // save new tab arrays to storage
     await setTabsForSpace(space.id, updatedTabs);
 

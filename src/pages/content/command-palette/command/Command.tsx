@@ -70,7 +70,7 @@ const Command = ({
   // }
 
   const CommandTypeIcon: FC<{ classes: string }> = ({ classes }) => {
-    if ((isStaticCommand && type !== CommandType.DiscardTabs) || isSubCommand) return undefined;
+    if ((isStaticCommand && type !== CommandType.DiscardTabs) || isSubCommand) return <></>;
 
     switch (type) {
       case CommandType.SwitchTab: {
@@ -153,7 +153,7 @@ const Command = ({
         );
       }
       default: {
-        return undefined;
+        return <></>;
       }
     }
   };
@@ -221,7 +221,7 @@ const Command = ({
       ) : null}
 
       {/* command type label/sticker */}
-      {typeof CommandTypeIcon({ classes: '' }) !== 'undefined' && !isSubCommand && isFocused ? (
+      {isStaticCommand && type === CommandType.DiscardTabs && !isStaticCommand && !isSubCommand && isFocused ? (
         <div className="flex items-center absolute right-2.5 top-1 bg-brand-darkBg/95 rounded-[5px] text-[10px] font-medium text-slate-400 px-2.5 py-2 capitalize select-none">
           <CommandTypeIcon classes="ml-1 text-slate-400/80 scale-[0.9]" />
         </div>
@@ -241,7 +241,11 @@ type CommandIconProps = {
 
 // TODO - fix - some icon appear too small
 const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
-  if (type === CommandType.Note) Icon = FileTextIcon;
+  let CmdIcon = Icon;
+
+  if (!Icon) CmdIcon = GlobeIcon;
+
+  if (type === CommandType.Note) CmdIcon = FileTextIcon;
 
   // handle fallback image for favicon icons
   const handleImageLoadError: ReactEventHandler<HTMLImageElement> = ev => {
@@ -262,10 +266,10 @@ const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
           src={Icon as string}
           onError={handleImageLoadError}
           className={cn('size-[14px] opacity-95 object-contain object-center', {
-            invert: Icon.includes('github.com'),
+            // invert: Icon.includes('github.com'),
           })}
         />
-        {/* show fallback icon */}
+        {/* fallback icon */}
         <GlobeIcon className="hidden text-slate-400 scale-[0.9]" />
       </>
     );
@@ -273,7 +277,7 @@ const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
 
   // icon
   return (
-    <Icon
+    <CmdIcon
       className={cn(
         'text-slate-400/90 w-[14px] scale-[1]',
         { 'text-slate-300/90': isFocused },

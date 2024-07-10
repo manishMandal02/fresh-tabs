@@ -41,8 +41,6 @@ export const getFaviconURLAsync = async (siteUrl: string, size = 32) => {
 
   const res = await fetch(googleFaviconURL);
 
-  console.log('🚨 ~ getFaviconURLAsync ~ res:', res);
-
   if (res.ok) {
     return googleFaviconURL;
   } else {
@@ -75,7 +73,6 @@ export const getFaviconURLAsync = async (siteUrl: string, size = 32) => {
 //   if (subdomainRegex.test(url.origin) && url.hostname?.split('.')[0] !== 'www') {
 //     faviconUrl = createChromeFaviconURL(url);
 
-//     console.log('🚀 ~ getFaviconURL ~ faviconUrl:', faviconUrl);
 //   } else {
 //     faviconUrl = googleFaviconURL(url);
 //   }

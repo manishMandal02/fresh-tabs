@@ -30,7 +30,7 @@ const MoreOptions = ({
   onHistoryClick,
   onSnoozedTabsClick,
 }: Props) => {
-  console.log('🚀 ~ MoreOptions ~ 🔁 rendered');
+  console.log(' MoreOptions ~ 🔁 rendered');
   const [showMenu, setShowMenu] = useState(false);
   return (
     <Popover

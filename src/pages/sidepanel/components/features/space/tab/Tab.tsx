@@ -41,7 +41,7 @@ const Tab = ({
   hideIcon = false,
   size = 'md',
 }: Props) => {
-  console.log('🚀 ~ Tab ~ 🔁 rendered');
+  console.log('Tab ~ 🔁 rendered');
 
   // handle open tab
   const handleOpen = async () => {

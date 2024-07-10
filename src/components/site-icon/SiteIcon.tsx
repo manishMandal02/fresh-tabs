@@ -23,8 +23,6 @@ const SiteIcon = ({ siteURl, faviconUrl, classes }: Props) => {
 
     const res = await fetch(ev.currentTarget?.src);
 
-    console.log('🚨 ~ SiteIcon ~ res:', res);
-
     if (res.ok) return;
 
     const alternateFaviconUrl = getAlternativeFaviconUrl(siteURl);

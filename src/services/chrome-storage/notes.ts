@@ -99,8 +99,6 @@ export const updateNote = async (id: string, note: Partial<Omit<INote, 'id'>>, r
 
     const noteToUpdate = allNotes.find(note => note.id === id);
 
-    console.log('🌅 ~ updateNote ~ noteToUpdate:', noteToUpdate);
-
     if (!noteToUpdate?.id) return false;
 
     const updatedNote = { ...noteToUpdate, ...note };

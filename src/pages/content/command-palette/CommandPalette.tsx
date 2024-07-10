@@ -21,12 +21,13 @@ import { DEFAULT_SEARCH_PLACEHOLDER, useCommandPalette } from './useCommandPalet
 import { staticCommands, useCommand, webSearchCommand } from './command/useCommand';
 import { ICommand, ISearchFilters, ISpace, ITab } from '../../../types/global.types';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
+import { debounce } from '@root/src/utils';
 
 export const COMMAND_PALETTE_SIZE = {
   HEIGHT: 500,
   WIDTH: 600,
   MAX_HEIGHT: 500 + 100,
-  MAX_WIDTH: 600 + 200,
+  MAX_WIDTH: 600 + 100,
 } as const;
 
 export const COMMAND_HEIGHT = 38;
@@ -162,10 +163,12 @@ const CommandPalette = ({
 
   // search commands
   const handleGlobalSearch = useCallback(
-    async (searchQuery: string) => {
+    async (searchTerm: string) => {
       let matchedCommands: ICommand[] = [];
 
-      const searchQueryLowerCase = searchQuery.toLowerCase().trim();
+      const searchQueryLowerCase = searchTerm.toLowerCase().trim();
+
+      console.log('🌅 ~ handleGlobalSearch:171 ~ searchQueryLowerCase:', searchQueryLowerCase);
 
       const currentGroups = await getAllGroups(activeSpace.id);
       let filteredStaticCommands = staticCommands;
@@ -272,16 +275,21 @@ const CommandPalette = ({
             });
         }
       }
+      console.log('🚀 ~ matchedCommands:', matchedCommands);
 
-      if (matchedCommands.length > 5) {
+      if (matchedCommands.length >= 4) {
         // returned  static matched commands
-        return matchedCommands;
+        setSuggestedCommands(matchedCommands);
+        setIsLoadingResults(false);
+
+        setFocusedCommandIndex(1);
+        return;
       }
 
       // search for links, notes and more from background script
       const res = await publishEvents<ICommand[]>({
         event: 'SEARCH',
-        payload: { searchQuery, searchFilterPreferences: searchFilters },
+        payload: { searchQuery: searchTerm, searchFilterPreferences: searchFilters },
       });
 
       if (res?.length > 0) {
@@ -296,37 +304,33 @@ const CommandPalette = ({
       }
 
       if (matchedCommands.length < 6) {
-        matchedCommands.push(webSearchCommand(searchQuery, matchedCommands.length + 1));
+        matchedCommands.push(webSearchCommand(searchTerm, matchedCommands.length + 1));
       }
 
-      return matchedCommands;
-    },
-
-    [activeSpace, searchFilters, groupId],
-  );
-
-  let timeoutId: NodeJS.Timeout;
-  // TODO - fix - search term is not the latest always, it's a one back sometimes
-  // TODO - fix - ☝️.. also, it mostly shows 1 static command even when it should've matched 2-3 commands (maybe because the static cmd is not enough)
-  const debounceGlobalSearch = (searchTerm: string) => {
-    clearTimeout(timeoutId);
-
-    timeoutId = setTimeout(async () => {
-      // Perform the search request here
-      const commands = await handleGlobalSearch(searchTerm);
-
-      console.log('🌅 ~ debounceGlobalSearch:319 ~ searchTerm:', searchTerm);
-
-      console.log('🌅 ~ debounceGlobalSearch:319 ~ commands:', commands);
-
-      setSuggestedCommands(commands);
+      setSuggestedCommands(matchedCommands);
       setIsLoadingResults(false);
 
       setFocusedCommandIndex(1);
-    }, 350);
-  };
+    },
 
-  // on global search
+    [activeSpace, searchFilters, groupId, setSuggestedCommands, setFocusedCommandIndex],
+  );
+
+  const debounceGlobalSearch = debounce((searchQuery: string) => {
+    if (searchQuery.trim() && !subCommand) {
+      // start search
+      handleGlobalSearch(searchQuery);
+    }
+
+    if (!searchQuery.trim() && !subCommand) {
+      // reset search
+      setDefaultSuggestedCommands();
+      setSearchQueryPlaceholder(DEFAULT_SEARCH_PLACEHOLDER);
+      setFocusedCommandIndex(1);
+    }
+  }, 300);
+
+  // reset sub command for during note capture
   useEffect(() => {
     if (subCommand === CommandType.NewNote) {
       // do nothing if subCommand is new note (taking a new)
@@ -334,19 +338,7 @@ const CommandPalette = ({
       setSuggestedCommands([]);
       return;
     }
-
-    if (searchQuery.trim() && !subCommand) {
-      setIsLoadingResults(true);
-      setSuggestedCommands([]);
-      debounceGlobalSearch(searchQuery);
-    } else if (!searchQuery.trim() && !subCommand) {
-      // reset search
-      setDefaultSuggestedCommands();
-      setSearchQueryPlaceholder(DEFAULT_SEARCH_PLACEHOLDER);
-      setFocusedCommandIndex(1);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, subCommand, searchFilters, groupId]);
+  }, [setSuggestedCommands, subCommand]);
 
   // on search in sub command
   useEffect(() => {
@@ -449,7 +441,12 @@ const CommandPalette = ({
               subCommand={subCommand}
               searchQuery={searchQuery}
               searchFilters={searchFilters}
-              setSearchQuery={setSearchQuery}
+              setSearchQuery={value => {
+                setSearchQuery(value);
+                setIsLoadingResults(true);
+                setSuggestedCommands([]);
+                debounceGlobalSearch(value);
+              }}
               setSearchFilters={setSearchFilters}
               placeholder={searchQueryPlaceholder}
               handleFocusSearchInput={handleFocusSearchInput}

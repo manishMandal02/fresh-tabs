@@ -11,8 +11,6 @@ export const handleNotesRemainderAlarm = async (alarmName: string) => {
   // get note
   const note = await getNote(noteId);
 
-  console.log('💰 ~ handleNotesRemainderAlarm ~ note:', note);
-
   // update note
   const res = await updateNote(
     noteId,

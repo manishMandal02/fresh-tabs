@@ -193,7 +193,6 @@ const ActiveSpaceTabs = ({ space, onTabNotesClick }: Props) => {
       });
 
       filteredNotes;
-      console.log('✅ ~ filteredNotes:', filteredNotes);
       setTabNotes(filteredNotes);
     })();
 

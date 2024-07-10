@@ -10,8 +10,6 @@ export const handleMergeDailySpaceTimeChunksAlarm = async () => {
   try {
     const dailySpaceTimeChunks = await getDailySpaceTime<IDailySpaceTimeChunks[]>(null);
 
-    console.log('🚀 ~ handleMergeDailySpaceTimeChunksAlarm ~ dailySpaceTimeChunks:', dailySpaceTimeChunks);
-
     if (dailySpaceTimeChunks.length < 1) return;
 
     const spaces = await getAllSpaces();
@@ -42,8 +40,6 @@ export const handleMergeDailySpaceTimeChunksAlarm = async () => {
     // remove space with no time spent
     chunksBySpace = chunksBySpace.filter(chunk => Math.round(chunk.minutes) > 0);
 
-    console.log('🚀 ~ handleMergeDailySpaceTimeChunksAlarm ~ chunksBySpace:', chunksBySpace);
-
     const setDailySpaceTimePromises = [];
 
     for (const space of chunksBySpace) {
@@ -53,15 +49,11 @@ export const handleMergeDailySpaceTimeChunksAlarm = async () => {
         minutes: Math.round(minutes),
       };
 
-      console.log('🚀 ~ handleMergeDailySpaceTimeChunksAlarm ~ dailySpaceTime:', dailySpaceTime);
-
       const dailySpaceTimeAll = await getDailySpaceTime<IDailySpaceTime[]>(spaceId);
 
       // check if today's time usage is set already
       if (dailySpaceTimeAll?.length > 0 && dailySpaceTimeAll.some(time => getISODate(time.date) === getISODate(today)))
         continue;
-
-      console.log('🚀 ~ handleMergeDailySpaceTimeChunksAlarm ~ dailySpaceTimeAll:', dailySpaceTimeAll);
 
       setDailySpaceTimePromises.push(setDailySpaceTime(spaceId, [...(dailySpaceTimeAll || []), dailySpaceTime]));
     }

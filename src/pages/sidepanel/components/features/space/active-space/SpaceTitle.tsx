@@ -27,8 +27,8 @@ const SpaceTitle = ({ space }: Props) => {
 
     const activeSpace = await getSpace(space.id);
 
-    updateSpaceState({ ...activeSpace, title: spaceTitle.trim() });
-    updateSpace(space.id, { ...activeSpace, title: spaceTitle.trim() });
+    updateSpaceState({ ...activeSpace, title: spaceTitle.trim(), isSaved: true });
+    updateSpace(space.id, { ...activeSpace, title: spaceTitle.trim(), isSaved: true });
   }, [space, spaceTitle, updateSpaceState]);
 
   // set space title from props
@@ -59,8 +59,8 @@ const SpaceTitle = ({ space }: Props) => {
 
       const activeSpace = await getSpace(space.id);
 
-      updateSpaceState({ ...activeSpace, emoji });
-      updateSpace(space.id, { ...activeSpace, emoji });
+      updateSpaceState({ ...activeSpace, emoji, isSaved: true });
+      updateSpace(space.id, { ...activeSpace, emoji, isSaved: true });
     },
     [space, updateSpaceState],
   );

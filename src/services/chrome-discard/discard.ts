@@ -12,8 +12,6 @@ export const discardAllTabs = async (autoDiscard = false, ignoreWhitelist = true
       ...(autoDiscard && { audible: false }),
     });
 
-    console.log('✅ ~ discardAllTabs ~ tabs:', tabs);
-
     if (autoDiscard) {
       const { autoDiscardTabs } = await getAppSettings();
 
