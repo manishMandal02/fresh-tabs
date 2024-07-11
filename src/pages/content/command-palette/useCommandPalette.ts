@@ -452,6 +452,20 @@ export const useCommandPalette = ({ activeSpace, groupId, onClose, isOpenedInPop
     { enableOnFormTags: true, document: iFrameDoc },
   );
 
+  // cmd + arrow up pressed - go to top
+  useHotkeys(
+    'mod+ArrowUp',
+    () => {
+      if (focusedCommandIndex < 2) {
+        setFocusedCommandIndex(suggestedCommands.length);
+        return;
+      }
+
+      setFocusedCommandIndex(1);
+    },
+    [suggestedCommands, focusedCommandIndex],
+    { enableOnFormTags: true, document: iFrameDoc },
+  );
   // arrow up pressed
   useHotkeys(
     'ArrowUp',
@@ -467,6 +481,19 @@ export const useCommandPalette = ({ activeSpace, groupId, onClose, isOpenedInPop
     { enableOnFormTags: true, document: iFrameDoc },
   );
 
+  // cmd + arrow down pressed - go to bottom
+  useHotkeys(
+    'mod+ArrowDown',
+    () => {
+      if (focusedCommandIndex >= suggestedCommands.length) {
+        setFocusedCommandIndex(1);
+        return;
+      }
+      setFocusedCommandIndex(suggestedCommands.length);
+    },
+    [suggestedCommands, focusedCommandIndex],
+    { enableOnFormTags: true, document: iFrameDoc },
+  );
   // arrow down pressed
   useHotkeys(
     'ArrowDown',

@@ -1,9 +1,10 @@
 export function debounce<T extends (...args: unknown[]) => void>(func: T, delay = 500) {
-  let timer: NodeJS.Timeout;
+  let timeout: NodeJS.Timeout = null;
   return (...args: Parameters<T>) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => {
       func.apply(this, args);
+      timeout = null;
     }, delay);
   };
 }

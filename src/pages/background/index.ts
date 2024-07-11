@@ -15,8 +15,9 @@ import { retryAtIntervals } from '../../utils/retry-at-intervals';
 import { debounceWithEvents, generateId, wait } from '../../utils';
 import { handleSnoozedTabAlarm } from './handler/alarm/un-snooze-tab';
 import { asyncMessageHandler } from '../../utils/async-message-handler';
-import { discardAllTabs } from '@root/src/services/chrome-discard/discard';
 import { matchWordsInText } from '@root/src/utils/string/matchWordsInText';
+import { discardAllTabs } from '@root/src/services/chrome-discard/discard';
+import { getFaviconURLAsync, isChromeUrl, parseUrl } from '../../utils/url';
 import { handleNotesRemainderAlarm } from './handler/alarm/notes-remainder';
 import { publishEvents, publishEventsTab } from '../../utils/publish-events';
 import { handleMergeSpaceHistoryAlarm } from './handler/alarm/mergeSpaceHistory';
@@ -24,10 +25,8 @@ import { createAlarm, getAlarm } from '@root/src/services/chrome-alarms/helpers'
 import { removeWWWPrefix, getUrlDomain } from '@root/src/utils/url/get-url-domain';
 import { getStorage, setStorage } from '@root/src/services/chrome-storage/helpers';
 import { removeGroup, updateGroup } from '@root/src/services/chrome-storage/groups';
-import { getRecentlyVisitedSites } from '@root/src/services/chrome-history/history';
 import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
 import { getAppSettings, saveSettings } from '@root/src/services/chrome-storage/settings';
-import { getFaviconURLAsync, isChromeUrl, parseUrl } from '../../utils/url';
 import { addSnoozedTab, getTabToUnSnooze } from '@root/src/services/chrome-storage/snooze-tabs';
 import { handleMergeDailySpaceTimeChunksAlarm } from './handler/alarm/mergeDailySpaceTimeChunks';
 import { getSpaceHistory, setSpaceHistory } from '@root/src/services/chrome-storage/space-history';
@@ -143,13 +142,7 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - improvement - search
-// 1. limit number res cmd
-// 2. get the limit num from content script
-
-// TODO - improve fix link preview
-// 1. some link not opening + (error: extension context invalidated error)
-// 2. some link opening, my personal site links with no-referrer not opening
+// TODO fix - error on content script:: extension context invalidated error
 
 // TODO - improve - add cmd palette preference option to remove cmd
 
@@ -472,7 +465,6 @@ export const showCommandPaletteContentScript = async (
   }
 
   // get command palette props data
-  const recentSites = await getRecentlyVisitedSites();
 
   const activeSpace = await getSpaceByWindow(windowId);
 
@@ -491,7 +483,6 @@ export const showCommandPaletteContentScript = async (
         event: 'SHOW_COMMAND_PALETTE',
         payload: {
           activeSpace,
-          recentSites,
           groupId: tabGroupId,
           searchFilterPreferences: {
             searchBookmarks: preferences.cmdPalette.includeBookmarksInSearch,
@@ -793,7 +784,7 @@ chrome.runtime.onMessage.addListener(
       }
 
       case 'SEARCH': {
-        const { searchQuery, searchFilterPreferences } = payload;
+        const { searchQuery, searchFilterPreferences, searchResLimit } = payload;
 
         const matchedCommands: ICommand[] = [];
 
@@ -811,8 +802,8 @@ chrome.runtime.onMessage.addListener(
           });
 
           if (notes?.length > 0) {
-            // do not show more than 6 notes results
-            notes.length > 8 && notes.splice(8);
+            // do not show more than search result limit
+            notes.length > searchResLimit && notes.splice(searchResLimit);
 
             notes?.forEach((note, idx) => {
               if (!note?.text || !note?.title) return;
@@ -830,8 +821,8 @@ chrome.runtime.onMessage.addListener(
           }
         }
 
-        // return the matched results if more than 6 (won't search bookmark & history)
-        if (matchedCommands.length > 7) return matchedCommands;
+        // return the matched results if more than result limit (won't search bookmark & history)
+        if (matchedCommands.length >= searchResLimit) return matchedCommands;
 
         if (searchFilterPreferences.searchBookmarks) {
           let bookmarks = await chrome.bookmarks.search({ query: searchQuery });
@@ -845,39 +836,40 @@ chrome.runtime.onMessage.addListener(
           });
 
           // limit search results
-          bookmarks.length + matchedCommands.length > 8 && bookmarks.splice(8 - matchedCommands.length);
+          if (bookmarks.length + matchedCommands.length > searchResLimit) {
+            bookmarks = bookmarks.splice(0, searchResLimit - matchedCommands.length);
+          }
 
           if (bookmarks?.length > 0) {
-            bookmarks.forEach(async (item, idx) => {
+            for (const item of bookmarks) {
               if (!item) return;
               const icon = await getFaviconURLAsync(item.url);
 
               matchedCommands.push({
                 icon,
-                index: idx,
+                index: 0,
                 type: CommandType.Link,
                 label: item.title,
                 metadata: item.url,
                 alias: 'Bookmark',
               });
-            });
+            }
           }
         }
 
-        // TODO - improvement - (sometimes) bookmarks and other search res is not sent back tab instead true is being returned
         // return the matched results if more than 6 (won't search history)
-        if (matchedCommands.length > 6) return matchedCommands;
+        if (matchedCommands.length >= searchResLimit) return matchedCommands;
 
         // get 1 month before date to find history before that
         const oneMonthBefore = new Date();
 
-        oneMonthBefore.setMonth(oneMonthBefore.getMonth() - 1);
+        oneMonthBefore.setMonth(oneMonthBefore.getMonth() - 2);
 
         // query history (words match)
         const history = await chrome.history.search({
           text: searchQuery,
           startTime: oneMonthBefore.getTime(),
-          maxResults: Math.max(8 - matchedCommands.length, 4),
+          maxResults: searchResLimit - matchedCommands.length,
         });
 
         if (history?.length > 0) {

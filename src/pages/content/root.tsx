@@ -16,7 +16,7 @@ import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 import { getUserSelectionText, isValidURL, publishEvents } from '@root/src/utils';
 import CommandPalette, { COMMAND_PALETTE_SIZE } from './command-palette/CommandPalette';
-import { IMessageEventContentScript, ISearchFilters, ISpace, ITab, NoteBubblePos } from '../../types/global.types';
+import { IMessageEventContentScript, ISearchFilters, ISpace, NoteBubblePos } from '../../types/global.types';
 
 // development: refresh content page on update
 refreshOnUpdate('pages/content');
@@ -38,7 +38,6 @@ const handleCloseCommandPalette = () => {
 
 type AppendContainerProps = {
   activeSpace: ISpace;
-  recentSites?: ITab[];
   selectedText?: string;
   groupId?: number;
   selectedNoteId?: string;
@@ -46,7 +45,6 @@ type AppendContainerProps = {
 };
 
 const appendCommandPaletteContainer = ({
-  recentSites,
   activeSpace,
   groupId,
   selectedText,
@@ -108,7 +106,6 @@ const appendCommandPaletteContainer = ({
           return (
             <CommandPalette
               isOpenedInPopupWindow={false}
-              recentSites={recentSites || []}
               activeSpace={activeSpace}
               groupId={groupId}
               onClose={handleCloseCommandPalette}
@@ -305,8 +302,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
     // close the preview window on escape press
     document.body.addEventListener('keydown', (ev: KeyboardEvent) => {
-      console.log('🚀 ~ document.body.addEventListener ~ ev:', ev);
-
       if (ev.key !== 'Escape') return;
       window.close();
     });
@@ -319,10 +314,9 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
 
   if (msgEvent === 'SHOW_COMMAND_PALETTE') {
-    const { activeSpace, recentSites, searchFilterPreferences, groupId } = event.payload;
+    const { activeSpace, searchFilterPreferences, groupId } = event.payload;
     appendCommandPaletteContainer({
       groupId,
-      recentSites,
       activeSpace,
       searchFilterPreferences,
     });
@@ -350,14 +344,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   document.body.addEventListener('click', async ev => {
     const clickedEl = ev.target as HTMLElement;
 
-    console.log('🌅 ~ clickedEl:', clickedEl);
-
     if (clickedEl.tagName !== 'A' && !clickedEl.closest('a')) return;
 
     let hrefLink =
       clickedEl.tagName === 'A' ? clickedEl.getAttribute('href') : clickedEl.closest('a').getAttribute('href') || '';
 
-    hrefLink = !hrefLink.startsWith(window.location.origin) ? window.location.origin + hrefLink : hrefLink;
+    hrefLink = !isValidURL(hrefLink) ? window.location.origin + hrefLink : hrefLink;
 
     // open link in preview window if user preference is set to Shift + Click and the shift key was pressed
     if (

@@ -70,7 +70,6 @@ const CommandPalettePopup = () => {
             groupId={commandPaletteProps.groupId}
             isOpenedInPopupWindow={true}
             onClose={onCloseCommandPalette}
-            recentSites={[]}
             activeSpace={commandPaletteProps.activeSpace}
             searchFiltersPreference={commandPaletteProps.searchFilterPreferences}
           />

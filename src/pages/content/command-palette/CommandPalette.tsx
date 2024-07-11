@@ -4,9 +4,9 @@ import { useState, useEffect, useRef, MouseEventHandler, useCallback } from 'rea
 import Command from './command/Command';
 import { cn } from '@root/src/utils/cn';
 import CaptureNote from '../capture-note';
-import SearchBox from './search-box/SearchBox';
+import { debounce } from '@root/src/utils';
 import KBD from '@root/src/components/kbd/KBD';
-import { getFaviconURL } from '../../../utils/url';
+import SearchBox from './search-box/SearchBox';
 import { CommandType } from '@root/src/constants/app';
 import CommandDivider from './command/CommandDivider';
 import { getTime } from '@root/src/utils/date-time/get-time';
@@ -17,11 +17,10 @@ import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getAllGroups } from '@root/src/services/chrome-storage/groups';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { useCustomAnimation } from '../../sidepanel/hooks/useCustomAnimation';
+import { ICommand, ISearchFilters, ISpace } from '../../../types/global.types';
 import { DEFAULT_SEARCH_PLACEHOLDER, useCommandPalette } from './useCommandPalette';
 import { staticCommands, useCommand, webSearchCommand } from './command/useCommand';
-import { ICommand, ISearchFilters, ISpace, ITab } from '../../../types/global.types';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
-import { debounce } from '@root/src/utils';
 
 export const COMMAND_PALETTE_SIZE = {
   HEIGHT: 500,
@@ -32,11 +31,12 @@ export const COMMAND_PALETTE_SIZE = {
 
 export const COMMAND_HEIGHT = 38;
 
+const SEARCH_RESULT_MAX_LIMIT = 8;
+
 const SUGGESTED_COMMANDS_MAX_HEIGHT = 400;
 
 type Props = {
   activeSpace: ISpace;
-  recentSites: ITab[];
   groupId: number;
   onClose?: () => void;
   searchFiltersPreference: ISearchFilters;
@@ -52,7 +52,6 @@ type Props = {
 
 const CommandPalette = ({
   activeSpace,
-  recentSites,
   onClose,
   groupId,
   searchFiltersPreference,
@@ -148,18 +147,9 @@ const CommandPalette = ({
 
     filteredStaticCommands = filteredStaticCommands.map((cmd, idx) => ({ ...cmd, index: idx + 1 }));
 
-    const recentSitesCommands = recentSites.slice(0, 3).map<ICommand>((site, idx) => ({
-      index: filteredStaticCommands.length + idx + 1,
-      icon: getFaviconURL(site.url),
-      type: CommandType.Link,
-      metadata: site.url,
-      label: site.title,
-      alias: 'History',
-    }));
-
-    setSuggestedCommands([...filteredStaticCommands, ...(recentSitesCommands || [])]);
+    setSuggestedCommands(filteredStaticCommands);
     setFocusedCommandIndex(1);
-  }, [recentSites, setSuggestedCommands, setFocusedCommandIndex, activeSpace]);
+  }, [setSuggestedCommands, setFocusedCommandIndex, activeSpace]);
 
   // search commands
   const handleGlobalSearch = useCallback(
@@ -167,6 +157,12 @@ const CommandPalette = ({
       let matchedCommands: ICommand[] = [];
 
       const searchQueryLowerCase = searchTerm.toLowerCase().trim();
+
+      if (!searchQueryLowerCase) {
+        await setDefaultSuggestedCommands();
+        setIsLoadingResults(false);
+        return;
+      }
 
       console.log('🌅 ~ handleGlobalSearch:171 ~ searchQueryLowerCase:', searchQueryLowerCase);
 
@@ -275,9 +271,8 @@ const CommandPalette = ({
             });
         }
       }
-      console.log('🚀 ~ matchedCommands:', matchedCommands);
 
-      if (matchedCommands.length >= 4) {
+      if (matchedCommands.length >= SEARCH_RESULT_MAX_LIMIT) {
         // returned  static matched commands
         setSuggestedCommands(matchedCommands);
         setIsLoadingResults(false);
@@ -289,8 +284,18 @@ const CommandPalette = ({
       // search for links, notes and more from background script
       const res = await publishEvents<ICommand[]>({
         event: 'SEARCH',
-        payload: { searchQuery: searchTerm, searchFilterPreferences: searchFilters },
+        payload: {
+          searchQuery: searchTerm,
+          searchFilterPreferences: searchFilters,
+          searchResLimit: SEARCH_RESULT_MAX_LIMIT - matchedCommands.length,
+        },
       });
+      console.log(
+        '🌅 ~ handleGlobalSearch:299 ~ SEARCH_RESULT_MAX_LIMIT - matchedCommands.length :',
+        SEARCH_RESULT_MAX_LIMIT - matchedCommands.length,
+      );
+
+      console.log('🌅 ~ handleGlobalSearch:301 ~ res:', res);
 
       if (res?.length > 0) {
         // remove duplicates
@@ -312,23 +317,10 @@ const CommandPalette = ({
 
       setFocusedCommandIndex(1);
     },
-
-    [activeSpace, searchFilters, groupId, setSuggestedCommands, setFocusedCommandIndex],
+    [activeSpace, groupId, searchFilters, setSuggestedCommands, setFocusedCommandIndex, setDefaultSuggestedCommands],
   );
 
-  const debounceGlobalSearch = debounce((searchQuery: string) => {
-    if (searchQuery.trim() && !subCommand) {
-      // start search
-      handleGlobalSearch(searchQuery);
-    }
-
-    if (!searchQuery.trim() && !subCommand) {
-      // reset search
-      setDefaultSuggestedCommands();
-      setSearchQueryPlaceholder(DEFAULT_SEARCH_PLACEHOLDER);
-      setFocusedCommandIndex(1);
-    }
-  }, 300);
+  const debounceGlobalSearch = useCallback(debounce(handleGlobalSearch, 400), [activeSpace, groupId, searchFilters]);
 
   // reset sub command for during note capture
   useEffect(() => {
@@ -445,7 +437,18 @@ const CommandPalette = ({
                 setSearchQuery(value);
                 setIsLoadingResults(true);
                 setSuggestedCommands([]);
-                debounceGlobalSearch(value);
+
+                if (!searchQuery.trim() && !subCommand) {
+                  // reset search
+                  setDefaultSuggestedCommands();
+                  setSearchQueryPlaceholder(DEFAULT_SEARCH_PLACEHOLDER);
+                  setFocusedCommandIndex(1);
+                  return;
+                }
+
+                if (searchQuery.trim() && !subCommand) {
+                  debounceGlobalSearch(value);
+                }
               }}
               setSearchFilters={setSearchFilters}
               placeholder={searchQueryPlaceholder}

@@ -119,6 +119,20 @@ const CreateNote = ({
   );
 
   useHotkeys(
+    'escape',
+    () => {
+      onClose();
+    },
+    [],
+    {
+      document: iFrameDoc,
+      enableOnContentEditable: true,
+      preventDefault: true,
+      enableOnFormTags: true,
+    },
+  );
+
+  useHotkeys(
     'mod+backspace',
     () => {
       if (note !== EDITOR_EMPTY_STATE) return;

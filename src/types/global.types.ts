@@ -251,8 +251,8 @@ interface IEventPayloadContentScript {
   noteTitle?: string;
   snackbarMsg?: string;
   searchQuery?: string;
+  searchResLimit?: number;
   snoozedUntil?: number;
-  recentSites?: ITab[];
   activeSpace?: ISpace;
   noteRemainder?: string;
   isOpenedInPopupWindow?: boolean;

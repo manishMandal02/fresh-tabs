@@ -221,7 +221,7 @@ const Command = ({
       ) : null}
 
       {/* command type label/sticker */}
-      {isStaticCommand && type === CommandType.DiscardTabs && !isStaticCommand && !isSubCommand && isFocused ? (
+      {((isStaticCommand && type === CommandType.DiscardTabs) || !isStaticCommand) && !isSubCommand && isFocused ? (
         <div className="flex items-center absolute right-2.5 top-1 bg-brand-darkBg/95 rounded-[5px] text-[10px] font-medium text-slate-400 px-2.5 py-2 capitalize select-none">
           <CommandTypeIcon classes="ml-1 text-slate-400/80 scale-[0.9]" />
         </div>
