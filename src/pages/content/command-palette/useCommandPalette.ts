@@ -134,13 +134,13 @@ export const useCommandPalette = ({ activeSpace, groupId, onClose, isOpenedInPop
                 label: space.title,
                 type: CommandType.AddToSpace,
                 index: idx + 1,
-                icon: space.theme,
+                icon: space.emoji,
                 metadata: space.id,
               }));
 
             setSuggestedCommandsForSubCommand(addToSpaceCommands);
             setSubCommand(CommandType.AddToSpace);
-            setSearchQueryPlaceholder('Select group');
+            setSearchQueryPlaceholder('Select space');
             setFocusedCommandIndex(1);
           } else {
             await publishEvents({

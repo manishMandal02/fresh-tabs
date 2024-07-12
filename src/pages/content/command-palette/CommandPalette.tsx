@@ -156,7 +156,7 @@ const CommandPalette = ({
     async (searchTerm: string) => {
       const searchQueryLowerCase = searchTerm.toLowerCase().trim();
 
-      if (!searchQueryLowerCase) {
+      if (!searchQueryLowerCase || suggestedCommandsForSubCommand.length === 1) {
         setSuggestedCommands(suggestedCommandsForSubCommand);
         setFocusedCommandIndex(1);
         setIsLoadingResults(false);
@@ -217,8 +217,6 @@ const CommandPalette = ({
         setIsLoadingResults(false);
         return;
       }
-
-      console.log('🌅 ~ handleSearchCommands:171 ~ searchQueryLowerCase:', searchQueryLowerCase);
 
       const currentGroups = await getAllGroups(activeSpace.id);
       let filteredStaticCommands = staticCommands;
@@ -387,13 +385,21 @@ const CommandPalette = ({
 
   // reset sub command for during note capture
   useEffect(() => {
-    if (subCommand !== CommandType.NewNote) return;
-    // do nothing if subCommand is new note (note capture mode)
-    // clear command suggestions
-    setSuggestedCommands([]);
-    setSuggestedCommandsForSubCommand([]);
-    return;
+    if (subCommand === CommandType.NewNote) {
+      // do nothing if subCommand is new note (note capture mode)
+      // clear command suggestions
+      setSuggestedCommands([]);
+      setSuggestedCommandsForSubCommand([]);
+      return;
+    }
   }, [subCommand, setSuggestedCommands, setSuggestedCommandsForSubCommand]);
+
+  useEffect(() => {
+    if (suggestedCommandsForSubCommand.length > 0) {
+      setSuggestedCommands(suggestedCommandsForSubCommand);
+      setFocusedCommandIndex(1);
+    }
+  }, [suggestedCommandsForSubCommand, setFocusedCommandIndex, setSuggestedCommands]);
 
   // on command select/click
   const onCommandClick = async (index: number) => {
@@ -448,6 +454,11 @@ const CommandPalette = ({
               searchFilters={searchFilters}
               setSearchQuery={async value => {
                 setSearchQuery(value);
+
+                // do not nothing if suggested commands for sub command is 1
+                // (search input is used as an input for group name,space title, etc.)
+                if (subCommand && suggestedCommandsForSubCommand.length < 1 && suggestedCommands.length === 1) return;
+
                 setIsLoadingResults(true);
                 setSuggestedCommands([]);
 
@@ -476,11 +487,10 @@ const CommandPalette = ({
                   //  only updated focused index if out of range
                   setFocusedCommandIndex(prev => {
                     if (prev < 1 || prev > suggestedCommandsForSubCommand.length) return 1;
+                    setIsLoadingResults(false);
 
                     return prev;
                   });
-
-                  setIsLoadingResults(false);
                 }
               }}
               setSearchFilters={setSearchFilters}
@@ -522,6 +532,7 @@ const CommandPalette = ({
               {/* actions */}
               {suggestedCommands?.length > 0 &&
                 suggestedCommands?.map(cmd => {
+                  s;
                   const renderCommands: JSX.Element[] = [];
                   // section label
                   // do not render  for sub commands
@@ -542,7 +553,9 @@ const CommandPalette = ({
                       label={cmd.label}
                       type={cmd.type}
                       Icon={cmd.icon}
-                      searchTerm={searchQuery.toLowerCase().trim()}
+                      searchTerm={
+                        subCommand && suggestedCommandsForSubCommand.length < 1 ? '' : searchQuery.toLowerCase().trim()
+                      }
                       alias={cmd?.alias || ''}
                       metadata={(cmd?.metadata as string) || ''}
                       isSubCommand={!!subCommand}

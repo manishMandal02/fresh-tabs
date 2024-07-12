@@ -17,9 +17,10 @@ import { cn } from '@root/src/utils/cn';
 import { isValidURL } from '@root/src/utils/url';
 import { useFrame } from 'react-frame-component';
 import { COMMAND_HEIGHT } from '../CommandPalette';
-import { CommandType } from '@root/src/constants/app';
+import { CommandType, ThemeColor } from '@root/src/constants/app';
 import { RadixIconType } from '@root/src/types/global.types';
 import { useMetaKeyPressed } from '@root/src/pages/sidepanel/hooks/use-key-shortcuts';
+import { capitalize } from '@root/src/utils';
 
 type CommandIcon = RadixIconType | string;
 
@@ -60,7 +61,7 @@ const Command = ({
     parentConTainerEl: iFrameDoc.body.querySelector('dialog'),
   });
 
-  const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escapedSearchTerm = searchTerm ? searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
 
   const commandAlias = alias;
 
@@ -239,7 +240,6 @@ type CommandIconProps = {
   type: CommandType;
 };
 
-// TODO - fix - some icon appear too small
 const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
   let CmdIcon = Icon;
 
@@ -254,11 +254,20 @@ const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
     (ev.currentTarget.nextElementSibling as SVGAElement).style.display = 'block';
   };
 
+  if (typeof Icon === 'string' && type === CommandType.AddToGroup) {
+    // group color as icon
+    return (
+      <span
+        className="size-[10px] rounded-full block -mb-px z-[20] opacity-90"
+        style={{ backgroundColor: ThemeColor[capitalize(Icon as ThemeColor)] }}></span>
+    );
+  }
+
   if (typeof Icon === 'string' && !isValidURL(Icon as string)) {
-    // emoji
+    // space emoji as icon
     return <span className="w-[16px] mr-2.5 h-fit text-start">{Icon}</span>;
   } else if (typeof Icon === 'string') {
-    // favicon
+    // site favicon as icon
     return (
       <>
         <img
@@ -275,7 +284,7 @@ const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
     );
   }
 
-  // icon
+  // svg static icons
   return (
     <CmdIcon
       className={cn(
