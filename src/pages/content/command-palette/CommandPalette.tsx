@@ -151,20 +151,74 @@ const CommandPalette = ({
     setFocusedCommandIndex(1);
   }, [setSuggestedCommands, setFocusedCommandIndex, activeSpace]);
 
+  // search sub commands
+  const handleSearchSubCommands = useCallback(
+    async (searchTerm: string) => {
+      const searchQueryLowerCase = searchTerm.toLowerCase().trim();
+
+      if (!searchQueryLowerCase) {
+        setSuggestedCommands(suggestedCommandsForSubCommand);
+        setFocusedCommandIndex(1);
+        setIsLoadingResults(false);
+        return;
+      }
+
+      console.log('💰 ~ handleSearchSubCommands:159 ~ searchQueryLowerCase:', searchQueryLowerCase);
+
+      // handle snooze sub command, generate date & time based on user input
+      if (subCommand === CommandType.SnoozeTab) {
+        const parsedDateFromSearch = naturalLanguageToDate(searchQueryLowerCase);
+        if (parsedDateFromSearch) {
+          const dynamicTimeCommand: ICommand = {
+            index: 1,
+            label: `${getReadableDate(parsedDateFromSearch)} @ ${getTime(parsedDateFromSearch)}`,
+            alias: getTimeAgo(parsedDateFromSearch),
+            type: CommandType.SnoozeTab,
+            icon: getCommandIcon(CommandType.SnoozeTab).Icon,
+            metadata: parsedDateFromSearch,
+          };
+          setSuggestedCommands([dynamicTimeCommand]);
+        } else {
+          setSuggestedCommands(suggestedCommandsForSubCommand);
+        }
+        setFocusedCommandIndex(1);
+        setIsLoadingResults(false);
+
+        return;
+      }
+
+      //  filter suggested sub-commands
+      const filteredSubCommands = suggestedCommandsForSubCommand
+        .filter(c => c.label.toLowerCase().includes(searchQueryLowerCase))
+        .map((cmd, idx) => ({ ...cmd, index: idx + 1 }));
+      setSuggestedCommands(filteredSubCommands);
+
+      //  only updated focused index if out of range
+      setFocusedCommandIndex(prev => {
+        if (prev < 1 || prev > filteredSubCommands.length) return 1;
+
+        return prev;
+      });
+
+      setIsLoadingResults(false);
+    },
+    [subCommand, setSuggestedCommands, setFocusedCommandIndex, suggestedCommandsForSubCommand, getCommandIcon],
+  );
+
   // search commands
-  const handleGlobalSearch = useCallback(
+  const handleSearchCommands = useCallback(
     async (searchTerm: string) => {
       let matchedCommands: ICommand[] = [];
 
       const searchQueryLowerCase = searchTerm.toLowerCase().trim();
 
       if (!searchQueryLowerCase) {
-        await setDefaultSuggestedCommands();
+        setDefaultSuggestedCommands();
         setIsLoadingResults(false);
         return;
       }
 
-      console.log('🌅 ~ handleGlobalSearch:171 ~ searchQueryLowerCase:', searchQueryLowerCase);
+      console.log('🌅 ~ handleSearchCommands:171 ~ searchQueryLowerCase:', searchQueryLowerCase);
 
       const currentGroups = await getAllGroups(activeSpace.id);
       let filteredStaticCommands = staticCommands;
@@ -275,112 +329,71 @@ const CommandPalette = ({
       if (matchedCommands.length >= SEARCH_RESULT_MAX_LIMIT) {
         // returned  static matched commands
         setSuggestedCommands(matchedCommands);
-        setIsLoadingResults(false);
 
         setFocusedCommandIndex(1);
+        setIsLoadingResults(false);
+
         return;
       }
 
+      // available space for cmd
+      const searchResLimit = SEARCH_RESULT_MAX_LIMIT - matchedCommands.length;
+
       // search for links, notes and more from background script
-      const res = await publishEvents<ICommand[]>({
+      let res = await publishEvents<ICommand[]>({
         event: 'SEARCH',
         payload: {
+          searchResLimit,
           searchQuery: searchTerm,
           searchFilterPreferences: searchFilters,
-          searchResLimit: SEARCH_RESULT_MAX_LIMIT - matchedCommands.length,
         },
       });
-      console.log(
-        '🌅 ~ handleGlobalSearch:299 ~ SEARCH_RESULT_MAX_LIMIT - matchedCommands.length :',
-        SEARCH_RESULT_MAX_LIMIT - matchedCommands.length,
-      );
-
-      console.log('🌅 ~ handleGlobalSearch:301 ~ res:', res);
 
       if (res?.length > 0) {
-        // remove duplicates
-        matchedCommands = [...(matchedCommands.length ? [...matchedCommands] : []), ...res].filter(
-          (v, i, a) => a.findIndex(v2 => v2.metadata === v.metadata) === i,
-        );
+        res = res.length > searchResLimit ? res.slice(0, searchResLimit) : res;
+
+        matchedCommands.push(...res);
+
         matchedCommands = matchedCommands.map<ICommand>((cmd, idx) => ({
           ...cmd,
           index: idx + 1,
         }));
+
+        console.log('🌅 ~ handleSearchCommands:367 ~ matchedCommands:', matchedCommands);
       }
 
       if (matchedCommands.length < 6) {
+        // add web search command
         matchedCommands.push(webSearchCommand(searchTerm, matchedCommands.length + 1));
       }
 
       setSuggestedCommands(matchedCommands);
-      setIsLoadingResults(false);
 
       setFocusedCommandIndex(1);
+      setIsLoadingResults(false);
     },
     [activeSpace, groupId, searchFilters, setSuggestedCommands, setFocusedCommandIndex, setDefaultSuggestedCommands],
   );
 
-  const debounceGlobalSearch = useCallback(debounce(handleGlobalSearch, 400), [activeSpace, groupId, searchFilters]);
+  const debouncedSearchCommands = useCallback(debounce(handleSearchCommands, 300), [
+    activeSpace,
+    groupId,
+    searchFilters,
+  ]);
+
+  const debouncedSearchSubCommands = useCallback(debounce(handleSearchSubCommands, 300), [
+    suggestedCommandsForSubCommand,
+  ]);
 
   // reset sub command for during note capture
   useEffect(() => {
-    if (subCommand === CommandType.NewNote) {
-      // do nothing if subCommand is new note (taking a new)
-      // clear command suggestions
-      setSuggestedCommands([]);
-      return;
-    }
-  }, [setSuggestedCommands, subCommand]);
-
-  // on search in sub command
-  useEffect(() => {
-    // filter the suggested sub commands based on search query, also update the index
-    if (subCommand && searchQuery.trim() && suggestedCommandsForSubCommand.length > 0) {
-      // handle snooze sub command, generate date & time based on user input
-      if (subCommand === CommandType.SnoozeTab) {
-        const parsedDateFromSearch = naturalLanguageToDate(searchQuery);
-        if (parsedDateFromSearch) {
-          const dynamicTimeCommand: ICommand = {
-            index: 1,
-            label: `${getReadableDate(parsedDateFromSearch)} @ ${getTime(parsedDateFromSearch)}`,
-            alias: getTimeAgo(parsedDateFromSearch),
-            type: CommandType.SnoozeTab,
-            icon: getCommandIcon(CommandType.SnoozeTab).Icon,
-            metadata: parsedDateFromSearch,
-          };
-          setSuggestedCommands([dynamicTimeCommand]);
-        } else {
-          setSuggestedCommands(suggestedCommandsForSubCommand);
-        }
-        setFocusedCommandIndex(1);
-      } else {
-        //  filter suggested sub-commands based on user input
-        const filteredSubCommands = suggestedCommandsForSubCommand
-          .filter(c => c.label.toLowerCase().includes(searchQuery.toLowerCase()))
-          .map((cmd, idx) => ({ ...cmd, index: idx + 1 }));
-        setSuggestedCommands(filteredSubCommands);
-
-        //  only updated focused index if out of range
-        setFocusedCommandIndex(prev => {
-          if (prev < 1 || prev > filteredSubCommands.length) return 1;
-
-          return prev;
-        });
-      }
-    } else if (subCommand && !searchQuery && suggestedCommandsForSubCommand.length > 0) {
-      setSuggestedCommands(suggestedCommandsForSubCommand);
-
-      //  only updated focused index if out of range
-
-      setFocusedCommandIndex(prev => {
-        if (prev < 1 || prev > suggestedCommandsForSubCommand.length) return 1;
-
-        return prev;
-      });
-    }
-    // re-render only when the below dependency change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, subCommand, suggestedCommandsForSubCommand]);
+    if (subCommand !== CommandType.NewNote) return;
+    // do nothing if subCommand is new note (note capture mode)
+    // clear command suggestions
+    setSuggestedCommands([]);
+    setSuggestedCommandsForSubCommand([]);
+    return;
+  }, [subCommand, setSuggestedCommands, setSuggestedCommandsForSubCommand]);
 
   // on command select/click
   const onCommandClick = async (index: number) => {
@@ -433,21 +446,41 @@ const CommandPalette = ({
               subCommand={subCommand}
               searchQuery={searchQuery}
               searchFilters={searchFilters}
-              setSearchQuery={value => {
+              setSearchQuery={async value => {
                 setSearchQuery(value);
                 setIsLoadingResults(true);
                 setSuggestedCommands([]);
 
                 if (!searchQuery.trim() && !subCommand) {
-                  // reset search
-                  setDefaultSuggestedCommands();
+                  // reset suggested commands
+                  await setDefaultSuggestedCommands();
                   setSearchQueryPlaceholder(DEFAULT_SEARCH_PLACEHOLDER);
-                  setFocusedCommandIndex(1);
-                  return;
+                  setIsLoadingResults(false);
                 }
 
                 if (searchQuery.trim() && !subCommand) {
-                  debounceGlobalSearch(value);
+                  debouncedSearchCommands(value);
+                }
+
+                if (subCommand && suggestedCommandsForSubCommand.length > 0) {
+                  if (searchQuery.trim()) {
+                    // search sub commands
+                    debouncedSearchSubCommands(value);
+                    return;
+                  }
+
+                  // reset suggested commands for sub commands
+
+                  setSuggestedCommands(suggestedCommandsForSubCommand);
+
+                  //  only updated focused index if out of range
+                  setFocusedCommandIndex(prev => {
+                    if (prev < 1 || prev > suggestedCommandsForSubCommand.length) return 1;
+
+                    return prev;
+                  });
+
+                  setIsLoadingResults(false);
                 }
               }}
               setSearchFilters={setSearchFilters}

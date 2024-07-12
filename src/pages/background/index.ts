@@ -866,13 +866,21 @@ chrome.runtime.onMessage.addListener(
         oneMonthBefore.setMonth(oneMonthBefore.getMonth() - 2);
 
         // query history (words match)
-        const history = await chrome.history.search({
+        let history = await chrome.history.search({
           text: searchQuery,
           startTime: oneMonthBefore.getTime(),
           maxResults: searchResLimit - matchedCommands.length,
         });
 
         if (history?.length > 0) {
+          // remove duplicate
+          history = history.filter((h1, idx) => {
+            const index = history.findIndex(b => b.url === h1.url);
+            if (index === -1 || index === idx) return true;
+
+            return false;
+          });
+
           for (const item of history) {
             if (!item.url) return;
             const icon = await getFaviconURLAsync(item.url);
