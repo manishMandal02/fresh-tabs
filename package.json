@@ -63,6 +63,7 @@
     "react-hook-form": "^7.51.1",
     "react-hotkeys-hook": "^4.5.0",
     "react-icons": "^4.12.0",
+    "react-select": "^5.8.0",
     "react-tooltip": "^5.25.1",
     "victory": "^36.9.1",
     "webextension-polyfill": "0.10.0",

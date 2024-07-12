@@ -1,5 +1,6 @@
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
+import Select from 'react-select';
 import { useState, useEffect, memo, ReactNode, FC, useRef } from 'react';
 import { Cross2Icon, OpenInNewWindowIcon } from '@radix-ui/react-icons';
 
@@ -9,12 +10,12 @@ import { SlideModal } from '../../../../../components/modal';
 import Switch from '../../../../../components/switch/Switch';
 import Accordion from '../../../../../components/accordion/Accordion';
 import { useCustomAnimation } from '../../../hooks/useCustomAnimation';
-import { AlarmName, DefaultAppSettings } from '@root/src/constants/app';
 import { saveSettings } from '@root/src/services/chrome-storage/settings';
 import { discardAllTabs } from '@root/src/services/chrome-discard/discard';
 import { createAlarm, deleteAlarm } from '@root/src/services/chrome-alarms/helpers';
 import RadioGroup, { RadioOptions } from '../../../../../components/radio-group/RadioGroup';
 import { appSettingsAtom, showSettingsModalAtom, snackbarAtom } from '@root/src/stores/app';
+import { AlarmName, CommandType, Commands, DefaultAppSettings } from '@root/src/constants/app';
 import { removeWWWPrefix, cn, getUrlDomain, parseUrl, retryAtIntervals, wait, isValidURL } from '@root/src/utils';
 
 const domainWithSubdomainRegex = /^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,10}$/;
@@ -55,6 +56,22 @@ const autoDiscardIntervalTimeOptions: RadioOptions[] = [
   { value: '15', label: '15 min' },
   { value: '30', label: '30 min' },
 ];
+
+// maps current enabled/active cmd to show select option to disable them
+const getCommandsToDisableSelectOptions = (disabledCmd: Commands): RadioOptions[] => {
+  let allCommands = Object.keys(CommandType) as Commands;
+
+  if (disabledCmd.length > 0) {
+    allCommands = allCommands.filter(cmd => !disabledCmd.includes(cmd));
+  }
+
+  return allCommands.map(cmd => {
+    return {
+      value: cmd,
+      label: cmd,
+    };
+  });
+};
 
 type IAppSettingsKeys = keyof IAppSettings;
 
@@ -283,7 +300,9 @@ const Settings = () => {
 
   return (
     <SlideModal title="Preferences" isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)}>
-      <div className="relative flex flex-col w-full h-full max-h-[90vh] pt-1.5 px-1 text-slate-400">
+      <div
+        id="preference-container"
+        className="relative flex flex-col w-full h-full max-h-[90vh] pt-1.5 px-1 text-slate-400">
         <div className="w-full h-fit max-h-[100%] overflow-y-auto cc-scrollbar pb-[28.5px]">
           {/* general */}
           <Accordion
@@ -401,7 +420,7 @@ const Settings = () => {
           {/* command palette */}
           <Accordion
             id="command-palette"
-            defaultCollapsed
+            // defaultCollapsed
             classes={{
               triggerContainer:
                 'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px mb-[3px]',
@@ -487,6 +506,52 @@ const Settings = () => {
                   disabled={settingsUpdateData.cmdPalette.isDisabled}>
                   Change Shortcut In Chrome <OpenInNewWindowIcon className="text-slate-600/80" />
                 </button>
+              </div>
+
+              {/* disabled commands */}
+              <div className="flex flex-col items-star px-1">
+                <p className="text-[12px] mb-1 font-light tracking-wide ml-px">
+                  Disabled Commands ({settingsUpdateData.autoDiscardTabs.whitelistedDomains.length})
+                </p>
+                {/* input box */}
+                {/* TODO- style react-select */}
+                <Select
+                  defaultInputValue="select-command"
+                  isMulti
+                  menuPlacement="top"
+                  menuPosition="fixed"
+                  menuPortalTarget={document.querySelector('#preference-container')}
+                  // minMenuHeight={150}
+                  // classNames={{
+                  //   container: () => 'relative z-[100] w-full',
+                  //   menu: () => 'z-[9999999] h-full w-full',
+                  //   menuPortal: () => 'z-[9999999999] w-full',
+                  // }}
+                  options={[
+                    { label: 'Select Command', value: 'select-command' },
+                    ...getCommandsToDisableSelectOptions([]),
+                  ]}
+                  onChange={() => {}}
+                />
+                {/* domain chips */}
+                <div className="ml-1 flex items-start justify-start flex-grow flex-wrap max-w-full mt-1.5 overflow-x-hidden overflow-y-auto cc-scrollbar max-h-[100px]">
+                  {settingsUpdateData.autoDiscardTabs.whitelistedDomains.length == 1 ? (
+                    settingsUpdateData.autoDiscardTabs.whitelistedDomains.map((domain, index) => (
+                      <div
+                        className="w-fit flex items-center justify-between pl-2.5 pr-1 py-[2.5px] bg-brand-darkBgAccent/30 shadow shadow-brand-darkBg/60 rounded-xl mb-1 mr-1 select-text"
+                        key={index}>
+                        <span className="text-[9px] text-slate-400/90">{domain}</span>
+                        <button
+                          onClick={() => handleRemoveWhitelistDomain(domain)}
+                          className="bg-brand-darkBgAccent/60 border border-brand-darkBg/40 rounded-full ml-[2.5px] hover:bg-brand-darkBg/10 transition-colors duration-200">
+                          <Cross2Icon className="text-slate-500 scale-[0.8]" />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-slate-500 text-[10px] font-light">No disabled commands</p>
+                  )}
+                </div>
               </div>
             </BodyContainer>
           </Accordion>

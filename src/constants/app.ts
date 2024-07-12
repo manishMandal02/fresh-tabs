@@ -48,6 +48,8 @@ export enum CommandType {
   WhitelistDomainForAutoDiscard = 'whitelist-domain-auto-discard',
 }
 
+export type Commands = Array<keyof typeof CommandType>;
+
 export enum NOTIFICATION_TYPE {
   NOTE_REMAINDER = 'note-remainder',
   UN_SNOOZED_TAB = 'un-snoozed-tab',
@@ -105,7 +107,7 @@ export const DefaultAppSettings: IAppSettings = {
   autoSaveToBookmark: 'daily',
   deleteUnsavedSpace: 'immediately',
   autoDiscardTabs: { isEnabled: true, discardTabAfterIdleTime: 10, whitelistedDomains: [] },
-  cmdPalette: { isDisabled: false, includeBookmarksInSearch: true, includeNotesInSearch: false },
+  cmdPalette: { isDisabled: false, includeBookmarksInSearch: true, includeNotesInSearch: false, disabledCommands: [] },
   linkPreview: { isDisabled: false, openTrigger: 'shift-click', size: 'tablet' },
   notes: { isDisabled: false, showOnAllSites: true, bubblePos: 'bottom-left' },
 };

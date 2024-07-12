@@ -61,6 +61,8 @@ const CommandPalette = ({
 }: Props) => {
   console.log('CommandPalette ~ 🔁 rendered');
 
+  // TODO - handle notes feature disabled case
+
   // loading search result
   const [isLoadingResults, setIsLoadingResults] = useState(false);
 
@@ -532,7 +534,6 @@ const CommandPalette = ({
               {/* actions */}
               {suggestedCommands?.length > 0 &&
                 suggestedCommands?.map(cmd => {
-                  s;
                   const renderCommands: JSX.Element[] = [];
                   // section label
                   // do not render  for sub commands

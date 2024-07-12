@@ -435,7 +435,7 @@ export const showCommandPaletteContentScript = async (
       state: 'normal',
       url: chrome.runtime.getURL(`src/pages/command-palette-popup/index.html?windowId=${currentWindow.id}`),
       width: 700,
-      height: 460,
+      height: 465,
       top: popupOffsetTop,
       left: popupOffsetLeft,
     });

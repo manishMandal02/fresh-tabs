@@ -27,6 +27,7 @@ type CommandPaletteSettings = {
   isDisabled: boolean;
   includeBookmarksInSearch: boolean;
   includeNotesInSearch: boolean;
+  disabledCommands: CommandType[];
 };
 
 type LinkPreviewSettings = {
