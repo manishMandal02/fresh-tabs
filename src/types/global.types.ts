@@ -1,3 +1,4 @@
+import { Commands } from './../constants/app';
 import { IconProps } from '@radix-ui/react-icons/dist/types';
 import { CommandType, NOTIFICATION_TYPE, ThemeColor } from '@root/src/constants/app';
 import { ForwardRefExoticComponent, HTMLProps } from 'react';
@@ -27,7 +28,7 @@ type CommandPaletteSettings = {
   isDisabled: boolean;
   includeBookmarksInSearch: boolean;
   includeNotesInSearch: boolean;
-  disabledCommands: CommandType[];
+  disabledCommands: Commands[];
 };
 
 type LinkPreviewSettings = {

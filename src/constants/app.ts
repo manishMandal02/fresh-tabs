@@ -48,7 +48,7 @@ export enum CommandType {
   WhitelistDomainForAutoDiscard = 'whitelist-domain-auto-discard',
 }
 
-export type Commands = Array<keyof typeof CommandType>;
+export type Commands = keyof typeof CommandType;
 
 export enum NOTIFICATION_TYPE {
   NOTE_REMAINDER = 'note-remainder',

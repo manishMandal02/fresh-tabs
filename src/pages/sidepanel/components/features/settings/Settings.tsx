@@ -58,8 +58,8 @@ const autoDiscardIntervalTimeOptions: RadioOptions[] = [
 ];
 
 // maps current enabled/active cmd to show select option to disable them
-const getCommandsToDisableSelectOptions = (disabledCmd: Commands): RadioOptions[] => {
-  let allCommands = Object.keys(CommandType) as Commands;
+const getCommandsToDisableSelectOptions = (disabledCmd: Commands[]): RadioOptions[] => {
+  let allCommands = Object.keys(CommandType) as Commands[];
 
   if (disabledCmd.length > 0) {
     allCommands = allCommands.filter(cmd => !disabledCmd.includes(cmd));
@@ -76,6 +76,7 @@ const getCommandsToDisableSelectOptions = (disabledCmd: Commands): RadioOptions[
 type IAppSettingsKeys = keyof IAppSettings;
 
 const Settings = () => {
+  console.log('Settings 🔁 rendered');
   const [showSettingsModal, setShowSettingsModal] = useAtom(showSettingsModalAtom);
 
   // local settings state
@@ -84,6 +85,8 @@ const Settings = () => {
   const [openAppShortcut, setOpenAppShortcut] = useState('');
 
   const whitelistInputRef = useRef<HTMLInputElement>(null);
+
+  const [enabledCmdOptions, setEnabledCmdOptions] = useState([]);
 
   const [commandPaletteShortcut, setCommandPaletteShortcut] = useState('');
 
@@ -98,9 +101,13 @@ const Settings = () => {
 
   // set local settings data state
   useEffect(() => {
+    if (!showSettingsModal) return;
     setSettingsUpdateData(appSettings);
     getAppShortcuts();
-  }, [appSettings]);
+    const enabledCommands = getCommandsToDisableSelectOptions(appSettings.cmdPalette.disabledCommands);
+
+    setEnabledCmdOptions(enabledCommands);
+  }, [showSettingsModal]);
 
   // on settings change
   const handleSettingsChange = (key: IAppSettingsKeys, value: IAppSettings[IAppSettingsKeys]) => {
@@ -173,11 +180,21 @@ const Settings = () => {
     setSnackbar({ show: true, msg: 'Preferences saved', isSuccess: true });
   };
 
+  // update blocked commands
+  const handleUpdateBlockCommands = async (commands: Commands[]) => {
+    const updatedSettings = {
+      ...settingsUpdateData,
+      cmdPalette: { ...settingsUpdateData.cmdPalette, disabledCommands: commands },
+    };
+    await saveSettings(updatedSettings);
+
+    // save to global (ui) state
+    setAppSetting(updatedSettings);
+  };
+
   // save whitelist site
   const handleAddWhitelistDomain = async () => {
     let domainInput = whitelistInputRef.current.value;
-
-    console.log('🌅 ~ handleAddWhitelistDomain ~ domainInput:', domainInput);
 
     if (!domainInput) return;
 
@@ -192,49 +209,37 @@ const Settings = () => {
 
     domainInput = removeWWWPrefix(domainInput);
 
-    const updatedWhitelist = [...appSettings.autoDiscardTabs.whitelistedDomains, domainInput];
-    // save to storage
-    await saveSettings({
+    const updatedSettings = {
       ...appSettings,
       autoDiscardTabs: {
         ...appSettings.autoDiscardTabs,
-        whitelistedDomains: updatedWhitelist,
+        whitelistedDomains: [...appSettings.autoDiscardTabs.whitelistedDomains, domainInput],
       },
-    });
+    };
+    // save to storage
+    await saveSettings(updatedSettings);
 
     whitelistInputRef.current.value = '';
 
     // save to global (ui) state
-    setAppSetting({
-      ...appSettings,
-      autoDiscardTabs: {
-        ...appSettings.autoDiscardTabs,
-        whitelistedDomains: updatedWhitelist,
-      },
-    });
+    setAppSetting(updatedSettings);
   };
 
   // remove whitelist site
   const handleRemoveWhitelistDomain = async (domain: string) => {
-    const updatedWhitelist = appSettings.autoDiscardTabs.whitelistedDomains.filter(d => d !== domain);
+    const updatedWhitelist = {
+      ...appSettings,
+      autoDiscardTabs: {
+        ...appSettings.autoDiscardTabs,
+        whitelistedDomains: appSettings.autoDiscardTabs.whitelistedDomains.filter(d => d !== domain),
+      },
+    };
 
     // save to storage
-    await saveSettings({
-      ...appSettings,
-      autoDiscardTabs: {
-        ...appSettings.autoDiscardTabs,
-        whitelistedDomains: updatedWhitelist,
-      },
-    });
+    await saveSettings(updatedWhitelist);
 
     // save to global (ui) state
-    setAppSetting({
-      ...appSettings,
-      autoDiscardTabs: {
-        ...appSettings.autoDiscardTabs,
-        whitelistedDomains: updatedWhitelist,
-      },
-    });
+    setAppSetting(updatedWhitelist);
   };
 
   const getAppShortcuts = async () => {
@@ -243,8 +248,6 @@ const Settings = () => {
     let openSidePanelShortcut = chromeShortcuts.find(s => s.name == '_execute_action')?.shortcut || '⌘E';
 
     let openCommandPaletteShortcut = chromeShortcuts.find(s => s.name == 'cmdPalette')?.shortcut || '⌘.';
-
-    console.log('🚀 ~ getAppShortcut ~ openCommandPaletteShortcut:', openCommandPaletteShortcut);
 
     openSidePanelShortcut = openSidePanelShortcut.split('').join(' + ');
     openCommandPaletteShortcut = openCommandPaletteShortcut.split('').join(' + ');
@@ -511,38 +514,54 @@ const Settings = () => {
               {/* disabled commands */}
               <div className="flex flex-col items-star px-1">
                 <p className="text-[12px] mb-1 font-light tracking-wide ml-px">
-                  Disabled Commands ({settingsUpdateData.autoDiscardTabs.whitelistedDomains.length})
+                  Disable Commands ({settingsUpdateData.autoDiscardTabs.whitelistedDomains.length})
                 </p>
                 {/* input box */}
-                {/* TODO- style react-select */}
                 <Select
-                  defaultInputValue="select-command"
                   isMulti
                   menuPlacement="top"
                   menuPosition="fixed"
                   menuPortalTarget={document.querySelector('#preference-container')}
-                  // minMenuHeight={150}
-                  // classNames={{
-                  //   container: () => 'relative z-[100] w-full',
-                  //   menu: () => 'z-[9999999] h-full w-full',
-                  //   menuPortal: () => 'z-[9999999999] w-full',
-                  // }}
-                  options={[
-                    { label: 'Select Command', value: 'select-command' },
-                    ...getCommandsToDisableSelectOptions([]),
-                  ]}
-                  onChange={() => {}}
+                  isSearchable={true}
+                  isClearable={true}
+                  closeMenuOnSelect={false}
+                  classNames={{
+                    control: () =>
+                      '!bg-brand-darkBgAccent/70 !border-slate-700/80  !outline-none focus-within:!border-slate-500/90 !shadow-none !max-h-[125px] !overflow-y-auto cc-scrollbar',
+                    menu: () => '!bg-brand-darkBgAccent/95',
+                    menuList: () => 'cc-scrollbar',
+                    option: props =>
+                      // eslint-disable-next-line react/prop-types
+                      !props.isFocused
+                        ? '!text-slate-300 !bg-transparent hover:!bg-slate-700'
+                        : '!bg-slate-700/90 !text-slate-200',
+                    input: () => ' text-slate-300',
+                    indicatorSeparator: () => '!bg-slate-600',
+                    dropdownIndicator: () => '!text-slate-500/80',
+                    clearIndicator: () => '!text-slate-500/90 hover:!text-slate-500/70 !cursor-pointer',
+                    noOptionsMessage: () => '!text-slate-400',
+                    multiValue: () => '!bg-brand-darkBg/40 rounded-md',
+                    multiValueLabel: () => '!text-slate-300 ',
+                    multiValueRemove: () => 'hover:!bg-rose-300 hover:!text-slate-800',
+                  }}
+                  placeholder="Select Command"
+                  options={enabledCmdOptions}
+                  value={appSettings.cmdPalette.disabledCommands || []}
+                  onChange={selected => {
+                    const selectedCmd = selected.map(option => option);
+                    handleUpdateBlockCommands(selectedCmd);
+                  }}
                 />
                 {/* domain chips */}
                 <div className="ml-1 flex items-start justify-start flex-grow flex-wrap max-w-full mt-1.5 overflow-x-hidden overflow-y-auto cc-scrollbar max-h-[100px]">
-                  {settingsUpdateData.autoDiscardTabs.whitelistedDomains.length == 1 ? (
-                    settingsUpdateData.autoDiscardTabs.whitelistedDomains.map((domain, index) => (
+                  {settingsUpdateData.cmdPalette.disabledCommands.length > 0 ? (
+                    settingsUpdateData.cmdPalette.disabledCommands.map((cmd, index) => (
                       <div
                         className="w-fit flex items-center justify-between pl-2.5 pr-1 py-[2.5px] bg-brand-darkBgAccent/30 shadow shadow-brand-darkBg/60 rounded-xl mb-1 mr-1 select-text"
                         key={index}>
-                        <span className="text-[9px] text-slate-400/90">{domain}</span>
+                        <span className="text-[9px] text-slate-400/90">{cmd}</span>
                         <button
-                          onClick={() => handleRemoveWhitelistDomain(domain)}
+                          onClick={() => handleRemoveWhitelistDomain(cmd)}
                           className="bg-brand-darkBgAccent/60 border border-brand-darkBg/40 rounded-full ml-[2.5px] hover:bg-brand-darkBg/10 transition-colors duration-200">
                           <Cross2Icon className="text-slate-500 scale-[0.8]" />
                         </button>
@@ -688,7 +707,6 @@ const Settings = () => {
                   Whitelist Sites ({settingsUpdateData.autoDiscardTabs.whitelistedDomains.length})
                 </p>
                 {/* input box */}
-                {/*  eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
 
                 <input
                   type="text"
