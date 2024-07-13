@@ -7,8 +7,8 @@ import CaptureNote from '../capture-note';
 import { debounce } from '@root/src/utils';
 import KBD from '@root/src/components/kbd/KBD';
 import SearchBox from './search-box/SearchBox';
-import { CommandType } from '@root/src/constants/app';
 import CommandDivider from './command/CommandDivider';
+import { CommandType } from '@root/src/constants/app';
 import { getTime } from '@root/src/utils/date-time/get-time';
 import { publishEvents } from '../../../utils/publish-events';
 import { getTimeAgo } from '@root/src/utils/date-time/time-ago';
@@ -16,10 +16,11 @@ import { getAllSpaces } from '@root/src/services/chrome-storage/spaces';
 import { getTabsInSpace } from '@root/src/services/chrome-storage/tabs';
 import { getAllGroups } from '@root/src/services/chrome-storage/groups';
 import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
+import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 import { useCustomAnimation } from '../../sidepanel/hooks/useCustomAnimation';
 import { ICommand, ISearchFilters, ISpace } from '../../../types/global.types';
-import { DEFAULT_SEARCH_PLACEHOLDER, useCommandPalette } from './useCommandPalette';
 import { staticCommands, useCommand, webSearchCommand } from './command/useCommand';
+import { DEFAULT_SEARCH_PLACEHOLDER, useCommandPalette } from './useCommandPalette';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
 
 export const COMMAND_PALETTE_SIZE = {
@@ -39,7 +40,6 @@ type Props = {
   activeSpace: ISpace;
   groupId: number;
   onClose?: () => void;
-  searchFiltersPreference: ISearchFilters;
   userSelectedText?: string;
   selectedNoteId?: string;
   isOpenedInPopupWindow?: boolean;
@@ -54,30 +54,78 @@ const CommandPalette = ({
   activeSpace,
   onClose,
   groupId,
-  searchFiltersPreference,
   userSelectedText,
   selectedNoteId,
   isOpenedInPopupWindow,
 }: Props) => {
   console.log('CommandPalette ~ 🔁 rendered');
 
-  // TODO - handle notes feature disabled case
-
   // loading search result
   const [isLoadingResults, setIsLoadingResults] = useState(false);
 
   const [searchFilters, setSearchFilters] = useState<ISearchFilters>({ searchBookmarks: false, searchNotes: false });
+
+  const [isNotesDisabled, setIsNotesDisabled] = useState(false);
+
+  const [enabledCommands, setEnabledCommands] = useState([]);
 
   // elements ref
   const modalRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionContainerRef = useRef<HTMLDivElement>(null);
 
+  // focus search input box
+  const handleFocusSearchInput = () => {
+    inputRef.current?.focus();
+  };
+
+  const setUserPreference = async () => {
+    const { cmdPalette, notes } = await getAppSettings();
+
+    setSearchFilters({
+      searchBookmarks: cmdPalette.includeBookmarksInSearch,
+      searchNotes: cmdPalette.includeNotesInSearch,
+    });
+
+    const enabledCommandsFiltered = staticCommands.filter(
+      cmd =>
+        !cmdPalette.disabledCommands.includes(cmd.type) && (notes.isDisabled ? cmd.type !== CommandType.NewNote : true),
+    );
+
+    setIsNotesDisabled(notes.isDisabled);
+
+    setEnabledCommands(enabledCommandsFiltered);
+  };
+
+  // initialize component
+  useEffect(() => {
+    modalRef.current?.showModal();
+    handleFocusSearchInput();
+
+    (async () => {
+      // set user preference
+      await setUserPreference();
+    })();
+    // run only when components renders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if ((!userSelectedText && !selectedNoteId) || isNotesDisabled) {
+      // apply user preference to cmd palette
+
+      setDefaultSuggestedCommands();
+    } else {
+      setSubCommand(CommandType.NewNote);
+    }
+  }, [enabledCommands, isNotesDisabled, userSelectedText, selectedNoteId]);
+
   const handleClose = useCallback(() => {
     modalRef.current?.close();
     onClose();
   }, [onClose]);
 
+  // logic hook
   const {
     subCommand,
     searchQuery,
@@ -102,29 +150,6 @@ const CommandPalette = ({
 
   const { isStaticCommand, getCommandIcon } = useCommand();
 
-  // focus search input box
-  const handleFocusSearchInput = () => {
-    inputRef.current?.focus();
-  };
-
-  // initialize component
-  useEffect(() => {
-    modalRef.current?.showModal();
-    handleFocusSearchInput();
-
-    if (searchFiltersPreference) {
-      setSearchFilters(searchFiltersPreference);
-    }
-
-    if (!userSelectedText && !selectedNoteId) {
-      setDefaultSuggestedCommands();
-    } else {
-      setSubCommand(CommandType.NewNote);
-    }
-    // run when component mounts
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // check if the focused command is visible
   useEffect(() => {
     const numOfVisibleCommands = (SUGGESTED_COMMANDS_MAX_HEIGHT - 15) / COMMAND_HEIGHT;
@@ -137,21 +162,26 @@ const CommandPalette = ({
   }, [focusedCommandIndex, suggestedCommands]);
 
   // set default suggested commands
-  const setDefaultSuggestedCommands = useCallback(async () => {
-    // filter out featured command
-    let filteredStaticCommands = staticCommands.filter(cmd => !!cmd?.isFeatured);
+  const setDefaultSuggestedCommands = useCallback(
+    async (commands?: ICommand[]) => {
+      let filteredStaticCommands = commands ? commands : enabledCommands;
 
-    const currentGroups = await getAllGroups(activeSpace.id);
+      // filter out cmd (only featured and enabled commands)
+      filteredStaticCommands = filteredStaticCommands.filter(cmd => !!cmd?.isFeatured);
 
-    if (currentGroups && currentGroups.length < 1) {
-      filteredStaticCommands = filteredStaticCommands.filter(cmd => cmd.type !== CommandType.AddToGroup);
-    }
+      const currentGroups = await getAllGroups(activeSpace.id);
 
-    filteredStaticCommands = filteredStaticCommands.map((cmd, idx) => ({ ...cmd, index: idx + 1 }));
+      if (currentGroups && currentGroups.length < 1) {
+        filteredStaticCommands = filteredStaticCommands.filter(cmd => cmd.type !== CommandType.AddToGroup);
+      }
 
-    setSuggestedCommands(filteredStaticCommands);
-    setFocusedCommandIndex(1);
-  }, [setSuggestedCommands, setFocusedCommandIndex, activeSpace]);
+      filteredStaticCommands = filteredStaticCommands.map((cmd, idx) => ({ ...cmd, index: idx + 1 }));
+
+      setSuggestedCommands(filteredStaticCommands);
+      setFocusedCommandIndex(1);
+    },
+    [setSuggestedCommands, setFocusedCommandIndex, activeSpace, enabledCommands],
+  );
 
   // search sub commands
   const handleSearchSubCommands = useCallback(
@@ -164,8 +194,6 @@ const CommandPalette = ({
         setIsLoadingResults(false);
         return;
       }
-
-      console.log('💰 ~ handleSearchSubCommands:159 ~ searchQueryLowerCase:', searchQueryLowerCase);
 
       // handle snooze sub command, generate date & time based on user input
       if (subCommand === CommandType.SnoozeTab) {
@@ -221,7 +249,7 @@ const CommandPalette = ({
       }
 
       const currentGroups = await getAllGroups(activeSpace.id);
-      let filteredStaticCommands = staticCommands;
+      let filteredStaticCommands = enabledCommands;
 
       // do not include add to group cmd if no group exists
       if (!currentGroups || currentGroups.length < 1) {
@@ -358,8 +386,6 @@ const CommandPalette = ({
           ...cmd,
           index: idx + 1,
         }));
-
-        console.log('🌅 ~ handleSearchCommands:367 ~ matchedCommands:', matchedCommands);
       }
 
       if (matchedCommands.length < 6) {
@@ -372,13 +398,22 @@ const CommandPalette = ({
       setFocusedCommandIndex(1);
       setIsLoadingResults(false);
     },
-    [activeSpace, groupId, searchFilters, setSuggestedCommands, setFocusedCommandIndex, setDefaultSuggestedCommands],
+    [
+      activeSpace,
+      groupId,
+      searchFilters,
+      setSuggestedCommands,
+      setFocusedCommandIndex,
+      setDefaultSuggestedCommands,
+      enabledCommands,
+    ],
   );
 
   const debouncedSearchCommands = useCallback(debounce(handleSearchCommands, 300), [
     activeSpace,
     groupId,
     searchFilters,
+    enabledCommands,
   ]);
 
   const debouncedSearchSubCommands = useCallback(debounce(handleSearchSubCommands, 300), [
@@ -454,6 +489,16 @@ const CommandPalette = ({
               subCommand={subCommand}
               searchQuery={searchQuery}
               searchFilters={searchFilters}
+              setSearchFilters={setSearchFilters}
+              isNotesDisabled={isNotesDisabled}
+              placeholder={searchQueryPlaceholder}
+              handleFocusSearchInput={handleFocusSearchInput}
+              onClearSearch={() => {
+                setSubCommand(null);
+                setDefaultSuggestedCommands();
+                setSuggestedCommandsForSubCommand([]);
+                setFocusedCommandIndex(1);
+              }}
               setSearchQuery={async value => {
                 setSearchQuery(value);
 
@@ -494,15 +539,6 @@ const CommandPalette = ({
                     return prev;
                   });
                 }
-              }}
-              setSearchFilters={setSearchFilters}
-              placeholder={searchQueryPlaceholder}
-              handleFocusSearchInput={handleFocusSearchInput}
-              onClearSearch={() => {
-                setSubCommand(null);
-                setDefaultSuggestedCommands();
-                setSuggestedCommandsForSubCommand([]);
-                setFocusedCommandIndex(1);
               }}
             />
           ) : (
@@ -571,7 +607,7 @@ const CommandPalette = ({
                 })}
 
               {/* lading commands ui (skeleton) */}
-              {isLoadingResults
+              {isLoadingResults || enabledCommands.length < 1
                 ? [1, 2].map(v => (
                     <div key={v} className="w-full  mb-[5px] mt-1.5 flex items-center justify-start">
                       <span className="w-[24px] h-[25px] bg-brand-darkBgAccent/70 ml-2  rounded animate-pulse"></span>
@@ -582,7 +618,7 @@ const CommandPalette = ({
                   ))
                 : null}
               {/* no commands found */}
-              {!isLoadingResults && suggestedCommands?.length < 1 ? (
+              {!isLoadingResults && suggestedCommands?.length < 1 && enabledCommands.length > 0 ? (
                 <div
                   className="w-full flex items-center  justify-center text-slate-500 text-sm font-light py-1"
                   style={{ height: COMMAND_HEIGHT + 'px' }}>

@@ -23,6 +23,7 @@ const SubCommandIndicator: FC<{ subCommandType?: CommandType }> = ({ subCommandT
 type Props = {
   searchQuery: string;
   placeholder: string;
+  isNotesDisabled: boolean;
   subCommand: CommandType;
   setSearchQuery: (query: string) => void;
   onClearSearch: () => void;
@@ -40,6 +41,7 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
       onClearSearch,
       searchFilters,
       setSearchQuery,
+      isNotesDisabled,
       setSearchFilters,
       handleFocusSearchInput,
     },
@@ -112,23 +114,25 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
           </motion.div>
           {/* notes */}
           {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-          <motion.span
-            whileTap={{ scale: '1.1', width: '100%' }}
-            transition={{ type: 'spring', duration: '0.1', damping: 15, stiffness: 200 }}
-            tabIndex={-1}
-            onClick={() => {
-              setSearchFilters(prev => ({ ...prev, searchNotes: !prev.searchNotes }));
-              handleFocusSearchInput();
-            }}
-            className={cn(
-              'flex w-[60px] items-center justify-center overflow-hidden text-slate-300/70 font-light text-[10.5px] border border-brand-darkBgAccent/90 px-2.5 py-px rounded-2xl select-none cursor-pointer',
-              { 'bg-brand-darkBgAccent/70 px-1.5': searchNotes },
-            )}>
-            <span className="mr-[2px]">
-              {searchNotes ? <CheckIcon className="text-slate-200 scale-[0.7]" /> : null}
-            </span>
-            Notes
-          </motion.span>
+          {!isNotesDisabled ? (
+            <motion.span
+              whileTap={{ scale: '1.1', width: '100%' }}
+              transition={{ type: 'spring', duration: '0.1', damping: 15, stiffness: 200 }}
+              tabIndex={-1}
+              onClick={() => {
+                setSearchFilters(prev => ({ ...prev, searchNotes: !prev.searchNotes }));
+                handleFocusSearchInput();
+              }}
+              className={cn(
+                'flex w-[60px] items-center justify-center overflow-hidden text-slate-300/70 font-light text-[10.5px] border border-brand-darkBgAccent/90 px-2.5 py-px rounded-2xl select-none cursor-pointer',
+                { 'bg-brand-darkBgAccent/70 px-1.5': searchNotes },
+              )}>
+              <span className="mr-[2px]">
+                {searchNotes ? <CheckIcon className="text-slate-200 scale-[0.7]" /> : null}
+              </span>
+              Notes
+            </motion.span>
+          ) : null}
           {/* <span>Bookmarks</span> */}
         </div>
       </div>

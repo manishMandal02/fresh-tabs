@@ -53,7 +53,7 @@ const Auth = () => {
           <button
             onClick={handleSendMagicLink}
             disabled={email.length > 4 ? !emailRegex.test(email.trim()) : true}
-            className={`mt-5 py-1.5 w-[87%] max-w-[70vw] text-[13.5px] text-slate-800/90 font-semibold flex items-center justify-center bg-brand-primary rounded mx-auto
+            className={`mt-5 py-1.5 w-[220px] text-[13.5px] text-slate-800/90 font-semibold flex items-center justify-center bg-brand-primary rounded mx-auto
                         hover:opacity-90 duration-300  transition-all disabled:hover:opacity-100 disabled:bg-slate-700 disabled:text-slate-300/70 disabled:cursor-default group
                          outline-none border-[2px] border-transparent focus-within:border-slate-300 select-none
                         `}>

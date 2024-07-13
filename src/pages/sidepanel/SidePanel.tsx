@@ -37,6 +37,7 @@ import {
   notesAtom,
   userAtom,
 } from '@root/src/stores/app';
+import { getUser } from '@root/src/services/chrome-storage/user';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -75,11 +76,13 @@ const SidePanel = () => {
   useEffect(() => {
     setIsLoadingSpaces(true);
     (async () => {
-      // TODO - temp - no auth check
       // check if user authed or not
-      // const user = await getUser();
 
-      // if (!user) return;
+      const user = await getUser();
+      if (!user) {
+        setIsLoadingSpaces(false);
+        return;
+      }
 
       // set user
       setUser(user);
@@ -160,7 +163,7 @@ const SidePanel = () => {
           <FavTabs tabs={globalPinnedTabs} isGlobal={true} setGlobalPinnedTabs={setGlobalPinnedTabs} />
         </div> */}
         <ErrorBoundary FallbackComponent={ErrorBoundaryUI}>
-          {user ? (
+          {!user ? (
             <Auth />
           ) : (
             <>

@@ -144,8 +144,6 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 
 // TODO fix - error on content script:: extension context invalidated error
 
-// TODO - improve - add cmd palette preference option to remove cmd
-
 // TODO - complete auth UI and logic for FE
 
 //!------

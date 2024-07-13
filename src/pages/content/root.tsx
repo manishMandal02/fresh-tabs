@@ -16,7 +16,7 @@ import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 import { getUserSelectionText, isValidURL, publishEvents } from '@root/src/utils';
 import CommandPalette, { COMMAND_PALETTE_SIZE } from './command-palette/CommandPalette';
-import { IMessageEventContentScript, ISearchFilters, ISpace, NoteBubblePos } from '../../types/global.types';
+import { IMessageEventContentScript, ISpace, NoteBubblePos } from '../../types/global.types';
 
 // development: refresh content page on update
 refreshOnUpdate('pages/content');
@@ -41,7 +41,6 @@ type AppendContainerProps = {
   selectedText?: string;
   groupId?: number;
   selectedNoteId?: string;
-  searchFilterPreferences?: ISearchFilters;
 };
 
 const appendCommandPaletteContainer = ({
@@ -49,7 +48,6 @@ const appendCommandPaletteContainer = ({
   groupId,
   selectedText,
   selectedNoteId,
-  searchFilterPreferences,
 }: AppendContainerProps) => {
   if (document.getElementById(ContentScriptContainerIds.COMMAND_PALETTE)) return;
 
@@ -111,7 +109,6 @@ const appendCommandPaletteContainer = ({
               onClose={handleCloseCommandPalette}
               userSelectedText={userSelectedText?.trim() || ''}
               selectedNoteId={selectedNoteId}
-              searchFiltersPreference={searchFilterPreferences}
             />
           );
         }}
@@ -314,11 +311,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
 
   if (msgEvent === 'SHOW_COMMAND_PALETTE') {
-    const { activeSpace, searchFilterPreferences, groupId } = event.payload;
+    const { activeSpace, groupId } = event.payload;
     appendCommandPaletteContainer({
       groupId,
       activeSpace,
-      searchFilterPreferences,
     });
   }
 

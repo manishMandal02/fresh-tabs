@@ -1,8 +1,8 @@
 import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
 import Select from 'react-select';
-import { useState, useEffect, memo, ReactNode, FC, useRef } from 'react';
 import { Cross2Icon, OpenInNewWindowIcon } from '@radix-ui/react-icons';
+import { useState, useEffect, memo, ReactNode, FC, useRef } from 'react';
 
 import Spinner from '../../../../../components/spinner';
 import { IAppSettings } from '@root/src/types/global.types';
@@ -13,9 +13,9 @@ import { useCustomAnimation } from '../../../hooks/useCustomAnimation';
 import { saveSettings } from '@root/src/services/chrome-storage/settings';
 import { discardAllTabs } from '@root/src/services/chrome-discard/discard';
 import { createAlarm, deleteAlarm } from '@root/src/services/chrome-alarms/helpers';
+import { AlarmName, CommandType, DefaultAppSettings } from '@root/src/constants/app';
 import RadioGroup, { RadioOptions } from '../../../../../components/radio-group/RadioGroup';
 import { appSettingsAtom, showSettingsModalAtom, snackbarAtom } from '@root/src/stores/app';
-import { AlarmName, CommandType, Commands, DefaultAppSettings } from '@root/src/constants/app';
 import { removeWWWPrefix, cn, getUrlDomain, parseUrl, retryAtIntervals, wait, isValidURL } from '@root/src/utils';
 
 const domainWithSubdomainRegex = /^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,10}$/;
@@ -57,9 +57,21 @@ const autoDiscardIntervalTimeOptions: RadioOptions[] = [
   { value: '30', label: '30 min' },
 ];
 
+const CommandsNotAllowedToDisable: CommandType[] = [
+  'switch-space',
+  'new-space',
+  'new-note',
+  'link',
+  'snooze-tab',
+  'discard-tabs',
+  'switch-tab',
+];
+
 // maps current enabled/active cmd to show select option to disable them
-const getCommandsToDisableSelectOptions = (disabledCmd: Commands[]): RadioOptions[] => {
-  let allCommands = Object.keys(CommandType) as Commands[];
+const getCommandsToDisableSelectOptions = (disabledCmd: CommandType[]): RadioOptions[] => {
+  let allCommands = Object.values(CommandType);
+
+  allCommands = allCommands.filter(cmd => !CommandsNotAllowedToDisable.includes(cmd));
 
   if (disabledCmd.length > 0) {
     allCommands = allCommands.filter(cmd => !disabledCmd.includes(cmd));
@@ -68,7 +80,7 @@ const getCommandsToDisableSelectOptions = (disabledCmd: Commands[]): RadioOption
   return allCommands.map(cmd => {
     return {
       value: cmd,
-      label: cmd,
+      label: cmd.replaceAll('-', ' '),
     };
   });
 };
@@ -181,7 +193,7 @@ const Settings = () => {
   };
 
   // update blocked commands
-  const handleUpdateBlockCommands = async (commands: Commands[]) => {
+  const handleUpdateBlockCommands = async (commands: CommandType[]) => {
     const updatedSettings = {
       ...settingsUpdateData,
       cmdPalette: { ...settingsUpdateData.cmdPalette, disabledCommands: commands },
@@ -514,9 +526,8 @@ const Settings = () => {
               {/* disabled commands */}
               <div className="flex flex-col items-star px-1">
                 <p className="text-[12px] mb-1 font-light tracking-wide ml-px">
-                  Disable Commands ({settingsUpdateData.autoDiscardTabs.whitelistedDomains.length})
+                  Disable Commands ({appSettings.cmdPalette.disabledCommands.length})
                 </p>
-                {/* input box */}
                 <Select
                   isMulti
                   menuPlacement="top"
@@ -533,44 +544,31 @@ const Settings = () => {
                     option: props =>
                       // eslint-disable-next-line react/prop-types
                       !props.isFocused
-                        ? '!text-slate-300 !bg-transparent hover:!bg-slate-700'
-                        : '!bg-slate-700/90 !text-slate-200',
-                    input: () => ' text-slate-300',
+                        ? '!text-slate-300 !bg-transparent hover:!bg-brand-darkBg/80 !capitalize'
+                        : '!bg-brand-darkBg/80 !text-slate-200 !capitalize ',
+                    input: () => '!text-slate-300',
                     indicatorSeparator: () => '!bg-slate-600',
                     dropdownIndicator: () => '!text-slate-500/80',
                     clearIndicator: () => '!text-slate-500/90 hover:!text-slate-500/70 !cursor-pointer',
                     noOptionsMessage: () => '!text-slate-400',
-                    multiValue: () => '!bg-brand-darkBg/40 rounded-md',
-                    multiValueLabel: () => '!text-slate-300 ',
+                    multiValue: () => '!bg-brand-darkBg/40 !rounded-md py-[1.5px]',
+                    multiValueLabel: () => '!text-slate-300 !capitalize',
                     multiValueRemove: () => 'hover:!bg-rose-300 hover:!text-slate-800',
                   }}
                   placeholder="Select Command"
                   options={enabledCmdOptions}
-                  value={appSettings.cmdPalette.disabledCommands || []}
+                  value={
+                    appSettings.cmdPalette.disabledCommands.map(cmd => ({
+                      label: cmd.replaceAll('-', ' '),
+                      value: cmd,
+                    })) || []
+                  }
                   onChange={selected => {
-                    const selectedCmd = selected.map(option => option);
-                    handleUpdateBlockCommands(selectedCmd);
+                    const selectedCommands = selected.map(option => option.value);
+
+                    handleUpdateBlockCommands(selectedCommands as CommandType[]);
                   }}
                 />
-                {/* domain chips */}
-                <div className="ml-1 flex items-start justify-start flex-grow flex-wrap max-w-full mt-1.5 overflow-x-hidden overflow-y-auto cc-scrollbar max-h-[100px]">
-                  {settingsUpdateData.cmdPalette.disabledCommands.length > 0 ? (
-                    settingsUpdateData.cmdPalette.disabledCommands.map((cmd, index) => (
-                      <div
-                        className="w-fit flex items-center justify-between pl-2.5 pr-1 py-[2.5px] bg-brand-darkBgAccent/30 shadow shadow-brand-darkBg/60 rounded-xl mb-1 mr-1 select-text"
-                        key={index}>
-                        <span className="text-[9px] text-slate-400/90">{cmd}</span>
-                        <button
-                          onClick={() => handleRemoveWhitelistDomain(cmd)}
-                          className="bg-brand-darkBgAccent/60 border border-brand-darkBg/40 rounded-full ml-[2.5px] hover:bg-brand-darkBg/10 transition-colors duration-200">
-                          <Cross2Icon className="text-slate-500 scale-[0.8]" />
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-slate-500 text-[10px] font-light">No disabled commands</p>
-                  )}
-                </div>
               </div>
             </BodyContainer>
           </Accordion>

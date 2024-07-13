@@ -1,16 +1,14 @@
 import { useState, useEffect } from 'react';
 
 import { publishEvents } from '@root/src/utils';
+import { ISpace } from '@root/src/types/global.types';
 import CommandPalette from '../content/command-palette';
-import { ISearchFilters, ISpace } from '@root/src/types/global.types';
 import { getSpaceByWindow } from '@root/src/services/chrome-storage/spaces';
-import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 
 const CommandPalettePopup = () => {
   const [commandPaletteProps, setCommandPaletteProps] = useState<{
     activeSpace: ISpace;
     groupId: number;
-    searchFilterPreferences: ISearchFilters;
   }>(null);
 
   const getCommandPaletteData = async () => {
@@ -19,8 +17,6 @@ const CommandPalettePopup = () => {
     if (!currentWindowId) return;
 
     const activeSpace = await getSpaceByWindow(currentWindowId);
-
-    const preferences = await getAppSettings();
 
     document.title = `${activeSpace?.emoji || ''}  ${activeSpace?.title || ''}`;
 
@@ -32,10 +28,6 @@ const CommandPalettePopup = () => {
     setCommandPaletteProps({
       activeSpace,
       groupId: activeTab.groupId || 0,
-      searchFilterPreferences: {
-        searchBookmarks: preferences.cmdPalette.includeBookmarksInSearch,
-        searchNotes: preferences.cmdPalette.includeNotesInSearch,
-      },
     });
 
     // add event listener to listen to main app shortcut
@@ -71,7 +63,6 @@ const CommandPalettePopup = () => {
             isOpenedInPopupWindow={true}
             onClose={onCloseCommandPalette}
             activeSpace={commandPaletteProps.activeSpace}
-            searchFiltersPreference={commandPaletteProps.searchFilterPreferences}
           />
         ) : (
           <div className="text-[18px] text-center">.</div>

@@ -25,30 +25,30 @@ export enum ThemeColor {
   Grey = '#d1d5db',
 }
 
-export enum CommandType {
-  Link = 'link',
-  Note = 'note',
-  NewSpace = 'new-space',
-  NewNote = 'new-note',
-  CloseTab = 'close-tab',
-  SwitchTab = 'switch-tab',
-  WebSearch = 'web-search',
-  SnoozeTab = 'snooze-tab',
-  NewGroup = 'new-group',
-  AddToGroup = 'add-to-group',
-  RenameGroup = 'rename-group',
-  AddToSpace = 'add-to-space',
-  SwitchSpace = 'switch-space',
-  DiscardTabs = 'discard-tabs',
-  OpenSidePanel = 'open-side-panel',
-  OpenPreferencesModal = 'open-preferences-modal',
-  OpenSnoozedTabsModal = 'open-snoozed-tabs-modal',
-  OpenSpaceHistoryModal = 'open-space-history-modal',
-  OpenNotificationsModal = 'open-notifications-modal',
-  WhitelistDomainForAutoDiscard = 'whitelist-domain-auto-discard',
-}
+export const CommandType = {
+  Link: 'link',
+  Note: 'note',
+  NewSpace: 'new-space',
+  NewNote: 'new-note',
+  CloseTab: 'close-tab',
+  SwitchTab: 'switch-tab',
+  WebSearch: 'web-search',
+  SnoozeTab: 'snooze-tab',
+  NewGroup: 'new-group',
+  AddToGroup: 'add-to-group',
+  RenameGroup: 'rename-group',
+  AddToSpace: 'add-to-space',
+  SwitchSpace: 'switch-space',
+  DiscardTabs: 'discard-tabs',
+  OpenSidePanel: 'open-side-panel',
+  OpenPreferencesModal: 'open-preferences-modal',
+  OpenSnoozedTabsModal: 'open-snoozed-tabs-modal',
+  OpenSpaceHistoryModal: 'open-space-history-modal',
+  OpenNotificationsModal: 'open-notifications-modal',
+  WhitelistDomainForAutoDiscard: 'whitelist-domain-to-prevent-auto-discard',
+} as const;
 
-export type Commands = keyof typeof CommandType;
+export type CommandType = (typeof CommandType)[keyof typeof CommandType];
 
 export enum NOTIFICATION_TYPE {
   NOTE_REMAINDER = 'note-remainder',
