@@ -268,6 +268,29 @@ const appendOpenInTabBtnOverlay = () => {
     });
   });
 
+  // TODO - improvement - close btn on some sites appear to be weirdly shaped
+  const closeBtn = document.createElement('span');
+  closeBtn.style.position = 'absolute';
+  closeBtn.style.top = '-10px';
+  closeBtn.style.right = '-10px';
+  closeBtn.style.width = '0px 5px 2px 5px';
+  closeBtn.style.cursor = 'pointer';
+  closeBtn.style.fontWeight = '300';
+  closeBtn.style.color = '#151b21';
+  closeBtn.style.backgroundColor = '#eaeaea';
+  closeBtn.style.borderRadius = '50%';
+  closeBtn.style.border = '1px solid  #151b21';
+  closeBtn.innerHTML = '&times;';
+
+  closeBtn.addEventListener('click', ev => {
+    ev.stopPropagation();
+    if (!overlayBtn) return;
+    overlayBtn.replaceChildren();
+    overlayBtn.remove();
+  });
+
+  overlayBtn.appendChild(closeBtn);
+
   document.body.appendChild(overlayBtn);
 };
 
@@ -330,7 +353,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   sendResponse(true);
 });
 
-// show link preview
+// open link preview
 (async () => {
   //  check if the link previews is disabled
   const { linkPreview } = await getAppSettings();
@@ -374,13 +397,25 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
     const isInternalLink = new URL(hrefLink).hostname === new URL(location.href).hostname;
 
+    const isRedirectURl = hrefLink.includes('/redirect');
+
+    if (sessionStorage.getItem('activeWindowId')) {
+      // links clicked from Link Preview window
+      // TODO - fix - youtube redirect urls are not working
+
+      // allow only internal links in Link Preview window
+      if (willOpenInNewTab || !isInternalLink || isRedirectURl) {
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+
+      return;
+    }
+
     if (!hrefLink || !isValidURL(hrefLink) || (isInternalLink && !willOpenInNewTab)) return;
 
     ev.preventDefault();
     ev.stopPropagation();
-
-    // do not allow to open external links, if in preview mode
-    if (sessionStorage.getItem('activeWindowId')) return;
 
     // send event to background script to create new popup window with the href link
 

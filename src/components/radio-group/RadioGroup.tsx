@@ -27,7 +27,7 @@ const RadioGroup = <T = string,>({ options, value, onChange, disabled, defaultVa
           <RadioGroupRadix.Item
             key={v}
             className={cn(
-              'bg-brand-darkBg/80 w-fit py-1.5 px-2.5 flex items-center justify-center border border-brand-darkBgAccent/35 shadow-sm shadow-brand-darkBg rounded cursor-pointer disabled:cursor-not-allowed',
+              'bg-brand-darkBg/80 w-fit py-1.5 px-2.5 flex items-center justify-center border border-brand-darkBgAccent/35 shadow-sm shadow-brand-darkBg rounded cursor-pointer disabled:cursor-not-allowed select-none',
               {
                 'before:content-[""] before:block before:w-[8px] before:h-[8px] before:rounded-[50%] before:bg-brand-darkBgAccent':
                   v !== value,

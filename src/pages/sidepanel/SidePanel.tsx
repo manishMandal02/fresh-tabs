@@ -37,7 +37,7 @@ import {
   notesAtom,
   userAtom,
 } from '@root/src/stores/app';
-import { getUser } from '@root/src/services/chrome-storage/user';
+// import { getUser } from '@root/src/services/chrome-storage/user';
 
 // event ids of processed events
 const processedEvents: string[] = [];
@@ -48,7 +48,7 @@ const SidePanel = () => {
   const [{ isDragging: isDraggingGlobal, type: draggingType }] = useAtom(dragStateAtom);
 
   // global state - app settings
-  const [user, setUser] = useAtom(userAtom);
+  const [user] = useAtom(userAtom);
   const setAppSetting = useSetAtom(appSettingsAtom);
   const setUserNotifications = useSetAtom(userNotificationsAtom);
   const setNotes = useSetAtom(notesAtom);
@@ -78,14 +78,14 @@ const SidePanel = () => {
     (async () => {
       // check if user authed or not
 
-      const user = await getUser();
-      if (!user) {
-        setIsLoadingSpaces(false);
-        return;
-      }
+      // const user = await getUser();
+      // if (!user) {
+      //   setIsLoadingSpaces(false);
+      //   return;
+      // }
 
-      // set user
-      setUser(user);
+      // // set user
+      // setUser(user);
 
       const { currentSpace, allSpaces } = await getAllSpacesStorage();
 
@@ -163,7 +163,7 @@ const SidePanel = () => {
           <FavTabs tabs={globalPinnedTabs} isGlobal={true} setGlobalPinnedTabs={setGlobalPinnedTabs} />
         </div> */}
         <ErrorBoundary FallbackComponent={ErrorBoundaryUI}>
-          {!user ? (
+          {user ? (
             <Auth />
           ) : (
             <>

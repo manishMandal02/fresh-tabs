@@ -13,6 +13,8 @@ type Props = {
 
 const TextInput = ({ id, value, onChange, placeholder, classes, autoFocus = true }: Props) => {
   const onInputChange: ChangeEventHandler<HTMLInputElement> = ev => {
+    console.log('🚀 ~ TextInput ~ ev:', ev);
+
     onChange(ev.target.value);
   };
   return (

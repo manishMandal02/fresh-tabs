@@ -142,11 +142,27 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
+// TODO - improvement - Link Preview
+// External links are clickable with redirect query (?redirect=), check the redirect url and stop if external.
+
+// TODO - improvement - Cmd Palette
+// disabling overflow on body causes bad ux, try to find another way
+//  stream matched commands to cmd palette search and not wait for full search to complete
+//  if a url/domain is entered cmd palette search allow user to fo to url (Cmd.Type = link)
+//  cmd Palette web search suggestions
+
+/*
+The newer URL is now http://clients1.google.com/complete/search?hl=en&output=toolbar&q=YOURSEARCHTERM
+
+Or even more recent: http://suggestqueries.google.com/complete/search?output=toolbar&hl=en&q=YOURSEARCHTERM
+
+http://google.com/complete/search?client=chrome&q=YOURSEARCHEDTERM\
+
+*/
+
 // TODO fix - error on content script:: extension context invalidated error
 
-// TODO - complete auth UI and logic for FE
-
-//!------
+//!---- 👇 later, when backend is being built
 
 // TODO - improvement - paginating larger data sets like notes for better performance and
 //+ query data when searched or for domain notes
