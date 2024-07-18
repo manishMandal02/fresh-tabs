@@ -243,7 +243,7 @@ type CommandIconProps = {
 const CommandIcon: FC<CommandIconProps> = ({ Icon, isFocused, type }) => {
   let CmdIcon = Icon;
 
-  if (!Icon) CmdIcon = GlobeIcon;
+  if (!Icon || type === CommandType.WebSearch) CmdIcon = GlobeIcon;
 
   if (type === CommandType.Note) CmdIcon = FileTextIcon;
 

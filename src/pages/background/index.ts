@@ -104,9 +104,8 @@ const checkExtensionBadgeEmoji = async () => {
 (async () => {
   await checkExtensionBadgeEmoji();
 
+  //TODO - testing...
   // initializeContextMenuItems();
-
-  //TODO - testing... save default settings to sync storage
   // await saveSettings(DefaultAppSettings);
 
   const autoSaveToBMAlarm = await getAlarm(AlarmName.autoSaveBM);
@@ -141,18 +140,6 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
     fileTrace: 'src/pages/background/index.ts:35 ~ chrome.sidePanel.setPanelBehavior()',
   });
 });
-
-// TODO - improvement - Cmd Palette
-//  cmd Palette web search suggestions
-
-/*
-The newer URL is now http://clients1.google.com/complete/search?hl=en&output=toolbar&q=YOURSEARCHTERM
-
-Or even more recent: http://suggestqueries.google.com/complete/search?output=toolbar&hl=en&q=YOURSEARCHTERM
-
-http://google.com/complete/search?client=chrome&q=YOURSEARCHEDTERM\
-
-*/
 
 // TODO fix - error on content script:: extension context invalidated error
 
@@ -903,6 +890,35 @@ chrome.runtime.onMessage.addListener(
             });
           }
         }
+
+        // return the matched results if more than 6 (won't show web search suggestions)
+        if (matchedCommands.length >= searchResLimit) return matchedCommands;
+
+        /*
+            The newer URL is now http://clients1.google.com/complete/search?hl=en&output=toolbar&q=YOURSEARCHTERM
+            Or even more recent: http://suggestqueries.google.com/complete/search?output=toolbar&hl=en&q=YOURSEARCHTERM
+            http://google.com/complete/search?client=chrome&q=YOURSEARCHEDTERM\
+       */
+
+        const res = await fetch(`http://google.com/complete/search?client=chrome&q=${searchQuery}`);
+
+        const parsedRes = await res.json();
+
+        let suggestions = parsedRes[1] as string[];
+
+        if (!suggestions) return matchedCommands;
+
+        suggestions = suggestions.slice(0, Math.max(searchResLimit - matchedCommands.length, 1));
+
+        suggestions.forEach(query => {
+          matchedCommands.push({
+            index: 0,
+            type: CommandType.WebSearch,
+            label: query,
+            icon: null,
+            // alias: 'Suggestions',
+          });
+        });
 
         return matchedCommands;
       }
