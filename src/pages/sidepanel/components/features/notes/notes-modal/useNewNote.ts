@@ -7,12 +7,11 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { generateId } from '@root/src/utils';
 import { isValidURL } from '@root/src/utils/url';
 import { INote } from '@root/src/types/global.types';
+import { DomainWithSubdomainRegex } from '../../settings/Settings';
 import { snackbarAtom, activeSpaceAtom, notesAtom } from '@root/src/stores/app';
 import { addNewNote, updateNote } from '@root/src/services/chrome-storage/notes';
 import { removeWWWPrefix, getUrlDomain } from '@root/src/utils/url/get-url-domain';
 import { naturalLanguageToDate } from '@root/src/utils/date-time/naturalLanguageToDate';
-
-const domainWithSubdomainRegex = /^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,10}$/;
 
 type UseNewNoteProps = {
   remainder: string;
@@ -34,7 +33,7 @@ export const useNewNote = ({ remainder, note, noteId, noteCreatedAt, handleClose
     domain: z
       .string()
       .trim()
-      .refine(value => domainWithSubdomainRegex.test(value), {
+      .refine(value => DomainWithSubdomainRegex.test(value), {
         message: 'Enter a valid domain or sub domain',
       }),
     title: z.string().trim().min(4, {
@@ -57,7 +56,7 @@ export const useNewNote = ({ remainder, note, noteId, noteCreatedAt, handleClose
 
     const pastedText = ev.clipboardData.getData('text');
     // check if pasted text is a sub domain
-    if (domainWithSubdomainRegex.test(pastedText)) {
+    if (DomainWithSubdomainRegex.test(pastedText)) {
       // if yes - do nothing
       inputFrom.setValue('domain', removeWWWPrefix(pastedText));
       return;

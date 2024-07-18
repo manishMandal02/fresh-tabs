@@ -72,8 +72,6 @@ const SearchBox = forwardRef<HTMLInputElement, PropsWithChildren<Props>>(
           ref={ref}
           placeholder={placeholder}
           onChange={ev => {
-            ev.nativeEvent.stopImmediatePropagation();
-
             setSearchQuery(ev.currentTarget.value);
           }}
           type="text"

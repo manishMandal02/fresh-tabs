@@ -246,11 +246,9 @@ const appendOpenInTabBtnOverlay = () => {
   overlayBtn.style.zIndex = '9999999999';
   overlayBtn.style.top = '14px';
   overlayBtn.style.right = '16px';
-  overlayBtn.style.padding = '10px 18px';
+  overlayBtn.style.padding = '7px 14px';
   overlayBtn.style.borderRadius = '4px';
 
-  overlayBtn.style.fontFamily = 'system-ui';
-  overlayBtn.style.fontSize = '12px';
   overlayBtn.style.fontWeight = '500';
   overlayBtn.style.color = '#151b21';
   overlayBtn.style.backgroundColor = '#eaeaea';
@@ -268,31 +266,129 @@ const appendOpenInTabBtnOverlay = () => {
     });
   });
 
-  // TODO - improvement - close btn on some sites appear to be weirdly shaped
   const closeBtn = document.createElement('span');
-  closeBtn.style.position = 'absolute';
-  closeBtn.style.top = '-10px';
-  closeBtn.style.right = '-10px';
-  closeBtn.style.width = '0px 5px 2px 5px';
+  closeBtn.style.position = 'fixed';
+  closeBtn.style.zIndex = '9999999999';
+  closeBtn.style.top = '10px';
+  closeBtn.style.right = '12px';
+  closeBtn.style.padding = '2px 4.5px';
   closeBtn.style.cursor = 'pointer';
   closeBtn.style.fontWeight = '300';
   closeBtn.style.color = '#151b21';
   closeBtn.style.backgroundColor = '#eaeaea';
   closeBtn.style.borderRadius = '50%';
+  closeBtn.style.fontSize = '7.5px';
+
   closeBtn.style.border = '1px solid  #151b21';
-  closeBtn.innerHTML = '&times;';
+  closeBtn.innerText = 'X';
 
   closeBtn.addEventListener('click', ev => {
     ev.stopPropagation();
     if (!overlayBtn) return;
-    overlayBtn.replaceChildren();
+
     overlayBtn.remove();
+
+    (ev.target as HTMLElement).remove();
   });
 
-  overlayBtn.appendChild(closeBtn);
+  // create shadow root for buttons
 
-  document.body.appendChild(overlayBtn);
+  const root = document.createElement('div');
+
+  root.id = ContentScriptContainerIds.SNACKBAR;
+
+  document.body.appendChild(root);
+
+  const shadowRoot = root.attachShadow({ mode: 'open' });
+
+  const rootIntoShadow = document.createElement('div');
+
+  rootIntoShadow.id = 'shadow-root';
+
+  shadowRoot.appendChild(rootIntoShadow);
+
+  // append buttons
+  rootIntoShadow.appendChild(overlayBtn);
+  rootIntoShadow.appendChild(closeBtn);
 };
+
+// shows a link in a temporary popup window
+const openLinkPreview = async () => {
+  //  check if the link previews is disabled
+  const { linkPreview } = await getAppSettings();
+
+  if (linkPreview.isDisabled) return;
+
+  document.body.addEventListener('click', async ev => {
+    const clickedEl = ev.target as HTMLElement;
+
+    if (clickedEl.tagName !== 'A' && !clickedEl.closest('a')) return;
+
+    let hrefLink =
+      clickedEl.tagName === 'A' ? clickedEl.getAttribute('href') : clickedEl.closest('a').getAttribute('href') || '';
+
+    hrefLink = !isValidURL(hrefLink) ? window.location.origin + hrefLink : hrefLink;
+
+    // open link in preview window if user preference is set to Shift + Click and the shift key was pressed
+    if (
+      linkPreview.openTrigger === 'shift-click' &&
+      isValidURL(hrefLink) &&
+      !sessionStorage.getItem('activeWindowId')
+    ) {
+      if (!ev.shiftKey) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+
+      await publishEvents({
+        event: 'OPEN_LINK_PREVIEW_POPUP',
+        payload: {
+          url: hrefLink,
+        },
+      });
+
+      return;
+    }
+
+    const willOpenInNewTab =
+      clickedEl.tagName === 'A'
+        ? clickedEl.getAttribute('target') === '_blank'
+        : clickedEl.closest('a').getAttribute('target') === '_blank' || false;
+
+    const isInternalLink = new URL(hrefLink).hostname === new URL(location.href).hostname;
+    const isRedirectURl = hrefLink.includes('/redirect');
+
+    console.log("🚀 ~ sessionStorage.getItem('activeWindowId'):", sessionStorage.getItem('activeWindowId'));
+
+    // links clicked from Link Preview window
+    if (sessionStorage.getItem('activeWindowId')) {
+      // allow only internal links in Link Preview window
+      if (willOpenInNewTab || isInternalLink || isRedirectURl) {
+        ev.stopPropagation();
+        ev.preventDefault();
+      }
+
+      return;
+    }
+
+    if (!hrefLink || !isValidURL(hrefLink) || (isInternalLink && !willOpenInNewTab)) return;
+
+    ev.preventDefault();
+    ev.stopPropagation();
+
+    // send event to background script to create new popup window with the href link
+
+    await publishEvents({
+      event: 'OPEN_LINK_PREVIEW_POPUP',
+      payload: {
+        url: hrefLink,
+      },
+    });
+  });
+};
+
+(async () => {
+  await openLinkPreview();
+})();
 
 //  listen to events form background script
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
@@ -309,6 +405,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
     // list for keyboard events for opening app in side panel
     document.body.addEventListener('keydown', async (ev: KeyboardEvent) => {
+      // TODO - listen for key down of shortcuts defined by user
       if (ev.key === 's' && ev.metaKey) {
         ev.preventDefault();
         ev.stopPropagation();
@@ -352,78 +449,3 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
   sendResponse(true);
 });
-
-// open link preview
-(async () => {
-  //  check if the link previews is disabled
-  const { linkPreview } = await getAppSettings();
-
-  if (linkPreview.isDisabled) return;
-
-  document.body.addEventListener('click', async ev => {
-    const clickedEl = ev.target as HTMLElement;
-
-    if (clickedEl.tagName !== 'A' && !clickedEl.closest('a')) return;
-
-    let hrefLink =
-      clickedEl.tagName === 'A' ? clickedEl.getAttribute('href') : clickedEl.closest('a').getAttribute('href') || '';
-
-    hrefLink = !isValidURL(hrefLink) ? window.location.origin + hrefLink : hrefLink;
-
-    // open link in preview window if user preference is set to Shift + Click and the shift key was pressed
-    if (
-      linkPreview.openTrigger === 'shift-click' &&
-      isValidURL(hrefLink) &&
-      !sessionStorage.getItem('activeWindowId')
-    ) {
-      if (!ev.shiftKey) return;
-      ev.preventDefault();
-      ev.stopPropagation();
-
-      await publishEvents({
-        event: 'OPEN_LINK_PREVIEW_POPUP',
-        payload: {
-          url: hrefLink,
-        },
-      });
-
-      return;
-    }
-
-    const willOpenInNewTab =
-      clickedEl.tagName === 'A'
-        ? clickedEl.getAttribute('target') === '_blank'
-        : clickedEl.closest('a').getAttribute('target') === '_blank' || false;
-
-    const isInternalLink = new URL(hrefLink).hostname === new URL(location.href).hostname;
-
-    const isRedirectURl = hrefLink.includes('/redirect');
-
-    if (sessionStorage.getItem('activeWindowId')) {
-      // links clicked from Link Preview window
-      // TODO - fix - youtube redirect urls are not working
-
-      // allow only internal links in Link Preview window
-      if (willOpenInNewTab || !isInternalLink || isRedirectURl) {
-        ev.preventDefault();
-        ev.stopPropagation();
-      }
-
-      return;
-    }
-
-    if (!hrefLink || !isValidURL(hrefLink) || (isInternalLink && !willOpenInNewTab)) return;
-
-    ev.preventDefault();
-    ev.stopPropagation();
-
-    // send event to background script to create new popup window with the href link
-
-    await publishEvents({
-      event: 'OPEN_LINK_PREVIEW_POPUP',
-      payload: {
-        url: hrefLink,
-      },
-    });
-  });
-})();

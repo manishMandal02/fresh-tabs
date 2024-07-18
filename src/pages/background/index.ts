@@ -142,13 +142,7 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - improvement - Link Preview
-// External links are clickable with redirect query (?redirect=), check the redirect url and stop if external.
-
 // TODO - improvement - Cmd Palette
-// disabling overflow on body causes bad ux, try to find another way
-//  stream matched commands to cmd palette search and not wait for full search to complete
-//  if a url/domain is entered cmd palette search allow user to fo to url (Cmd.Type = link)
 //  cmd Palette web search suggestions
 
 /*

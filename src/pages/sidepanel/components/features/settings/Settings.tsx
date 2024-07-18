@@ -18,7 +18,7 @@ import RadioGroup, { RadioOptions } from '../../../../../components/radio-group/
 import { appSettingsAtom, showSettingsModalAtom, snackbarAtom } from '@root/src/stores/app';
 import { removeWWWPrefix, cn, getUrlDomain, parseUrl, retryAtIntervals, wait, isValidURL } from '@root/src/utils';
 
-const domainWithSubdomainRegex = /^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,10}$/;
+export const DomainWithSubdomainRegex = /^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,10}$/;
 
 const autoSaveToBookmark: RadioOptions[] = [
   { value: 'off', label: 'Off' },
@@ -210,12 +210,12 @@ const Settings = () => {
 
     if (!domainInput) return;
 
-    if (!domainWithSubdomainRegex.test(domainInput) && !isValidURL(domainInput)) {
+    if (!DomainWithSubdomainRegex.test(domainInput) && !isValidURL(domainInput)) {
       whitelistInputRef.current.setAttribute('data-invalid-domain', 'true');
       return;
     }
 
-    if (!domainWithSubdomainRegex.test(domainInput)) {
+    if (!DomainWithSubdomainRegex.test(domainInput)) {
       domainInput = getUrlDomain(domainInput);
     }
 

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, MouseEventHandler, useCallback } from 'rea
 import Command from './command/Command';
 import { cn } from '@root/src/utils/cn';
 import CaptureNote from '../capture-note';
-import { debounce } from '@root/src/utils';
+import { debounce, getFaviconURL, isValidURL } from '@root/src/utils';
 import KBD from '@root/src/components/kbd/KBD';
 import SearchBox from './search-box/SearchBox';
 import CommandDivider from './command/CommandDivider';
@@ -22,6 +22,8 @@ import { ICommand, ISearchFilters, ISpace } from '../../../types/global.types';
 import { staticCommands, useCommand, webSearchCommand } from './command/useCommand';
 import { DEFAULT_SEARCH_PLACEHOLDER, useCommandPalette } from './useCommandPalette';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
+
+const DomainWithSubdomainRegex = /^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,10}$/;
 
 export const COMMAND_PALETTE_SIZE = {
   HEIGHT: 500,
@@ -272,6 +274,17 @@ const CommandPalette = ({
           matchedCommands.push({ ...cmd, index: idx + 1 });
         });
 
+      // if search term is a url then add a link cmd to go to the url
+      if (isValidURL(searchQueryLowerCase) || DomainWithSubdomainRegex.test(searchQueryLowerCase)) {
+        matchedCommands.push({
+          label: searchTerm,
+          type: CommandType.Link,
+          metadata: `${searchTerm}`,
+          icon: getFaviconURL(searchTerm.startsWith('http') ? searchTerm : `https://${searchTerm}`),
+          index: matchedCommands.length + 1,
+        });
+      }
+
       // query current tab url/title (words match)
       {
         let tabs = await getTabsInSpace(activeSpace.id);
@@ -354,18 +367,27 @@ const CommandPalette = ({
         }
       }
 
-      if (matchedCommands.length >= SEARCH_RESULT_MAX_LIMIT) {
+      let alreadyMatchedCommandsTotal = 0;
+
+      if (matchedCommands.length >= 1) {
         // returned  static matched commands
         setSuggestedCommands(matchedCommands);
 
         setFocusedCommandIndex(1);
-        setIsLoadingResults(false);
 
-        return;
+        // stop search if matched commands is 6 or more
+        if (matchedCommands.length >= SEARCH_RESULT_MAX_LIMIT) {
+          setIsLoadingResults(false);
+          return;
+        }
+
+        alreadyMatchedCommandsTotal = matchedCommands.length;
+
+        matchedCommands = [];
       }
 
       // available space for cmd
-      const searchResLimit = SEARCH_RESULT_MAX_LIMIT - matchedCommands.length;
+      const searchResLimit = SEARCH_RESULT_MAX_LIMIT - alreadyMatchedCommandsTotal;
 
       // search for links, notes and more from background script
       let res = await publishEvents<ICommand[]>({
@@ -377,23 +399,26 @@ const CommandPalette = ({
         },
       });
 
+      matchedCommands = [];
+
       if (res?.length > 0) {
         res = res.length > searchResLimit ? res.slice(0, searchResLimit) : res;
 
         matchedCommands.push(...res);
-
-        matchedCommands = matchedCommands.map<ICommand>((cmd, idx) => ({
-          ...cmd,
-          index: idx + 1,
-        }));
       }
 
-      if (matchedCommands.length < 6) {
+      if (alreadyMatchedCommandsTotal + matchedCommands.length < 6) {
         // add web search command
-        matchedCommands.push(webSearchCommand(searchTerm, matchedCommands.length + 1));
+        matchedCommands.push(webSearchCommand(searchTerm, 0));
       }
 
-      setSuggestedCommands(matchedCommands);
+      setSuggestedCommands(commands => [
+        ...commands,
+        ...matchedCommands.map<ICommand>((cmd, idx) => ({
+          ...cmd,
+          index: commands.length + (idx + 1),
+        })),
+      ]);
 
       setFocusedCommandIndex(1);
       setIsLoadingResults(false);
@@ -509,19 +534,21 @@ const CommandPalette = ({
                 setIsLoadingResults(true);
                 setSuggestedCommands([]);
 
-                if (!searchQuery.trim() && !subCommand) {
+                if (!value.trim() && !subCommand) {
                   // reset suggested commands
                   await setDefaultSuggestedCommands();
                   setSearchQueryPlaceholder(DEFAULT_SEARCH_PLACEHOLDER);
                   setIsLoadingResults(false);
                 }
 
-                if (searchQuery.trim() && !subCommand) {
+                if (value.trim() && !subCommand) {
+                  console.log('🚨 ~ value.trim:', value.trim());
+
                   debouncedSearchCommands(value);
                 }
 
                 if (subCommand && suggestedCommandsForSubCommand.length > 0) {
-                  if (searchQuery.trim()) {
+                  if (value.trim()) {
                     // search sub commands
                     debouncedSearchSubCommands(value);
                     return;
