@@ -143,7 +143,6 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 
 // TODO - fix - command palette 👇
 // not in center (popup window) for large monitor (2nd screen)
-// does not recognize some domains to directly visit the site (ex: docker.com, o-blog-scrapper.onrender.com. gets "invalid url pattern" error)
 
 // TODO - feat - snippets: allow users to create snippets and use them on sites via cmd palette
 // TODO - feat - reading mode: allow user to read any blogs without any distractions
@@ -428,8 +427,11 @@ export const showCommandPaletteContentScript = async (
     // open command palette in new popup window
     const currentWindow = await chrome.windows.get(windowId);
 
-    const popupOffsetTop = Math.ceil(currentWindow.height + currentWindow.top) / 4;
-    const popupOffsetLeft = Math.ceil(currentWindow.width / 4 + currentWindow.left);
+    // seems to adjust the popup at the center
+    const adjustLeftBy = currentWindow.left > 50 ? 3.8 : 3.1;
+
+    const popupOffsetTop = Math.round((currentWindow.height + currentWindow.top) / 3.6);
+    const popupOffsetLeft = Math.round(currentWindow.width / adjustLeftBy + currentWindow.left);
 
     const window = await chrome.windows.create({
       focused: true,
