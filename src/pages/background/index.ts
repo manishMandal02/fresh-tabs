@@ -143,7 +143,6 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
 
 // TODO - fix - command palette 👇
 // not in center (popup window) for large monitor (2nd screen)
-// try not adding overflow hidden to the body.
 // does not recognize some domains to directly visit the site (ex: docker.com, o-blog-scrapper.onrender.com. gets "invalid url pattern" error)
 
 // TODO - feat - snippets: allow users to create snippets and use them on sites via cmd palette
@@ -506,346 +505,387 @@ export const showCommandPaletteContentScript = async (
 // handle events from content script (command palette)
 chrome.runtime.onMessage.addListener(
   asyncMessageHandler<IMessageEventContentScript, boolean | ICommand[]>(async request => {
-    const { event, payload } = request;
+    try {
+      const { event, payload } = request;
 
-    logger.info(`Event received at runtime.onMessage:: ${event}`);
+      logger.info(`Event received at runtime.onMessage:: ${event}`);
 
-    // handle events cases
-    switch (event) {
-      case 'SWITCH_TAB': {
-        const { tabId, shouldCloseCurrentTab, isOpenedInPopupWindow, activeSpace } = payload;
+      // handle events cases
+      switch (event) {
+        case 'SWITCH_TAB': {
+          const { tabId, shouldCloseCurrentTab, isOpenedInPopupWindow, activeSpace } = payload;
 
-        const currentTab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
+          const currentTab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
 
-        await goToTab(tabId);
+          await goToTab(tabId);
 
-        if (shouldCloseCurrentTab) {
-          await chrome.tabs.remove(currentTab.id);
-        }
+          if (shouldCloseCurrentTab) {
+            await chrome.tabs.remove(currentTab.id);
+          }
 
-        return true;
-      }
-
-      case 'SWITCH_SPACE': {
-        const { spaceId, shouldOpenInNewWindow } = payload;
-
-        const space = await getSpace(spaceId);
-
-        const tabs = await getTabsInSpace(spaceId);
-
-        await openSpace({ space, tabs, shouldOpenInNewWindow });
-
-        return true;
-      }
-
-      case 'NEW_SPACE': {
-        const { spaceTitle, isOpenedInPopupWindow, activeSpace } = payload;
-
-        const tab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
-
-        const newSpace = await createNewSpace(
-          {
-            title: spaceTitle,
-            emoji: '🚀',
-            theme: ThemeColor.Cyan,
-            activeTabIndex: 0,
-            isSaved: true,
-            windowId: 0,
-          },
-          [tab],
-        );
-
-        await openSpace({ space: newSpace, tabs: [tab], shouldOpenInNewWindow: false });
-
-        return true;
-      }
-
-      case 'NEW_NOTE': {
-        const { activeSpace, note, url, noteRemainder, noteTitle, isOpenedInPopupWindow } = payload;
-
-        const currentTab = await getCurrentTab();
-
-        const domain = removeWWWPrefix(url) || '';
-
-        const title = noteTitle || currentTab.title;
-
-        // new note data
-        const newNote: INote = {
-          title,
-          domain,
-          id: generateId(),
-          text: note,
-          spaceId: activeSpace.id,
-          createdAt: new Date().getTime(),
-          ...(noteRemainder && { remainderAt: naturalLanguageToDate(noteRemainder) }),
-        };
-
-        // create note
-        await addNewNote(newNote);
-
-        const { notes } = await getAppSettings();
-
-        if (!isOpenedInPopupWindow) {
-          await publishEventsTab(currentTab.id, {
-            event: 'SHOW_SNACKBAR',
-            payload: { activeSpace, notesBubblePos: notes.bubblePos, snackbarMsg: 'Note Captured' },
-          });
-        }
-
-        // send to side panel
-        await publishEvents({
-          id: generateId(),
-          event: 'UPDATE_NOTIFICATIONS',
-          payload: {
-            spaceId: activeSpace.id,
-          },
-        });
-
-        return true;
-      }
-
-      case 'EDIT_NOTE': {
-        const { note, url, activeSpace, noteRemainder, noteId, noteTitle, isOpenedInPopupWindow } = payload;
-
-        const noteToEdit = await getNote(noteId);
-
-        await updateNote(noteId, {
-          ...noteToEdit,
-          text: note,
-          ...(noteTitle && { title: noteTitle }),
-          ...(url && { domain: url }),
-          ...(noteRemainder && { remainderAt: naturalLanguageToDate(noteRemainder) }),
-        });
-
-        const currentTab = await getCurrentTab();
-
-        const { notes } = await getAppSettings();
-
-        if (!isOpenedInPopupWindow) {
-          await publishEventsTab(currentTab.id, {
-            event: 'SHOW_SNACKBAR',
-            payload: { activeSpace, notesBubblePos: notes.bubblePos, snackbarMsg: 'Note Saved' },
-          });
-        }
-
-        // send to side panel
-        await publishEvents({
-          id: generateId(),
-          event: 'UPDATE_NOTIFICATIONS',
-          payload: {
-            spaceId: activeSpace.id,
-          },
-        });
-
-        return true;
-      }
-
-      case 'DELETE_NOTE': {
-        const { noteId, spaceId } = payload;
-        await deleteNote(noteId);
-
-        // send to side panel
-        await publishEvents({
-          id: generateId(),
-          event: 'UPDATE_NOTIFICATIONS',
-          payload: {
-            spaceId,
-          },
-        });
-        return true;
-      }
-
-      case 'NEW_GROUP': {
-        const { groupName, isOpenedInPopupWindow, activeSpace } = payload;
-
-        const tab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
-
-        const newGroupId = await chrome.tabs.group({
-          tabIds: tab.id,
-          ...(isOpenedInPopupWindow ? { createProperties: { windowId: activeSpace.windowId } } : {}),
-        });
-
-        await chrome.tabGroups.update(newGroupId, {
-          title: groupName,
-          color: 'blue',
-          collapsed: false,
-        });
-
-        return true;
-      }
-
-      case 'ADD_TO_GROUP': {
-        const { groupId, isOpenedInPopupWindow, activeSpace } = payload;
-        const tab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
-
-        await chrome.tabs.group({ groupId, tabIds: tab.id });
-
-        return true;
-      }
-
-      case 'RENAME_GROUP': {
-        const { groupId, groupName } = payload;
-
-        await chrome.tabGroups.update(groupId, { title: groupName });
-
-        return true;
-      }
-
-      case 'GO_TO_URL': {
-        const { url, shouldOpenInNewTab, isOpenedInPopupWindow, activeSpace } = payload;
-
-        // check if url already opened indifferent tab
-        let openedTab = null;
-
-        if (isOpenedInPopupWindow) {
-          const [matchedTab] = await chrome.tabs.query({ url, windowId: activeSpace.windowId });
-          openedTab = matchedTab;
-        } else {
-          const [matchedTab] = await chrome.tabs.query({ url, currentWindow: true });
-          openedTab = matchedTab;
-        }
-
-        if (openedTab?.id) {
-          await goToTab(openedTab.id);
           return true;
         }
 
-        const { index, ...tab } = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
+        case 'SWITCH_SPACE': {
+          const { spaceId, shouldOpenInNewWindow } = payload;
 
-        if (!shouldOpenInNewTab) {
-          await chrome.tabs.update(tab.id, { url: parseUrl(url) });
-        } else {
-          await chrome.tabs.create({ index: index + 1, url, active: true });
+          const space = await getSpace(spaceId);
+
+          const tabs = await getTabsInSpace(spaceId);
+
+          await openSpace({ space, tabs, shouldOpenInNewWindow });
+
+          return true;
         }
 
-        return true;
-      }
+        case 'NEW_SPACE': {
+          const { spaceTitle, isOpenedInPopupWindow, activeSpace } = payload;
 
-      case 'OPEN_PREVIEW_LINK_AS_TAB': {
-        const { url } = payload;
+          const tab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
 
-        const popupWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW' });
-        if (!popupWindow) return;
+          const newSpace = await createNewSpace(
+            {
+              title: spaceTitle,
+              emoji: '🚀',
+              theme: ThemeColor.Cyan,
+              activeTabIndex: 0,
+              isSaved: true,
+              windowId: 0,
+            },
+            [tab],
+          );
 
-        const spaceId = popupWindow.split('-')[0];
-        const popupWindowId = Number(popupWindow.split('-')[1]);
+          await openSpace({ space: newSpace, tabs: [tab], shouldOpenInNewWindow: false });
 
-        const space = await getSpace(spaceId);
-
-        await chrome.tabs.create({ url, active: true, windowId: space.windowId });
-
-        await chrome.windows.update(space.windowId, { focused: true });
-
-        await chrome.windows.remove(popupWindowId);
-
-        return true;
-      }
-
-      case 'OPEN_APP_SIDEPANEL': {
-        const { windowId } = payload;
-
-        await chrome.sidePanel.open({ windowId });
-
-        if (payload?.isOpenedInPopupWindow) {
-          await chrome.windows.update(windowId, { focused: true });
+          return true;
         }
 
-        if (payload?.openSidePanelModal) {
-          setTimeout(async () => {
-            // retry until side panel loaded
-            await retryAtIntervals({
-              retries: 3,
-              interval: 250,
-              callback: async () => {
-                // open modal based on command selected
-                return await publishEvents({
-                  id: generateId(),
-                  event: 'OPEN_MODAL',
-                  payload: { openSidePanelModal: payload.openSidePanelModal },
-                });
-              },
+        case 'NEW_NOTE': {
+          const { activeSpace, note, url, noteRemainder, noteTitle, isOpenedInPopupWindow } = payload;
+
+          const currentTab = await getCurrentTab();
+
+          const domain = removeWWWPrefix(url) || '';
+
+          const title = noteTitle || currentTab.title;
+
+          // new note data
+          const newNote: INote = {
+            title,
+            domain,
+            id: generateId(),
+            text: note,
+            spaceId: activeSpace.id,
+            createdAt: new Date().getTime(),
+            ...(noteRemainder && { remainderAt: naturalLanguageToDate(noteRemainder) }),
+          };
+
+          // create note
+          await addNewNote(newNote);
+
+          const { notes } = await getAppSettings();
+
+          if (!isOpenedInPopupWindow) {
+            await publishEventsTab(currentTab.id, {
+              event: 'SHOW_SNACKBAR',
+              payload: { activeSpace, notesBubblePos: notes.bubblePos, snackbarMsg: 'Note Captured' },
             });
-          }, 250);
-        }
+          }
 
-        return true;
-      }
-
-      case 'MOVE_TAB_TO_SPACE': {
-        const { spaceId, isOpenedInPopupWindow, activeSpace } = payload;
-        const tabsInSpace = await getTabsInSpace(spaceId);
-
-        const tab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
-
-        await setTabsForSpace(spaceId, [...tabsInSpace, tab]);
-
-        await chrome.tabs.remove(tab.id);
-
-        // create new tab if selected space is opened in another window
-        await openTabsInTransferredSpace(spaceId, [tab]);
-        return true;
-      }
-
-      case 'SEARCH': {
-        const { searchQuery, searchFilterPreferences, searchResLimit } = payload;
-
-        const matchedCommands: ICommand[] = [];
-
-        if (searchFilterPreferences.searchNotes) {
-          let notes = await getAllNotes();
-          notes = notes?.filter(note => {
-            // match query with  domain
-            if (note.domain.includes(searchQuery)) return true;
-            // match query with title
-            if (matchWordsInText(searchQuery, note.title)) return true;
-            // match query with note text
-            if (matchWordsInText(searchQuery, note.text)) return true;
-
-            return false;
+          // send to side panel
+          await publishEvents({
+            id: generateId(),
+            event: 'UPDATE_NOTIFICATIONS',
+            payload: {
+              spaceId: activeSpace.id,
+            },
           });
 
-          if (notes?.length > 0) {
-            // do not show more than search result limit
-            notes.length > searchResLimit && notes.splice(searchResLimit);
+          return true;
+        }
 
-            notes?.forEach((note, idx) => {
-              if (!note?.text || !note?.title) return;
+        case 'EDIT_NOTE': {
+          const { note, url, activeSpace, noteRemainder, noteId, noteTitle, isOpenedInPopupWindow } = payload;
 
-              matchedCommands.push({
-                index: idx,
-                type: CommandType.Note,
-                label: note.title,
-                // icon will be added in Command component
-                icon: null,
-                metadata: note.id,
-                alias: 'Note',
+          const noteToEdit = await getNote(noteId);
+
+          await updateNote(noteId, {
+            ...noteToEdit,
+            text: note,
+            ...(noteTitle && { title: noteTitle }),
+            ...(url && { domain: url }),
+            ...(noteRemainder && { remainderAt: naturalLanguageToDate(noteRemainder) }),
+          });
+
+          const currentTab = await getCurrentTab();
+
+          const { notes } = await getAppSettings();
+
+          if (!isOpenedInPopupWindow) {
+            await publishEventsTab(currentTab.id, {
+              event: 'SHOW_SNACKBAR',
+              payload: { activeSpace, notesBubblePos: notes.bubblePos, snackbarMsg: 'Note Saved' },
+            });
+          }
+
+          // send to side panel
+          await publishEvents({
+            id: generateId(),
+            event: 'UPDATE_NOTIFICATIONS',
+            payload: {
+              spaceId: activeSpace.id,
+            },
+          });
+
+          return true;
+        }
+
+        case 'DELETE_NOTE': {
+          const { noteId, spaceId } = payload;
+          await deleteNote(noteId);
+
+          // send to side panel
+          await publishEvents({
+            id: generateId(),
+            event: 'UPDATE_NOTIFICATIONS',
+            payload: {
+              spaceId,
+            },
+          });
+          return true;
+        }
+
+        case 'NEW_GROUP': {
+          const { groupName, isOpenedInPopupWindow, activeSpace } = payload;
+
+          const tab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
+
+          const newGroupId = await chrome.tabs.group({
+            tabIds: tab.id,
+            ...(isOpenedInPopupWindow ? { createProperties: { windowId: activeSpace.windowId } } : {}),
+          });
+
+          await chrome.tabGroups.update(newGroupId, {
+            title: groupName,
+            color: 'blue',
+            collapsed: false,
+          });
+
+          return true;
+        }
+
+        case 'ADD_TO_GROUP': {
+          const { groupId, isOpenedInPopupWindow, activeSpace } = payload;
+          const tab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
+
+          await chrome.tabs.group({ groupId, tabIds: tab.id });
+
+          return true;
+        }
+
+        case 'RENAME_GROUP': {
+          const { groupId, groupName } = payload;
+
+          await chrome.tabGroups.update(groupId, { title: groupName });
+
+          return true;
+        }
+
+        case 'GO_TO_URL': {
+          const { url, shouldOpenInNewTab, isOpenedInPopupWindow, activeSpace } = payload;
+
+          // check if url already opened indifferent tab
+          let openedTab = null;
+
+          if (isOpenedInPopupWindow) {
+            const [matchedTab] = await chrome.tabs.query({ url: new URL(url).href, windowId: activeSpace.windowId });
+            openedTab = matchedTab;
+          } else {
+            const [matchedTab] = await chrome.tabs.query({ url: new URL(url).href, currentWindow: true });
+            openedTab = matchedTab;
+          }
+
+          if (openedTab?.id) {
+            await goToTab(openedTab.id);
+            return true;
+          }
+
+          const { index, ...tab } = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
+
+          if (!shouldOpenInNewTab) {
+            await chrome.tabs.update(tab.id, { url });
+          } else {
+            await chrome.tabs.create({ index: index + 1, url, active: true });
+          }
+
+          return true;
+        }
+
+        case 'OPEN_PREVIEW_LINK_AS_TAB': {
+          const { url } = payload;
+
+          const popupWindow = await getStorage<string>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW' });
+          if (!popupWindow) return;
+
+          const spaceId = popupWindow.split('-')[0];
+          const popupWindowId = Number(popupWindow.split('-')[1]);
+
+          const space = await getSpace(spaceId);
+
+          await chrome.tabs.create({ url, active: true, windowId: space.windowId });
+
+          await chrome.windows.update(space.windowId, { focused: true });
+
+          await chrome.windows.remove(popupWindowId);
+
+          return true;
+        }
+
+        case 'OPEN_APP_SIDEPANEL': {
+          const { windowId } = payload;
+
+          await chrome.sidePanel.open({ windowId });
+
+          if (payload?.isOpenedInPopupWindow) {
+            await chrome.windows.update(windowId, { focused: true });
+          }
+
+          if (payload?.openSidePanelModal) {
+            setTimeout(async () => {
+              // retry until side panel loaded
+              await retryAtIntervals({
+                retries: 3,
+                interval: 250,
+                callback: async () => {
+                  // open modal based on command selected
+                  return await publishEvents({
+                    id: generateId(),
+                    event: 'OPEN_MODAL',
+                    payload: { openSidePanelModal: payload.openSidePanelModal },
+                  });
+                },
               });
-            });
+            }, 250);
           }
+
+          return true;
         }
 
-        // return the matched results if more than result limit (won't search bookmark & history)
-        if (matchedCommands.length >= searchResLimit) return matchedCommands;
+        case 'MOVE_TAB_TO_SPACE': {
+          const { spaceId, isOpenedInPopupWindow, activeSpace } = payload;
+          const tabsInSpace = await getTabsInSpace(spaceId);
 
-        if (searchFilterPreferences.searchBookmarks) {
-          let bookmarks = await chrome.bookmarks.search({ query: searchQuery });
+          const tab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
 
-          // remove duplicate
-          bookmarks = bookmarks.filter((bm, idx) => {
-            const index = bookmarks.findIndex(b => b.url === bm.url);
-            if (index === -1 || index === idx) return true;
+          await setTabsForSpace(spaceId, [...tabsInSpace, tab]);
 
-            return false;
-          });
+          await chrome.tabs.remove(tab.id);
 
-          // limit search results
-          if (bookmarks.length + matchedCommands.length > searchResLimit) {
-            bookmarks = bookmarks.splice(0, searchResLimit - matchedCommands.length);
+          // create new tab if selected space is opened in another window
+          await openTabsInTransferredSpace(spaceId, [tab]);
+          return true;
+        }
+
+        case 'SEARCH': {
+          const { searchQuery, searchFilterPreferences, searchResLimit } = payload;
+
+          const matchedCommands: ICommand[] = [];
+
+          if (searchFilterPreferences.searchNotes) {
+            let notes = await getAllNotes();
+            notes = notes?.filter(note => {
+              // match query with  domain
+              if (note.domain.includes(searchQuery)) return true;
+              // match query with title
+              if (matchWordsInText(searchQuery, note.title)) return true;
+              // match query with note text
+              if (matchWordsInText(searchQuery, note.text)) return true;
+
+              return false;
+            });
+
+            if (notes?.length > 0) {
+              // do not show more than search result limit
+              notes.length > searchResLimit && notes.splice(searchResLimit);
+
+              notes?.forEach((note, idx) => {
+                if (!note?.text || !note?.title) return;
+
+                matchedCommands.push({
+                  index: idx,
+                  type: CommandType.Note,
+                  label: note.title,
+                  // icon will be added in Command component
+                  icon: null,
+                  metadata: note.id,
+                  alias: 'Note',
+                });
+              });
+            }
           }
 
-          if (bookmarks?.length > 0) {
-            for (const item of bookmarks) {
-              if (!item) return;
+          // return the matched results if more than result limit (won't search bookmark & history)
+          if (matchedCommands.length >= searchResLimit) return matchedCommands;
+
+          if (searchFilterPreferences.searchBookmarks) {
+            let bookmarks = await chrome.bookmarks.search({ query: searchQuery });
+
+            // remove duplicate
+            bookmarks = bookmarks.filter((bm, idx) => {
+              const index = bookmarks.findIndex(b => b.url === bm.url);
+              if (index === -1 || index === idx) return true;
+
+              return false;
+            });
+
+            // limit search results
+            if (bookmarks.length + matchedCommands.length > searchResLimit) {
+              bookmarks = bookmarks.splice(0, searchResLimit - matchedCommands.length);
+            }
+
+            if (bookmarks?.length > 0) {
+              for (const item of bookmarks) {
+                if (!item) return;
+                const icon = await getFaviconURLAsync(item.url);
+
+                matchedCommands.push({
+                  icon,
+                  index: 0,
+                  type: CommandType.Link,
+                  label: item.title,
+                  metadata: item.url,
+                  alias: 'Bookmark',
+                });
+              }
+            }
+          }
+
+          // return the matched results if more than 6 (won't search history)
+          if (matchedCommands.length >= searchResLimit) return matchedCommands;
+
+          // get 1 month before date to find history before that
+          const oneMonthBefore = new Date();
+
+          oneMonthBefore.setMonth(oneMonthBefore.getMonth() - 2);
+
+          // query history (words match)
+          let history = await chrome.history.search({
+            text: searchQuery,
+            startTime: oneMonthBefore.getTime(),
+            maxResults: searchResLimit - matchedCommands.length,
+          });
+
+          if (history?.length > 0) {
+            // remove duplicate
+            history = history.filter((h1, idx) => {
+              const index = history.findIndex(b => b.url === h1.url);
+              if (index === -1 || index === idx) return true;
+
+              return false;
+            });
+
+            for (const item of history) {
+              if (!item.url) return;
               const icon = await getFaviconURLAsync(item.url);
 
               matchedCommands.push({
@@ -853,241 +893,204 @@ chrome.runtime.onMessage.addListener(
                 index: 0,
                 type: CommandType.Link,
                 label: item.title,
-                metadata: item.url,
-                alias: 'Bookmark',
+                metadata: parseUrl(item.url),
+                alias: 'History',
               });
             }
           }
-        }
 
-        // return the matched results if more than 6 (won't search history)
-        if (matchedCommands.length >= searchResLimit) return matchedCommands;
+          // return the matched results if more than 6 (won't show web search suggestions)
+          if (matchedCommands.length >= searchResLimit) return matchedCommands;
 
-        // get 1 month before date to find history before that
-        const oneMonthBefore = new Date();
-
-        oneMonthBefore.setMonth(oneMonthBefore.getMonth() - 2);
-
-        // query history (words match)
-        let history = await chrome.history.search({
-          text: searchQuery,
-          startTime: oneMonthBefore.getTime(),
-          maxResults: searchResLimit - matchedCommands.length,
-        });
-
-        if (history?.length > 0) {
-          // remove duplicate
-          history = history.filter((h1, idx) => {
-            const index = history.findIndex(b => b.url === h1.url);
-            if (index === -1 || index === idx) return true;
-
-            return false;
-          });
-
-          for (const item of history) {
-            if (!item.url) return;
-            const icon = await getFaviconURLAsync(item.url);
-
-            matchedCommands.push({
-              icon,
-              index: 0,
-              type: CommandType.Link,
-              label: item.title,
-              metadata: parseUrl(item.url),
-              alias: 'History',
-            });
-          }
-        }
-
-        // return the matched results if more than 6 (won't show web search suggestions)
-        if (matchedCommands.length >= searchResLimit) return matchedCommands;
-
-        /*
+          /*
             The newer URL is now http://clients1.google.com/complete/search?hl=en&output=toolbar&q=YOURSEARCHTERM
             Or even more recent: http://suggestqueries.google.com/complete/search?output=toolbar&hl=en&q=YOURSEARCHTERM
             http://google.com/complete/search?client=chrome&q=YOURSEARCHEDTERM\
        */
 
-        const res = await fetch(`http://google.com/complete/search?client=chrome&q=${searchQuery}`);
+          const res = await fetch(`http://google.com/complete/search?client=chrome&q=${searchQuery}`);
 
-        const parsedRes = await res.json();
+          const parsedRes = await res.json();
 
-        let suggestions = parsedRes[1] as string[];
+          let suggestions = parsedRes[1] as string[];
 
-        if (!suggestions) return matchedCommands;
+          if (!suggestions) return matchedCommands;
 
-        suggestions = suggestions.slice(0, Math.max(searchResLimit - matchedCommands.length, 1));
+          suggestions = suggestions.slice(0, Math.max(searchResLimit - matchedCommands.length, 1));
 
-        suggestions.forEach(query => {
-          matchedCommands.push({
-            index: 0,
-            type: CommandType.WebSearch,
-            label: query,
-            icon: null,
-            // alias: 'Suggestions',
+          suggestions.forEach(query => {
+            matchedCommands.push({
+              index: 0,
+              type: CommandType.WebSearch,
+              label: query,
+              icon: null,
+              // alias: 'Suggestions',
+            });
           });
-        });
 
-        return matchedCommands;
-      }
+          return matchedCommands;
+        }
 
-      case 'WEB_SEARCH': {
-        const { searchQuery, shouldOpenInNewTab, isOpenedInPopupWindow, activeSpace } = payload;
+        case 'WEB_SEARCH': {
+          const { searchQuery, shouldOpenInNewTab, isOpenedInPopupWindow, activeSpace } = payload;
 
-        if (!shouldOpenInNewTab) {
-          // search in current tab
-          await chrome.search.query({ text: searchQuery, disposition: 'CURRENT_TAB' });
-        } else {
-          // create new tab to search (as the default new tab search opens a new tab at the end to search)
+          if (!shouldOpenInNewTab) {
+            // search in current tab
+            await chrome.search.query({ text: searchQuery, disposition: 'CURRENT_TAB' });
+          } else {
+            // create new tab to search (as the default new tab search opens a new tab at the end to search)
+            const currentTab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
+
+            const newTab = await createActiveTab('chrome://newtab', currentTab.index + 1);
+
+            await chrome.search.query({ text: searchQuery, tabId: newTab.id });
+          }
+
+          return true;
+        }
+
+        case 'DISCARD_TABS': {
+          const { shouldIgnoreDiscardWhitelist } = payload;
+          return await discardAllTabs(false, shouldIgnoreDiscardWhitelist);
+        }
+
+        case 'WHITE_LIST_DOMAIN_FOR_AUTO_DISCARD': {
+          const { activeSpace, isOpenedInPopupWindow } = payload;
+
           const currentTab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
 
-          const newTab = await createActiveTab('chrome://newtab', currentTab.index + 1);
+          const domainToWhitelist = getUrlDomain(currentTab.url);
 
-          await chrome.search.query({ text: searchQuery, tabId: newTab.id });
-        }
+          const appSettings = await getAppSettings();
 
-        return true;
-      }
-
-      case 'DISCARD_TABS': {
-        const { shouldIgnoreDiscardWhitelist } = payload;
-        return await discardAllTabs(false, shouldIgnoreDiscardWhitelist);
-      }
-
-      case 'WHITE_LIST_DOMAIN_FOR_AUTO_DISCARD': {
-        const { activeSpace, isOpenedInPopupWindow } = payload;
-
-        const currentTab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
-
-        const domainToWhitelist = getUrlDomain(currentTab.url);
-
-        const appSettings = await getAppSettings();
-
-        await saveSettings({
-          ...appSettings,
-          autoDiscardTabs: {
-            ...appSettings.autoDiscardTabs,
-            whitelistedDomains: [...(appSettings.autoDiscardTabs.whitelistedDomains || []), domainToWhitelist],
-          },
-        });
-
-        return;
-      }
-
-      case 'SNOOZE_TAB': {
-        const { snoozedUntil, spaceId, isOpenedInPopupWindow, activeSpace } = payload;
-
-        let activeTab: chrome.tabs.Tab = null;
-
-        if (isOpenedInPopupWindow) {
-          const [matchedTab] = await chrome.tabs.query({
-            active: true,
-            windowId: activeSpace.windowId,
+          await saveSettings({
+            ...appSettings,
+            autoDiscardTabs: {
+              ...appSettings.autoDiscardTabs,
+              whitelistedDomains: [...(appSettings.autoDiscardTabs.whitelistedDomains || []), domainToWhitelist],
+            },
           });
 
-          activeTab = matchedTab;
-        } else {
-          const [matchedTab] = await chrome.tabs.query({
-            active: true,
-            currentWindow: true,
-          });
-
-          activeTab = matchedTab;
+          return;
         }
 
-        const { url, title, id, favIconUrl: faviconUrl } = activeTab;
+        case 'SNOOZE_TAB': {
+          const { snoozedUntil, spaceId, isOpenedInPopupWindow, activeSpace } = payload;
 
-        // add snooze tab to storage
-        await addSnoozedTab(spaceId, {
-          snoozedUntil,
-          url,
-          title,
-          faviconUrl,
-          snoozedAt: Date.now(),
-        });
+          let activeTab: chrome.tabs.Tab = null;
 
-        const triggerTimeInMinutes = Math.ceil((snoozedUntil - Date.now()) / 1000 / 60);
+          if (isOpenedInPopupWindow) {
+            const [matchedTab] = await chrome.tabs.query({
+              active: true,
+              windowId: activeSpace.windowId,
+            });
 
-        // create a alarm trigger
-        await createAlarm({ name: AlarmName.snoozedTab(spaceId), triggerAfter: triggerTimeInMinutes });
-        // close the tab
-        await chrome.tabs.remove(id);
-        return true;
-      }
+            activeTab = matchedTab;
+          } else {
+            const [matchedTab] = await chrome.tabs.query({
+              active: true,
+              currentWindow: true,
+            });
 
-      case 'CLOSE_TAB': {
-        const { activeSpace, isOpenedInPopupWindow } = payload;
-        const currentTab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
-
-        await chrome.tabs.remove(currentTab.id);
-
-        return true;
-      }
-
-      case 'OPEN_LINK_PREVIEW_POPUP': {
-        const popupWindowId = await getStorage<number>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW' });
-
-        if (popupWindowId) {
-          try {
-            const popupWindow = await chrome.windows.get(popupWindowId);
-            if (popupWindow?.id) return true;
-          } catch {
-            await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW', value: '' });
+            activeTab = matchedTab;
           }
-        }
-        const { url } = payload;
 
-        const currentWindow = await chrome.windows.getCurrent();
+          const { url, title, id, favIconUrl: faviconUrl } = activeTab;
 
-        const { linkPreview } = await getAppSettings();
+          // add snooze tab to storage
+          await addSnoozedTab(spaceId, {
+            snoozedUntil,
+            url,
+            title,
+            faviconUrl,
+            snoozedAt: Date.now(),
+          });
 
-        // calculate window size based on user preference
-        let windowWidth = 0;
-        let windowHeight = 0;
-        let popupOffsetLeft = 0;
+          const triggerTimeInMinutes = Math.ceil((snoozedUntil - Date.now()) / 1000 / 60);
 
-        if (linkPreview.size === 'mobile') {
-          windowWidth = 480;
-          windowHeight = 750;
-          popupOffsetLeft = Math.ceil(currentWindow.width / 4 + currentWindow.left);
-        }
-        if (linkPreview.size === 'tablet') {
-          windowWidth = 1100;
-          windowHeight = 750;
-          popupOffsetLeft = Math.ceil(currentWindow.left + currentWindow.width / 5);
-        }
-        if (linkPreview.size === 'desktop') {
-          windowWidth = 1350;
-          windowHeight = 850;
-          popupOffsetLeft = Math.ceil(currentWindow.left + 80);
+          // create a alarm trigger
+          await createAlarm({ name: AlarmName.snoozedTab(spaceId), triggerAfter: triggerTimeInMinutes });
+          // close the tab
+          await chrome.tabs.remove(id);
+          return true;
         }
 
-        const window = await chrome.windows.create({
-          url,
-          type: 'popup',
-          state: 'normal',
-          focused: true,
-          width: windowWidth,
-          height: windowHeight,
-          left: popupOffsetLeft,
-          top: currentWindow.top + 140,
-        });
+        case 'CLOSE_TAB': {
+          const { activeSpace, isOpenedInPopupWindow } = payload;
+          const currentTab = await getCurrentTab(isOpenedInPopupWindow ? activeSpace.windowId : 0);
 
-        await wait(100);
+          await chrome.tabs.remove(currentTab.id);
 
-        const space = await getSpaceByWindow(currentWindow.id);
+          return true;
+        }
 
-        if (!space?.id || window?.tabs?.length < 1) return false;
+        case 'OPEN_LINK_PREVIEW_POPUP': {
+          const popupWindowId = await getStorage<number>({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW' });
 
-        //  save popup window id to storage TEMP_..
-        await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW', value: `${space.id}-${window.id}` });
+          if (popupWindowId) {
+            try {
+              const popupWindow = await chrome.windows.get(popupWindowId);
+              if (popupWindow?.id) return true;
+            } catch {
+              await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW', value: '' });
+            }
+          }
+          const { url } = payload;
 
-        return true;
+          const currentWindow = await chrome.windows.getCurrent();
+
+          const { linkPreview } = await getAppSettings();
+
+          // calculate window size based on user preference
+          let windowWidth = 0;
+          let windowHeight = 0;
+          let popupOffsetLeft = 0;
+
+          if (linkPreview.size === 'mobile') {
+            windowWidth = 480;
+            windowHeight = 750;
+            popupOffsetLeft = Math.ceil(currentWindow.width / 4 + currentWindow.left);
+          }
+          if (linkPreview.size === 'tablet') {
+            windowWidth = 1100;
+            windowHeight = 750;
+            popupOffsetLeft = Math.ceil(currentWindow.left + currentWindow.width / 5);
+          }
+          if (linkPreview.size === 'desktop') {
+            windowWidth = 1350;
+            windowHeight = 850;
+            popupOffsetLeft = Math.ceil(currentWindow.left + 80);
+          }
+
+          const window = await chrome.windows.create({
+            url,
+            type: 'popup',
+            state: 'normal',
+            focused: true,
+            width: windowWidth,
+            height: windowHeight,
+            left: popupOffsetLeft,
+            top: currentWindow.top + 140,
+          });
+
+          await wait(100);
+
+          const space = await getSpaceByWindow(currentWindow.id);
+
+          if (!space?.id || window?.tabs?.length < 1) return false;
+
+          //  save popup window id to storage TEMP_..
+          await setStorage({ type: 'session', key: 'LINK_PREVIEW_POPUP_WINDOW', value: `${space.id}-${window.id}` });
+
+          return true;
+        }
+
+        default: {
+          return true;
+        }
       }
-
-      default: {
-        return true;
-      }
+    } catch (error) {
+      logger.error({ error, msg: 'error handling event at background script.' });
     }
   }),
 );
@@ -1792,7 +1795,7 @@ const handleTabsReplaced = async events => {
   for (const window of windows) {
     const space = await getSpaceByWindow(window.id);
 
-    if (space?.id) continue;
+    if (!space?.id) continue;
 
     const tabsInSpace = await getTabsInSpace(space.id);
 

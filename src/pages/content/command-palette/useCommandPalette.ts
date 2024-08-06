@@ -12,6 +12,7 @@ import { getReadableDate } from '@root/src/utils/date-time/getReadableDate';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { getAllGroups, getGroup } from '@root/src/services/chrome-storage/groups';
+import { parseUrl } from '@root/src/utils';
 
 // default suggested time for snooze tab command
 const defaultSuggestedSnoozeTimeLabels = [
@@ -190,7 +191,7 @@ export const useCommandPalette = ({ activeSpace, groupId, onClose, isOpenedInPop
             payload: {
               activeSpace,
               isOpenedInPopupWindow,
-              url: focusedCommand.metadata as string,
+              url: parseUrl(focusedCommand.metadata as string),
               shouldOpenInNewTab: isMetaKeyPressed,
             },
           });

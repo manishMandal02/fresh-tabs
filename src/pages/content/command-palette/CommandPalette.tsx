@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, MouseEventHandler, useCallback } from 'rea
 import Command from './command/Command';
 import { cn } from '@root/src/utils/cn';
 import CaptureNote from '../capture-note';
-import { debounce, getFaviconURL, isValidURL } from '@root/src/utils';
+import { debounce, getFaviconURL, isValidURL, parseUrl } from '@root/src/utils';
 import KBD from '@root/src/components/kbd/KBD';
 import SearchBox from './search-box/SearchBox';
 import CommandDivider from './command/CommandDivider';
@@ -280,7 +280,7 @@ const CommandPalette = ({
           label: searchTerm,
           type: CommandType.Link,
           metadata: `${searchTerm}`,
-          icon: getFaviconURL(searchTerm.startsWith('http') ? searchTerm : `https://${searchTerm}`),
+          icon: getFaviconURL(parseUrl(searchTerm)),
           index: matchedCommands.length + 1,
         });
       }
