@@ -16,9 +16,7 @@ type Props = {
 };
 
 const getTotalTime = (data: PieChartData[]) => {
-  const totalMinutes = data.reduce((acc, curr) => {
-    return acc + (curr.value as number);
-  }, 0);
+  const totalMinutes = data.reduce((acc, curr) => acc + (curr.value as number), 0);
   return toHours(totalMinutes);
 };
 

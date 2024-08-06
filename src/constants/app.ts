@@ -131,8 +131,8 @@ export const SampleSpaces: ISpaceWithTabs[] = [
     tabs: [
       {
         id: 0,
-        url: 'https://manishmandal.me',
-        faviconUrl: 'https://manishmandal.me/favicon.ico',
+        url: 'https://manishmandal.com',
+        faviconUrl: 'https://manishmandal.com/favicon.ico',
         title: 'Manish Mandal',
         index: 0,
       },
@@ -156,9 +156,9 @@ export const SampleSpaces: ISpaceWithTabs[] = [
     tabs: [
       {
         id: 0,
-        url: 'https://manishmandal.me',
+        url: 'https://manishmandal.com',
         title: 'Manish Mandal',
-        faviconUrl: 'https://manishmandal.me/favicon.ico',
+        faviconUrl: 'https://manishmandal.com/favicon.ico',
         index: 0,
       },
       {

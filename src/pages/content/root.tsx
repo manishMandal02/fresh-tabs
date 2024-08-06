@@ -266,8 +266,13 @@ const appendOpenInTabBtnOverlay = () => {
     });
   });
 
+  overlayBtn.addEventListener('mouseover', () => {
+    closeBtn.style.display = 'block';
+  });
+
   const closeBtn = document.createElement('span');
   closeBtn.style.position = 'fixed';
+  closeBtn.style.display = 'hidden';
   closeBtn.style.zIndex = '9999999999';
   closeBtn.style.top = '10px';
   closeBtn.style.right = '12px';

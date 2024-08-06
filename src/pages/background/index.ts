@@ -141,7 +141,19 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO fix - error on content script:: extension context invalidated error
+// TODO - fix - side panel - removing whitelisted site from preference doesn't show immediate effect/result
+
+// TODO - fix - (Link Preview) show close button option for open in tab only after hover
+
+// TODO - fix - command palette 👇
+// not in center (popup window) for large monitor (2nd screen)
+// try not adding overflow hidden to the body.
+// does not recognize some domains to directly visit the site (ex: docker.com, o-blog-scrapper.onrender.com. gets "invalid url pattern" error)
+
+// TODO - feat - snippets: allow users to create snippets and use them on sites via cmd palette
+// TODO - feat - reading mode: allow user to read any blogs without any distractions
+
+// TODO - fix - error on content script:: extension context invalidated error
 
 //!---- 👇 later, when backend is being built
 

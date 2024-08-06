@@ -108,7 +108,7 @@ const SnoozedTabs = () => {
             </span>
           ))}
         </div>
-        <div className="h-fit max-h-[70vh] overflow-y-auto cc-scrollbar">
+        <div className="h-fit max-h-[70vh] overflow-x-hidden overflow-y-auto cc-scrollbar px-[2px] py-1">
           {snoozedTabs
             .sort((a, b) => (a.snoozedUntil > b.snoozedUntil ? 1 : -1))
             ?.map(tab => (

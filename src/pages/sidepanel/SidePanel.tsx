@@ -81,6 +81,7 @@ const SidePanel = () => {
       const user = await getUser();
       if (!user) {
         setIsLoadingSpaces(false);
+
         return;
       }
 

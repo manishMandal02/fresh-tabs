@@ -174,7 +174,7 @@ const Notification = () => {
         {allNotifications.length > 0 &&
           Object.entries(notifications).map(([date, dateNotification]) => {
             return (
-              <div key={date} className=" flex flex-col  w-full h-full py-1 px-3.5">
+              <div key={date} className=" flex flex-col  w-full h-full py-1 px-2">
                 <p className="text-[12px] font-medium text-slate-400/70 mb-[2.5px]">
                   {getISODate(date) === getISODate(new Date()) ? 'Today •' : ''} {'  '} {getWeekday(new Date(date))}
                   {'  '}
@@ -213,7 +213,7 @@ const Notification = () => {
                       }}
                       className={`translate-x-[34px] absolute group-hover:translate-x-0 flex items-center justify-center rounded-tr-md rounded-br-md
                                bg-brand-darkBgAccent/30 hover:bg-rose-400/50  w-[22.5px] h-full top-0 right-0  transition-all duration-300`}>
-                      <TrashIcon className="text-rose-400 scale-[0.95]" />
+                      <TrashIcon className="text-rose-400 scale-[0.95] " />
                     </button>
                   </button>
                 ))}

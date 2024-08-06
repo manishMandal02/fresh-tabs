@@ -231,6 +231,8 @@ const Settings = () => {
     // save to storage
     await saveSettings(updatedSettings);
 
+    setSettingsUpdateData(updatedSettings);
+
     whitelistInputRef.current.value = '';
 
     // save to global (ui) state
@@ -239,7 +241,7 @@ const Settings = () => {
 
   // remove whitelist site
   const handleRemoveWhitelistDomain = async (domain: string) => {
-    const updatedWhitelist = {
+    const updatedSettings = {
       ...appSettings,
       autoDiscardTabs: {
         ...appSettings.autoDiscardTabs,
@@ -248,10 +250,12 @@ const Settings = () => {
     };
 
     // save to storage
-    await saveSettings(updatedWhitelist);
+    await saveSettings(updatedSettings);
+
+    setSettingsUpdateData(updatedSettings);
 
     // save to global (ui) state
-    setAppSetting(updatedWhitelist);
+    setAppSetting(updatedSettings);
   };
 
   const getAppShortcuts = async () => {
@@ -435,7 +439,7 @@ const Settings = () => {
           {/* command palette */}
           <Accordion
             id="command-palette"
-            // defaultCollapsed
+            defaultCollapsed
             classes={{
               triggerContainer:
                 'border-b border-brand-darkBgAccent/30 bg-brand-darkBgAccent/30 rounded-tr-md rounded-tl-md py-px mb-[3px]',
@@ -673,7 +677,6 @@ const Settings = () => {
                   }
                 />
               </div>
-
               <p
                 className={cn('text-[12px] font-light tracking-wide ml-1', {
                   'opacity-70 cursor-not-allowed': !settingsUpdateData.autoDiscardTabs.isEnabled,
@@ -705,7 +708,6 @@ const Settings = () => {
                   Whitelist Sites ({settingsUpdateData.autoDiscardTabs.whitelistedDomains.length})
                 </p>
                 {/* input box */}
-
                 <input
                   type="text"
                   ref={whitelistInputRef}
