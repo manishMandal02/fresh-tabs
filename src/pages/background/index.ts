@@ -141,8 +141,6 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - fix - side panel - removing whitelisted site from preference doesn't show immediate effect/result
-
 // TODO - fix - (Link Preview) show close button option for open in tab only after hover
 
 // TODO - fix - command palette 👇
@@ -1747,6 +1745,9 @@ chrome.windows.onRemoved.addListener(async windowId => {
 chrome.windows.onFocusChanged.addListener(async windowId => {
   // record daily space time
   await recordDailySpaceTime(windowId);
+
+  // TODO - testing...
+  return;
 
   // remove temp pop windows if any
   try {

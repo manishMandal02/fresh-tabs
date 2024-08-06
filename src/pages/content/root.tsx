@@ -238,6 +238,9 @@ const showNotes = async (spaceId: string, position: NoteBubblePos, reRender = fa
 };
 
 const appendOpenInTabBtnOverlay = () => {
+  let isHoveringOverCloseBtn = false;
+  let isHoveringOverOpenInTabBtn = false;
+
   const overlayBtn = document.createElement('button');
 
   overlayBtn.id = 'fresh-tabs-button-overlay';
@@ -267,12 +270,22 @@ const appendOpenInTabBtnOverlay = () => {
   });
 
   overlayBtn.addEventListener('mouseover', () => {
+    isHoveringOverOpenInTabBtn = true;
     closeBtn.style.display = 'block';
+  });
+
+  overlayBtn.addEventListener('mouseleave', () => {
+    isHoveringOverOpenInTabBtn = false;
+    setTimeout(() => {
+      if (isHoveringOverCloseBtn) return;
+
+      closeBtn.style.display = 'none';
+    }, 100);
   });
 
   const closeBtn = document.createElement('span');
   closeBtn.style.position = 'fixed';
-  closeBtn.style.display = 'hidden';
+  closeBtn.style.display = 'none';
   closeBtn.style.zIndex = '9999999999';
   closeBtn.style.top = '10px';
   closeBtn.style.right = '12px';
@@ -294,6 +307,18 @@ const appendOpenInTabBtnOverlay = () => {
     overlayBtn.remove();
 
     (ev.target as HTMLElement).remove();
+  });
+
+  closeBtn.addEventListener('mouseover', () => {
+    isHoveringOverCloseBtn = true;
+  });
+  closeBtn.addEventListener('mouseleave', () => {
+    isHoveringOverCloseBtn = false;
+    setTimeout(() => {
+      if (isHoveringOverOpenInTabBtn) return;
+
+      closeBtn.style.display = 'none';
+    }, 100);
   });
 
   // create shadow root for buttons
