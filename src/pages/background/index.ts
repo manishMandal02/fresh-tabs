@@ -141,8 +141,6 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - fix - (Link Preview) show close button option for open in tab only after hover
-
 // TODO - fix - command palette 👇
 // not in center (popup window) for large monitor (2nd screen)
 // try not adding overflow hidden to the body.
@@ -1745,9 +1743,6 @@ chrome.windows.onRemoved.addListener(async windowId => {
 chrome.windows.onFocusChanged.addListener(async windowId => {
   // record daily space time
   await recordDailySpaceTime(windowId);
-
-  // TODO - testing...
-  return;
 
   // remove temp pop windows if any
   try {

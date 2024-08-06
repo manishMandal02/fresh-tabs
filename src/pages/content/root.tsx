@@ -21,9 +21,6 @@ import { IMessageEventContentScript, ISpace, NoteBubblePos } from '../../types/g
 // development: refresh content page on update
 refreshOnUpdate('pages/content');
 
-// host page position to reset after closing command palette
-let hostBackgroundPosition = 'auto';
-
 // close command palette
 const handleCloseCommandPalette = () => {
   const commandPaletteContainerEl = document.getElementById(ContentScriptContainerIds.COMMAND_PALETTE);
@@ -32,8 +29,6 @@ const handleCloseCommandPalette = () => {
 
   commandPaletteContainerEl.replaceChildren();
   commandPaletteContainerEl.remove();
-
-  document.body.style.overflow = hostBackgroundPosition;
 };
 
 type AppendContainerProps = {
@@ -68,10 +63,6 @@ const appendCommandPaletteContainer = ({
   commandPaletteContainer.style.display = 'flex';
   commandPaletteContainer.style.alignItems = 'center';
   commandPaletteContainer.style.justifyContent = 'center';
-
-  // prevent scrolling on host site
-  hostBackgroundPosition = document.body.style.overflow;
-  document.body.style.overflow = 'hidden';
 
   // append root react component for command palette
   document.body.append(commandPaletteContainer);
