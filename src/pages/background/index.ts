@@ -141,9 +141,6 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
-// TODO - fix - command palette 👇
-// not in center (popup window) for large monitor (2nd screen)
-
 // TODO - feat - snippets: allow users to create snippets and use them on sites via cmd palette
 // TODO - feat - reading mode: allow user to read any blogs without any distractions
 

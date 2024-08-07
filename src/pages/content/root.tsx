@@ -17,6 +17,7 @@ import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 import { getUserSelectionText, isValidURL, publishEvents } from '@root/src/utils';
 import CommandPalette, { COMMAND_PALETTE_SIZE } from './command-palette/CommandPalette';
 import { IMessageEventContentScript, ISpace, NoteBubblePos } from '../../types/global.types';
+import { isProbablyReaderable, Readability } from '@mozilla/readability';
 
 // development: refresh content page on update
 refreshOnUpdate('pages/content');
@@ -407,8 +408,22 @@ const openLinkPreview = async () => {
   });
 };
 
+// reading mode
+const readingMode = () => {
+  const reader = new Readability(document).parse();
+
+  console.log('🚀 ~ file: root.tsx:415 ~ readingMode ~ reader:', reader);
+  console.log(
+    '🚀 ~ file: root.tsx:422 ~ readingMode ~ isProbablyReaderable(document):',
+    isProbablyReaderable(document),
+  );
+};
+
+console.log('🚀 ~ file: root.tsx:422 ~ readingMode ~ readingMode:', readingMode);
+
 (async () => {
   await openLinkPreview();
+  // readingMode();
 })();
 
 //  listen to events form background script
