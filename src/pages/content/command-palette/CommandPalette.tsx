@@ -22,6 +22,7 @@ import { ICommand, ISearchFilters, ISpace } from '../../../types/global.types';
 import { staticCommands, useCommand, webSearchCommand } from './command/useCommand';
 import { DEFAULT_SEARCH_PLACEHOLDER, useCommandPalette } from './useCommandPalette';
 import { naturalLanguageToDate } from '../../../utils/date-time/naturalLanguageToDate';
+import { isProbablyReaderable } from '@mozilla/readability';
 
 const DomainWithSubdomainRegex = /^(?:[-A-Za-z0-9]+\.)+[A-Za-z]{2,10}$/;
 
@@ -89,9 +90,14 @@ const CommandPalette = ({
       searchNotes: cmdPalette.includeNotesInSearch,
     });
 
+    const isReadingModeSupported = isProbablyReaderable(document);
     const enabledCommandsFiltered = staticCommands.filter(
       cmd =>
-        !cmdPalette.disabledCommands.includes(cmd.type) && (notes.isDisabled ? cmd.type !== CommandType.NewNote : true),
+        !cmdPalette.disabledCommands.includes(cmd.type) &&
+        // exclude note cmd if notes feat disabled
+        (notes.isDisabled ? cmd.type !== CommandType.NewNote : true) &&
+        // exclude reading mode if reading mode not supported fot current page or if cmd palette opened in popup window
+        (isOpenedInPopupWindow || isReadingModeSupported ? cmd.type !== CommandType.ReadingMode : true),
     );
 
     setIsNotesDisabled(notes.isDisabled);

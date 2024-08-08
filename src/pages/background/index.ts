@@ -141,6 +141,11 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(error 
   });
 });
 
+// TODO - fix - note text editor
+// list extra space
+// code block not good ux
+// heading styles
+
 // TODO - feat - snippets: allow users to create snippets and use them on sites via cmd palette
 // TODO - feat - reading mode: allow user to read any blogs without any distractions
 
@@ -651,6 +656,16 @@ chrome.runtime.onMessage.addListener(
               spaceId,
             },
           });
+          return true;
+        }
+
+        case 'READING_MODE_CMD': {
+          const currentTab = await getCurrentTab();
+
+          await publishEventsTab(currentTab.id, {
+            event: 'OPEN_READING_MODE',
+          });
+
           return true;
         }
 

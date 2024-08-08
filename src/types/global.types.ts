@@ -224,6 +224,8 @@ type MessageEventsContentScript =
   | 'SHOW_DOMAIN_NOTES'
   | 'SHOW_SNACKBAR'
   | 'SWITCH_SPACE'
+  | 'READING_MODE_CMD'
+  | 'OPEN_READING_MODE'
   | 'NEW_SPACE'
   | 'NEW_GROUP'
   | 'ADD_TO_GROUP'

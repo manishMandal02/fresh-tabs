@@ -1,11 +1,13 @@
 import refreshOnUpdate from 'virtual:reload-on-update-in-view';
 
 import { createRoot } from 'react-dom/client';
+import { Readability } from '@mozilla/readability';
 import Frame, { FrameContextConsumer } from 'react-frame-component';
 
 import DomainNotes from './domain-notes';
 import injectedStyle from './injected.css?inline';
 import { SnackbarContentScript } from './snackbar';
+import ReadingMode from './reading-mode/ReadingMode';
 import { getTime } from '@root/src/utils/date-time/get-time';
 import { getWeekday } from '@root/src/utils/date-time/get-weekday';
 import { getSpace } from '@root/src/services/chrome-storage/spaces';
@@ -17,20 +19,9 @@ import { getAppSettings } from '@root/src/services/chrome-storage/settings';
 import { getUserSelectionText, isValidURL, publishEvents } from '@root/src/utils';
 import CommandPalette, { COMMAND_PALETTE_SIZE } from './command-palette/CommandPalette';
 import { IMessageEventContentScript, ISpace, NoteBubblePos } from '../../types/global.types';
-import { isProbablyReaderable, Readability } from '@mozilla/readability';
 
 // development: refresh content page on update
 refreshOnUpdate('pages/content');
-
-// close command palette
-const handleCloseCommandPalette = () => {
-  const commandPaletteContainerEl = document.getElementById(ContentScriptContainerIds.COMMAND_PALETTE);
-
-  if (!commandPaletteContainerEl) return;
-
-  commandPaletteContainerEl.replaceChildren();
-  commandPaletteContainerEl.remove();
-};
 
 type AppendContainerProps = {
   activeSpace: ISpace;
@@ -107,6 +98,16 @@ const appendCommandPaletteContainer = ({
       </FrameContextConsumer>
     </Frame>,
   );
+};
+
+// close command palette
+const handleCloseCommandPalette = () => {
+  const commandPaletteContainerEl = document.getElementById(ContentScriptContainerIds.COMMAND_PALETTE);
+
+  if (!commandPaletteContainerEl) return;
+
+  commandPaletteContainerEl.replaceChildren();
+  commandPaletteContainerEl.remove();
 };
 
 const handleShowSnackbar = (title: string) => {
@@ -408,22 +409,78 @@ const openLinkPreview = async () => {
   });
 };
 
-// reading mode
-const readingMode = () => {
-  const reader = new Readability(document).parse();
+let hostBodyOverflowYState = 'auto';
 
-  console.log('🚀 ~ file: root.tsx:415 ~ readingMode ~ reader:', reader);
-  console.log(
-    '🚀 ~ file: root.tsx:422 ~ readingMode ~ isProbablyReaderable(document):',
-    isProbablyReaderable(document),
+// reading mode
+const handleOpenReadingMode = () => {
+  if (document.getElementById(ContentScriptContainerIds.READING_MODE)) return;
+
+  const readingModeContainer = document.createElement('div');
+
+  readingModeContainer.id = ContentScriptContainerIds.READING_MODE;
+
+  readingModeContainer.style.height = '100vh';
+  readingModeContainer.style.width = '100vw';
+  readingModeContainer.style.zIndex = '2147483647';
+
+  readingModeContainer.style.position = 'fixed';
+  readingModeContainer.style.top = '0';
+  readingModeContainer.style.left = '0';
+
+  readingModeContainer.style.display = 'flex';
+  readingModeContainer.style.alignItems = 'center';
+  readingModeContainer.style.justifyContent = 'center';
+
+  hostBodyOverflowYState = document.body.style.overflowY;
+  document.body.style.overflowY = 'hidden';
+  // append root react component for command palette
+  document.body.append(readingModeContainer);
+
+  const copyDocument = document.cloneNode(true) as Document;
+
+  const reader = new Readability(copyDocument).parse();
+
+  console.log('🚀 ~ file: root.tsx:415 ~ handleOpenReadingMode ~ reader:', reader.content);
+
+  createRoot(readingModeContainer).render(
+    <Frame
+      style={{
+        width: '100vw',
+        height: '100vh',
+        border: 'none',
+        background: 'none',
+      }}
+      id="fresh-tabs-reader"
+      title="fresh-tabs-iframe-reader"
+      allowTransparency={true}>
+      <FrameContextConsumer>
+        {context => {
+          const style = context.document.createElement('style');
+          style.innerHTML = injectedStyle;
+          context.document.head.appendChild(style);
+          context.document.body.style.background = 'none';
+          return <ReadingMode title={reader.title} body={reader.content} onClose={handleCloseReadingMode} />;
+        }}
+      </FrameContextConsumer>
+    </Frame>,
   );
 };
 
-console.log('🚀 ~ file: root.tsx:422 ~ readingMode ~ readingMode:', readingMode);
+const handleCloseReadingMode = () => {
+  document.body.style.overflowY = hostBodyOverflowYState;
+
+  const readingModeContainer = document.getElementById(ContentScriptContainerIds.READING_MODE);
+  if (!readingModeContainer) return;
+
+  readingModeContainer.replaceChildren();
+
+  readingModeContainer.remove();
+};
 
 (async () => {
   await openLinkPreview();
-  // readingMode();
+  // TODO - testing...
+  handleOpenReadingMode();
 })();
 
 //  listen to events form background script
@@ -472,6 +529,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       groupId,
       activeSpace,
     });
+  }
+
+  if (msgEvent === 'OPEN_READING_MODE') {
+    handleOpenReadingMode();
   }
 
   if (msgEvent === 'SHOW_SNACKBAR') {

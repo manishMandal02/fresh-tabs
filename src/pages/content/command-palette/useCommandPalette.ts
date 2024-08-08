@@ -171,6 +171,18 @@ export const useCommandPalette = ({ activeSpace, groupId, onClose, isOpenedInPop
           break;
         }
 
+        case CommandType.ReadingMode: {
+          await publishEvents({
+            event: 'READING_MODE_CMD',
+            payload: {
+              activeSpace,
+              isOpenedInPopupWindow,
+            },
+          });
+          handleCloseCommandPalette();
+          break;
+        }
+
         case CommandType.WebSearch: {
           await publishEvents({
             event: 'WEB_SEARCH',

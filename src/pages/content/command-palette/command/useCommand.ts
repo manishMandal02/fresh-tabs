@@ -13,6 +13,7 @@ import {
   BellIcon,
   GearIcon,
   CounterClockwiseClockIcon,
+  ReaderIcon,
 } from '@radix-ui/react-icons';
 
 import { CommandType } from '@root/src/constants/app';
@@ -62,16 +63,24 @@ export const staticCommands: ICommand[] = [
   },
   {
     index: 6,
+    type: CommandType.ReadingMode,
+    label: 'Reading Mode',
+    icon: ReaderIcon,
+    alias: 'Open in reader',
+    isFeatured: true,
+  },
+  {
+    index: 7,
     type: CommandType.WhitelistDomainForAutoDiscard,
     label: 'Whitelist site',
     icon: CheckIcon,
     alias: 'Prevent this site from being discarded',
     isFeatured: true,
   },
-  { index: 7, type: CommandType.CloseTab, label: 'Close Tab', icon: Cross1Icon, alias: 'Close current tab' },
+  { index: 8, type: CommandType.CloseTab, label: 'Close Tab', icon: Cross1Icon, alias: 'Close current tab' },
   // group cmd
   {
-    index: 8,
+    index: 9,
     type: CommandType.NewGroup,
     label: 'New Group',
     icon: PlusIcon,
@@ -79,14 +88,14 @@ export const staticCommands: ICommand[] = [
     isFeatured: true,
   },
   {
-    index: 9,
+    index: 10,
     type: CommandType.AddToGroup,
     label: 'Add to Group',
     icon: LayersIcon,
     alias: 'Move tab to a group',
   },
   {
-    index: 10,
+    index: 11,
     type: CommandType.RenameGroup,
     label: 'Rename Group',
     icon: Pencil1Icon,
@@ -94,35 +103,35 @@ export const staticCommands: ICommand[] = [
   },
   // quick access side panel menu items
   {
-    index: 11,
+    index: 12,
     type: CommandType.OpenSidePanel,
     label: 'Open FreshTab',
     icon: LayersIcon,
     alias: 'open in side pane',
   },
   {
-    index: 12,
+    index: 13,
     type: CommandType.OpenNotificationsModal,
     label: 'Show Notifications',
     icon: BellIcon,
     alias: 'open in side panel',
   },
   {
-    index: 13,
+    index: 14,
     type: CommandType.OpenPreferencesModal,
     label: 'Show Preferences',
     icon: GearIcon,
     alias: 'open in side panel',
   },
   {
-    index: 14,
+    index: 15,
     type: CommandType.OpenSnoozedTabsModal,
     label: 'Show Snoozed Tabs',
     icon: ClockIcon,
     alias: 'open in side panel',
   },
   {
-    index: 15,
+    index: 16,
     type: CommandType.OpenSpaceHistoryModal,
     label: 'Show Space History',
     icon: CounterClockwiseClockIcon,

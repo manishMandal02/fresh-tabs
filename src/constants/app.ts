@@ -3,6 +3,7 @@ import { IAppSettings, IPinnedTab, ISpaceWithTabs } from '../types/global.types'
 
 export const ContentScriptContainerIds = {
   COMMAND_PALETTE: 'fresh-tabs-command-palette-container',
+  READING_MODE: 'fresh-tabs-command-reading-mode',
   DOMAIN_NOTES: 'fresh-tabs-domain-notes-container',
   SNACKBAR: 'fresh-tabs-snackbar-container',
 } as const;
@@ -29,6 +30,7 @@ export const CommandType = {
   Link: 'link',
   Note: 'note',
   NewSpace: 'new-space',
+  ReadingMode: 'reading-mode',
   NewNote: 'new-note',
   CloseTab: 'close-tab',
   SwitchTab: 'switch-tab',
