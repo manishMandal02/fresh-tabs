@@ -47,6 +47,14 @@ export const staticCommands: ICommand[] = [
   },
   {
     index: 4,
+    type: CommandType.ReadingMode,
+    label: 'Reading Mode',
+    icon: ReaderIcon,
+    alias: 'Open in reader',
+    isFeatured: true,
+  },
+  {
+    index: 5,
     type: CommandType.SnoozeTab,
     label: 'Snooze Tab',
     icon: ClockIcon,
@@ -54,21 +62,14 @@ export const staticCommands: ICommand[] = [
     isFeatured: true,
   },
   {
-    index: 5,
+    index: 6,
     type: CommandType.DiscardTabs,
     label: 'Discard Tabs',
     icon: MoonIcon,
     alias: 'Save memory',
     isFeatured: true,
   },
-  {
-    index: 6,
-    type: CommandType.ReadingMode,
-    label: 'Reading Mode',
-    icon: ReaderIcon,
-    alias: 'Open in reader',
-    isFeatured: true,
-  },
+
   {
     index: 7,
     type: CommandType.WhitelistDomainForAutoDiscard,

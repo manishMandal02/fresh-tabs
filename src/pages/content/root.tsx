@@ -6,6 +6,7 @@ import Frame, { FrameContextConsumer } from 'react-frame-component';
 
 import DomainNotes from './domain-notes';
 import injectedStyle from './injected.css?inline';
+import readingModeCSS from './reading-mode/readiing-mode.css?inline';
 import { SnackbarContentScript } from './snackbar';
 import ReadingMode from './reading-mode/ReadingMode';
 import { getTime } from '@root/src/utils/date-time/get-time';
@@ -336,13 +337,19 @@ const appendOpenInTabBtnOverlay = () => {
 };
 
 // shows a link in a temporary popup window
-const openLinkPreview = async () => {
+const openLinkPreview = async (doc?: Document, isReadingMode = false) => {
   //  check if the link previews is disabled
   const { linkPreview } = await getAppSettings();
 
   if (linkPreview.isDisabled) return;
 
-  document.body.addEventListener('click', async ev => {
+  let copyDocument = document;
+
+  if (doc) {
+    copyDocument = doc;
+  }
+
+  copyDocument.body.addEventListener('click', async ev => {
     const clickedEl = ev.target as HTMLElement;
 
     if (clickedEl.tagName !== 'A' && !clickedEl.closest('a')) return;
@@ -354,11 +361,10 @@ const openLinkPreview = async () => {
 
     // open link in preview window if user preference is set to Shift + Click and the shift key was pressed
     if (
-      linkPreview.openTrigger === 'shift-click' &&
-      isValidURL(hrefLink) &&
-      !sessionStorage.getItem('activeWindowId')
+      isReadingMode ||
+      (linkPreview.openTrigger === 'shift-click' && isValidURL(hrefLink) && !sessionStorage.getItem('activeWindowId'))
     ) {
-      if (!ev.shiftKey) return;
+      if (!isReadingMode && !ev.shiftKey) return;
       ev.preventDefault();
       ev.stopPropagation();
 
@@ -438,9 +444,13 @@ const handleOpenReadingMode = () => {
 
   const copyDocument = document.cloneNode(true) as Document;
 
-  const reader = new Readability(copyDocument).parse();
+  const reader = new Readability(copyDocument);
 
-  console.log('🚀 ~ file: root.tsx:415 ~ handleOpenReadingMode ~ reader:', reader.content);
+  const parsedData = reader.parse();
+
+  console.log('🚀 ~ file: root.tsx:446 ~ handleOpenReadingMode ~ parsedData:', parsedData);
+
+  console.log('🚀 ~ file: root.tsx:443 ~ handleOpenReadingMode ~ reader:', reader);
 
   createRoot(readingModeContainer).render(
     <Frame
@@ -456,10 +466,17 @@ const handleOpenReadingMode = () => {
       <FrameContextConsumer>
         {context => {
           const style = context.document.createElement('style');
-          style.innerHTML = injectedStyle;
+          style.innerHTML = readingModeCSS;
           context.document.head.appendChild(style);
           context.document.body.style.background = 'none';
-          return <ReadingMode title={reader.title} body={reader.content} onClose={handleCloseReadingMode} />;
+          return (
+            <ReadingMode
+              title={parsedData.title}
+              contentBody={parsedData.content}
+              onLoad={() => openLinkPreview(context.document, true)}
+              onClose={handleCloseReadingMode}
+            />
+          );
         }}
       </FrameContextConsumer>
     </Frame>,
@@ -480,7 +497,7 @@ const handleCloseReadingMode = () => {
 (async () => {
   await openLinkPreview();
   // TODO - testing...
-  handleOpenReadingMode();
+  // handleOpenReadingMode();
 })();
 
 //  listen to events form background script
