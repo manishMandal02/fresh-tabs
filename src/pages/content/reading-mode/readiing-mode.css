@@ -197,3 +197,21 @@ body {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
+
+.cc-reader p > img,
+.cc-reader span img {
+  max-width: none; /* Removes any previously applied max-width */
+  max-height: 24px; /* Ensures the icon doesn't exceed a specific height */
+  width: auto; /* Respects the original width of the icon */
+  height: auto; /* Maintains the aspect ratio */
+  display: inline-block; /* Ensures the image is treated as inline */
+  margin: 0 4px; /* Adds a small margin around the icon */
+  vertical-align: middle; /* Aligns the icon vertically with surrounding text */
+}
+
+/* General Styles for Text Spans to Align with Icons */
+/* .cc-reader p span,
+.cc-reader span {
+    display: inline-flex;
+    align-items: center;
+} */
